@@ -13,9 +13,14 @@ use crate::main;
 unsafe extern "C" {
     fn NonMaskableInt();
     fn HardFault();
+    fn MemManage();
+    fn BusFault();
+    fn UsageFault();
     fn SVCall();
+    fn DebugMonitor();
     fn PendSV();
-    fn SysTick_Isr();
+    fn SysTick();
+    fn DefaultHandler();
 }
 
 #[repr(C)]
@@ -29,37 +34,51 @@ pub union Vector {
 #[no_mangle]
 pub static __exception_table: [Vector; 15] = [
     Vector { handler: Reset },
-    Vector { handler: NonMaskableInt },
+    Vector {
+        handler: NonMaskableInt,
+    },
     Vector { handler: HardFault },
-    Vector { reserved: 0 },
-    Vector { reserved: 0 },
-    Vector { reserved: 0 },
+    Vector { handler: MemManage },
+    Vector { handler: BusFault },
+    Vector {
+        handler: UsageFault,
+    },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { handler: SVCall },
-    Vector { reserved: 0 },
+    Vector {
+        handler: DebugMonitor,
+    },
     Vector { reserved: 0 },
     Vector { handler: PendSV },
-    Vector { handler: SysTick_Isr },
+    Vector { handler: SysTick },
 ];
+
+const SCB_VTOR: *mut u32 = 0xE000_ED08 as *mut u32;
+const SCB_CPACR: *mut u32 = 0xE000_ED88 as *mut u32;
+const EXTERNAL_INTERRUPT_COUNT: usize = 150;
 
 #[no_mangle]
 pub unsafe extern "C" fn Reset() {
-    
     unsafe extern "C" {
         static mut _sidata: u32;
         static mut _srelocate: u32;
         static mut _erelocate: u32;
         static mut _szero: u32;
         static mut _ezero: u32;
-        static mut __vector_table_flash_start: u32;
-        static mut __vector_table_flash_end: u32;
+        static __vector_table_flash_start: u32;
+        static __vector_table_flash_end: u32;
         static mut __vector_table_ram_start: u32;
     }
 
     asm!("cpsid i", options(nostack, preserves_flags));
+
+    /* Enable the Cortex-M7 FPU before any hard-float code can run. */
+    write_volatile(SCB_CPACR, read_volatile(SCB_CPACR) | (0b1111 << 20));
+    asm!("dsb 0xF", options(nomem, nostack, preserves_flags));
+    asm!("isb 0xF", options(nomem, nostack, preserves_flags));
 
     /* Relocate .data from ROM to RAM */
     {
@@ -85,7 +104,7 @@ pub unsafe extern "C" fn Reset() {
         }
     }
 
-    /* Copy vector table to RAM */
+    /* Copy the vector table to RAM so handlers can be patched at runtime. */
     {
         let src = addr_of!(__vector_table_flash_start) as *const u32;
         let end = addr_of!(__vector_table_flash_end) as *const u32;
@@ -94,18 +113,13 @@ pub unsafe extern "C" fn Reset() {
         let words = end.offset_from(src) as usize;
         let dst_addr = dst as usize;
 
-        debug_assert_eq!(dst_addr % 512, 0);
+        debug_assert_eq!(dst_addr % 1024, 0);
 
         for i in 0..words {
             write_volatile(dst.add(i), read_volatile(src.add(i)));
         }
 
-        asm!("dsb 0xF", options(nomem, nostack, preserves_flags));
-        asm!("isb 0xF", options(nomem, nostack, preserves_flags));
-
-        /* VTOR */
-        write_volatile(0xE000_ED08 as *mut u32, dst_addr as u32);
-
+        write_volatile(SCB_VTOR, dst_addr as u32);
         asm!("dsb 0xF", options(nomem, nostack, preserves_flags));
         asm!("isb 0xF", options(nomem, nostack, preserves_flags));
     }
@@ -128,9 +142,5 @@ pub unsafe extern "C" fn DefaultHandler_() -> ! {
 
 #[unsafe(link_section = ".vectors.interrupt_table")]
 #[no_mangle]
-pub static __interrupt_table: [unsafe extern "C" fn(); 74] = [{
-    unsafe extern "C" {
-        fn DefaultHandler();
-    }
-    DefaultHandler
-}; 74];
+pub static __interrupt_table: [unsafe extern "C" fn(); EXTERNAL_INTERRUPT_COUNT] =
+    [DefaultHandler; EXTERNAL_INTERRUPT_COUNT];

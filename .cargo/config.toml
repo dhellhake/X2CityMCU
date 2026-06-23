@@ -1,8 +1,8 @@
 [build]
-target = "thumbv6m-none-eabi"
+target = "thumbv7em-none-eabihf"
 
-[target.thumbv6m-none-eabi]
+[target.thumbv7em-none-eabihf]
 rustflags = [
     "-C", "link-arg=-Tmemory.x", 
-    "-C", "target-cpu=cortex-m0",
+    "-C", "target-cpu=cortex-m7",
 ]

@@ -4,16 +4,16 @@
         {
             "type": "cortex-debug",
             "request": "launch",
-            "name": "Debug (OpenOCD)",
+            "name": "Debug STM32H743 (J-Link SWD)",
             "servertype": "openocd",
             "serverpath":"C:/Users/domin/AppData/Roaming/xPacks/openocd/xpack-openocd-0.12.0-6/bin/openocd.exe",
             "cwd": "${workspaceRoot}",
             "preLaunchTask": "Cargo Build",
-            "executable": "./target/thumbv6m-none-eabi/debug/ExhValveAct",
+            "executable": "./target/thumbv7em-none-eabihf/debug/ExhValveAct",
             "configFiles": [
-                "/.devenv/ATSAMC21G18A/ATSAMC21G18A.cfg"
+                "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.cfg"
             ],
-            "svdFile": "${workspaceRoot}/.devenv/ATSAMC21G18A/ATSAMC21G18A.svd",
+            "svdFile": "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.svd",
             "showDevDebugOutput": "raw"
         }
     ]

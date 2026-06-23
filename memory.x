@@ -2,15 +2,20 @@ EXTERN(DefaultHandler);
 
 PROVIDE(NonMaskableInt = DefaultHandler);
 PROVIDE(HardFault      = DefaultHandler);
+PROVIDE(MemManage      = DefaultHandler);
+PROVIDE(BusFault       = DefaultHandler);
+PROVIDE(UsageFault     = DefaultHandler);
 PROVIDE(SVCall         = DefaultHandler);
+PROVIDE(DebugMonitor   = DefaultHandler);
 PROVIDE(PendSV         = DefaultHandler);
-PROVIDE(SysTick_Isr    = DefaultHandler);
+PROVIDE(SysTick        = DefaultHandler);
 PROVIDE(DefaultHandler = DefaultHandler_);
 
 MEMORY
 {
-    rom (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
-    ram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00008000
+    /* STM32H743IIT6: 2 MiB internal flash, 128 KiB DTCM used for stack/data. */
+    rom (rx)  : ORIGIN = 0x08000000, LENGTH = 0x00200000
+    ram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00020000
 }
 
 STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE :
@@ -23,7 +28,7 @@ SECTIONS
 
     .vectors ORIGIN(rom) :
     {
-        . = ALIGN(4);
+        . = ALIGN(1024);
         __vector_table_flash_start = .;
 
         /* Initial stack pointer */
@@ -76,9 +81,11 @@ SECTIONS
 
     .ram_vector_table (NOLOAD) :
     {
-        . = ALIGN(512);
+        . = ALIGN(1024);
         __vector_table_ram_start = .;
-        . += 0x200;
+        . += __vector_table_flash_end - __vector_table_flash_start;
+        . = ALIGN(4);
+        __vector_table_ram_end = .;
     } > ram
 
     .bss (NOLOAD) :

@@ -10,8 +10,6 @@ pub mod drv;
 use core::panic::PanicInfo;
 
 fn main() -> ! {
-    
-
     loop {}
 }
 
