@@ -8,7 +8,7 @@ PROVIDE(UsageFault     = DefaultHandler);
 PROVIDE(SVCall         = DefaultHandler);
 PROVIDE(DebugMonitor   = DefaultHandler);
 PROVIDE(PendSV         = DefaultHandler);
-PROVIDE(SysTick        = DefaultHandler);
+PROVIDE(SysTick_Isr    = DefaultHandler);
 PROVIDE(DefaultHandler = DefaultHandler_);
 
 MEMORY

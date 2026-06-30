@@ -5,11 +5,74 @@
 #![allow(non_snake_case)]
 #![allow(unused_assignments)]
 
+pub mod os;
+pub mod mcu;
 pub mod drv;
 
-use core::panic::PanicInfo;
+use core::{
+    arch::asm,
+    ops::DerefMut,
+    panic::PanicInfo
+};
+
+use crate::{
+    mcu::{
+        Os, SYSTICK,
+        deployment::{
+            tsk_1_5ms,
+            tsk_2_10ms
+        }
+    }, os::{
+        Application,
+        task::{
+            TaskCycleTime,
+            TaskStatus
+        }
+    }
+};
+
+// SysTick runs from the processor clock when CLKSOURCE is set.
+// After reset the STM32H743 selects HSI as SYSCLK with no CPU/AHB prescaler.
+const SYSTICK_CLOCK_HZ: u32 = 64_000_000;
+
+fn background(_tstmp: u64) {
+    loop {}
+}
+
+
 
 fn main() -> ! {
+    
+    /* Pre-Os Init */
+
+    /* OS Init */
+    let mut stack: u32 = 0;
+    Os.borrow().replace(Some(Application::new()));
+    if let Some(ref mut os) = Os.borrow().borrow_mut().deref_mut() {
+        os.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS);
+        os.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS);
+        os.SetTask(2, background, TaskCycleTime::NonCyclic);
+        os.tasks[os.taskIdx as usize].status = TaskStatus::Active;
+        stack = os.tasks[os.taskIdx as usize].sp;
+    }    
+    
+    /* Post-OS Init */
+
+    /* Start Scheduling */
+    SYSTICK.with(|syst| {
+        syst.Configure(SYSTICK_CLOCK_HZ);
+        let _ = syst.SetTimerAt(1000);
+    });
+
+    /* OS Start */    
+    unsafe {
+        asm!("msr psp, {0}", in(reg) stack);
+        asm!("msr control, {0}", in(reg) 0x2);
+        asm!("isb");
+    }
+
+    background(0);
+
     loop {}
 }
 
