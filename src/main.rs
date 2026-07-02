@@ -17,7 +17,7 @@ use core::{
 
 use crate::{
     mcu::{
-        Os, SYSTICK,
+        McuManager, Os, SYSTICK,
         deployment::{
             tsk_1_5ms,
             tsk_2_10ms
@@ -32,8 +32,7 @@ use crate::{
 };
 
 // SysTick runs from the processor clock when CLKSOURCE is set.
-// After reset the STM32H743 selects HSI as SYSCLK with no CPU/AHB prescaler.
-const SYSTICK_CLOCK_HZ: u32 = 64_000_000;
+const SYSTICK_CLOCK_HZ: u32 = 480_000_000;
 
 fn background(_tstmp: u64) {
     loop {}
@@ -44,6 +43,7 @@ fn background(_tstmp: u64) {
 fn main() -> ! {
     
     /* Pre-Os Init */
+    McuManager::McuClockTree_Init();
 
     /* OS Init */
     let mut stack: u32 = 0;
