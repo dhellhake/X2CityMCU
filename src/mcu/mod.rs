@@ -24,9 +24,11 @@ pub mod peripherals;
 pub mod deployment;
 pub(crate) const TASK_COUNT: usize = 3;
 pub(crate) const STACK_SIZE: usize = 256;    
+#[unsafe(link_section = ".dtcm_bss.os")]
 pub(crate) static Os: Mutex<RefCell<Option<Application<TASK_COUNT, STACK_SIZE>>>> = Mutex::new(RefCell::new(None));
 
 pub static SCB: Shared<Scb> = Shared::new(Scb::new());
+#[unsafe(link_section = ".dtcm_bss.systick")]
 pub static SYSTICK: Shared<Systick> = Shared::new(Systick::new());
 pub static RCC: Shared<Rcc> = Shared::new(Rcc::new());
 pub static PWR: Shared<Pwr> = Shared::new(Pwr::new());
