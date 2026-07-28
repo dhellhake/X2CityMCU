@@ -17,15 +17,17 @@ use core::{
 
 use crate::{
     mcu::{
-        McuManager, Os, SYSTICK,
+        McuManager, Os,
         deployment::{
             tsk_1_5ms,
-            tsk_2_10ms
+            tsk_2_10ms,
+            tsk_pfm_10ms
         }
     }, os::{
         Application,
         task::{
             TaskCycleTime,
+            TaskRole,
             TaskStatus
         }
     }
@@ -49,20 +51,16 @@ fn main() -> ! {
     let mut stack: u32 = 0;
     Os.borrow().replace(Some(Application::new()));
     if let Some(ref mut os) = Os.borrow().borrow_mut().deref_mut() {
-        os.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS);
-        os.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS);
-        os.SetTask(2, background, TaskCycleTime::NonCyclic);
+        os.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
+        os.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS, TaskRole::Supervised);
+        os.SetTask(2, tsk_pfm_10ms, TaskCycleTime::_10MS, TaskRole::Unsupervised);
+        os.SetTask(3, background, TaskCycleTime::NonCyclic, TaskRole::Background);
         os.tasks[os.taskIdx as usize].status = TaskStatus::Active;
         stack = os.tasks[os.taskIdx as usize].sp;
     }    
     
     /* Post-OS Init */
-
-    /* Start Scheduling */
-    SYSTICK.with(|syst| {
-        syst.Configure(SYSTICK_CLOCK_HZ);
-        let _ = syst.SetTimerAt(1000);
-    });
+    McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);
 
     /* OS Start */    
     unsafe {
