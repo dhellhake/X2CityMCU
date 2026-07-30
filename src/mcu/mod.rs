@@ -7,14 +7,18 @@ use crate::{drv::{
         flash::Flash,
         gpio::{
             Gpio,
-            GPIOC_ADDR,
+            GPIOA_ADDR,
         },
         pwr::Pwr,
         wwdg::Wwdg,
         rcc::Rcc,
         scb::Scb,
         syscfg::Syscfg,
-        systick::Systick
+        systick::Systick,
+        usart::{
+            Usart,
+            USART1_ADDR,
+        },
     },
     mcu::program_flow::ProgramFlowMonitor,
     os::{
@@ -40,7 +44,8 @@ pub static RCC: Shared<Rcc> = Shared::new(Rcc::new());
 pub static PWR: Shared<Pwr> = Shared::new(Pwr::new());
 pub static SYSCFG: Shared<Syscfg> = Shared::new(Syscfg::new());
 pub static FLASH: Shared<Flash> = Shared::new(Flash::new());
-pub static GPIOC: Shared<Gpio> = Shared::new(Gpio::new(GPIOC_ADDR));
+pub static GPIOA: Shared<Gpio> = Shared::new(Gpio::new(GPIOA_ADDR));
+pub static USART1: Shared<Usart> = Shared::new(Usart::new(USART1_ADDR));
 #[unsafe(link_section = ".dtcm_bss.wwdg")]
 static WWDG: Shared<Wwdg> = Shared::new(Wwdg::new());
 #[unsafe(link_section = ".dtcm_bss.pfm")]
@@ -74,6 +79,48 @@ impl McuManager {
         RCC.with(|rcc| {
             peripherals::rcc::ConfigurePll1Hse25MhzTo480Mhz(rcc);
         });
+    }
+
+    pub fn UartCommunication_Init()
+    {
+        RCC.with(|rcc| {
+            peripherals::usart::ConfigureUsart1DebugHeaderClocks(rcc);
+        });
+
+        GPIOA.with(|gpioa| {
+            peripherals::usart::ConfigureUsart1DebugHeaderPins(gpioa);
+        });
+
+        USART1.with(|usart1| {
+            peripherals::usart::ConfigureUsart1DebugHeader115200(usart1);
+        });
+    }
+
+    pub fn UartCommunication_Write(bytes: &[u8])
+    {
+        for byte in bytes {
+            while !Self::UartCommunication_TryWriteByte(*byte) {}
+        }
+
+        while !USART1.with(|usart1| usart1.IsTransmissionComplete()) {}
+    }
+
+    pub fn UartCommunication_TryReadByte() -> Option<u8>
+    {
+        USART1.with(|usart1| {
+            usart1.TryReadWord().and_then(|word| {
+                if word <= u8::MAX as u16 {
+                    Some(word as u8)
+                } else {
+                    None
+                }
+            })
+        })
+    }
+
+    pub fn UartCommunication_TryWriteByte(byte: u8) -> bool
+    {
+        USART1.with(|usart1| usart1.TryWriteWord(byte as u16))
     }
 
     pub fn ProgramFlowSupervision_Start(systickClockHz: u32)

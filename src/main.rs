@@ -46,6 +46,7 @@ fn main() -> ! {
     
     /* Pre-Os Init */
     McuManager::McuClockTree_Init();
+    McuManager::UartCommunication_Init();
 
     /* OS Init */
     let mut stack: u32 = 0;
