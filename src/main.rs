@@ -8,6 +8,7 @@
 pub mod os;
 pub mod mcu;
 pub mod drv;
+pub mod vd18mt;
 
 use core::{
     arch::asm,
@@ -21,7 +22,8 @@ use crate::{
         deployment::{
             tsk_1_5ms,
             tsk_2_10ms,
-            tsk_pfm_10ms
+            tsk_pfm_10ms,
+            VD18MT,
         }
     }, os::{
         Application,
@@ -30,7 +32,8 @@ use crate::{
             TaskRole,
             TaskStatus
         }
-    }
+    },
+    vd18mt::VD18MTInterface,
 };
 
 // SysTick runs from the processor clock when CLKSOURCE is set.
@@ -47,6 +50,7 @@ fn main() -> ! {
     /* Pre-Os Init */
     McuManager::McuClockTree_Init();
     McuManager::UartCommunication_Init();
+    McuManager::VD18MTCommunication_Init();
 
     /* OS Init */
     let mut stack: u32 = 0;
@@ -61,8 +65,11 @@ fn main() -> ! {
     }    
     
     /* Post-OS Init */
-    McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);
+    VD18MT.borrow().replace(Some(VD18MTInterface::new()));
 
+    /* Program Flow Start */
+    McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);
+    
     /* OS Start */    
     unsafe {
         asm!("msr psp, {0}", in(reg) stack);

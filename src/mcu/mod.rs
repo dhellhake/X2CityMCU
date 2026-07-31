@@ -8,6 +8,7 @@ use crate::{drv::{
         gpio::{
             Gpio,
             GPIOA_ADDR,
+            GPIOD_ADDR,
         },
         pwr::Pwr,
         wwdg::Wwdg,
@@ -18,6 +19,7 @@ use crate::{drv::{
         usart::{
             Usart,
             USART1_ADDR,
+            USART2_ADDR,
         },
     },
     mcu::program_flow::ProgramFlowMonitor,
@@ -45,7 +47,9 @@ pub static PWR: Shared<Pwr> = Shared::new(Pwr::new());
 pub static SYSCFG: Shared<Syscfg> = Shared::new(Syscfg::new());
 pub static FLASH: Shared<Flash> = Shared::new(Flash::new());
 pub static GPIOA: Shared<Gpio> = Shared::new(Gpio::new(GPIOA_ADDR));
+pub static GPIOD: Shared<Gpio> = Shared::new(Gpio::new(GPIOD_ADDR));
 pub static USART1: Shared<Usart> = Shared::new(Usart::new(USART1_ADDR));
+pub static USART2: Shared<Usart> = Shared::new(Usart::new(USART2_ADDR));
 #[unsafe(link_section = ".dtcm_bss.wwdg")]
 static WWDG: Shared<Wwdg> = Shared::new(Wwdg::new());
 #[unsafe(link_section = ".dtcm_bss.pfm")]
@@ -121,6 +125,52 @@ impl McuManager {
     pub fn UartCommunication_TryWriteByte(byte: u8) -> bool
     {
         USART1.with(|usart1| usart1.TryWriteWord(byte as u16))
+    }
+
+    pub fn VD18MTCommunication_Init()
+    {
+        RCC.with(|rcc| {
+            peripherals::usart::ConfigureUsart2Vd18mtClocks(rcc);
+        });
+
+        GPIOA.with(|gpioa| {
+            peripherals::usart::ConfigureUsart2Vd18mtRxPin(gpioa);
+        });
+
+        GPIOD.with(|gpiod| {
+            peripherals::usart::ConfigureUsart2Vd18mtTxPin(gpiod);
+        });
+
+        USART2.with(|usart2| {
+            peripherals::usart::ConfigureUsart2Vd18mt9600(usart2);
+        });
+    }
+
+    pub fn VD18MTCommunication_Write(bytes: &[u8])
+    {
+        for byte in bytes {
+            while !Self::VD18MTCommunication_TryWriteByte(*byte) {}
+        }
+
+        while !USART2.with(|usart2| usart2.IsTransmissionComplete()) {}
+    }
+
+    pub fn VD18MTCommunication_TryReadByte() -> Option<u8>
+    {
+        USART2.with(|usart2| {
+            usart2.TryReadWord().and_then(|word| {
+                if word <= u8::MAX as u16 {
+                    Some(word as u8)
+                } else {
+                    None
+                }
+            })
+        })
+    }
+
+    pub fn VD18MTCommunication_TryWriteByte(byte: u8) -> bool
+    {
+        USART2.with(|usart2| usart2.TryWriteWord(byte as u16))
     }
 
     pub fn ProgramFlowSupervision_Start(systickClockHz: u32)
