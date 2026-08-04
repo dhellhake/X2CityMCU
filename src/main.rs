@@ -8,6 +8,7 @@
 pub mod os;
 pub mod mcu;
 pub mod drv;
+pub mod bms;
 pub mod vd18mt;
 
 use core::{
@@ -23,6 +24,7 @@ use crate::{
             tsk_1_5ms,
             tsk_2_10ms,
             tsk_pfm_10ms,
+            BMS,
             VD18MT,
         }
     }, os::{
@@ -41,6 +43,7 @@ use crate::{
         VT8MTData,
         VT8MTErrorCode,
     },
+    bms::BmsInterface,
 };
 
 // SysTick runs from the processor clock when CLKSOURCE is set.
@@ -58,6 +61,7 @@ fn main() -> ! {
     McuManager::McuClockTree_Init();
     McuManager::UartCommunication_Init();
     McuManager::VD18MTCommunication_Init();
+    McuManager::BmsCommunication_Init();
 
     /* OS Init */
     let mut stack: u32 = 0;
@@ -81,6 +85,7 @@ fn main() -> ! {
         SpeedKmh: 0,
     });
     VD18MT.borrow().replace(Some(vd18mt));
+    BMS.borrow().replace(Some(BmsInterface::new()));
 
     /* Program Flow Start */
     McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);

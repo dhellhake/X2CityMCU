@@ -8,6 +8,7 @@ use crate::{drv::{
         gpio::{
             Gpio,
             GPIOA_ADDR,
+            GPIOB_ADDR,
             GPIOD_ADDR,
         },
         pwr::Pwr,
@@ -20,6 +21,7 @@ use crate::{drv::{
             Usart,
             USART1_ADDR,
             USART2_ADDR,
+            USART3_ADDR,
         },
     },
     mcu::program_flow::ProgramFlowMonitor,
@@ -47,9 +49,11 @@ pub static PWR: Shared<Pwr> = Shared::new(Pwr::new());
 pub static SYSCFG: Shared<Syscfg> = Shared::new(Syscfg::new());
 pub static FLASH: Shared<Flash> = Shared::new(Flash::new());
 pub static GPIOA: Shared<Gpio> = Shared::new(Gpio::new(GPIOA_ADDR));
+pub static GPIOB: Shared<Gpio> = Shared::new(Gpio::new(GPIOB_ADDR));
 pub static GPIOD: Shared<Gpio> = Shared::new(Gpio::new(GPIOD_ADDR));
 pub static USART1: Shared<Usart> = Shared::new(Usart::new(USART1_ADDR));
 pub static USART2: Shared<Usart> = Shared::new(Usart::new(USART2_ADDR));
+pub static USART3: Shared<Usart> = Shared::new(Usart::new(USART3_ADDR));
 #[unsafe(link_section = ".dtcm_bss.wwdg")]
 static WWDG: Shared<Wwdg> = Shared::new(Wwdg::new());
 #[unsafe(link_section = ".dtcm_bss.pfm")]
@@ -171,6 +175,48 @@ impl McuManager {
     pub fn VD18MTCommunication_TryWriteByte(byte: u8) -> bool
     {
         USART2.with(|usart2| usart2.TryWriteWord(byte as u16))
+    }
+
+    pub fn BmsCommunication_Init()
+    {
+        RCC.with(|rcc| {
+            peripherals::usart::ConfigureUsart3BmsClocks(rcc);
+        });
+
+        GPIOB.with(|gpiob| {
+            peripherals::usart::ConfigureUsart3BmsPins(gpiob);
+        });
+
+        USART3.with(|usart3| {
+            peripherals::usart::ConfigureUsart3Bms9600(usart3);
+        });
+    }
+
+    pub fn BmsCommunication_Write(bytes: &[u8])
+    {
+        for byte in bytes {
+            while !Self::BmsCommunication_TryWriteByte(*byte) {}
+        }
+
+        while !USART3.with(|usart3| usart3.IsTransmissionComplete()) {}
+    }
+
+    pub fn BmsCommunication_TryReadByte() -> Option<u8>
+    {
+        USART3.with(|usart3| {
+            usart3.TryReadWord().and_then(|word| {
+                if word <= u8::MAX as u16 {
+                    Some(word as u8)
+                } else {
+                    None
+                }
+            })
+        })
+    }
+
+    pub fn BmsCommunication_TryWriteByte(byte: u8) -> bool
+    {
+        USART3.with(|usart3| usart3.TryWriteWord(byte as u16))
     }
 
     pub fn ProgramFlowSupervision_Start(systickClockHz: u32)
