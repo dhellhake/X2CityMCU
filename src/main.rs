@@ -33,7 +33,14 @@ use crate::{
             TaskStatus
         }
     },
-    vd18mt::VD18MTInterface,
+    vd18mt::{
+        VD18MTInterface,
+        VT8MTBatteryIndication,
+        VT8MTBatteryCurrent,
+        VT8MTControllerStatusFlags,
+        VT8MTData,
+        VT8MTErrorCode,
+    },
 };
 
 // SysTick runs from the processor clock when CLKSOURCE is set.
@@ -65,7 +72,15 @@ fn main() -> ! {
     }    
     
     /* Post-OS Init */
-    VD18MT.borrow().replace(Some(VD18MTInterface::new()));
+    let mut vd18mt = VD18MTInterface::new();
+    vd18mt.VD18MTInterface_SetVT8MTData(VT8MTData {
+        BatteryIndication: VT8MTBatteryIndication::FourSixths,
+        ControllerStatus: VT8MTControllerStatusFlags::ControllerWorking,
+        BatteryCurrentAmperes: VT8MTBatteryCurrent::FromAmperes(0.0),
+        ErrorCode: VT8MTErrorCode::NoError,
+        SpeedKmh: 0,
+    });
+    VD18MT.borrow().replace(Some(vd18mt));
 
     /* Program Flow Start */
     McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);
