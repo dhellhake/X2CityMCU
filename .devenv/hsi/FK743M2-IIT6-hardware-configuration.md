@@ -1,8 +1,29 @@
-# FK743M2-IIT6 V1.1 Hardware/Software Interface
+# FK743M2-IIT6 V1.1 Hardware/Software Interface Specification
 
-This document records the hardware configuration performed by the current
-X2CityMCU firmware and the connector pinout of the FK743M2-IIT6 V1.1 board.
-The target microcontroller is the STM32H743IIT6 in the LQFP176 package.
+This document specifies the hardware/software interface (HSI) and records the
+hardware configuration performed by the current X2CityMCU firmware. The target
+is the FK743M2-IIT6 V1.1 board with an STM32H743IIT6 in the LQFP176 package.
+
+| Document attribute | Value |
+| --- | --- |
+| Document ID | `X2C-HSI-001` |
+| Lifecycle status | Draft; not released for a safety-related production item |
+| Configuration item | This Git-controlled Markdown file and its referenced implementation files |
+| Applicable safety-process baseline | ISO 26262:2018 Parts 4, 6 and 8 |
+| Item-level ASIL allocation | `TBD` by the hazard analysis and risk assessment |
+| Parent technical/software safety requirements | `TBD` by the technical safety concept and software safety requirements specification |
+| Intended owner | MCU software integration |
+
+The requirement structure is intended to support an ISO 26262 safety lifecycle,
+but this document alone does not establish ISO 26262 compliance. Item definition,
+HARA, ASIL allocation, parent-requirement traceability, confirmation measures,
+tool confidence, independence arguments, production release and the safety case
+remain outside this document until supplied by the applicable safety plan.
+
+The requirement tables are normative. The later configuration, memory and pinout
+sections are informative design description and implementation evidence. If the
+two conflict, the conflict shall be resolved through change control before a
+safety release; the requirement shall not silently be weakened to match the code.
 
 The following terms are used throughout the document:
 
@@ -16,6 +37,157 @@ The following terms are used throughout the document:
 - Board silkscreen names omit the `P` prefix. For example, `A3` is MCU pin
   `PA3`, and `I11` is MCU pin `PI11`.
 
+For normative statements, **shall** denotes a mandatory requirement, **should**
+denotes a recommendation requiring justification if not followed, and **may**
+denotes permission. Unless a row states otherwise, every requirement has the
+ASIL and parent traceability shown as `TBD` in the document attributes. These
+attributes shall be resolved before a safety release.
+
+### Requirement Status
+
+The status is informative and is not a verification verdict:
+
+- **Implemented**: matching implementation was found by source inspection.
+- **Partial**: part of the requirement is implemented, but an implementation or
+  verification obligation remains open.
+- **Open**: the required behavior or safety evidence was not found.
+- **Assumption**: satisfaction depends on board, system or external-component
+  evidence outside this repository.
+
+Verification method codes are:
+
+| Code | Verification method |
+| --- | --- |
+| `I` | Inspection of source, linker output, schematic, pin continuity or configuration records |
+| `A` | Analysis or calculation against the controlled MCU/board specification |
+| `T-SW` | Host/unit/software-integration test with recorded expected and actual results |
+| `T-HW` | Test on the specified target board with recorded equipment and results |
+| `T-FI` | Fault-injection test demonstrating the specified detection and reaction |
+
+## Normative HSI Requirements
+
+### Scope And Configuration Control
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-GEN-001` | The software shall execute only on an FK743M2-IIT6 V1.1 board populated with an STM32H743IIT6 in the LQFP176 package unless a controlled HSI variant is released. | System integration | `I`, `T-HW` | Assumption; board identity must be recorded for each test/release unit. |
+| `HSI-GEN-002` | The linker memory map, startup code and peripheral base addresses shall match the STM32H743IIT6 memory and peripheral map. | Linker, startup, generic drivers | `I`, `A` | Implemented in [`memory.x`](../../memory.x), [`src/drv/startup`](../../src/drv/startup) and the drivers. |
+| `HSI-GEN-003` | All required MCU hardware initialization shall complete before the scheduler can execute an application task. | `main`, `McuManager` | `I`, `T-SW` | Implemented by the startup order in [`src/main.rs`](../../src/main.rs). |
+| `HSI-GEN-004` | Project-specific board and use-case configuration shall reside in `src/mcu`; reusable register-level access shall reside in the `src/drv` submodule. | Software architecture | `I` | Implemented by [`src/mcu/peripherals`](../../src/mcu/peripherals) and [`src/drv`](../../src/drv). |
+| `HSI-GEN-005` | A peripheral not explicitly identified as configured by this HSI shall not be enabled or used by application software. | MCU software | `I`, `T-SW` | Implemented by inspection; listed under [Intentionally Unconfigured Hardware](#intentionally-unconfigured-hardware). |
+| `HSI-GEN-006` | Failure to establish a required hardware configuration shall prevent execution of safety-relevant application functions and shall cause the allocated safe reaction within the item FTTI. | Startup and system safety mechanism | `T-FI`, `T-HW` | Open; several pre-watchdog readiness waits and assertion paths can wait indefinitely. Safe reaction and FTTI are `TBD`. |
+| `HSI-GEN-007` | A change to target part, board revision, clock, memory allocation, peripheral configuration or pin assignment shall update this HSI, its parent traces and affected verification before release. | Configuration/change management | `I` | Partial; this file is version controlled, but parent traces and release workflow are `TBD`. |
+| `HSI-GEN-008` | Safety-relevant hardware configuration values shall be represented by named constants or typed values and shall not be modified during normal operation except by an approved safety mechanism. | MCU software | `I`, `T-SW` | Partial; typed driver values and project constants exist, but a formal write-protection and call-graph verification record is absent. |
+
+### Reset, Core And Internal Memory
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-STA-001` | Reset startup shall mask configurable interrupts before modifying TCM state or runtime memory. | Reset handler | `I`, `T-HW` | Implemented by `cpsid i` in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs). |
+| `HSI-STA-002` | Startup shall enable the 64 KiB ITCM and 128 KiB DTCM and execute data/instruction synchronization barriers before either TCM is used. | Reset handler, Cortex-M7 core | `I`, `T-HW` | Implemented in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs). |
+| `HSI-STA-003` | Startup shall grant full access to floating-point coprocessors CP10 and CP11, followed by synchronization barriers, before any hard-float Rust code can execute. | Reset handler, Cortex-M7 core | `I`, `T-HW` | Implemented in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs). |
+| `HSI-STA-004` | Startup shall copy initialized ordinary data from its Flash load image to AXI SRAM and zero ordinary BSS before `main`. | Reset handler, linker | `I`, `T-HW` | Implemented by `.data` and `.bss` relocation. |
+| `HSI-STA-005` | Startup shall copy selected initialized DTCM data, zero selected DTCM BSS and complete both operations before accessing the relocated objects. | Reset handler, linker | `I`, `T-HW` | Implemented by `.dtcm_data` and `.dtcm_bss` relocation. |
+| `HSI-STA-006` | Startup shall copy `.itcm_text` from Flash to ITCM and execute synchronization barriers before calling relocated code. | Reset handler, linker | `I`, `T-HW` | Implemented in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs). |
+| `HSI-STA-007` | The linker shall reject an image whose `.itcm_text` exceeds the 64 KiB ITCM range. | Linker | `I`, `T-SW` | Implemented by the ITCM linker assertion in [`memory.x`](../../memory.x). |
+| `HSI-STA-008` | The linker shall reject an image whose DTCM allocations overlap the reserved main stack or exceed the 128 KiB DTCM range. | Linker | `I`, `T-SW` | Implemented by the DTCM linker assertions in [`memory.x`](../../memory.x). |
+| `HSI-STA-009` | The complete interrupt vector table shall be copied from Flash to a 1024-byte-aligned DTCM allocation, and `SCB.VTOR` shall reference that copy before interrupts are unmasked. | Reset handler, SCB, linker | `I`, `T-HW` | Implemented in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) and [`memory.x`](../../memory.x). |
+| `HSI-STA-010` | Startup shall unmask interrupts only after all runtime memory relocation, zeroing and vector-table redirection are complete. | Reset handler | `I`, `T-HW` | Implemented by `cpsie i` immediately before `main`. |
+| `HSI-STA-011` | The linker shall reserve a non-overlapping 4 KiB, 8-byte-aligned main stack at the top of DTCM and shall place its end in the initial vector-table stack entry. | Linker, reset vector | `I`, `T-SW` | Implemented in [`memory.x`](../../memory.x). |
+| `HSI-STA-012` | Each configured OS task shall have a 1024-byte stack in DTCM, and the configured task count shall not exceed the statically allocated task array. | OS, linker | `I`, `T-SW` | Implemented for four tasks by `STACK_SIZE = 256` words and the DTCM OS object. Stack-depth evidence remains open. |
+| `HSI-STA-013` | Thread mode shall use the process stack pointer in privileged mode before the background task is entered. | `main`, Cortex-M7 core | `I`, `T-HW` | Implemented by the `PSP` and `CONTROL=0x2` writes in [`src/main.rs`](../../src/main.rs). |
+| `HSI-STA-014` | A processor exception or panic shall invoke the allocated safe reaction and shall not leave outputs in an unidentified state beyond the item FTTI. | Exception handlers, system safety mechanism | `T-FI`, `T-HW` | Partial; handlers stop in a loop and WWDG1 can reset only after it has started. Pre-watchdog reaction, output state and FTTI are `TBD`. |
+| `HSI-MEM-001` | Ordinary initialized and zero-initialized objects not explicitly selected for DTCM shall be allocated in the 512 KiB AXI SRAM range `0x2400_0000..0x2408_0000`. | Linker | `I`, `T-SW` | Implemented by `.data` and `.bss` placement and an AXI SRAM bounds assertion. |
+| `HSI-MEM-002` | D2 SRAM, D3 SRAM and backup SRAM shall remain unallocated until startup initialization, ownership and diagnostic requirements are defined for them. | Linker, MCU software | `I` | Implemented; only region symbols are currently exposed by [`memory.x`](../../memory.x). |
+| `HSI-MEM-003` | External SDRAM shall not be linked, dereferenced or exposed to application software until FMC pin setup, SDRAM timing, JEDEC initialization and a startup memory test have completed successfully. | FMC configuration, linker, system integration | `I`, `T-HW`, `T-FI` | Implemented as a prohibition; SDRAM is absent from [`memory.x`](../../memory.x). FMC initialization and test are not implemented. |
+| `HSI-MEM-004` | Instruction cache, data cache or MPU use shall require a controlled memory-attribute configuration and analysis of coherency, DMA and safety mechanisms before enablement. | Cortex-M7 core configuration | `I`, `A`, `T-HW` | Implemented as a prohibition; cache and MPU enablement is absent. Future configuration remains open. |
+| `HSI-MEM-005` | The safety analysis shall define startup and runtime diagnostics for internal SRAM, ECC faults, stack overflow and memory corruption according to the allocated ASIL and FTTI. | Safety concept, MCU software | `A`, `T-FI` | Open; no complete RAM/ECC/stack diagnostic concept is implemented. |
+
+### Power, Flash And Clock Tree
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-CLK-001` | Startup shall select the internal LDO supply by setting `PWR_CR3.LDOEN=1`, `BYPASS=0` and `SCUEN=0`, and shall wait for the applicable supply-ready indication. | PWR | `I`, `T-HW` | Implemented by [`ConfigureLdoSupply`](../../src/mcu/peripherals/pwr.rs). |
+| `HSI-CLK-002` | Before selecting a 480 MHz CPU clock, startup shall select voltage scale 1, wait for readiness, enable SYSCFG overdrive to voltage scale 0, and wait for voltage readiness. | PWR, SYSCFG | `I`, `T-HW` | Implemented by [`ConfigureVoltageScale0For480Mhz`](../../src/mcu/peripherals/pwr.rs). |
+| `HSI-CLK-003` | The system clock source shall be the fitted 25 MHz HSE crystal on PH0/PH1 in crystal mode with HSE bypass disabled. | Board oscillator, RCC | `I`, `A`, `T-HW` | Implemented by [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs); crystal frequency is a board assumption. |
+| `HSI-CLK-004` | PLL1 shall use HSE with `DIVM1=5`, `DIVN1=192`, `DIVP1=2`, wide VCO, 4-to-8-MHz input range and fractional mode disabled. PLL1P shall be enabled; PLL1Q and PLL1R shall remain disabled. | RCC PLL1 | `I`, `A`, `T-HW` | Implemented by [`ConfigurePll1Hse25MhzTo480Mhz`](../../src/mcu/peripherals/rcc.rs). |
+| `HSI-CLK-005` | Startup shall wait for HSE and PLL1 readiness and shall confirm that the system-clock status selects PLL1 before continuing. | RCC | `I`, `T-FI`, `T-HW` | Implemented with blocking ready/status waits. The waits are not time bounded. |
+| `HSI-CLK-006` | `D1CPRE` shall divide SYSCLK by 1, `HPRE` shall divide SYSCLK by 2, and each APB prescaler shall divide HCLK by 2. | RCC bus clocks | `I`, `A`, `T-HW` | Implemented by [`SetBusPrescalersFor480Mhz`](../../src/mcu/peripherals/rcc.rs). |
+| `HSI-CLK-007` | The configured clock tree shall produce a 480 MHz CPU clock, 240 MHz HCLK/AXI clock and 120 MHz PCLK1, PCLK2, PCLK3 and PCLK4 from a 25 MHz HSE. | RCC, board oscillator | `A`, `T-HW` | Implemented; calculations are recorded under [Resulting Clock Domains](#resulting-clock-domains). |
+| `HSI-CLK-008` | Before switching SYSCLK to PLL1, the Flash interface shall be configured for at least four wait states at the configured voltage and clock. | Flash, startup sequence | `I`, `A`, `T-HW` | Implemented by [`ConfigureFor480Mhz`](../../src/mcu/peripherals/flash.rs), called before the PLL1 switch. |
+| `HSI-CLK-009` | Before switching SYSCLK to PLL1, `FLASH_ACR.WRHIGHFREQ` shall be set to the value required by the controlled STM32H743II datasheet/reference-manual revision for voltage scale 0 and a 240 MHz AXI clock. | Flash | `I`, `A`, `T-HW` | Open; the driver supports the field, but project configuration changes only `LATENCY`. |
+| `HSI-CLK-010` | The software shall not claim or use a 48 MHz USB kernel clock while PLL1Q is disabled and no alternative 48 MHz source is configured. | RCC, USB software | `I` | Implemented; USB is intentionally unconfigured. |
+| `HSI-CLK-011` | Loss or out-of-tolerance operation of a safety-relevant system clock shall be detected and shall cause the allocated safe reaction within the item FTTI. | RCC clock security or independent monitor | `T-FI`, `T-HW` | Open; HSE clock security and an independent runtime clock monitor are not enabled. |
+| `HSI-CLK-012` | Safety-relevant clock, power and Flash configuration registers shall be read back or independently checked before supervised operation begins. | MCU initialization diagnostics | `I`, `T-FI`, `T-HW` | Partial; readiness/status bits are checked, but there is no complete expected-register readback. |
+
+### Scheduler Timing, Program Flow And Watchdog
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-TIM-001` | SysTick shall use the processor clock and shall be configured with `SYSTICK_CLOCK_HZ = 480_000_000`. | SysTick, OS | `I`, `A`, `T-HW` | Implemented in [`src/main.rs`](../../src/main.rs) and [`src/drv/systick`](../../src/drv/systick). |
+| `HSI-TIM-002` | Every programmed SysTick interval shall fit the 24-bit reload field; longer intervals shall be represented without truncating the requested deadline. | SysTick driver | `I`, `T-SW` | Implemented by bounded deadline arming in [`src/drv/systick`](../../src/drv/systick). |
+| `HSI-TIM-003` | The first scheduler deadline shall be armed for 1000 us after the program-flow epoch. | MCU manager, SysTick | `I`, `T-HW` | Implemented by `INITIAL_SCHEDULER_WAKEUP_US`. |
+| `HSI-TIM-004` | The scheduler and program-flow monitor shall use the same monotonic microsecond time base. | SysTick, OS, PFM | `I`, `T-SW` | Implemented through `Systick::GetElapsedMicroseconds`. Independent timing plausibility evidence is open. |
+| `HSI-WDG-001` | WWDG1 shall be clocked from PCLK3 at 120 MHz and configured with divider 32768, reload counter `0x7F`, window counter `0x61` and early-wakeup interrupt disabled. | RCC, WWDG1 | `I`, `A`, `T-HW` | Implemented by [`src/mcu/peripherals/wwdg.rs`](../../src/mcu/peripherals/wwdg.rs). |
+| `HSI-WDG-002` | The WWDG1 configuration shall provide an approximate hardware window opening at 8.2 ms and reset timeout at 17.5 ms after each reload. | WWDG1 | `A`, `T-HW` | Implemented by the values in `HSI-WDG-001`; tolerance analysis against PCLK3 accuracy is open. |
+| `HSI-WDG-003` | WWDG1 start and the first SysTick deadline shall be performed in one interrupt-masked critical section using program-flow epoch 0. | MCU manager | `I`, `T-HW` | Implemented by [`ProgramFlowSupervision_Start`](../../src/mcu/mod.rs). |
+| `HSI-WDG-004` | Exactly one 10 ms unsupervised PFM task shall be configured, and it shall execute after all supervised tasks released at the same deadline. | OS task configuration, PFM | `I`, `T-SW` | Implemented and checked by [`ProgramFlowMonitor::ConfigureFromTasks`](../../src/mcu/program_flow.rs). |
+| `HSI-WDG-005` | Each task with role `Supervised` and a cyclic period shall report ordered start/end checkpoints for every release in the 10 ms supervision cycle. Background and unsupervised tasks shall not falsely contribute checkpoints. | OS, PFM | `I`, `T-SW`, `T-FI` | Implemented in [`src/os`](../../src/os) and [`src/mcu/program_flow.rs`](../../src/mcu/program_flow.rs). |
+| `HSI-WDG-006` | Before each watchdog service, the PFM shall validate all expected checkpoints for omission, duplication, order, completion and configured timing limits. | PFM | `I`, `T-SW`, `T-FI` | Implemented by `ValidateAndServiceWatchdog`. |
+| `HSI-WDG-007` | The PFM shall authorize and perform WWDG1 service only between 8500 us and 15500 us relative to the current supervision-cycle start. | PFM, WWDG1 | `I`, `A`, `T-HW` | Implemented by `WATCHDOG_SERVICE_MIN_US` and `WATCHDOG_SERVICE_MAX_US`. |
+| `HSI-WDG-008` | No application task or periodic path other than the PFM validation path shall service WWDG1. | Software architecture | `I`, `T-SW` | Implemented; WWDG1 ownership is private to [`src/mcu/mod.rs`](../../src/mcu/mod.rs), and the only refresh call is in PFM. |
+| `HSI-WDG-009` | Detection of invalid flow, invalid PFM state, missing checkpoints or a missed software service interval shall latch a diagnostic fault and inhibit all subsequent watchdog service until reset. | PFM | `I`, `T-FI`, `T-HW` | Implemented by the latched `Faulted` state. Formal fault-injection evidence is open. |
+| `HSI-WDG-010` | WWDG1 shall be started only after required MCU, communication, OS, component and PFM initialization has completed successfully, and before any safety-relevant cyclic application task executes. | Startup, MCU manager | `I`, `T-HW` | Implemented by the order in [`src/main.rs`](../../src/main.rs). Completeness criteria for safety initialization are `TBD`. |
+| `HSI-WDG-011` | After WWDG1 is started, normal software shall neither disable it nor alter its divider, reload, window or fault reaction. | WWDG1 ownership, MCU software | `I`, `T-SW` | Partial; no normal reconfiguration call exists and hardware cannot be stopped without reset, but formal freedom-from-interference evidence is absent. |
+| `HSI-WDG-012` | The worst-case interval from a monitored fault to watchdog reset or other safe reaction shall not exceed the item FTTI under all specified oscillator, scheduling and execution-time tolerances. | System safety analysis | `A`, `T-FI`, `T-HW` | Open; the nominal watchdog timing is defined, but item FTTI and tolerance/WCET evidence are `TBD`. |
+| `HSI-WDG-013` | Startup stalls occurring before WWDG1 activation shall be covered by an independent startup supervision mechanism or by starting an appropriate watchdog early enough to meet the item FTTI. | System safety mechanism | `A`, `T-FI`, `T-HW` | Open; no early startup watchdog or bounded startup timeout is implemented. |
+
+### UART, GPIO And External Electrical Interfaces
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-UAR-001` | USART1, USART2 and USART3 shall use asynchronous 8N1, LSB-first, non-inverted signaling, oversampling by 16, prescaler 1, enabled transmit/receive and enabled FIFO mode. | USART1/2/3 | `I`, `T-HW` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
+| `HSI-UAR-002` | USART1 shall use a 120 MHz PCLK2 kernel clock, 115200 baud, PA9/AF7 as push-pull TX and PA10/AF7 with pull-up as RX. | RCC, GPIOA, USART1 | `I`, `A`, `T-HW` | Implemented for the P1 CH343/debug UART. |
+| `HSI-UAR-003` | USART2 shall use a 120 MHz PCLK1 kernel clock, 9600 baud, PD5/AF7 as push-pull TX and PA3/AF7 with pull-up as RX. | RCC, GPIOA/GPIOD, USART2 | `I`, `A`, `T-HW` | Implemented for the VD18MT/VT8MT interface. |
+| `HSI-UAR-004` | USART3 shall use a 120 MHz PCLK1 kernel clock, 9600 baud, PB10/AF7 as push-pull TX and PB11/AF7 with pull-up as RX. | RCC, GPIOB, USART3 | `I`, `A`, `T-HW` | Implemented for the JDB BMS interface. |
+| `HSI-UAR-005` | UART initialization shall enable only the required GPIOA, GPIOB, GPIOD and USART1/2/3 peripheral clocks for these interfaces. | RCC | `I` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
+| `HSI-UAR-006` | USART1/2/3 communication shall remain polled with DMA, hardware flow control and USART interrupts disabled until an approved HSI change allocates and verifies those resources. | USART1/2/3, NVIC, DMA | `I` | Implemented as the current configuration. |
+| `HSI-UAR-007` | A communication channel allocated a safety requirement shall detect UART framing, noise, overrun and parity indications, clear them deterministically and communicate invalidity to its consumer. | USART driver, component | `I`, `T-SW`, `T-FI` | Partial; the BMS path exposes and handles USART errors. USART1/USART2 safety allocation and error handling are `TBD`. |
+| `HSI-UAR-008` | A safety-relevant UART protocol shall provide and verify message framing, length, checksum, value range, sequence/freshness or timeout as required by its allocated safety requirement. | BMS/display component | `I`, `T-SW`, `T-FI` | Partial; component parsers validate framing/checksums, but channel safety allocation and end-to-end safety metrics are `TBD`. |
+| `HSI-UAR-009` | External devices connected to MCU GPIO shall satisfy STM32H743II input/output voltage limits, share a defined ground reference and shall not back-power an unpowered participant. | Board/system integration | `I`, `A`, `T-HW` | Assumption; external wiring is not controlled by firmware. |
+| `HSI-UAR-010` | The 5 V VT8MT UART side shall connect to PA3/PD5 only through a level interface demonstrated to provide valid 3.3 V MCU levels across voltage, load, baud rate and temperature. | External level shifter, system integration | `A`, `T-HW` | Assumption; the installed bidirectional level-shifter behavior requires electrical validation. |
+| `HSI-DBG-001` | SWD shall use PA13/SWDIO, PA14/SWCLK, NRST, target 3.3 V reference and common ground as listed for P1; four-wire JTAG operation shall not be assumed from J-Link signal labels. | Board P1, debugger configuration | `I`, `T-HW` | Implemented for development/debug connection. |
+| `HSI-DBG-002` | Safety-relevant operation shall not depend on an attached debugger, and production debug access shall follow the item safety and security concept. | System integration | `I`, `T-HW` | Partial; standalone execution works, but the production debug-access policy is `TBD`. |
+
+### Board Resources And Pin Ownership
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-PIN-001` | Configured MCU pins and externally connected signals shall match the assignments in [Current External Assignments](#current-external-assignments), [Enclosure 48-Pin Molex Connector](#enclosure-48-pin-molex-connector) and [Board Connector Pinout](#board-connector-pinout). | MCU GPIO, board/system wiring | `I`, `T-HW` | Partial; software assignments are implemented, while production wiring continuity evidence is external. |
+| `HSI-PIN-002` | FMC-connected SDRAM pins shall not be reassigned as application GPIO while the fitted W9825G6KH-6I is present, unless the electrical effect is analyzed and approved. | Pin multiplexing, board SDRAM | `I`, `A` | Implemented as a prohibition; FMC is currently unconfigured. |
+| `HSI-PIN-003` | PC8, PC9, PC10, PC11, PC12 and PD2 shall remain available to the fitted microSD interface. PC9 shall not output MCO2 while an SD transaction is active. | Pin multiplexing, SDMMC1, RCC | `I`, `T-HW` | Implemented as a prohibition; SDMMC1 and MCO2 are currently unconfigured. |
+| `HSI-PIN-004` | PA11 and PA12 shall remain unconfigured until USB OTG FS, its electrical interface and a valid 48 MHz kernel clock are specified and verified. | GPIOA, RCC, USB OTG FS | `I`, `T-HW` | Implemented as a prohibition. |
+| `HSI-PIN-005` | LCD1 RGB, timing, touch and backlight pins shall remain unconfigured until ownership, timing, electrical and startup requirements for the attached panel are specified and verified. | LTDC, GPIO, touch interface | `I`, `T-HW` | Implemented as a prohibition. |
+| `HSI-PIN-006` | PC14/PC15, LSE, RTC, backup domain and PH7 user LED shall remain unconfigured until their use and fault behavior are added to this HSI. | RCC, RTC, GPIOH | `I` | Implemented as a prohibition. |
+| `HSI-PIN-007` | Pins without an allocated software function shall remain in their documented reset state unless an approved pin-safety analysis specifies a deterministic alternative. | GPIO | `I`, `A`, `T-HW` | Implemented by absence of writes; pin-level safety analysis is open. |
+| `HSI-PIN-008` | Shared or multiply connected board pins shall have one declared owner at a time, and software shall prevent conflicting peripheral functions from being enabled concurrently. | MCU software architecture | `I`, `T-SW` | Partial; current configuration has no active conflict, but no generic ownership enforcement exists. |
+| `HSI-PIN-009` | Enclosure connector cavities M1 and M2 shall be assigned to the nominal 12 V supply, and cavities M3 and M4 shall be assigned to GND. The four power cavities shall not be assigned a signal function. | Enclosure connector and harness | `I`, `T-HW` | Assumption; assignment is based on the current physical integration and requires continuity and polarity verification. |
+| `HSI-PIN-010` | An enclosure-connector cavity marked `TBD` in this HSI shall remain electrically unassigned until its function, direction, electrical limits, internal destination and verification are approved. | System integration | `I`, `T-HW` | Implemented as an interface prohibition; 44 cavities are currently unassigned. |
+| `HSI-PIN-011` | Before a safety release, the exact Molex part number, keying orientation, mating-face reference view and cavity-label sequence shall be recorded and verified against the physical enclosure connector. | System integration and configuration management | `I`, `T-HW` | Open; the 48-cavity count implies that one letter between A and M is omitted, provisionally documented as column I. |
+
+### Verification And Safety Release
+
+| ID | Requirement | Allocated element | Verification | Current status and evidence |
+| --- | --- | --- | --- | --- |
+| `HSI-VER-001` | A release build shall fail when Flash, ITCM, DTCM, AXI SRAM or reserved-stack bounds in `memory.x` are exceeded. | Linker/build system | `T-SW` | Implemented for ITCM, DTCM, AXI SRAM and main-stack relations; Flash overflow is enforced by linker region size. |
+| `HSI-VER-002` | Each safety release shall archive a linker map demonstrating the address and size of the vector table, `.itcm_text`, DTCM objects, each task stack, main stack, `.data` and `.bss`. | Build/configuration management | `I` | Open; linker placement is inspectable, but no release evidence archive is defined. |
+| `HSI-VER-003` | Target verification shall demonstrate 480 MHz CPU timing and the derived bus clocks using an independent measurement or a traceable timing test. | Verification | `A`, `T-HW` | Partial; a 32 MHz MCO2 test on PC9 previously confirmed the derived clock, but the test code and formal record are not retained. |
+| `HSI-VER-004` | Target verification shall demonstrate execution inside and outside ITCM, valid DTCM data/stack use, vector-table relocation and correct interrupt dispatch after relocation. | Verification | `T-HW` | Partial; development smoke tests were performed, but a controlled verification report is absent. |
+| `HSI-VER-005` | Target verification shall exercise nominal, early, late, missing, duplicate, out-of-sequence and internally corrupted PFM/watchdog cases and record the resulting diagnostic and reset timing. | Verification | `T-FI`, `T-HW` | Open; implementation exists, but complete recorded fault-injection evidence is absent. |
+| `HSI-VER-006` | Target verification shall measure baud rate and validate transmit, receive and error behavior for all configured UARTs at the connector/device boundary. | Verification | `T-HW`, `T-FI` | Partial; nominal communication has been manually observed, but controlled error/tolerance records are absent. |
+| `HSI-VER-007` | Before safety release, every HSI requirement shall have an allocated ASIL, parent safety-requirement trace, responsible owner, verification result and controlled evidence reference, or an approved rationale for non-applicability. | Safety/configuration management | `I` | Open; this draft intentionally exposes the missing allocations and evidence. |
+| `HSI-VER-008` | Tool confidence, compiler/linker assumptions and verification-tool suitability shall be assessed according to the project safety plan before their outputs are used as sole safety evidence. | Safety management | `I`, `A` | Open; no tool-confidence assessment is present in this repository. |
+
 ## Configuration Summary
 
 | Subsystem | Current software state | Principal source |
@@ -27,6 +199,7 @@ The following terms are used throughout the document:
 | ITCM/DTCM | Enabled during reset; selected code/data relocated before `main` | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`memory.x`](../../memory.x) |
 | Vector table | Copied from Flash to DTCM and `VTOR` redirected to the RAM copy | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
 | SWD | J-Link target connection on PA13, PA14 and NRST | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
+| Enclosure connector | 48-pin Molex matrix; M1/M2 = nominal 12 V, M3/M4 = GND, all other cavities TBD | Physical integration record |
 | USART1 | Debug/PC UART, 115200 8N1, PA9/PA10 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
 | USART2 | VD18MT/VT8MT display UART, 9600 8N1, PA3/PD5 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
 | USART3 | JDB BMS UART, 9600 8N1, PB10/PB11 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
@@ -214,6 +387,41 @@ module; its electrical behavior is outside the firmware configuration.
 
 The J-Link connector names TMS and TCLK carry SWDIO and SWCLK respectively
 because the debug transport is configured for SWD, not four-wire JTAG.
+
+## Enclosure 48-Pin Molex Connector
+
+This is the external connector fitted to the enclosure around the board. The
+view below is the mating-face view looking into the male connector, using the
+cavity labels molded into the connector. A wire-side view is mirrored and shall
+not be inferred from this table.
+
+The connector is described as having 48 cavities in four numbered rows. Four
+rows and labels A through M would yield 52 positions if every letter were used.
+This draft therefore interprets the cavity sequence as `A` through `H`, followed
+by `J` through `M`, with `I` omitted. The exact part number and molded labels
+shall be checked before this overview is used to manufacture or test a harness.
+
+`TBD` means that no electrical function has yet been assigned to the cavity.
+
+| Row | A | B | C | D | E | F | G | H | J | K | L | M |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | 12 V supply |
+| 2 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | 12 V supply |
+| 3 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | GND |
+| 4 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | GND |
+
+| Cavity | Assigned function | Direction at enclosure | Internal destination | Verification state |
+| --- | --- | --- | --- | --- |
+| M1 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
+| M2 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
+| M3 | GND / supply return | Power return | TBD | Assignment recorded; continuity test pending |
+| M4 | GND / supply return | Power return | TBD | Assignment recorded; continuity test pending |
+
+The permitted supply range, current allocation between M1/M2 and M3/M4,
+contact derating, wire gauge, fusing, reverse-polarity protection and internal
+power destination remain `TBD` system-level interface properties. The nominal
+12 V assignment shall not be interpreted as permission to connect 12 V directly
+to an STM32H743II supply or GPIO pin.
 
 ## Board Connector Pinout
 
@@ -409,6 +617,14 @@ current software:
 
 ## Sources And Traceability
 
+The HSI work-product structure and requirement-management fields are aligned to
+the currently published second edition of the following standards. Access to
+the full controlled standards is required for a safety release:
+
+- [ISO 26262-4:2018, product development at the system level](https://www.iso.org/standard/68386.html)
+- [ISO 26262-6:2018, product development at the software level](https://www.iso.org/standard/68388.html)
+- [ISO 26262-8:2018, supporting processes](https://www.iso.org/standard/68390.html)
+
 Firmware configuration is derived directly from this repository, especially:
 
 - [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs)
@@ -417,6 +633,10 @@ Firmware configuration is derived directly from this repository, especially:
 - [`src/os`](../../src/os)
 - [`memory.x`](../../memory.x)
 - [`.cargo/config.toml`](../../.cargo/config.toml)
+
+The enclosure connector assignments are based on the integrator's physical
+wiring record: M1/M2 are nominal 12 V and M3/M4 are GND. No controlled Molex
+part drawing, harness drawing or internal power schematic has yet been supplied.
 
 Board-level pin and fixed-net information was cross-checked against:
 
