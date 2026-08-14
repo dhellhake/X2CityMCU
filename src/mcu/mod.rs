@@ -19,6 +19,7 @@ use crate::{drv::{
         systick::Systick,
         usart::{
             Usart,
+            USART_ERROR_FLAGS,
             USART1_ADDR,
             USART2_ADDR,
             USART3_ADDR,
@@ -60,6 +61,19 @@ static WWDG: Shared<Wwdg> = Shared::new(Wwdg::new());
 static PFM: Shared<ProgramFlowMonitor> = Shared::new(ProgramFlowMonitor::new());
 
 pub struct McuManager {
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct UartByteReadResult {
+    pub Byte: Option<u8>,
+    pub Errors: USART_ERROR_FLAGS,
+}
+
+impl UartByteReadResult {
+    pub const fn HasError(self) -> bool {
+        self.Errors.Any()
+    }
 }
 
 impl McuManager {
@@ -211,6 +225,23 @@ impl McuManager {
                     None
                 }
             })
+        })
+    }
+
+    pub fn BmsCommunication_TryReadByteWithErrors() -> UartByteReadResult
+    {
+        USART3.with(|usart3| {
+            let result = usart3.TryReadWordWithErrors();
+            UartByteReadResult {
+                Byte: result.word.and_then(|word| {
+                    if word <= u8::MAX as u16 {
+                        Some(word as u8)
+                    } else {
+                        None
+                    }
+                }),
+                Errors: result.errors,
+            }
         })
     }
 
