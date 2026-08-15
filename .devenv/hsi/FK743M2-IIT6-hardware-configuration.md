@@ -158,6 +158,7 @@ Verification method codes are:
 | `HSI-UAR-010` | The 5 V VT8MT UART side shall connect to PA3/PD5 only through a level interface demonstrated to provide valid 3.3 V MCU levels across voltage, load, baud rate and temperature. | External level shifter, system integration | `A`, `T-HW` | Assumption; the installed bidirectional level-shifter behavior requires electrical validation. |
 | `HSI-DBG-001` | SWD shall use PA13/SWDIO, PA14/SWCLK, NRST, target 3.3 V reference and common ground as listed for P1; four-wire JTAG operation shall not be assumed from J-Link signal labels. | Board P1, debugger configuration | `I`, `T-HW` | Implemented for development/debug connection. |
 | `HSI-DBG-002` | Safety-relevant operation shall not depend on an attached debugger, and production debug access shall follow the item safety and security concept. | System integration | `I`, `T-HW` | Partial; standalone execution works, but the production debug-access policy is `TBD`. |
+| `HSI-DBG-003` | The enclosure debug interface shall route J4 to PA13/SWDIO, K1 to PA14/SWCLK, K2 to the target 3.3 V reference, K3 to GND and K4 to NRST. J-Link TMS shall connect to J4/DIO, TCLK to K1/CLK, VCC/VTref to K2/3V3, GND to K3 and RESET to K4/RST. | Enclosure connector, internal harness and board P1 | `I`, `T-HW` | Assumption; the assignment is recorded and requires end-to-end continuity and isolation testing. |
 
 ### Board Resources And Pin Ownership
 
@@ -172,7 +173,7 @@ Verification method codes are:
 | `HSI-PIN-007` | Pins without an allocated software function shall remain in their documented reset state unless an approved pin-safety analysis specifies a deterministic alternative. | GPIO | `I`, `A`, `T-HW` | Implemented by absence of writes; pin-level safety analysis is open. |
 | `HSI-PIN-008` | Shared or multiply connected board pins shall have one declared owner at a time, and software shall prevent conflicting peripheral functions from being enabled concurrently. | MCU software architecture | `I`, `T-SW` | Partial; current configuration has no active conflict, but no generic ownership enforcement exists. |
 | `HSI-PIN-009` | Enclosure connector cavities M1 and M2 shall be assigned to the nominal 12 V supply, and cavities M3 and M4 shall be assigned to GND. The four power cavities shall not be assigned a signal function. | Enclosure connector and harness | `I`, `T-HW` | Assumption; assignment is based on the current physical integration and requires continuity and polarity verification. |
-| `HSI-PIN-010` | An enclosure-connector cavity marked `TBD` in this HSI shall remain electrically unassigned until its function, direction, electrical limits, internal destination and verification are approved. | System integration | `I`, `T-HW` | Implemented as an interface prohibition; 44 cavities are currently unassigned. |
+| `HSI-PIN-010` | An enclosure-connector cavity marked `TBD` in this HSI shall remain electrically unassigned until its function, direction, electrical limits, internal destination and verification are approved. | System integration | `I`, `T-HW` | Implemented as an interface prohibition; 39 cavities are currently unassigned. |
 | `HSI-PIN-011` | Before a safety release, the exact Molex part number, keying orientation, mating-face reference view and cavity-label sequence shall be recorded and verified against the physical enclosure connector. | System integration and configuration management | `I`, `T-HW` | Open; the 48-cavity count implies that one letter between A and M is omitted, provisionally documented as column I. |
 
 ### Verification And Safety Release
@@ -198,8 +199,8 @@ Verification method codes are:
 | FPU | CP10 and CP11 full access enabled before Rust code executes | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
 | ITCM/DTCM | Enabled during reset; selected code/data relocated before `main` | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`memory.x`](../../memory.x) |
 | Vector table | Copied from Flash to DTCM and `VTOR` redirected to the RAM copy | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
-| SWD | J-Link target connection on PA13, PA14 and NRST | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
-| Enclosure connector | 48-pin Molex matrix; M1/M2 = nominal 12 V, M3/M4 = GND, all other cavities TBD | Physical integration record |
+| SWD | J-Link target connection on PA13, PA14 and NRST through enclosure cavities J4, K1 and K4; K2/K3 provide reference and ground | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
+| Enclosure connector | 48-pin Molex matrix; M1/M2 = nominal 12 V, M3/M4 = GND, J4/K1/K2/K3/K4 = debugger interface, all other cavities TBD | Physical integration record |
 | USART1 | Debug/PC UART, 115200 8N1, PA9/PA10 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
 | USART2 | VD18MT/VT8MT display UART, 9600 8N1, PA3/PD5 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
 | USART3 | JDB BMS UART, 9600 8N1, PB10/PB11 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
@@ -369,11 +370,11 @@ module; its electrical behavior is outside the firmware configuration.
 
 | External device | Board signal | MCU pin | Direction relative to MCU | Status |
 | --- | --- | --- | --- | --- |
-| J-Link EDU Mini V2 | DIO / J-Link TMS | PA13/SWDIO | Bidirectional | Active debug connection |
-| J-Link EDU Mini V2 | CLK / J-Link TCLK | PA14/SWCLK | Input | Active debug connection |
-| J-Link EDU Mini V2 | RST / J-Link RESET | NRST | Input to reset circuit | Active debug connection |
-| J-Link EDU Mini V2 | 3.3V / J-Link VCC | 3.3V target reference | Power sense | Active debug connection |
-| J-Link EDU Mini V2 | GND | GND | Reference | Active debug connection |
+| J-Link EDU Mini V2 via enclosure | J4 DIO / J-Link TMS | PA13/SWDIO | Bidirectional | Active enclosure debug route |
+| J-Link EDU Mini V2 via enclosure | K1 CLK / J-Link TCLK | PA14/SWCLK | Input | Active enclosure debug route |
+| J-Link EDU Mini V2 via enclosure | K4 RST / J-Link RESET | NRST | Input to reset circuit | Active enclosure debug route |
+| J-Link EDU Mini V2 via enclosure | K2 3V3 / J-Link VCC | 3.3V target reference | Power sense | Active enclosure debug route |
+| J-Link EDU Mini V2 via enclosure | K3 GND | GND | Reference | Active enclosure debug route |
 | CH343 USB/UART | TX | PA10/USART1_RX | Input | Active |
 | CH343 USB/UART | RX | PA9/USART1_TX | Output | Active |
 | CH343 USB/UART | GND | GND | Reference | Active |
@@ -405,13 +406,18 @@ shall be checked before this overview is used to manufacture or test a harness.
 
 | Row | A | B | C | D | E | F | G | H | J | K | L | M |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | 12 V supply |
-| 2 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | 12 V supply |
-| 3 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | GND |
-| 4 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | GND |
+| 1 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | SWD CLK | TBD | 12 V supply |
+| 2 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | 3.3 V target reference | TBD | 12 V supply |
+| 3 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | GND | TBD | GND |
+| 4 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | SWD DIO | RST | TBD | GND |
 
 | Cavity | Assigned function | Direction at enclosure | Internal destination | Verification state |
 | --- | --- | --- | --- | --- |
+| J4 | SWD DIO / J-Link TMS | Bidirectional | PA13/SWDIO through board P1 DIO | Assignment recorded; end-to-end continuity test pending |
+| K1 | SWD CLK / J-Link TCLK | Input to enclosure | PA14/SWCLK through board P1 CLK | Assignment recorded; end-to-end continuity test pending |
+| K2 | 3.3 V target reference / J-Link VCC | Output reference from enclosure | Board 3.3 V rail through P1 3V3 | Assignment recorded; voltage and isolation test pending |
+| K3 | Debug ground | Reference | Board GND through P1 GND | Assignment recorded; end-to-end continuity test pending |
+| K4 | Debug reset / J-Link RESET | Input to enclosure | NRST through board P1 RST | Assignment recorded; end-to-end continuity test pending |
 | M1 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
 | M2 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
 | M3 | GND / supply return | Power return | TBD | Assignment recorded; continuity test pending |
@@ -422,6 +428,10 @@ contact derating, wire gauge, fusing, reverse-polarity protection and internal
 power destination remain `TBD` system-level interface properties. The nominal
 12 V assignment shall not be interpreted as permission to connect 12 V directly
 to an STM32H743II supply or GPIO pin.
+
+K2 is a target-voltage reference for the debugger. It shall not be used to power
+the enclosure from the debugger unless a separately reviewed hardware design
+explicitly permits that operating mode.
 
 ## Board Connector Pinout
 
@@ -635,8 +645,10 @@ Firmware configuration is derived directly from this repository, especially:
 - [`.cargo/config.toml`](../../.cargo/config.toml)
 
 The enclosure connector assignments are based on the integrator's physical
-wiring record: M1/M2 are nominal 12 V and M3/M4 are GND. No controlled Molex
-part drawing, harness drawing or internal power schematic has yet been supplied.
+wiring record: M1/M2 are nominal 12 V; M3/M4 are GND; J4 is SWD DIO; and
+K1/K2/K3/K4 are SWD CLK, 3.3 V target reference, GND and RST respectively. No
+controlled Molex part drawing, harness drawing or internal power schematic has
+yet been supplied.
 
 Board-level pin and fixed-net information was cross-checked against:
 
