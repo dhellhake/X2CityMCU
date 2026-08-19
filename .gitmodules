@@ -1,6 +1,0 @@
-[submodule "src/drv"]
-	path = src/drv
-	url = https://github.com/dhellhake/STM32H743IIT6.git
-[submodule "src/os"]
-	path = src/os
-	url = https://github.com/dhellhake/CortexOs.rs.git
