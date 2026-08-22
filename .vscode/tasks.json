@@ -8,6 +8,11 @@
             "args": [
                 "build"
             ],
+            "options": {
+                "env": {
+                    "CARGO_TARGET_DIR": "${workspaceFolder}/target"
+                }
+            },
             "problemMatcher": [
                 "$rustc"
             ],
@@ -56,8 +61,94 @@
             "args": [
                 "clean"
             ],
+            "options": {
+                "env": {
+                    "CARGO_TARGET_DIR": "${workspaceFolder}/target"
+                }
+            },
             "problemMatcher": [],
             "group": "build"
+        },
+        {
+            "label": "Build QSPI image (debug)",
+            "type": "process",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.devenv/build-qspi-image.ps1",
+                "-Configuration",
+                "Debug"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "label": "Build QSPI image (release)",
+            "type": "process",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.devenv/build-qspi-image.ps1",
+                "-Configuration",
+                "Release"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "label": "Program QSPI image (debug)",
+            "type": "process",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.devenv/program-qspi.ps1",
+                "-ElfPath",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct-qspi.elf",
+                "-BinaryPath",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct-qspi.bin",
+                "-ProbeSerial",
+                "${config:x2city.atmelIceSerial}",
+                "-AdapterSpeedKHz",
+                "${config:x2city.atmelIceSpeedKHz}",
+                "-NoReset"
+            ],
+            "dependsOn": "Build QSPI image (debug)",
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Program QSPI image (release)",
+            "type": "process",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.devenv/program-qspi.ps1",
+                "-ElfPath",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/release/ExhValveAct-qspi.elf",
+                "-BinaryPath",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/release/ExhValveAct-qspi.bin",
+                "-ProbeSerial",
+                "${config:x2city.atmelIceSerial}",
+                "-AdapterSpeedKHz",
+                "${config:x2city.atmelIceSpeedKHz}"
+            ],
+            "dependsOn": "Build QSPI image (release)",
+            "dependsOrder": "sequence",
+            "problemMatcher": []
         }
     ]
 }

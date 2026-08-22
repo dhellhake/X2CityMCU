@@ -5,6 +5,8 @@ use crate::{
     os::{task::Task, Scheduler},
 };
 
+#[cfg(feature = "qspi-boot")]
+mod boot;
 mod clocktree;
 pub mod deployment;
 

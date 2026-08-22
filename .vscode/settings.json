@@ -1,4 +1,6 @@
 {
     "rust-analyzer.cargo.allTargets": false,
-    "rust-analyzer.check.targets": "thumbv7em-none-eabihf"
+    "rust-analyzer.check.targets": "thumbv7em-none-eabihf",
+    "x2city.atmelIceSerial": "J41800090518",
+    "x2city.atmelIceSpeedKHz": 100
 }

@@ -14,15 +14,16 @@ PROVIDE(SysTick_Isr    = DefaultHandler);
 PROVIDE(DefaultHandler = DefaultHandler_);
 
 /*
- * i.MX RT1061 RAM execution layout.
+ * i.MX RT1061 FlexSPI1 NOR boot layout.
  *
- * The debugger writes one contiguous image to the dedicated OCRAM block. The
- * reset trampoline runs there while it configures FlexRAM, then copies the
- * complete vector/code image to ITCM and initialized data to DTCM.
+ * The Boot ROM reads the FlexSPI Configuration Block at 0x60000000 and
+ * the Image Vector Table at 0x60001000. It then enters the bootstrap Cortex
+ * vector at 0x60002000. Reset executes in place only long enough to configure
+ * FlexRAM and copy the complete application into ITCM/DTCM.
  *
- * GPR17 value 0xAAAAFFFF assigns banks 0-7 to ITCM and banks 8-15 to
- * DTCM, giving 256 KiB of each and no configurable OCRAM. The 512 KiB
- * OCRAM_BOOT block is dedicated SRAM and is not affected by FlexRAM.
+ * The default flash geometry is the 4 MiB W25Q32JV fitted to the documented
+ * FET1061-S module. A module carrying the optional 16 MiB device needs both
+ * this memory length and the Rust Boot Data/FCB geometry reviewed together.
  */
 __flexram_bank_config = 0xAAAAFFFF;
 
@@ -31,6 +32,7 @@ BOOT_STACK_SIZE = DEFINED(BOOT_STACK_SIZE) ? BOOT_STACK_SIZE : 0x0400;
 
 MEMORY
 {
+    QSPI_FLASH (rx)  : ORIGIN = 0x60000000, LENGTH = 0x00400000
     ITCM       (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
     DTCM       (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00040000
     OCRAM_BOOT (rwx) : ORIGIN = 0x20200000, LENGTH = 0x00080000
@@ -38,12 +40,39 @@ MEMORY
 
 SECTIONS
 {
-    /*
-     * The first two words are consumed by the debugger before Reset runs.
-     * Reset itself and all literals used before relocation must remain here.
-     */
-    .boot ORIGIN(OCRAM_BOOT) :
+    /* Boot ROM FlexSPI Configuration Block; the structure itself is 512 B. */
+    .flash_config ORIGIN(QSPI_FLASH) :
     {
+        FILL(0xFFFFFFFF);
+        __flash_image_start = .;
+        __flash_config_start = .;
+        KEEP(*(.boot_header.flash_config));
+        __flash_config_payload_end = .;
+        . = ORIGIN(QSPI_FLASH) + 0x1000;
+        __flash_config_end = .;
+    } > QSPI_FLASH
+
+    /* Boot ROM IVT (32 B), immediately followed by Boot Data (16 B). */
+    .boot_rom_header (ORIGIN(QSPI_FLASH) + 0x1000) :
+    {
+        FILL(0xFFFFFFFF);
+        __boot_rom_ivt_start = .;
+        KEEP(*(.boot_header.ivt));
+        __boot_rom_ivt_end = .;
+        __boot_data_start = .;
+        KEEP(*(.boot_header.boot_data));
+        __boot_data_end = .;
+        . = ORIGIN(QSPI_FLASH) + 0x2000;
+        __boot_rom_header_end = .;
+    } > QSPI_FLASH
+
+    /*
+     * The ROM IVT enters this Cortex vector table. Keeping a conventional
+     * vector handoff also lets a debugger launch this bootstrap directly.
+     */
+    .boot (ORIGIN(QSPI_FLASH) + 0x2000) :
+    {
+        FILL(0xFFFFFFFF);
         . = ALIGN(1024);
         __boot_vector_table = .;
         LONG(__boot_stack_top);
@@ -63,7 +92,6 @@ SECTIONS
         LONG(BootFault);
         LONG(BootFault);
 
-        /* Keep VTOR valid even if a fault occurs during the trampoline. */
         . = __boot_vector_table + 0x400;
         __boot_text_start = .;
         KEEP(*(.boot.reset));
@@ -72,23 +100,21 @@ SECTIONS
         KEEP(*(.boot.fault.*));
         . = ALIGN(4);
         __boot_text_end = .;
-    } > OCRAM_BOOT
+    } > QSPI_FLASH
 
     __itcm_load_start = ALIGN(LOADADDR(.boot) + SIZEOF(.boot), 1024);
     __itcm_load_source = __itcm_load_start;
 
-    /* One contiguous image: vectors, all executable code, and all constants. */
+    /* Runtime vectors, executable code, and constants are copied to ITCM. */
     .itcm_image ORIGIN(ITCM) : AT(__itcm_load_start)
     {
         __itcm_start = .;
         __vector_table = .;
 
-        /* Initial application stack pointer. */
         LONG(__stack_top);
         KEEP(*(.vectors.exception_table));
         KEEP(*(.vectors.interrupt_table));
 
-        /* 174 vectors need 696 bytes; reserve 1 KiB for VTOR alignment. */
         . = __vector_table + 0x400;
         __text_start = .;
 
@@ -102,7 +128,6 @@ SECTIONS
         __text_end = .;
     } > ITCM
 
-    /* ARM unwind indexes have a distinct ELF section type. */
     .ARM.exidx : AT(__itcm_load_start + (ADDR(.ARM.exidx) - __itcm_start))
     {
         . = ALIGN(4);
@@ -127,6 +152,8 @@ SECTIONS
     } > DTCM
 
     __data_load_end = __data_load_start + SIZEOF(.data);
+    __flash_image_end = __data_load_end;
+    __flash_image_size = __flash_image_end - __flash_image_start;
 
     .bss (NOLOAD) :
     {
@@ -161,7 +188,7 @@ SECTIONS
         . = ALIGN(8);
     } > DTCM
 
-    /* A debugger-safe bootstrap stack in fixed OCRAM. Reset itself is stackless. */
+    /* Bootstrap exceptions always use fixed OCRAM, never configurable FlexRAM. */
     __boot_stack_top = ORIGIN(OCRAM_BOOT) + LENGTH(OCRAM_BOOT);
     __boot_stack_bottom = __boot_stack_top - BOOT_STACK_SIZE;
 
@@ -173,25 +200,34 @@ SECTIONS
         . = ALIGN(8);
     } > OCRAM_BOOT
 
-    __ram_image_start = ORIGIN(OCRAM_BOOT);
-    __ram_image_end = __data_load_end;
-
     /DISCARD/ :
     {
         *(.comment);
         *(.ARM.attributes);
     }
 
-    ASSERT(__boot_vector_table == ORIGIN(OCRAM_BOOT),
-           "bootstrap vector table must start at fixed OCRAM base")
+    ASSERT(__flash_config_start == ORIGIN(QSPI_FLASH),
+           "FlexSPI configuration must start at 0x60000000")
+    ASSERT((__flash_config_payload_end - __flash_config_start) == 0x200,
+           "FlexSPI NOR Configuration Block must be exactly 512 bytes")
+    ASSERT(__boot_rom_ivt_start == ORIGIN(QSPI_FLASH) + 0x1000,
+           "Boot ROM IVT must start at flash offset 0x1000")
+    ASSERT((__boot_rom_ivt_end - __boot_rom_ivt_start) == 0x20,
+           "Boot ROM IVT must be exactly 32 bytes")
+    ASSERT((__boot_data_end - __boot_data_start) == 0x10,
+           "Boot Data must be exactly 16 bytes")
+    ASSERT(__boot_vector_table == ORIGIN(QSPI_FLASH) + 0x2000,
+           "bootstrap vector table must start at flash offset 0x2000")
+    ASSERT(__boot_text_start == ORIGIN(QSPI_FLASH) + 0x2400,
+           "bootstrap code must start at flash offset 0x2400")
     ASSERT(__boot_text_end <= __itcm_load_start,
            "bootstrap overlaps the staged ITCM image")
+    ASSERT(__flash_image_end <= ORIGIN(QSPI_FLASH) + LENGTH(QSPI_FLASH),
+           "boot image exceeds the configured 4 MiB QSPI NOR")
     ASSERT(__itcm_end <= ORIGIN(ITCM) + LENGTH(ITCM),
            "application code and vectors exceed 256 KiB ITCM")
     ASSERT(__dtcm_used_end <= __stack_bottom,
            "DTCM data overlaps the reserved stack")
-    ASSERT(__ram_image_end <= __boot_stack_bottom,
-           "debugger load image exceeds fixed OCRAM staging space")
     ASSERT((__stack_top & 7) == 0, "application stack must be 8-byte aligned")
     ASSERT((__boot_stack_top & 7) == 0, "bootstrap stack must be 8-byte aligned")
 }
