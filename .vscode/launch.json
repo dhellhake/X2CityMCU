@@ -4,17 +4,60 @@
         {
             "type": "cortex-debug",
             "request": "launch",
-            "name": "Debug STM32H743 (J-Link SWD)",
-            "servertype": "openocd",
-            "serverpath":"C:/Users/domin/AppData/Roaming/xPacks/openocd/xpack-openocd-0.12.0-6/bin/openocd.exe",
-            "cwd": "${workspaceRoot}",
-            "preLaunchTask": "Cargo Build",
-            "executable": "./target/thumbv7em-none-eabihf/debug/ExhValveAct",
-            "configFiles": [
-                "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.cfg"
+            "name": "Debug i.MX RT1061 from RAM (J-Link SWD)",
+            "servertype": "jlink",
+            "serverpath": "C:/Program Files/SEGGER/JLink/JLinkGDBServerCL.exe",
+            "gdbPath": "C:/Program Files (x86)/Arm/GNU Toolchain mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Validate RAM image",
+            "executable": "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct",
+            "loadFiles": [],
+            "device": "${input:rt1061Device}",
+            "interface": "swd",
+            "serverArgs": [
+                "-speed",
+                "100"
             ],
-            "svdFile": "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.svd",
-            "showDevDebugOutput": "raw"
+            "breakAfterReset": true,
+            "overrideLaunchCommands": [
+                "monitor reset",
+                "monitor halt",
+                "restore \"${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin\" binary 0x20200000",
+                "set {unsigned int}0xe000ed08 = 0x20200000",
+                "set $msp = *(unsigned int *)0x20200000",
+                "set $sp = *(unsigned int *)0x20200000",
+                "set $pc = *(unsigned int *)0x20200004"
+            ],
+            "overrideRestartCommands": [
+                "monitor reset",
+                "monitor halt",
+                "restore \"${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin\" binary 0x20200000",
+                "set {unsigned int}0xe000ed08 = 0x20200000",
+                "set $msp = *(unsigned int *)0x20200000",
+                "set $sp = *(unsigned int *)0x20200000",
+                "set $pc = *(unsigned int *)0x20200004"
+            ],
+            "overrideResetCommands": [
+                "monitor reset",
+                "monitor halt",
+                "restore \"${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin\" binary 0x20200000",
+                "set {unsigned int}0xe000ed08 = 0x20200000",
+                "set $msp = *(unsigned int *)0x20200000",
+                "set $sp = *(unsigned int *)0x20200000",
+                "set $pc = *(unsigned int *)0x20200004"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "rt1061Device",
+            "type": "pickString",
+            "description": "Select the silicon revision printed on the MIMXRT1061 package",
+            "options": [
+                "MIMXRT1061xxx5A",
+                "MIMXRT1061xxx5B"
+            ],
+            "default": "MIMXRT1061xxx5A"
         }
     ]
 }

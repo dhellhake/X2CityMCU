@@ -1,24 +1,16 @@
 #![no_main]
 #![no_std]
-#![allow(non_upper_case_globals)]
-#![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(unused_assignments)]
 
 use core::panic::PanicInfo;
 
-fn main() -> ! {
-    
+mod drv;
 
+#[unsafe(no_mangle)]
+pub extern "C" fn main() -> ! {
     loop {}
 }
 
 #[panic_handler]
-fn panic(_i: &PanicInfo) -> ! {
-    loop {}
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn HardFault() {
+fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }

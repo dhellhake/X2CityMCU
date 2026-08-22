@@ -5,7 +5,9 @@
             "label": "Cargo Build",
             "type": "process",
             "command": "cargo",
-            "args": ["build"],
+            "args": [
+                "build"
+            ],
             "problemMatcher": [
                 "$rustc"
             ],
@@ -15,12 +17,47 @@
             }
         },
         {
+            "label": "Create RAM image",
+            "type": "process",
+            "command": "arm-none-eabi-objcopy",
+            "args": [
+                "-O",
+                "binary",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin"
+            ],
+            "dependsOn": "Cargo Build",
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Validate RAM image",
+            "type": "process",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.devenv/verify-ram-image.ps1",
+                "-ElfPath",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct",
+                "-BinaryPath",
+                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin"
+            ],
+            "dependsOn": "Create RAM image",
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
             "label": "Cargo Clean",
             "type": "process",
             "command": "cargo",
-            "args": ["clean"],
+            "args": [
+                "clean"
+            ],
             "problemMatcher": [],
             "group": "build"
-        },
+        }
     ]
 }
