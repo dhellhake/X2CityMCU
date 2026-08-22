@@ -1,16 +1,80 @@
 #![no_main]
 #![no_std]
+#![allow(non_upper_case_globals)]
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(unused_assignments)]
 
-use core::panic::PanicInfo;
+use core::{arch::asm, panic::PanicInfo};
+
+use crate::{
+    mcu::{
+        deployment::{background, tsk_1_5ms},
+        McuManager, Os,
+    },
+    os::{
+        task::{TaskCycleTime, TaskRole},
+        task_return_trap,
+    },
+};
 
 mod drv;
+pub mod mcu;
+pub mod os;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn main() -> ! {
-    loop {}
+    // Reset keeps interrupts masked. Keep the scheduler quiescent until PSP
+    // and CONTROL have been installed by the final OS handoff below.
+    unsafe { asm!("cpsid i", options(nomem, nostack, preserves_flags)) };
+
+    /* Pre-Os Init */
+    McuManager::McuClockTree_Init();
+
+    /* OS Init */
+    let stack = Os.with(|os| {
+        os.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
+        os.SetTask(
+            1,
+            background,
+            TaskCycleTime::NonCyclic,
+            TaskRole::Background,
+        );
+        os.ActivateBackgroundTask()
+    });
+
+    /* Post-OS Init */
+
+    /* Program Flow Start */
+    McuManager::Scheduler_Start();
+
+    /* OS Start */
+    // This is the final, non-returning operation in main: after selecting PSP,
+    // the compiler must never try to access main's MSP-based stack frame again.
+    unsafe {
+        asm!(
+            "msr psp, r0",
+            "movs r0, #2",
+            "msr control, r0",
+            "isb",
+            "movs r0, #0",
+            "movs r1, #0",
+            "ldr r2, ={background}",
+            "cpsie i",
+            "blx r2",
+            "ldr r2, ={task_return_trap}",
+            "bx r2",
+            in("r0") stack,
+            background = sym background,
+            task_return_trap = sym task_return_trap,
+            options(noreturn),
+        )
+    }
 }
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    loop {}
+    loop {
+        core::hint::spin_loop();
+    }
 }

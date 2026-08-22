@@ -1,3 +1,6 @@
 [submodule "src/drv"]
 	path = src/drv
 	url = https://github.com/dhellhake/iMX-RT1061.git
+[submodule "src/os"]
+	path = src/os
+	url = https://github.com/dhellhake/CortexOs.rs.git
