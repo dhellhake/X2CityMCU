@@ -1,6 +1,4 @@
 {
     "rust-analyzer.cargo.allTargets": false,
-    "rust-analyzer.check.targets": "thumbv7em-none-eabihf",
-    "CodeGPT.apiKey": "OpenAI",
-    "cortex-debug.liveWatchRefreshRate": 100
+    "rust-analyzer.check.targets": "thumbv7em-none-eabihf"
 }

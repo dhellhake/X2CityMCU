@@ -1,3 +1,5 @@
+ENTRY(Reset);
+
 EXTERN(DefaultHandler);
 
 PROVIDE(NonMaskableInt = DefaultHandler);
@@ -11,159 +13,183 @@ PROVIDE(PendSV         = DefaultHandler);
 PROVIDE(SysTick_Isr    = DefaultHandler);
 PROVIDE(DefaultHandler = DefaultHandler_);
 
+/*
+ * i.MX RT1061 RAM execution layout.
+ *
+ * The debugger writes one contiguous image to the dedicated OCRAM block. The
+ * reset trampoline runs there while it configures FlexRAM, then copies the
+ * complete vector/code image to ITCM and initialized data to DTCM.
+ *
+ * GPR17 value 0xAAAAFFFF assigns banks 0-7 to ITCM and banks 8-15 to
+ * DTCM, giving 256 KiB of each and no configurable OCRAM. The 512 KiB
+ * OCRAM_BOOT block is dedicated SRAM and is not affected by FlexRAM.
+ */
+__flexram_bank_config = 0xAAAAFFFF;
+
+STACK_SIZE      = DEFINED(STACK_SIZE)      ? STACK_SIZE      : 0x1000;
+BOOT_STACK_SIZE = DEFINED(BOOT_STACK_SIZE) ? BOOT_STACK_SIZE : 0x0400;
+
 MEMORY
 {
-    /* STM32H743IIT6 internal memory grouped by domain/features. */
-    itcm        (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00010000
-    rom         (rx)  : ORIGIN = 0x08000000, LENGTH = 0x00200000
-    dtcm        (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00020000
-    axi_sram    (rwx) : ORIGIN = 0x24000000, LENGTH = 0x00080000
-    d2_sram     (rwx) : ORIGIN = 0x30000000, LENGTH = 0x00048000
-    d3_sram     (rwx) : ORIGIN = 0x38000000, LENGTH = 0x00010000
-    backup_sram (rwx) : ORIGIN = 0x38800000, LENGTH = 0x00001000
+    ITCM       (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
+    DTCM       (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00040000
+    OCRAM_BOOT (rwx) : ORIGIN = 0x20200000, LENGTH = 0x00080000
 }
-
-STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE :
-             DEFINED(__stack_size__) ? __stack_size__ : 0x1000;
 
 SECTIONS
 {
-    PROVIDE(_axi_sram_start    = ORIGIN(axi_sram));
-    PROVIDE(_axi_sram_end      = ORIGIN(axi_sram) + LENGTH(axi_sram));
-    PROVIDE(_axisram_start     = _axi_sram_start);
-    PROVIDE(_axisram_end       = _axi_sram_end);
-    PROVIDE(_d2_sram_start     = ORIGIN(d2_sram));
-    PROVIDE(_d2_sram_end       = ORIGIN(d2_sram) + LENGTH(d2_sram));
-    PROVIDE(_d3_sram_start     = ORIGIN(d3_sram));
-    PROVIDE(_d3_sram_end       = ORIGIN(d3_sram) + LENGTH(d3_sram));
-    PROVIDE(_backup_sram_start = ORIGIN(backup_sram));
-    PROVIDE(_backup_sram_end   = ORIGIN(backup_sram) + LENGTH(backup_sram));
-    PROVIDE(_dtcm_start        = ORIGIN(dtcm));
-    PROVIDE(_dtcm_end          = ORIGIN(dtcm) + LENGTH(dtcm));
-    PROVIDE(_ram_end           = _axi_sram_end);
-    PROVIDE(_stack_start       = _dtcm_end);
-
-    .vectors ORIGIN(rom) :
+    /*
+     * The first two words are consumed by the debugger before Reset runs.
+     * Reset itself and all literals used before relocation must remain here.
+     */
+    .boot ORIGIN(OCRAM_BOOT) :
     {
         . = ALIGN(1024);
-        __vector_table_flash_start = .;
+        __boot_vector_table = .;
+        LONG(__boot_stack_top);
+        LONG(Reset);
+        LONG(BootFault);
+        LONG(BootFault);
+        LONG(BootFault);
+        LONG(BootFault);
+        LONG(BootFault);
+        LONG(0);
+        LONG(0);
+        LONG(0);
+        LONG(0);
+        LONG(BootFault);
+        LONG(BootFault);
+        LONG(0);
+        LONG(BootFault);
+        LONG(BootFault);
 
-        /* Initial stack pointer */
-        LONG(_stack_start);
+        /* Keep VTOR valid even if a fault occurs during the trampoline. */
+        . = __boot_vector_table + 0x400;
+        __boot_text_start = .;
+        KEEP(*(.boot.reset));
+        KEEP(*(.boot.reset.*));
+        KEEP(*(.boot.fault));
+        KEEP(*(.boot.fault.*));
+        . = ALIGN(4);
+        __boot_text_end = .;
+    } > OCRAM_BOOT
 
+    __itcm_load_start = ALIGN(LOADADDR(.boot) + SIZEOF(.boot), 1024);
+
+    /* One contiguous image: vectors, all executable code, and all constants. */
+    .itcm_image ORIGIN(ITCM) : AT(__itcm_load_start)
+    {
+        __itcm_start = .;
+        __vector_table = .;
+
+        /* Initial application stack pointer. */
+        LONG(__stack_top);
         KEEP(*(.vectors.exception_table));
         KEEP(*(.vectors.interrupt_table));
 
-        __vector_table_flash_end = .;
-    } > rom
+        /* 174 vectors need 696 bytes; reserve 1 KiB for VTOR alignment. */
+        . = __vector_table + 0x400;
+        __text_start = .;
 
-    .text :
-    {
+        *(.text .text.*);
+        *(.rodata .rodata.*);
+        *(.glue_7 .glue_7t);
+        *(.ARM.extab* .gnu.linkonce.armextab.*);
+        *(.eh_frame*);
+
         . = ALIGN(4);
-        __stext = .;
+        __text_end = .;
+    } > ITCM
 
-        *(.text .text.*)
-        *(.rodata .rodata.*)
-
-        . = ALIGN(4);
-        __etext = .;
-    } > rom
-
-    .ARM.extab :
-    {
-        . = ALIGN(4);
-        *(.ARM.extab* .gnu.linkonce.armextab.*)
-        . = ALIGN(4);
-    } > rom
-
-    .ARM.exidx :
+    /* ARM unwind indexes have a distinct ELF section type. */
+    .ARM.exidx : AT(__itcm_load_start + (ADDR(.ARM.exidx) - __itcm_start))
     {
         . = ALIGN(4);
         __exidx_start = .;
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*);
         __exidx_end = .;
         . = ALIGN(4);
-    } > rom
+        __itcm_end = .;
+    } > ITCM
 
-    .itcm_text :
-    {
-        . = ALIGN(8);
-        __itcm_text_start = .;
-        KEEP(*(.itcm_text .itcm_text.*))
-        . = ALIGN(8);
-        __itcm_text_end = .;
-    } > itcm AT > rom
+    __itcm_load_end = __itcm_load_start + (__itcm_end - __itcm_start);
+    __data_load_start = ALIGN(__itcm_load_end, 4);
 
-    __itcm_text_load_start = LOADADDR(.itcm_text);
-
-    .ram_vector_table (NOLOAD) :
-    {
-        . = ALIGN(1024);
-        __vector_table_ram_start = .;
-        . += __vector_table_flash_end - __vector_table_flash_start;
-        . = ALIGN(4);
-        __vector_table_ram_end = .;
-    } > dtcm
-
-    .dtcm_data :
-    {
-        . = ALIGN(8);
-        __dtcm_data_start = .;
-        *(.dtcm_data .dtcm_data.*)
-        . = ALIGN(8);
-        __dtcm_data_end = .;
-    } > dtcm AT > rom
-
-    __dtcm_data_load_start = LOADADDR(.dtcm_data);
-
-    .dtcm_bss (NOLOAD) :
-    {
-        . = ALIGN(8);
-        __dtcm_bss_start = .;
-        *(.dtcm_bss .dtcm_bss.*)
-        . = ALIGN(8);
-        __dtcm_bss_end = .;
-    } > dtcm
-
-    __dtcm_used_end = .;
-
-    .data :
+    .data ORIGIN(DTCM) : AT(__data_load_start)
     {
         . = ALIGN(4);
-        _srelocate = .;
-        *(.data .data.*)
+        __data_start = .;
+        *(.data .data.*);
         . = ALIGN(4);
-        _erelocate = .;
-    } > axi_sram AT > rom
+        __data_end = .;
+    } > DTCM
 
-    _sidata = LOADADDR(.data);
+    __data_load_end = __data_load_start + SIZEOF(.data);
 
     .bss (NOLOAD) :
     {
         . = ALIGN(4);
-        _sbss = .;
-        _szero = .;
-        *(.bss .bss.*)
-        *(COMMON)
+        __bss_start = .;
+        *(.bss .bss.*);
+        *(COMMON);
         . = ALIGN(4);
-        _ebss = .;
-        _ezero = .;
-    } > axi_sram
+        __bss_end = .;
+    } > DTCM
 
-    . = ALIGN(4);
+    .uninit (NOLOAD) :
+    {
+        . = ALIGN(4);
+        __uninit_start = .;
+        *(.uninit .uninit.*);
+        . = ALIGN(4);
+        __uninit_end = .;
+    } > DTCM
+
+    __dtcm_used_end = .;
     _end = .;
 
-    .stack ORIGIN(dtcm) + LENGTH(dtcm) - STACK_SIZE (NOLOAD) :
+    __stack_top = ORIGIN(DTCM) + LENGTH(DTCM);
+    __stack_bottom = __stack_top - STACK_SIZE;
+
+    .stack __stack_bottom (NOLOAD) :
     {
         . = ALIGN(8);
-        _sstack = .;
+        __stack_limit = .;
         . += STACK_SIZE;
         . = ALIGN(8);
-        _estack = .;
-    } > dtcm
+    } > DTCM
 
-    ASSERT(__itcm_text_end <= ORIGIN(itcm) + LENGTH(itcm), "ITCM text exceeds available ITCM")
-    ASSERT(__dtcm_used_end <= _sstack, "DTCM sections overlap reserved stack or exceed DTCM")
-    ASSERT(_estack == _stack_start, "reserved stack end does not match initial MSP")
-    ASSERT(_end <= ORIGIN(axi_sram) + LENGTH(axi_sram), "AXI SRAM data sections exceed AXI SRAM")
+    /* A debugger-safe bootstrap stack in fixed OCRAM. Reset itself is stackless. */
+    __boot_stack_top = ORIGIN(OCRAM_BOOT) + LENGTH(OCRAM_BOOT);
+    __boot_stack_bottom = __boot_stack_top - BOOT_STACK_SIZE;
+
+    .boot_stack __boot_stack_bottom (NOLOAD) :
+    {
+        . = ALIGN(8);
+        __boot_stack_limit = .;
+        . += BOOT_STACK_SIZE;
+        . = ALIGN(8);
+    } > OCRAM_BOOT
+
+    __ram_image_start = ORIGIN(OCRAM_BOOT);
+    __ram_image_end = __data_load_end;
+
+    /DISCARD/ :
+    {
+        *(.comment);
+        *(.ARM.attributes);
+    }
+
+    ASSERT(__boot_vector_table == ORIGIN(OCRAM_BOOT),
+           "bootstrap vector table must start at fixed OCRAM base")
+    ASSERT(__boot_text_end <= __itcm_load_start,
+           "bootstrap overlaps the staged ITCM image")
+    ASSERT(__itcm_end <= ORIGIN(ITCM) + LENGTH(ITCM),
+           "application code and vectors exceed 256 KiB ITCM")
+    ASSERT(__dtcm_used_end <= __stack_bottom,
+           "DTCM data overlaps the reserved stack")
+    ASSERT(__ram_image_end <= __boot_stack_bottom,
+           "debugger load image exceeds fixed OCRAM staging space")
+    ASSERT((__stack_top & 7) == 0, "application stack must be 8-byte aligned")
+    ASSERT((__boot_stack_top & 7) == 0, "bootstrap stack must be 8-byte aligned")
 }
