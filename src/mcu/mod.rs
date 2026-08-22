@@ -2,13 +2,14 @@
 
 use crate::{
     drv::{cortex::Shared, scb::Scb, systick::Systick},
-    os::{task::TaskStackStorage, Application},
+    os::{task::Task, Scheduler},
 };
 
 pub mod deployment;
 
 pub(crate) const TASK_COUNT: usize = 2;
-pub(crate) const STACK_SIZE: usize = 256;
+pub(crate) const TASK_5MS_STACK_SIZE: usize = 256;
+pub(crate) const TASK_BACKGROUND_STACK_SIZE: usize = 256;
 
 // The current RAM-launch clock contract. McuClockTree_Init must establish this
 // rate once its intentionally missing clock-tree implementation is added.
@@ -19,9 +20,14 @@ const SVC_PRIORITY: u8 = 0xD0;
 const SYSTICK_PRIORITY: u8 = 0xE0;
 const PENDSV_PRIORITY: u8 = 0xF0;
 
-pub(crate) static TASK_STACKS: TaskStackStorage<TASK_COUNT, STACK_SIZE> = TaskStackStorage::new();
-pub(crate) static Os: Shared<Application<TASK_COUNT, STACK_SIZE>> =
-    Shared::new(unsafe { Application::new(&TASK_STACKS) });
+// Tasks are stable objects outside Scheduler. Each one owns its stack and may
+// select a different compile-time capacity; Scheduler stores only their
+// handles in scheduler order.
+pub(crate) static TASK_5MS: Task<TASK_5MS_STACK_SIZE> = Task::new();
+pub(crate) static TASK_BACKGROUND: Task<TASK_BACKGROUND_STACK_SIZE> = Task::new();
+
+pub(crate) static SCHEDULER: Shared<Scheduler<TASK_COUNT>> =
+    Shared::new(unsafe { Scheduler::new([TASK_5MS.handle(), TASK_BACKGROUND.handle()]) });
 
 pub static SYSTICK: Shared<Systick> = Shared::new(Systick::new());
 pub static SCB: Shared<Scb> = Shared::new(Scb::new());
@@ -47,9 +53,9 @@ impl McuManager {
 
         SYSTICK.with(|syst| syst.Configure(CORE_CLOCK_HZ));
 
-        Os.with(|os| {
-            os.SetCyclicReleaseBase(SCHEDULER_EPOCH_US);
-            os.InvokeSchedule(SCHEDULER_EPOCH_US);
+        SCHEDULER.with(|scheduler| {
+            scheduler.SetCyclicReleaseBase(SCHEDULER_EPOCH_US);
+            scheduler.InvokeSchedule(SCHEDULER_EPOCH_US);
         });
     }
 

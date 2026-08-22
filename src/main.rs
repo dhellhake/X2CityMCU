@@ -1,6 +1,5 @@
 #![no_main]
 #![no_std]
-#![allow(non_upper_case_globals)]
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(unused_assignments)]
@@ -10,7 +9,7 @@ use core::{arch::asm, panic::PanicInfo};
 use crate::{
     mcu::{
         deployment::{background, tsk_1_5ms},
-        McuManager, Os,
+        McuManager, SCHEDULER,
     },
     os::{
         task::{TaskCycleTime, TaskRole},
@@ -28,19 +27,19 @@ pub extern "C" fn main() -> ! {
     // and CONTROL have been installed by the final OS handoff below.
     unsafe { asm!("cpsid i", options(nomem, nostack, preserves_flags)) };
 
-    /* Pre-Os Init */
+    /* Pre-OS Init */
     McuManager::McuClockTree_Init();
 
     /* OS Init */
-    let stack = Os.with(|os| {
-        os.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
-        os.SetTask(
+    let stack = SCHEDULER.with(|scheduler| {
+        scheduler.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
+        scheduler.SetTask(
             1,
             background,
             TaskCycleTime::NonCyclic,
             TaskRole::Background,
         );
-        os.ActivateBackgroundTask()
+        scheduler.ActivateBackgroundTask()
     });
 
     /* Post-OS Init */
