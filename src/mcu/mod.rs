@@ -5,15 +5,14 @@ use crate::{
     os::{task::Task, Scheduler},
 };
 
+mod clocktree;
 pub mod deployment;
+
+use clocktree::CORE_CLOCK_HZ;
 
 pub(crate) const TASK_COUNT: usize = 2;
 pub(crate) const TASK_5MS_STACK_SIZE: usize = 256;
 pub(crate) const TASK_BACKGROUND_STACK_SIZE: usize = 256;
-
-// The current RAM-launch clock contract. McuClockTree_Init must establish this
-// rate once its intentionally missing clock-tree implementation is added.
-pub(crate) const CORE_CLOCK_HZ: u32 = 528_000_000;
 
 const SCHEDULER_EPOCH_US: u64 = 0;
 const SVC_PRIORITY: u8 = 0xD0;
@@ -35,12 +34,6 @@ pub static SCB: Shared<Scb> = Shared::new(Scb::new());
 pub struct McuManager {}
 
 impl McuManager {
-    pub fn McuClockTree_Init() {
-        // Intentionally left as the project-specific clock implementation
-        // point. The current RAM-launch setup is expected to run at
-        // CORE_CLOCK_HZ.
-    }
-
     pub fn Scheduler_Start() {
         SCB.with(|scb| {
             // RT1061 implements the upper four priority bits. Keep SVC and
