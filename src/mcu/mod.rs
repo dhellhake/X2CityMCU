@@ -5,6 +5,7 @@ use crate::{
     os::{task::Task, Scheduler},
 };
 
+mod board;
 #[cfg(feature = "qspi-boot")]
 mod boot;
 mod clocktree;

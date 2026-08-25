@@ -29,6 +29,7 @@ pub extern "C" fn main() -> ! {
 
     /* Pre-OS Init */
     McuManager::McuClockTree_Init();
+    McuManager::BoardLed_Init();
 
     /* OS Init */
     let stack = SCHEDULER.with(|scheduler| {

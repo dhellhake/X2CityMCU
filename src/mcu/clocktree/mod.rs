@@ -1,8 +1,16 @@
 use core::arch::asm;
 
-use crate::{drv::{
-    BIT, ccm::{Ccm, CcmAnalog, PERIPH_CLK2_SEL, PLL_ARM_BYPASS_CLK_SRC, PRE_PERIPH_CLK_SEL}, cortex::Shared, dcdc::Dcdc,
-}, mcu::McuManager};
+use crate::{
+    drv::{
+        ccm::{
+            Ccm, CcmAnalog, CLOCK_GATE, PERIPH_CLK2_SEL, PLL_ARM_BYPASS_CLK_SRC, PRE_PERIPH_CLK_SEL,
+        },
+        cortex::Shared,
+        dcdc::Dcdc,
+        BIT,
+    },
+    mcu::McuManager,
+};
 
 const XTAL_CLOCK_HZ: u32 = 24_000_000;
 const ARM_PLL_LOOP_DIVIDER: u8 = 100;
@@ -33,6 +41,13 @@ const _: () = {
 static CCM: Shared<Ccm> = Shared::new(Ccm::new());
 static CCM_ANALOG: Shared<CcmAnalog> = Shared::new(CcmAnalog::new());
 static DCDC: Shared<Dcdc> = Shared::new(Dcdc::new());
+
+pub(super) fn EnableGpio1AndIomuxcClocks() {
+    CCM.with(|ccm| {
+        ccm.Set_CCGR1_CG13(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR4_CG1(CLOCK_GATE::RUN_WAIT);
+    });
+}
 
 impl McuManager {
     pub fn McuClockTree_Init() {
