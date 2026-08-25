@@ -14,8 +14,35 @@ use super::{clocktree, McuManager};
 const BOARD_LED_PAD: u8 = 51;
 const BOARD_LED_PIN: u8 = 9;
 
+const TASK_5MS_FIRST_RELEASE_US: u64 = 5_000;
+const HEARTBEAT_PERIOD_US: u64 = 1_000_000;
+const HEARTBEAT_FIRST_PULSE_END_US: u64 = 100_000;
+const HEARTBEAT_SECOND_PULSE_START_US: u64 = 200_000;
+const HEARTBEAT_SECOND_PULSE_END_US: u64 = 300_000;
+
 static GPIO1: Shared<Gpio> = Shared::new(Gpio::new(GPIO_INSTANCE::GPIO1));
 static IOMUXC: Shared<Iomuxc> = Shared::new(Iomuxc::new());
+
+const fn HeartbeatLedIsOn(scheduledTimestampUs: u64) -> bool {
+    let phaseUs =
+        scheduledTimestampUs.saturating_sub(TASK_5MS_FIRST_RELEASE_US) % HEARTBEAT_PERIOD_US;
+    phaseUs < HEARTBEAT_FIRST_PULSE_END_US
+        || (phaseUs >= HEARTBEAT_SECOND_PULSE_START_US && phaseUs < HEARTBEAT_SECOND_PULSE_END_US)
+}
+
+// Verify all task-aligned waveform edges at compile time: 100 ms on, 100 ms
+// off, 100 ms on, then 700 ms off for one 60 BPM heartbeat cycle.
+const _: () = {
+    assert!(HeartbeatLedIsOn(5_000));
+    assert!(HeartbeatLedIsOn(100_000));
+    assert!(!HeartbeatLedIsOn(105_000));
+    assert!(!HeartbeatLedIsOn(200_000));
+    assert!(HeartbeatLedIsOn(205_000));
+    assert!(HeartbeatLedIsOn(300_000));
+    assert!(!HeartbeatLedIsOn(305_000));
+    assert!(!HeartbeatLedIsOn(1_000_000));
+    assert!(HeartbeatLedIsOn(1_005_000));
+};
 
 impl McuManager {
     pub fn BoardLed_Init() {
@@ -52,7 +79,12 @@ impl McuManager {
     }
 
     #[inline]
-    pub fn BoardLed_Set(isOn: bool) {
+    pub fn BoardLed_Step(scheduledTimestampUs: u64) {
+        Self::BoardLed_Set(HeartbeatLedIsOn(scheduledTimestampUs));
+    }
+
+    #[inline]
+    fn BoardLed_Set(isOn: bool) {
         let pinState = if isOn {
             GPIO_PIN_STATE::LOW
         } else {

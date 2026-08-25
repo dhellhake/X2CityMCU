@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::mcu::McuManager;
+use crate::{drv::cortex::Shared, mcu::McuManager};
 
 mod frame;
 
@@ -87,6 +87,13 @@ pub struct BmsInterface {
     pub NewCellVoltageDataAvailable: bool,
     pub Diagnostics: BmsDiagnostics,
     pub LastStepTimestampUs: u64,
+}
+
+pub static BMS: Shared<BmsInterface> = Shared::new(BmsInterface::new());
+
+#[inline]
+pub fn BmsInterface_Run(tstmp: u64) {
+    BMS.with(|bms| bms.BmsInterface_Step(tstmp));
 }
 
 impl BmsInterface {

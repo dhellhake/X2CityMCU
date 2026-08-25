@@ -6,7 +6,7 @@ use crate::{
 };
 
 mod bmscommunication;
-mod board;
+mod boardled;
 #[cfg(feature = "qspi-boot")]
 mod boot;
 mod clocktree;
