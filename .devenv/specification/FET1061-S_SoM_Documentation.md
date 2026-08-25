@@ -4,7 +4,7 @@
 
 ## 1. Scope, source hierarchy, and revision context
 
-This document describes the **FET1061-S SoM**, not the peripherals fitted to the OK1061-S carrier board. Carrier-board schematics are used only to cross-check the SoM pad numbering and default net names.
+This document primarily describes the **FET1061-S SoM**, not the peripherals fitted to the OK1061-S carrier board. Carrier-board schematics are used to cross-check the SoM pad numbering and default net names; explicitly identified project-board facts are recorded separately in Section 7.
 
 The sources do not all describe the same point in the product's life:
 
@@ -245,6 +245,46 @@ For the BMS link, connect controller TX (pad 29) to the isolator's low-voltage-s
 Power the controller side from the carrier's 3.3 V rail and controller ground; power the BMS side from a compatible low-voltage logic supply referenced only to BMS-domain ground. The isolator does **not** create isolated power, and the two grounds must not be joined. Never connect either logic-supply pin directly to traction-battery voltage. Verify the exact ADuM1201 suffix, breakout-board channel directions and pin labels, logic thresholds, idle/fault behavior, creepage/clearance, and system isolation/transient rating. A bare chip's isolation rating does not automatically qualify a low-cost breakout board for an e-bike high-voltage boundary, and the flash-VCC test tap in Section 5.1 must not power the isolator.
 
 The two-channel passive throttle circuit, component tolerances, acquisition schedule, diagnostics, and verification requirements are specified in [FET1061-S_Throttle_Analog_Front_End.md](FET1061-S_Throttle_Analog_Front_End.md). Its proposed per-channel network is 2.00 kΩ series, 2.00 kΩ to quiet ground, and 1.0 µF from the ADC node to quiet ground: gain 0.5, Thevenin resistance 1 kΩ, and nominal pole about 159 Hz. Sample pad 91 and pad 92 consecutively on ADC2, nominally 16,000 pairs/s; accumulate 16 pairs per 1 ms command update, then apply the validated digital filter. Neither ADC pad may be driven directly by the 5 V throttle signals.
+
+### 7.3 Project-board external-system connector
+
+The project board connects to the outside system through a 48-position Molex connector. Its board coordinates form a 12 × 4 matrix:
+
+- X-axis columns: `A`, `B`, `C`, `D`, `E`, `F`, `G`, `H`, `J`, `K`, `L`, `M`; the letter `I` is intentionally omitted.
+- Y-axis rows: `1` through `4`.
+- A position is named as `<column><row>`, for example `M3`.
+- View orientation: look into the mating/contact face of the male connector. `A1` is the top-left position, `M1` is top-right, and `M4` is bottom-right.
+
+In this male-end contact-face view, `—` means that the assignment has not yet been documented here; it does not mean that the position is electrically unconnected.
+
+| Row ↓ / column → | `A` | `B` | `C` | `D` | `E` | `F` | `G` | `H` | `J` | `K` | `L` | `M` |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **`1` (top)** | — | — | — | — | — | — | — | `VD18MT Rx` | `BAT-` | `SWCLK` | — | `12V` |
+| **`2`** | — | — | — | — | — | — | — | `VD18MT Tx` | `BMS Tx` | `Vref` | — | `12V` |
+| **`3`** | — | — | — | — | — | — | — | — | `BMS Rx` | `GND` | — | `GND` |
+| **`4` (bottom)** | — | — | — | — | — | — | — | `BAT+` | `SWDIO` | `RESET` | — | `GND` |
+
+The currently established assignments are:
+
+| Connector position | Assignment | Note |
+|:---:|---|---|
+| `H1` | `VD18MT Rx` | VD18MT receive signal label |
+| `H2` | `VD18MT Tx` | VD18MT transmit signal label |
+| `H4` | `BAT+` | Battery-positive supply |
+| `J1` | `BAT-` | Battery-negative supply |
+| `J2` | `BMS Tx` | BMS transmit signal label |
+| `J3` | `BMS Rx` | BMS receive signal label |
+| `J4` | `SWDIO` | Serial Wire Debug data signal |
+| `K1` | `SWCLK` | Serial Wire Debug clock signal |
+| `K2` | `Vref` | Debugger voltage-reference signal |
+| `K3` | `GND` | Ground |
+| `K4` | `RESET` | Reset signal label |
+| `M1` | `12V` | 12 V supply |
+| `M2` | `12V` | 12 V supply |
+| `M3` | `GND` | Ground |
+| `M4` | `GND` | Ground |
+
+All other positions remain undocumented here; this does not mean that they are electrically unconnected. The exact Molex series/part number and keying are not yet recorded. Preserve the stated male-end contact-face view when using the matrix; a rear/wire-side view has the opposite left-to-right orientation.
 
 ## 8. Complete 100-pad pinout
 
