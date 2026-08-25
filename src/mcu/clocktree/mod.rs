@@ -3,7 +3,8 @@ use core::arch::asm;
 use crate::{
     drv::{
         ccm::{
-            Ccm, CcmAnalog, CLOCK_GATE, PERIPH_CLK2_SEL, PLL_ARM_BYPASS_CLK_SRC, PRE_PERIPH_CLK_SEL,
+            Ccm, CcmAnalog, CLOCK_GATE, PERIPH_CLK2_SEL, PLL_ARM_BYPASS_CLK_SRC,
+            PRE_PERIPH_CLK_SEL, UART_CLK_SEL,
         },
         cortex::Shared,
         dcdc::Dcdc,
@@ -18,12 +19,14 @@ const ARM_PLL_OUTPUT_HZ: u32 = XTAL_CLOCK_HZ * ARM_PLL_LOOP_DIVIDER as u32 / 2;
 const ARM_PODF: u8 = 1; // Encoded divide-by-two.
 const AHB_PODF: u8 = 0; // Encoded divide-by-one.
 const IPG_PODF: u8 = 3; // Encoded divide-by-four.
+const UART_CLK_PODF: u8 = 0; // Encoded divide-by-one.
 
 // 0.800 V + 0x12 * 0.025 V = 1.250 V. This is the lowest voltage in NXP's
 // 600 MHz overdrive range and remains inside the CVL5 part's 1.26 V recommended
 // operating ceiling, although 600 MHz itself is not qualified for this grade.
-// The next DCDC step (0x13, 1.275 V) must only be selected after a failed HIL
-// stability campaign because it exceeds that recommended voltage ceiling.
+// Raise this only after HIL demonstrates voltage-related instability. The
+// unaligned DTCM fault found during bring-up was caused by inherited MPU state,
+// not core voltage, and reproduced unchanged at 1.275 V.
 const DCDC_RUN_TARGET: u8 = 0x12;
 
 // Keep the software time base derived from the same divider values that the
@@ -31,11 +34,13 @@ const DCDC_RUN_TARGET: u8 = 0x12;
 pub(super) const CORE_CLOCK_HZ: u32 = ARM_PLL_OUTPUT_HZ / (ARM_PODF as u32 + 1);
 const AHB_CLOCK_HZ: u32 = CORE_CLOCK_HZ / (AHB_PODF as u32 + 1);
 const IPG_CLOCK_HZ: u32 = AHB_CLOCK_HZ / (IPG_PODF as u32 + 1);
+pub(super) const LPUART_CLOCK_HZ: u32 = XTAL_CLOCK_HZ / (UART_CLK_PODF as u32 + 1);
 
 const _: () = {
     assert!(CORE_CLOCK_HZ == 600_000_000);
     assert!(AHB_CLOCK_HZ == 600_000_000);
     assert!(IPG_CLOCK_HZ == 150_000_000);
+    assert!(LPUART_CLOCK_HZ == 24_000_000);
 };
 
 static CCM: Shared<Ccm> = Shared::new(Ccm::new());
@@ -49,6 +54,13 @@ pub(super) fn EnableGpio1AndIomuxcClocks() {
     });
 }
 
+pub(super) fn EnableLpuart6AndIomuxcClocks() {
+    CCM.with(|ccm| {
+        ccm.Set_CCGR3_CG3(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR4_CG1(CLOCK_GATE::RUN_WAIT);
+    });
+}
+
 impl McuManager {
     pub fn McuClockTree_Init() {
         // Reset has already copied this function to ITCM and keeps interrupts
@@ -58,6 +70,13 @@ impl McuManager {
             ccm.Set_CBCMR_PERIPH_CLK2_SEL(PERIPH_CLK2_SEL::OSC_CLK);
             ccm.Set_CBCDR_PERIPH_CLK2_PODF(0);
             ccm.Set_CBCDR_PERIPH_CLK_SEL(BIT::VALUE_1);
+
+            // Use the crystal directly for every LPUART root. This remains
+            // deterministic while PLLs are reconfigured and gives LPUART6 an
+            // exact 9600-bit/s divisor.
+            ccm.Set_CCGR3_CG3(CLOCK_GATE::OFF);
+            ccm.Set_CSCDR1_UART_CLK_SEL(UART_CLK_SEL::OSC_CLK);
+            ccm.Set_CSCDR1_UART_CLK_PODF(UART_CLK_PODF);
         });
         unsafe { asm!("dsb sy", "isb sy", options(nostack, preserves_flags)) };
 

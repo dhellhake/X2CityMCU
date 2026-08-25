@@ -1,4 +1,8 @@
+use crate::{bms::BmsInterface, drv::cortex::Shared};
+
 use super::McuManager;
+
+pub static BMS: Shared<BmsInterface> = Shared::new(BmsInterface::new());
 
 const TASK_5MS_FIRST_RELEASE_US: u64 = 5_000;
 const HEARTBEAT_PERIOD_US: u64 = 1_000_000;
@@ -29,6 +33,12 @@ const _: () = {
 
 pub extern "C" fn tsk_1_5ms(tstmp: u64) {
     McuManager::BoardLed_Set(heartbeat_led_is_on(tstmp));
+}
+
+pub extern "C" fn tsk_2_10ms(tstmp: u64) {
+    BMS.with(|bms| {
+        bms.BmsInterface_Step(tstmp);
+    });
 }
 
 pub extern "C" fn background(_tstmp: u64) {

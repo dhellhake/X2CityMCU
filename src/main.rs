@@ -8,7 +8,7 @@ use core::{arch::asm, panic::PanicInfo};
 
 use crate::{
     mcu::{
-        deployment::{background, tsk_1_5ms},
+        deployment::{background, tsk_1_5ms, tsk_2_10ms},
         McuManager, SCHEDULER,
     },
     os::{
@@ -17,6 +17,7 @@ use crate::{
     },
 };
 
+pub mod bms;
 mod drv;
 pub mod mcu;
 pub mod os;
@@ -30,12 +31,14 @@ pub extern "C" fn main() -> ! {
     /* Pre-OS Init */
     McuManager::McuClockTree_Init();
     McuManager::BoardLed_Init();
+    McuManager::BmsCommunication_Init();
 
     /* OS Init */
     let stack = SCHEDULER.with(|scheduler| {
         scheduler.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
+        scheduler.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS, TaskRole::Supervised);
         scheduler.SetTask(
-            1,
+            2,
             background,
             TaskCycleTime::NonCyclic,
             TaskRole::Background,
