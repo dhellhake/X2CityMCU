@@ -37,6 +37,25 @@ function ConvertTo-TclBracedPath {
     return $fullPath
 }
 
+function Invoke-QspiFailureContainment {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$OpenOcdExecutable,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    Write-Warning 'QSPI programming did not complete. Reconnecting to halt the target and verify the masked RTWDOG reset route.'
+    & $OpenOcdExecutable @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning 'Could not prove failure containment. Keep the target isolated and pulse POR_B before any further execution.'
+        return
+    }
+
+    Write-Warning 'Failure contained: target is halted with the RTWDOG reset route masked. Do not resume the flash-loader context; enter a verified image through Reset() or pulse POR_B.'
+}
+
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $validatorPath = Join-Path $PSScriptRoot 'verify-qspi-image.ps1'
 $setupPath = Join-Path $PSScriptRoot 'setup-qspi-flm.ps1'
@@ -149,6 +168,18 @@ $openOcdArguments = @(
     '-f', $programScriptPath
 )
 
+$failureContainmentArguments = @(
+    '-c', "set X2_PROBE_SERIAL {$ProbeSerial}"
+    '-c', "set X2_ADAPTER_SPEED_KHZ $AdapterSpeedKHz"
+    '-f', $targetConfigPath
+    '-c', 'init'
+    '-c', 'halt'
+    '-c', 'wait_halt 5000'
+    '-c', 'set x2_source_control [lindex [read_memory 0x400f8000 32 1] 0]'
+    '-c', 'if {(($x2_source_control >> 28) & 0xf) != 0x5} { error [format "RTWDOG reset route is not masked: SRC.SCR=0x%08x" $x2_source_control] }'
+    '-c', 'shutdown'
+)
+
 Write-Host ('QSPI program plan: source=0x{0:x}, padded=0x{1:x}, erase=0x{2:x}' -f $binaryLength, $paddedLength, $eraseLength)
 if ($resolvedBackupPath) {
     Write-Host "Pre-erase backup: $resolvedBackupPath"
@@ -163,26 +194,32 @@ if ($DryRun) {
     exit 0
 }
 
-& $OpenOcdPath @openOcdArguments
-if ($LASTEXITCODE -ne 0) {
-    throw "OpenOCD QSPI programming failed (exit code $LASTEXITCODE)"
-}
-
-if (-not (Test-Path -LiteralPath $readbackPath -PathType Leaf)) {
-    throw "OpenOCD did not produce the required QSPI read-back: $readbackPath"
-}
-
-$readbackBytes = [System.IO.File]::ReadAllBytes($readbackPath)
-if ($readbackBytes.Length -ne $expectedReadbackBytes.Length) {
-    throw "QSPI read-back length mismatch: expected $($expectedReadbackBytes.Length), found $($readbackBytes.Length)"
-}
-for ($index = 0; $index -lt $expectedReadbackBytes.Length; $index++) {
-    if ($readbackBytes[$index] -ne $expectedReadbackBytes[$index]) {
-        throw ('QSPI read-back mismatch at flash +0x{0:x}: expected 0x{1:x2}, found 0x{2:x2}' -f `
-            $index,
-            $expectedReadbackBytes[$index],
-            $readbackBytes[$index])
+try {
+    & $OpenOcdPath @openOcdArguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "OpenOCD QSPI programming failed (exit code $LASTEXITCODE)"
     }
+
+    if (-not (Test-Path -LiteralPath $readbackPath -PathType Leaf)) {
+        throw "OpenOCD did not produce the required QSPI read-back: $readbackPath"
+    }
+
+    $readbackBytes = [System.IO.File]::ReadAllBytes($readbackPath)
+    if ($readbackBytes.Length -ne $expectedReadbackBytes.Length) {
+        throw "QSPI read-back length mismatch: expected $($expectedReadbackBytes.Length), found $($readbackBytes.Length)"
+    }
+    for ($index = 0; $index -lt $expectedReadbackBytes.Length; $index++) {
+        if ($readbackBytes[$index] -ne $expectedReadbackBytes[$index]) {
+            throw ('QSPI read-back mismatch at flash +0x{0:x}: expected 0x{1:x2}, found 0x{2:x2}' -f `
+                $index,
+                $expectedReadbackBytes[$index],
+                $readbackBytes[$index])
+        }
+    }
+}
+catch {
+    Invoke-QspiFailureContainment -OpenOcdExecutable $OpenOcdPath -Arguments $failureContainmentArguments
+    throw
 }
 
 Write-Host "QSPI programming and full erased-prefix read-back verification succeeded."
@@ -211,4 +248,7 @@ if (-not $NoReset) {
         throw "QSPI image verified, but the POR_B pulse failed (OpenOCD exit code $LASTEXITCODE)"
     }
     Write-Host 'POR_B pulsed; Boot ROM is starting the verified QSPI image.'
+}
+else {
+    Write-Warning 'Target remains halted with the RTWDOG reset route masked; enter the verified image through Reset() or pulse POR_B instead of resuming the flash-loader context.'
 }

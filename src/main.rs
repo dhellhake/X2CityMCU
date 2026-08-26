@@ -8,7 +8,7 @@ use core::{arch::asm, panic::PanicInfo};
 
 use crate::{
     mcu::{
-        deployment::{background, tsk_1_5ms, tsk_2_10ms},
+        deployment::{background, tsk_1_5ms, tsk_2_10ms, tsk_program_flow_10ms},
         McuManager, SCHEDULER,
     },
     os::{
@@ -39,6 +39,12 @@ pub extern "C" fn main() -> ! {
         scheduler.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS, TaskRole::Supervised);
         scheduler.SetTask(
             2,
+            tsk_program_flow_10ms,
+            TaskCycleTime::_10MS,
+            TaskRole::Unsupervised,
+        );
+        scheduler.SetTask(
+            3,
             background,
             TaskCycleTime::NonCyclic,
             TaskRole::Background,
@@ -48,7 +54,7 @@ pub extern "C" fn main() -> ! {
 
     /* Post-OS Init */
 
-    /* Program Flow Start */
+    /* Scheduler / Program Flow Start */
     McuManager::Scheduler_Start();
 
     /* OS Start */

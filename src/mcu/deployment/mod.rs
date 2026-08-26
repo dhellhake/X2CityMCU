@@ -10,6 +10,10 @@ pub extern "C" fn tsk_2_10ms(tstmp: u64) {
     BmsInterface_Run(tstmp);
 }
 
+pub extern "C" fn tsk_program_flow_10ms(tstmp: u64) {
+    McuManager::ProgramFlow_ValidateAndServiceWatchdog(tstmp);
+}
+
 pub extern "C" fn background(_tstmp: u64) {
     loop {
         core::hint::spin_loop();

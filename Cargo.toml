@@ -6,3 +6,9 @@ edition = "2021"
 [features]
 default = []
 qspi-boot = []
+
+[[bin]]
+name = "ExhValveAct"
+path = "src/main.rs"
+test = false
+bench = false
