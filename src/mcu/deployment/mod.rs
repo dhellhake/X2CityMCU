@@ -1,4 +1,4 @@
-use crate::bms::BmsInterface_Run;
+use crate::{bms::BmsInterface_Run, vd18mt::VD18MTInterface_Run};
 
 use super::McuManager;
 
@@ -7,6 +7,7 @@ pub extern "C" fn tsk_1_5ms(tstmp: u64) {
 }
 
 pub extern "C" fn tsk_2_10ms(tstmp: u64) {
+    VD18MTInterface_Run(tstmp);
     BmsInterface_Run(tstmp);
 }
 

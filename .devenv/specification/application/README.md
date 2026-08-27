@@ -9,7 +9,7 @@ These pages describe the X2CityMCU carrier, firmware deployment, and connected s
 | Topic | Current authority |
 |---|---|
 | [Clocking](clocking.md) | Implemented firmware configuration; 600 MHz remains an explicitly unsupported operating point. |
-| [Communication interfaces](communication-interfaces.md) | BMS allocation and implementation are established; other allocations remain project choices pending full integration. |
+| [Communication interfaces](communication-interfaces.md) | BMS and level-shifted VD18MT links are implemented; ESC and debug-UART integration remain open. |
 | [External connector](external-connector.md) | Established assignments supplied for the 48-position Molex connector; unlisted positions remain unknown. |
 | [Power domains and isolation](power-domains-and-isolation.md) | Known external power domains plus an unresolved isolation decision. |
 | [Debug and boot](debug-and-boot.md) | Established Atmel-ICE SWD wiring and the implemented RAM/QSPI workflows. |

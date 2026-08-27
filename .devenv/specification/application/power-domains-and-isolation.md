@@ -10,10 +10,12 @@
 |---|---|---|
 | BMS | `BAT-` is permanently connected to battery negative. `BAT+` is permanently connected to battery positive and can reach 58.8 V. Its separate `GND` is tied to battery negative only while enabled by the BMS. | 9600 bit/s UART, TX and RX. The BMS provides no stated low-voltage rail for an isolator. |
 | ESC | `BAT+` is the intended power input. A 3.3 V output is provided by the ESC; its current capacity and back-power behavior are not yet specified. | TX, RX, and common ground. |
-| VD18MT | `BAT+` is the intended supply. Ground behavior beyond the interface label is not yet documented. | 9600 bit/s UART, TX and RX. |
-| Controller/carrier | The external connector exposes `BAT+`, permanent `BAT-`, `12V`, and contacts labelled `GND`. | The carrier terminates the implemented BMS UART, is intended to terminate the proposed VD18MT UART, and connects to the ESC elsewhere on the board. |
+| VD18MT | `BAT+` is the intended supply. Ground behavior beyond the interface label is not yet documented. | 9600 bit/s UART, TX and RX. The display-side 5 V UART is connected through the carrier's level-shifting interface. |
+| Controller/carrier | The external connector exposes `BAT+`, permanent `BAT-`, `12V`, and contacts labelled `GND`. | The carrier terminates the implemented BMS and level-shifted VD18MT UARTs and connects to the ESC elsewhere on the board. SoM UART pads are unbuffered 3.3 V logic. |
 
 Traction-battery voltage must never be connected to a 3.3 V logic-supply pin, UART pin, debugger reference, or the SoM's backup rail.
+
+The fitted board's VD18MT level shifter has supported valid display reception and controller UART transmission completion in a development HIL test. That result did not include an external waveform capture and does not replace production qualification of the exact topology, voltage margins, loading, transient behavior, or powered/unpowered back-power paths.
 
 ## Architectural options under consideration
 

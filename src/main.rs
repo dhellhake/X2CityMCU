@@ -21,6 +21,7 @@ pub mod bms;
 mod drv;
 pub mod mcu;
 pub mod os;
+pub mod vd18mt;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn main() -> ! {
@@ -32,6 +33,7 @@ pub extern "C" fn main() -> ! {
     McuManager::McuClockTree_Init();
     McuManager::BoardLed_Init();
     McuManager::BmsCommunication_Init();
+    McuManager::VD18MTCommunication_Init();
 
     /* OS Init */
     let stack = SCHEDULER.with(|scheduler| {

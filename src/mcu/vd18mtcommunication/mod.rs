@@ -10,22 +10,22 @@ use crate::drv::{
 
 use super::{clocktree, McuManager, UartByteReadResult, NVIC, USART_ERROR_FLAGS};
 
-const BMS_UART_BAUD_RATE: u32 = 9_600;
-const BMS_UART_INTERRUPT_PRIORITY: u8 = 0xC0;
-const BMS_UART_INSTANCE: LPUART_INSTANCE = LPUART_INSTANCE::LPUART6;
-const BMS_UART_INTERRUPT_NUMBER: u16 = BMS_UART_INSTANCE.InterruptNumber();
+const VD18MT_UART_BAUD_RATE: u32 = 9_600;
+const VD18MT_UART_INTERRUPT_PRIORITY: u8 = 0xC0;
+const VD18MT_UART_INSTANCE: LPUART_INSTANCE = LPUART_INSTANCE::LPUART2;
+const VD18MT_UART_INTERRUPT_NUMBER: u16 = VD18MT_UART_INSTANCE.InterruptNumber();
 
-// SoM pad 29 is GPIO_AD_B0_02 / LPUART6_TX. SoM pad 28 is
-// GPIO_AD_B0_03 / LPUART6_RX. IOMUXC indexes count from GPIO_EMC_00.
-const BMS_UART_TX_PAD: u8 = 44;
-const BMS_UART_RX_PAD: u8 = 45;
-const LPUART6_RX_SELECT_INPUT: u8 = 87;
-const LPUART6_TX_SELECT_INPUT: u8 = 88;
+// SoM pad 12 is GPIO_AD_B1_02 / LPUART2_TX. SoM pad 13 is
+// GPIO_AD_B1_03 / LPUART2_RX. IOMUXC indexes count from GPIO_EMC_00.
+const VD18MT_UART_TX_PAD: u8 = 60;
+const VD18MT_UART_RX_PAD: u8 = 61;
+const LPUART2_RX_SELECT_INPUT: u8 = 78;
+const LPUART2_TX_SELECT_INPUT: u8 = 79;
 
-// A maximum JDB response is 43 bytes including framing. The interrupt-backed
-// queue lets the 10 ms protocol task drain complete bursts without relying on
-// the RT1061's four-entry hardware FIFO.
-const RX_QUEUE_CAPACITY: usize = 64;
+// A display request is seven bytes and arrives in about 7.3 ms at 9600 8N1,
+// which is longer than the hardware FIFO can retain until the 10 ms task.
+// Interrupt-backed queues keep complete frames independent of task phasing.
+const RX_QUEUE_CAPACITY: usize = 32;
 const TX_QUEUE_CAPACITY: usize = 16;
 
 const EMPTY_READ_RESULT: UartByteReadResult = UartByteReadResult {
@@ -38,11 +38,11 @@ const EMPTY_READ_RESULT: UartByteReadResult = UartByteReadResult {
     },
 };
 
-static BMS_LPUART6: Shared<Lpuart> = Shared::new(Lpuart::new(BMS_UART_INSTANCE));
+static VD18MT_LPUART2: Shared<Lpuart> = Shared::new(Lpuart::new(VD18MT_UART_INSTANCE));
 static IOMUXC: Shared<Iomuxc> = Shared::new(Iomuxc::new());
-static BMS_UART_STATE: Shared<BmsUartState> = Shared::new(BmsUartState::new());
+static VD18MT_UART_STATE: Shared<Vd18mtUartState> = Shared::new(Vd18mtUartState::new());
 
-struct BmsUartState {
+struct Vd18mtUartState {
     receiveQueue: [UartByteReadResult; RX_QUEUE_CAPACITY],
     receiveReadIndex: usize,
     receiveWriteIndex: usize,
@@ -54,7 +54,7 @@ struct BmsUartState {
     transmitCount: usize,
 }
 
-impl BmsUartState {
+impl Vd18mtUartState {
     const fn new() -> Self {
         Self {
             receiveQueue: [EMPTY_READ_RESULT; RX_QUEUE_CAPACITY],
@@ -86,9 +86,8 @@ impl BmsUartState {
 
     fn PopReceive(&mut self) -> UartByteReadResult {
         if self.receiveOverflowed {
-            // None of the queued bytes can be trusted to belong to a complete
-            // frame after data was dropped. Present one synthetic overrun and
-            // restart from bytes received after the protocol task observes it.
+            // Once a byte has been dropped, no queued frame boundary can be
+            // trusted. Report one synthetic overrun and resume with new data.
             self.receiveOverflowed = false;
             self.receiveReadIndex = self.receiveWriteIndex;
             self.receiveCount = 0;
@@ -140,17 +139,17 @@ impl BmsUartState {
 }
 
 impl McuManager {
-    pub fn BmsCommunication_Init() {
-        clocktree::EnableLpuart6AndIomuxcClocks();
-        BMS_UART_STATE.with(BmsUartState::Reset);
+    pub fn VD18MTCommunication_Init() {
+        clocktree::EnableLpuart2AndIomuxcClocks();
+        VD18MT_UART_STATE.with(Vd18mtUartState::Reset);
 
-        let configured = BMS_LPUART6
-            .with(|uart| uart.Configure8N1(clocktree::LPUART_CLOCK_HZ, BMS_UART_BAUD_RATE));
+        let configured = VD18MT_LPUART2
+            .with(|uart| uart.Configure8N1(clocktree::LPUART_CLOCK_HZ, VD18MT_UART_BAUD_RATE));
         assert!(configured);
 
         IOMUXC.with(|iomuxc| {
             iomuxc.Write_SW_PAD_CTL_PAD(
-                BMS_UART_TX_PAD,
+                VD18MT_UART_TX_PAD,
                 SW_PAD_CTL_PAD {
                     SRE: IOMUXC_SLEW_RATE::SLOW,
                     DSE: IOMUXC_DRIVE_STRENGTH::R0_DIV_6,
@@ -163,7 +162,7 @@ impl McuManager {
                 },
             );
             iomuxc.Write_SW_PAD_CTL_PAD(
-                BMS_UART_RX_PAD,
+                VD18MT_UART_RX_PAD,
                 SW_PAD_CTL_PAD {
                     SRE: IOMUXC_SLEW_RATE::SLOW,
                     DSE: IOMUXC_DRIVE_STRENGTH::R0_DIV_6,
@@ -176,20 +175,20 @@ impl McuManager {
                 },
             );
 
-            iomuxc.Write_SELECT_INPUT(LPUART6_RX_SELECT_INPUT, IOMUXC_DAISY::DAISY_1);
-            iomuxc.Write_SELECT_INPUT(LPUART6_TX_SELECT_INPUT, IOMUXC_DAISY::DAISY_1);
+            iomuxc.Write_SELECT_INPUT(LPUART2_RX_SELECT_INPUT, IOMUXC_DAISY::DAISY_1);
+            iomuxc.Write_SELECT_INPUT(LPUART2_TX_SELECT_INPUT, IOMUXC_DAISY::DAISY_1);
 
-            // The UART is configured and drives an idle-high TX before either
-            // pad is switched away from its reset GPIO function.
+            // Configure the UART first so TX is already idle-high when these
+            // pads leave their reset GPIO functions.
             iomuxc.Write_SW_MUX_CTL_PAD(
-                BMS_UART_RX_PAD,
+                VD18MT_UART_RX_PAD,
                 SW_MUX_CTL_PAD {
                     MUX_MODE: IOMUXC_MUX_MODE::ALT2,
                     SION: BIT::VALUE_0,
                 },
             );
             iomuxc.Write_SW_MUX_CTL_PAD(
-                BMS_UART_TX_PAD,
+                VD18MT_UART_TX_PAD,
                 SW_MUX_CTL_PAD {
                     MUX_MODE: IOMUXC_MUX_MODE::ALT2,
                     SION: BIT::VALUE_0,
@@ -198,46 +197,53 @@ impl McuManager {
         });
 
         NVIC.with(|nvic| {
-            nvic.DisableInterrupt(BMS_UART_INTERRUPT_NUMBER);
-            nvic.ClearPendingInterrupt(BMS_UART_INTERRUPT_NUMBER);
-            nvic.SetPriority(BMS_UART_INTERRUPT_NUMBER, BMS_UART_INTERRUPT_PRIORITY);
-            nvic.BindInterruptHandler(BMS_UART_INTERRUPT_NUMBER, BmsCommunication_InterruptHandler);
+            nvic.DisableInterrupt(VD18MT_UART_INTERRUPT_NUMBER);
+            nvic.ClearPendingInterrupt(VD18MT_UART_INTERRUPT_NUMBER);
+            nvic.SetPriority(
+                VD18MT_UART_INTERRUPT_NUMBER,
+                VD18MT_UART_INTERRUPT_PRIORITY,
+            );
+            nvic.BindInterruptHandler(
+                VD18MT_UART_INTERRUPT_NUMBER,
+                VD18MTCommunication_InterruptHandler,
+            );
         });
-        BMS_LPUART6.with(|uart| uart.Set_CTRL_RIE(true));
-        NVIC.with(|nvic| nvic.EnableInterrupt(BMS_UART_INTERRUPT_NUMBER));
+        VD18MT_LPUART2.with(|uart| uart.Set_CTRL_RIE(true));
+        NVIC.with(|nvic| nvic.EnableInterrupt(VD18MT_UART_INTERRUPT_NUMBER));
     }
 
-    pub fn BmsCommunication_TryWriteByte(byte: u8) -> bool {
+    pub fn VD18MTCommunication_TryWriteByte(byte: u8) -> bool {
         with_interrupts_masked(|| {
-            let accepted = BMS_UART_STATE.with(|state| state.PushTransmit(byte));
+            let accepted = VD18MT_UART_STATE.with(|state| state.PushTransmit(byte));
             if accepted {
-                BMS_LPUART6.with(|uart| {
+                VD18MT_LPUART2.with(|uart| {
                     uart.Set_CTRL_TIE(true);
-                    Self::BmsCommunication_ServiceTransmit(uart);
+                    Self::VD18MTCommunication_ServiceTransmit(uart);
                 });
             }
             accepted
         })
     }
 
-    pub fn BmsCommunication_TryReadByteWithErrors() -> UartByteReadResult {
-        BMS_UART_STATE.with(BmsUartState::PopReceive)
+    pub fn VD18MTCommunication_TryReadByteWithErrors() -> UartByteReadResult {
+        VD18MT_UART_STATE.with(Vd18mtUartState::PopReceive)
     }
 
-    fn BmsCommunication_ServiceReceive(uart: &Lpuart) {
+    fn VD18MTCommunication_ServiceReceive(uart: &Lpuart) {
         loop {
             let result = uart.TryReadByteWithErrors();
             if result.Byte.is_none() && !result.Errors.Any() {
                 break;
             }
 
-            BMS_UART_STATE.with(|state| state.PushReceive(Self::MapReadResult(result)));
+            VD18MT_UART_STATE
+                .with(|state| state.PushReceive(Self::VD18MTCommunication_MapReadResult(result)));
         }
     }
 
-    fn BmsCommunication_ServiceTransmit(uart: &Lpuart) {
+    fn VD18MTCommunication_ServiceTransmit(uart: &Lpuart) {
         loop {
-            let byte = BMS_UART_STATE.with(|state| state.PeekTransmit());
+            let byte = VD18MT_UART_STATE.with(|state| state.PeekTransmit());
             let Some(byte) = byte else {
                 uart.Set_CTRL_TIE(false);
                 break;
@@ -247,20 +253,20 @@ impl McuManager {
                 break;
             }
 
-            BMS_UART_STATE.with(BmsUartState::PopTransmit);
+            VD18MT_UART_STATE.with(Vd18mtUartState::PopTransmit);
         }
     }
 
     #[inline]
-    fn MapReadResult(result: LPUART_BYTE_READ_RESULT) -> UartByteReadResult {
+    fn VD18MTCommunication_MapReadResult(result: LPUART_BYTE_READ_RESULT) -> UartByteReadResult {
         UartByteReadResult {
             Byte: result.Byte,
-            Errors: Self::MapErrorFlags(result.Errors),
+            Errors: Self::VD18MTCommunication_MapErrorFlags(result.Errors),
         }
     }
 
     #[inline]
-    fn MapErrorFlags(errors: LPUART_ERROR_FLAGS) -> USART_ERROR_FLAGS {
+    fn VD18MTCommunication_MapErrorFlags(errors: LPUART_ERROR_FLAGS) -> USART_ERROR_FLAGS {
         USART_ERROR_FLAGS {
             parityError: errors.parityError,
             framingError: errors.framingError,
@@ -270,10 +276,10 @@ impl McuManager {
     }
 }
 
-unsafe extern "C" fn BmsCommunication_InterruptHandler() {
-    BMS_LPUART6.with(|uart| {
-        McuManager::BmsCommunication_ServiceReceive(uart);
-        McuManager::BmsCommunication_ServiceTransmit(uart);
+unsafe extern "C" fn VD18MTCommunication_InterruptHandler() {
+    VD18MT_LPUART2.with(|uart| {
+        McuManager::VD18MTCommunication_ServiceReceive(uart);
+        McuManager::VD18MTCommunication_ServiceTransmit(uart);
     });
     nvic::ExitBarrier();
 }

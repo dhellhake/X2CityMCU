@@ -32,7 +32,11 @@ This is the application-level release checklist. Passing a software build or a d
 
 - Confirm each UART pin mux and input daisy, direction, format, baud error, signal level, idle state, cable loading, and external-device behavior.
 - Run sustained BMS traffic with error injection, framing faults, disconnect/reconnect, full queues, and scheduler load.
-- Qualify the ESC and VD18MT routes after their transceiver/isolation hardware is fixed.
+- Record and qualify the fitted VD18MT 3.3 V/5 V level-interface circuit, including display-TX voltage, margins, loading, power-off behavior, and back-powering; the successful development HIL test alone does not close this item.
+- Run sustained simultaneous BMS and VD18MT traffic under scheduler load. For VD18MT, verify 9600 8N1 framing, both directions, checksum rejection, parser resynchronization, partial-frame timeout, UART errors, queue overflow, disconnect/reconnect, and the 100 ms transmit period.
+- Capture the level-shifted VD18MT RX and TX waveforms externally to close signal amplitude, baud timing, and far-end reception; debugger counters alone do not prove the complete physical TX path.
+- Verify that a VD18MT consumer rejects stale display requests after a defined timeout before any request can affect safety-relevant behavior.
+- Qualify the ESC route after its transceiver/isolation hardware is fixed.
 - Record connector part numbers, keying, contact numbering, harness-side mirrored view, and all currently undocumented contacts.
 
 ## Operator inputs and safety-relevant output

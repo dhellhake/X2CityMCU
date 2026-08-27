@@ -21,6 +21,7 @@ mod boot;
 mod clocktree;
 pub mod deployment;
 mod programflow;
+mod vd18mtcommunication;
 
 use clocktree::CORE_CLOCK_HZ;
 pub use programflow::{
