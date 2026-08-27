@@ -199,10 +199,7 @@ impl McuManager {
         NVIC.with(|nvic| {
             nvic.DisableInterrupt(VD18MT_UART_INTERRUPT_NUMBER);
             nvic.ClearPendingInterrupt(VD18MT_UART_INTERRUPT_NUMBER);
-            nvic.SetPriority(
-                VD18MT_UART_INTERRUPT_NUMBER,
-                VD18MT_UART_INTERRUPT_PRIORITY,
-            );
+            nvic.SetPriority(VD18MT_UART_INTERRUPT_NUMBER, VD18MT_UART_INTERRUPT_PRIORITY);
             nvic.BindInterruptHandler(
                 VD18MT_UART_INTERRUPT_NUMBER,
                 VD18MTCommunication_InterruptHandler,
