@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Brake-handle measurement circuit</title>
+  <desc id="description">A nominal 3.3 volt resistance measurement loop annotated with measured development-board resistor values. The PCB excitation resistor feeds brake conductor A through connector G3. A two-wire Y harness places the coded left and right brake-handle networks in parallel. Connector G2 returns brake conductor B through the return resistor to analog ground. Each conductor is sampled through an approximately one kiloohm resistor by an ADC2 input with a one hundred nanofarad capacitor to analog ground. A separate note records that protection remains unresolved rather than drawing an unqualified clamp topology.</desc>
+
+  <defs>
+    <style>
+      .background { fill: #ffffff; }
+      .pcb-zone { fill: #eef6ff; stroke: #3876a8; stroke-width: 2; }
+      .harness-zone { fill: #fff7e7; stroke: #a96b16; stroke-width: 2; }
+      .adc-zone { fill: #effaf1; stroke: #3f7f4d; stroke-width: 2; }
+      .protection-zone { fill: #fafafa; stroke: #687078; stroke-width: 2; stroke-dasharray: 8 6; }
+      .wire { fill: none; stroke: #1f2933; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+      .component { fill: none; stroke: #1f2933; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .junction { fill: #1f2933; }
+      .terminal { fill: #ffffff; stroke: #1f2933; stroke-width: 3; }
+      .connector { fill: #ffffff; stroke: #a96b16; stroke-width: 3; }
+      .title { font: 700 32px "Segoe UI", Arial, sans-serif; fill: #17202a; }
+      .section { font: 700 22px "Segoe UI", Arial, sans-serif; fill: #17202a; }
+      .label { font: 600 19px "Segoe UI", Arial, sans-serif; fill: #17202a; }
+      .small { font: 17px "Segoe UI", Arial, sans-serif; fill: #303942; }
+      .tiny { font: 15px "Segoe UI", Arial, sans-serif; fill: #47515a; }
+      .net-label { font: 700 18px Consolas, "Courier New", monospace; fill: #155b87; }
+      .supply-label { font: 700 18px Consolas, "Courier New", monospace; fill: #9b3a20; }
+      .ground-label { font: 700 18px Consolas, "Courier New", monospace; fill: #39434d; }
+      .note { font: italic 16px "Segoe UI", Arial, sans-serif; fill: #4c5660; }
+      .leader { fill: none; stroke: #687078; stroke-width: 2; stroke-dasharray: 5 5; }
+    </style>
+  </defs>
+
+  <rect class="background" x="0" y="0" width="1600" height="900"/>
+  <text class="title" x="50" y="52">Brake-handle measurement circuit</text>
+  <text class="small" x="50" y="82">Selected handle codes with measured development-board PCB values</text>
+
+  <!-- Functional zones -->
+  <rect class="pcb-zone" x="35" y="105" width="465" height="418" rx="16"/>
+  <text class="section" x="57" y="137">PCB</text>
+
+  <rect class="harness-zone" x="500" y="105" width="590" height="405" rx="16"/>
+  <text class="section" x="520" y="138">External Y harness</text>
+
+  <rect class="pcb-zone" x="1090" y="105" width="475" height="418" rx="16"/>
+  <text class="section" x="1115" y="137">PCB</text>
+
+  <rect class="adc-zone" x="220" y="555" width="1160" height="265" rx="16"/>
+  <text class="section" x="668" y="543">Paired ADC2 acquisition</text>
+
+  <!-- Excitation path -->
+  <text class="supply-label" x="45" y="239">3V3_BRAKE</text>
+  <text class="tiny" x="45" y="258">3.350 V measured</text>
+  <path class="wire" d="M45 270 H205"/>
+  <path class="component" d="M205 270 l14 -14 l22 28 l22 -28 l22 28 l22 -28 l22 28 l14 -14"/>
+  <path class="wire" d="M343 270 H440"/>
+  <circle class="junction" cx="440" cy="270" r="7"/>
+  <text class="label" x="212" y="225">R_EXC</text>
+  <text class="small" x="203" y="248">measured 1.989 kΩ</text>
+  <text class="net-label" x="390" y="245">BRAKE_A</text>
+
+  <!-- Connector G3 -->
+  <path class="wire" d="M440 270 H500"/>
+  <rect class="connector" x="470" y="250" width="30" height="40" rx="4"/>
+  <text class="label" x="454" y="207">Molex G3</text>
+  <text class="tiny" x="454" y="228">BrkHdl A</text>
+
+  <!-- Harness input split -->
+  <path class="wire" d="M500 270 H565 M565 185 V390"/>
+  <circle class="junction" cx="565" cy="270" r="7"/>
+
+  <!-- Left-handle branch -->
+  <text class="label" x="590" y="166">Handle_L</text>
+  <path class="wire" d="M565 185 H610"/>
+  <path class="component" d="M610 185 l13 -13 l20 26 l20 -26 l20 26 l20 -26 l20 26 l13 -13"/>
+  <path class="wire" d="M736 185 H770 M770 165 V225"/>
+  <circle class="junction" cx="770" cy="185" r="6"/>
+  <text class="tiny" x="607" y="213">R_SER,L 6.113 kΩ</text>
+
+  <path class="wire" d="M770 165 H810 M925 165 H960"/>
+  <circle class="terminal" cx="810" cy="165" r="6"/>
+  <circle class="terminal" cx="925" cy="165" r="6"/>
+  <path class="component" d="M816 160 L900 139"/>
+  <text class="tiny" x="824" y="128">SW_L, normally open</text>
+
+  <path class="wire" d="M770 225 H800"/>
+  <path class="component" d="M800 225 l12 -12 l19 24 l19 -24 l19 24 l19 -24 l19 24 l12 -12"/>
+  <path class="wire" d="M919 225 H960 M960 165 V225"/>
+  <circle class="junction" cx="960" cy="185" r="6"/>
+  <text class="tiny" x="798" y="254">R_REL,L 12.845 kΩ</text>
+  <path class="wire" d="M960 185 H1025"/>
+
+  <!-- Right-handle branch -->
+  <text class="label" x="590" y="371">Handle_R</text>
+  <path class="wire" d="M565 390 H610"/>
+  <path class="component" d="M610 390 l13 -13 l20 26 l20 -26 l20 26 l20 -26 l20 26 l13 -13"/>
+  <path class="wire" d="M736 390 H770 M770 370 V430"/>
+  <circle class="junction" cx="770" cy="390" r="6"/>
+  <text class="tiny" x="607" y="418">R_SER,R 2.171 kΩ</text>
+
+  <path class="wire" d="M770 370 H810 M925 370 H960"/>
+  <circle class="terminal" cx="810" cy="370" r="6"/>
+  <circle class="terminal" cx="925" cy="370" r="6"/>
+  <path class="component" d="M816 365 L900 344"/>
+  <text class="tiny" x="824" y="333">SW_R, normally open</text>
+
+  <path class="wire" d="M770 430 H800"/>
+  <path class="component" d="M800 430 l12 -12 l19 24 l19 -24 l19 24 l19 -24 l19 24 l12 -12"/>
+  <path class="wire" d="M919 430 H960 M960 370 V430"/>
+  <circle class="junction" cx="960" cy="390" r="6"/>
+  <text class="tiny" x="802" y="459">R_REL,R 2.175 kΩ</text>
+  <path class="wire" d="M960 390 H1025"/>
+
+  <!-- Harness output merge -->
+  <path class="wire" d="M1025 185 V390 M1025 270 H1090"/>
+  <circle class="junction" cx="1025" cy="270" r="7"/>
+
+  <!-- Connector G2 and return path -->
+  <rect class="connector" x="1090" y="250" width="30" height="40" rx="4"/>
+  <path class="wire" d="M1120 270 H1170"/>
+  <circle class="junction" cx="1170" cy="270" r="7"/>
+  <text class="label" x="1080" y="207">Molex G2</text>
+  <text class="tiny" x="1080" y="228">BrkHdl B</text>
+  <text class="net-label" x="1120" y="245">BRAKE_B</text>
+
+  <path class="wire" d="M1170 270 H1245"/>
+  <path class="component" d="M1245 270 l14 -14 l22 28 l22 -28 l22 28 l22 -28 l22 28 l14 -14"/>
+  <path class="wire" d="M1383 270 H1460 V755"/>
+  <text class="label" x="1262" y="225">R_RET</text>
+  <text class="small" x="1240" y="248">measured 1.9974 kΩ</text>
+
+  <!-- ADC A branch -->
+  <path class="wire" d="M440 270 V390 M440 496 V610"/>
+  <path class="component" d="M440 390 l-14 13 l28 20 l-28 20 l28 20 l-28 20 l14 13"/>
+  <circle class="junction" cx="440" cy="610" r="7"/>
+  <text class="label" x="280" y="426">R_ADC_A</text>
+  <text class="small" x="245" y="450">measured 0.9868 kΩ</text>
+  <path class="wire" d="M440 610 H595"/>
+  <rect class="terminal" x="595" y="581" width="195" height="58" rx="9"/>
+  <text class="label" x="620" y="606">ADC_A · ADC2_IN1</text>
+  <text class="tiny" x="651" y="628">SoM pad 93</text>
+  <text class="net-label" x="460" y="595">ADC_A</text>
+
+  <path class="wire" d="M440 610 V668"/>
+  <path class="component" d="M410 668 H470 M410 686 H470"/>
+  <path class="wire" d="M440 686 V755"/>
+  <text class="label" x="286" y="674">C_ADC_A</text>
+  <text class="small" x="299" y="699">100 nF</text>
+
+  <!-- ADC B branch -->
+  <path class="wire" d="M1170 270 V390 M1170 496 V610"/>
+  <path class="component" d="M1170 390 l-14 13 l28 20 l-28 20 l28 20 l-28 20 l14 13"/>
+  <circle class="junction" cx="1170" cy="610" r="7"/>
+  <text class="label" x="1195" y="426">R_ADC_B</text>
+  <text class="small" x="1195" y="450">measured 0.9873 kΩ</text>
+  <path class="wire" d="M1170 610 H1005"/>
+  <rect class="terminal" x="810" y="581" width="195" height="58" rx="9"/>
+  <text class="label" x="835" y="606">ADC_B · ADC2_IN4</text>
+  <text class="tiny" x="866" y="628">SoM pad 94</text>
+  <text class="net-label" x="1082" y="595">ADC_B</text>
+
+  <path class="wire" d="M1170 610 V668"/>
+  <path class="component" d="M1140 668 H1200 M1140 686 H1200"/>
+  <path class="wire" d="M1170 686 V755"/>
+  <text class="label" x="1210" y="674">C_ADC_B</text>
+  <text class="small" x="1223" y="699">100 nF</text>
+
+  <rect class="protection-zone" x="600" y="687" width="400" height="50" rx="9"/>
+  <text class="small" x="649" y="709">D_PROT_A/B and connector protection</text>
+  <text class="tiny" x="669" y="729">allocation only; topology and ratings remain TBD</text>
+
+  <!-- Shared analog ground -->
+  <path class="wire" d="M440 755 H1460 M1170 755 V755"/>
+  <circle class="junction" cx="440" cy="755" r="6"/>
+  <circle class="junction" cx="1170" cy="755" r="6"/>
+  <circle class="junction" cx="1460" cy="755" r="6"/>
+  <path class="component" d="M1460 755 V785 M1428 785 H1492 M1438 797 H1482 M1448 809 H1472"/>
+  <text class="ground-label" x="1370" y="839">ANALOG_GND</text>
+
+  <!-- Footer notes -->
+  <circle class="junction" cx="58" cy="853" r="6"/>
+  <text class="small" x="75" y="859">Electrical junction</text>
+  <rect class="protection-zone" x="260" y="839" width="55" height="28" rx="5"/>
+  <text class="small" x="330" y="859">Unresolved protection allocation, not a selected clamp circuit</text>
+  <text class="note" x="900" y="859">Healthy sum: V_ADC_A + V_ADC_B = V_EXC + I_LOOP(R_RET − R_EXC)</text>
+</svg>
