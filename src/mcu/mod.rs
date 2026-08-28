@@ -18,11 +18,13 @@ mod bmscommunication;
 mod boardled;
 #[cfg(feature = "qspi-boot")]
 mod boot;
+mod brkhdlinput;
 mod clocktree;
 pub mod deployment;
 mod programflow;
 mod vd18mtcommunication;
 
+pub use brkhdlinput::{BrkHdlAdcPair, BrkHdlAdcPairStatus};
 use clocktree::CORE_CLOCK_HZ;
 pub use programflow::{
     ProgramFlowCheckpoint, ProgramFlowCheckpointKind, ProgramFlowDiagnostic, ProgramFlowFault,
@@ -30,7 +32,11 @@ pub use programflow::{
 };
 
 pub(crate) const TASK_COUNT: usize = 4;
-pub(crate) const TASK_5MS_STACK_SIZE: usize = 256;
+// The debug-profile ADC acquisition/classification call chain exceeds a
+// 256-word stack and would overwrite the adjacent SysTick bookkeeping before
+// returning. Keep enough headroom for both the measured path and exception
+// stacking; verify the watermark whenever this task grows.
+pub(crate) const TASK_5MS_STACK_SIZE: usize = 512;
 pub(crate) const TASK_10MS_STACK_SIZE: usize = 256;
 pub(crate) const TASK_PROGRAM_FLOW_STACK_SIZE: usize = 256;
 pub(crate) const TASK_BACKGROUND_STACK_SIZE: usize = 256;

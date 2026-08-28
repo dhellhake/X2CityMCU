@@ -33,7 +33,7 @@ const DCDC_RUN_TARGET: u8 = 0x12;
 // clock transition programs into hardware.
 pub(super) const CORE_CLOCK_HZ: u32 = ARM_PLL_OUTPUT_HZ / (ARM_PODF as u32 + 1);
 const AHB_CLOCK_HZ: u32 = CORE_CLOCK_HZ / (AHB_PODF as u32 + 1);
-const IPG_CLOCK_HZ: u32 = AHB_CLOCK_HZ / (IPG_PODF as u32 + 1);
+pub(super) const IPG_CLOCK_HZ: u32 = AHB_CLOCK_HZ / (IPG_PODF as u32 + 1);
 pub(super) const LPUART_CLOCK_HZ: u32 = XTAL_CLOCK_HZ / (UART_CLK_PODF as u32 + 1);
 
 const _: () = {
@@ -51,6 +51,15 @@ pub(super) fn EnableGpio1AndIomuxcClocks() {
     CCM.with(|ccm| {
         ccm.Set_CCGR1_CG13(CLOCK_GATE::RUN_WAIT);
         ccm.Set_CCGR4_CG1(CLOCK_GATE::RUN_WAIT);
+    });
+}
+
+pub(super) fn EnableAdc2Gpio1AndIomuxcClocks() {
+    CCM.with(|ccm| {
+        ccm.Set_CCGR1_CG4(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR1_CG13(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR4_CG1(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR4_CG2(CLOCK_GATE::RUN_WAIT);
     });
 }
 

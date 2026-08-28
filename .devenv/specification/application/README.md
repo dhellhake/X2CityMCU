@@ -14,7 +14,7 @@ These pages describe the X2CityMCU carrier, firmware deployment, and connected s
 | [Power domains and isolation](power-domains-and-isolation.md) | Known external power domains plus an unresolved isolation decision. |
 | [Debug and boot](debug-and-boot.md) | Established Atmel-ICE SWD wiring and the implemented RAM/QSPI workflows. |
 | [Throttle input](throttle-input.md) | Proposed analog front end and acquisition concept; hardware verification is still required. |
-| [Brake-handle input](brake-input.md) | Populated passive measurement circuit with initial electrical characterization and a proposed ADC2 hardware/software contract; ADC implementation, protection, and production qualification remain open. |
+| [Brake-handle input](brake-input.md) | ADC2 acquisition and `BrkHdlInterface` decoding are implemented with unpressed-state target evidence; protection, four-state/fault characterization, and production qualification remain open. |
 | [Verification](verification.md) | Cross-topic checks required before a production release. |
 
 ## Status language

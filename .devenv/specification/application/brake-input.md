@@ -2,7 +2,7 @@
 
 [Application index](README.md) · [SoM ADC pin map](../som/fet1061-s.md#complete-100-pad-pinout) · [Application verification](verification.md)
 
-**Status:** selected passive handle networks and a populated PCB measurement path. One development assembly has been electrically characterized, but those DMM measurements do not establish production nominal values or tolerances. ADC firmware, production thresholds, external-fault protection, and the system safety argument remain open. The exact switch contact specification, fitted resistor BOM, and vehicle fault envelope are blocking inputs.
+**Status:** selected passive handle networks, a populated PCB measurement path, and implemented ADC2 acquisition plus `BrkHdlInterface` decoding. RAM-target bring-up has confirmed the unpressed state and continuous 5 ms acquisition on one development assembly. The other physical states, injected faults, production thresholds, external-fault protection, and the system safety argument remain open. The exact switch contact specification, fitted resistor BOM, and vehicle fault envelope are blocking inputs.
 
 The state-encoding and nominal measurement network contains only switches, resistors, capacitors, and optional protection diodes. It needs no op-amp, comparator, current source, or handle-side electronics; the MCU uses two ADC inputs. This does **not** yet prove that a passive protection network can survive every required vehicle-harness fault. Production protection must be selected after that electrical fault envelope is defined.
 
@@ -14,9 +14,9 @@ Closing a switch adds conductance rather than shorting the loop. Since parallel 
 
 ### ADC acquisition overview
 
-The initial brake-only acquisition uses ADC2 as follows. These settings are the proposed operating point that the implementation and hardware tests must reproduce.
+The initial brake-only acquisition uses ADC2 as follows. These settings are implemented and remain the operating point that hardware qualification must reproduce.
 
-| Property | Proposed configuration |
+| Property | Implemented configuration |
 |---|---|
 | Channels | `ADC_A`: `ADC2_IN1`, SoM pad 93; `ADC_B`: `ADC2_IN4`, SoM pad 94 |
 | Resolution and reference | 12-bit single-ended conversion (`MODE = 0b10`); `REFSEL = 0b00`, using `VREFH = VDDA_ADC_3P3` and `VREFL = VSSA_ADC` |
@@ -27,7 +27,7 @@ The initial brake-only acquisition uses ADC2 as follows. These settings are the 
 | Trigger/readout | Software-triggered, one-shot (`ADTRG = 0`, `ADCO = 0`) through channel group 0; bounded polling |
 | Pair order and rate | `ADC_A` followed immediately by `ADC_B`, once per 5 ms supervised task release |
 | Runtime bound | Approximately 85.3 µs per averaged channel and 170.7 µs per pair; hard pair deadline 300 µs |
-| Disabled features | Continuous conversion, hardware trigger, compare, DMA, ADC interrupt (`AIEN = 0`), overwrite (`OVWREN = 0`), and asynchronous ADC clock output (`ADACKEN = 0`) |
+| Disabled features | Continuous conversion, hardware trigger, compare, DMA, ADC interrupt (`AIEN = 0`), overwrite (`OVWREN = 0`), and asynchronous ADC clock output (`ADACKEN = 0`); user offset correction is reset to zero (`OFS = 0`) |
 
 At 18.75 MHz, the selected 50-clock conversion sequence needs approximately 2.67 µs per raw conversion. The 32-sample average improves noise and matches the conditions used for the preliminary NXP total-unadjusted-error allowance while consuming less than 4% of the 5 ms task period. The complete normative boundary is defined in [ADC hardware-software interface](#adc-hardware-software-interface).
 
@@ -185,7 +185,7 @@ K = 0.105 / 0.327 / 0.460         0.564       0.786       0.920         1.026   
 hard wire short: V_A ≈ V_B, so the differential approaches zero and K is not used
 ```
 
-Illustrative bring-up windows could be `0.54–0.59`, `0.75–0.82`, `0.99–1.06`, and `1.21–1.28`. These are **not production thresholds**. Their purpose is to demonstrate that guard bands exist; replace them with limits derived from worst-case analysis and measured production-intent hardware.
+The bring-up firmware currently uses `0.54–0.59`, `0.75–0.82`, `0.99–1.06`, and `1.21–1.28`. These are **not production thresholds**. Their purpose is to exercise the implemented decoder while demonstrating that guard bands exist; replace them with limits derived from worst-case analysis and measured production-intent hardware.
 
 A preliminary sensitivity enumeration centered on the selected handle values and measured PCB resistor values, using hypothetical independent ±0.1% limits followed by an independent ±4.28 LSB error on each 12-bit ADC result, gives these illustrative `K` ranges:
 
@@ -238,12 +238,12 @@ The analog connection is hardwired; ALT5 does not select an ADC function. It kee
 
 ### Initialization contract
 
-1. Complete and stabilize the MCU clock tree before touching ADC2. Enable `CCM_CCGR4.CG1` for IOMUXC, `CCM_CCGR1.CG4` for ADC2, and `CCM_CCGR1.CG13` for GPIO1 in run/wait operation. Do not depend on another feature such as the board LED having enabled GPIO1 first.
+1. Complete and stabilize the MCU clock tree before touching ADC2. Enable `CCM_CCGR4.CG1` for IOMUXC, `CCM_CCGR4.CG2` for IOMUXC_GPR, `CCM_CCGR1.CG4` for ADC2, and `CCM_CCGR1.CG13` for GPIO1 in run/wait operation. Do not depend on another feature such as the board LED having enabled GPIO1 first.
 2. Apply the pad states in the channel table before using either voltage for diagnostics. Confirm `GPIO1_GDIR[28] = 0` and `GPIO1_GDIR[31] = 0`.
-3. Configure ADC2 with the exact operating settings from the [ADC acquisition overview](#adc-acquisition-overview). Before calibration, set every channel group to `ADCH = 31` and `AIEN = 0`, and disable compare, DMA, continuous conversion, overwrite, ADC interrupts, and hardware triggering.
+3. Configure ADC2 with the exact operating settings from the [ADC acquisition overview](#adc-acquisition-overview). First reject an ADC instance inherited from a RAM image with `ADC_GC.CAL` still active without writing another ADC register. Otherwise, set every channel group to `ADCH = 31` and `AIEN = 0`, clear user offset correction with `ADC_OFS = 0`, and disable compare, DMA, continuous conversion, overwrite, ADC interrupts, and hardware triggering.
 4. Select channel group 0 software triggering and apply the final clock, reference, resolution, power/speed, long-sample, and 32-sample-average settings before calibration.
 5. Run one bounded ADC auto-calibration per reset after the rails are stable. First clear a stale failure by writing one to the write-one-to-clear `ADC_GS.CALF` bit, then set `ADC_GC.CAL`. Poll `CAL` with a bounded timeout and reject `CALF`; calibration succeeds only after `CAL` clears, `CALF` remains clear, channel-group-0 completion is observed, and result 0 is read to clear completion. Do not write ADC configuration registers or enter a stop mode while calibration is active.
-6. A calibration timeout or failure must not block indefinitely. Initialization shall report the brake acquisition as unavailable; the software-visible state remains `fault`/`unknown` and propulsion permission remains false.
+6. A calibration timeout or failure must not block indefinitely. Initialization shall report the brake acquisition as unavailable; the software-visible state remains `fault`/`unknown` and propulsion permission remains false. If the bounded poll expires while `CAL` remains active, make no further ADC register access during that boot; recovery is reset-only.
 7. Do not learn a released code during startup. A handle may already be pressed or the harness may already be faulty, so only prevalidated fixed windows may classify the first pair.
 
 Recalibration is required after reset or after changing the ADC clock, reference, sample time, averaging, or power/speed mode. It is not a periodic runtime operation.
@@ -278,6 +278,14 @@ The 32 raw conversions for `ADC_A` precede the 32 raw conversions for `ADC_B`, s
 | Safety outputs | `fault` implies identity `unknown` and `propulsion_permit = false`. Any valid pressed result also sets `propulsion_permit = false`. Only a validated, debounced released history may permit propulsion. |
 
 The decoder should use integer difference, sum, and cross multiplication rather than floating-point division. It must consume a coherent pair and apply validity checks before the `K` windows. Acquisition status and electrical classification are separate: an ADC transaction can complete successfully while the measured circuit is electrically invalid.
+
+### Firmware implementation mapping
+
+- The generic RT1061 peripheral layer owns the register-level ADC implementation in `src/drv/adc`.
+- `src/mcu/brkhdlinput` owns ADC2 configuration, calibration, pad state, GPIO1/GPIO6 selection, paired conversion, timeout, sequence, and completion timestamp. No feature component directly reconfigures ADC2.
+- The software component is `BrkHdlInterface`; its single debugger-visible instance is named `BRKHDL`. Its mutually exclusive state is `Unpressed`, `A_Pressed`, `B_Pressed`, `AB_Pressed`, or `Error`. Handle A is the selected left-handle resistance signature and handle B is the selected right-handle signature; these names are independent of conductor labels `ADC_A` and `ADC_B`.
+- `tsk_1_5ms` runs the component once per release. A pressed or invalid result removes propulsion permission on the first sample. Permission returns only after five consecutive valid unpressed samples, spanning at least 20 ms at the 5 ms rate.
+- Consumers receive an immutable snapshot qualified for their current scheduler release. A missed producer release, acquisition error, repeated/out-of-order pair, stale timestamp, rail/sum/difference failure, or guard-band code yields `Error` with propulsion permission false.
 
 ### Shared ADC2 ownership
 
@@ -338,6 +346,12 @@ Therefore, if the system safety goal requires detection of every single fault th
 - Include accessible test points for `BRAKE_A`, `BRAKE_B`, `ADC_A`, and `ADC_B` without adding a path that bypasses harness supervision.
 
 ## Verification plan
+
+### Current firmware bring-up evidence
+
+On 2026-08-28, the final RAM-debug build was exercised through the Atmel-ICE with neither handle pressed. Two snapshots separated by 5 seconds remained `Unpressed`, with sequence advancing from 403 to 1404 and acquisition/electrical error counters remaining zero. The observed values were `ADC_A = 3085–3086`, `ADC_B = 1111`, `K = 0.5625–0.5628`, and `ADC_A + ADC_B = 4196–4197` raw codes. ADC2 remained configured as `CFG = 0x0000C378`, `GC = 0x00000020`, `GS.CALF = 0`, and `OFS = 0`; the released-state confirmation reached five samples and propulsion permission was true.
+
+The debug-profile 5 ms task required a 512-word stack after the ADC path was added. A breakpoint at the deepest classification path observed approximately 1,140 bytes used and 892 bytes remaining above the four-word guard. This is bring-up evidence, not a production worst-case stack proof. Physical actuation and fault injection were deliberately not performed in this unpressed-only run and remain required below.
 
 Before accepting production thresholds:
 
