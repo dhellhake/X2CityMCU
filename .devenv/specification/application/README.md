@@ -9,11 +9,11 @@ These pages describe the X2CityMCU carrier, firmware deployment, and connected s
 | Topic | Current authority |
 |---|---|
 | [Clocking](clocking.md) | Implemented firmware configuration; 600 MHz remains an explicitly unsupported operating point. |
-| [Communication interfaces](communication-interfaces.md) | BMS and level-shifted VD18MT links are implemented; ESC and debug-UART integration remain open. |
+| [Communication interfaces](communication-interfaces.md) | BMS, level-shifted VD18MT, and the 1,000,000-bit/s ESC link are implemented; firmware 6.02 is the selected ESC baseline, while full system qualification and debug-UART integration remain open. |
 | [External connector](external-connector.md) | Established assignments supplied for the 48-position Molex connector; unlisted positions remain unknown. |
 | [Power domains and isolation](power-domains-and-isolation.md) | Known external power domains plus an unresolved isolation decision. |
 | [Debug and boot](debug-and-boot.md) | Established Atmel-ICE SWD wiring and the implemented RAM/QSPI workflows. |
-| [Throttle input](throttle-input.md) | Proposed analog front end and acquisition concept; hardware verification is still required. |
+| [Throttle input](throttle-input.md) | Shared ADC2 acquisition and `AcHdlInterface` decoding are implemented with mechanically released/0% target evidence; full-travel calibration, protection, dynamic/fault characterization, and production qualification remain open. |
 | [Brake-handle input](brake-input.md) | ADC2 acquisition and `BrkHdlInterface` decoding are implemented with unpressed-state target evidence; protection, four-state/fault characterization, and production qualification remain open. |
 | [Verification](verification.md) | Cross-topic checks required before a production release. |
 

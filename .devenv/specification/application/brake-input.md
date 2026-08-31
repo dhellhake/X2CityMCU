@@ -14,7 +14,7 @@ Closing a switch adds conductance rather than shorting the loop. Since parallel 
 
 ### ADC acquisition overview
 
-The initial brake-only acquisition uses ADC2 as follows. These settings are implemented and remain the operating point that hardware qualification must reproduce.
+The shared brake/accelerator acquisition uses ADC2 as follows. These settings are implemented and remain the operating point that hardware qualification must reproduce.
 
 | Property | Implemented configuration |
 |---|---|
@@ -25,11 +25,11 @@ The initial brake-only acquisition uses ADC2 as follows. These settings are impl
 | Sample time | Long sample, 24 ADC clocks: `ADLSMP = 1`, `ADSTS = 0b11` |
 | Averaging | 32 conversions per reported channel result: `AVGE = 1`, averaging count 32 (`AVGS = 0b11`) |
 | Trigger/readout | Software-triggered, one-shot (`ADTRG = 0`, `ADCO = 0`) through channel group 0; bounded polling |
-| Pair order and rate | `ADC_A` followed immediately by `ADC_B`, once per 5 ms supervised task release |
-| Runtime bound | Approximately 85.3 µs per averaged channel and 170.7 µs per pair; hard pair deadline 300 µs |
+| Frame order and rate | `ADC_A`, `ADC_B`, accelerator signal, accelerator supply; one fail-atomic frame per 5 ms supervised task release |
+| Runtime bound | Approximately 85.3 µs per averaged channel and 170.7 µs per brake pair; hard brake-pair deadline 300 µs and complete-frame bound 600 µs |
 | Disabled features | Continuous conversion, hardware trigger, compare, DMA, ADC interrupt (`AIEN = 0`), overwrite (`OVWREN = 0`), and asynchronous ADC clock output (`ADACKEN = 0`); user offset correction is reset to zero (`OFS = 0`) |
 
-At 18.75 MHz, the selected 50-clock conversion sequence needs approximately 2.67 µs per raw conversion. The 32-sample average improves noise and matches the conditions used for the preliminary NXP total-unadjusted-error allowance while consuming less than 4% of the 5 ms task period. The complete normative boundary is defined in [ADC hardware-software interface](#adc-hardware-software-interface).
+At 18.75 MHz, the selected 50-clock conversion sequence needs approximately 2.67 µs per raw conversion. The 32-sample average improves noise and matches the conditions used for the preliminary NXP total-unadjusted-error allowance. The nominal four-channel conversion time is about 341 µs, or 6.8% of the 5 ms task period; software applies a 600 µs complete-frame bound. The complete normative boundary is defined in [ADC hardware-software interface](#adc-hardware-software-interface).
 
 The RT1060 data sheet permits 4–30 MHz ADC operation for 12-bit normal-power/normal-speed mode. The selected 18.75 MHz operating point therefore needs neither high-speed mode nor operation near the limit.
 
@@ -225,7 +225,7 @@ For unequal bias resistors, the exact healthy-loop relation is `V_A + V_B = V_EX
 
 ## ADC hardware-software interface
 
-This section defines the boundary between the populated analog circuit, the RT1061 ADC2 peripheral-access implementation, and the brake decoder. It is normative for the initial brake-only implementation; numerical state windows remain provisional until the production error budget and hardware characterization are complete.
+This section defines the boundary between the populated analog circuit, the shared RT1061 ADC2 peripheral-access implementation, and the brake decoder. Numerical state windows remain provisional until the production error budget and hardware characterization are complete.
 
 ### Hardware-facing channel contract
 
@@ -239,7 +239,7 @@ The analog connection is hardwired; ALT5 does not select an ADC function. It kee
 ### Initialization contract
 
 1. Complete and stabilize the MCU clock tree before touching ADC2. Enable `CCM_CCGR4.CG1` for IOMUXC, `CCM_CCGR4.CG2` for IOMUXC_GPR, `CCM_CCGR1.CG4` for ADC2, and `CCM_CCGR1.CG13` for GPIO1 in run/wait operation. Do not depend on another feature such as the board LED having enabled GPIO1 first.
-2. Apply the pad states in the channel table before using either voltage for diagnostics. Confirm `GPIO1_GDIR[28] = 0` and `GPIO1_GDIR[31] = 0`.
+2. Apply the pad states in the channel table before using either voltage for diagnostics. Confirm `GPIO1_GDIR[28..31] = 0`; pins 29/30 are the adjacent accelerator ADC inputs owned by the same acquisition component.
 3. Configure ADC2 with the exact operating settings from the [ADC acquisition overview](#adc-acquisition-overview). First reject an ADC instance inherited from a RAM image with `ADC_GC.CAL` still active without writing another ADC register. Otherwise, set every channel group to `ADCH = 31` and `AIEN = 0`, clear user offset correction with `ADC_OFS = 0`, and disable compare, DMA, continuous conversion, overwrite, ADC interrupts, and hardware triggering.
 4. Select channel group 0 software triggering and apply the final clock, reference, resolution, power/speed, long-sample, and 32-sample-average settings before calibration.
 5. Run one bounded ADC auto-calibration per reset after the rails are stable. First clear a stale failure by writing one to the write-one-to-clear `ADC_GS.CALF` bit, then set `ADC_GC.CAL`. Poll `CAL` with a bounded timeout and reject `CALF`; calibration succeeds only after `CAL` clears, `CALF` remains clear, channel-group-0 completion is observed, and result 0 is read to clear completion. Do not write ADC configuration registers or enter a stop mode while calibration is active.
@@ -259,10 +259,16 @@ trigger ADC2 group 0, channel 1 (ADC_A)
 trigger ADC2 group 0, channel 4 (ADC_B)
     -> wait with interrupts enabled for COCO0
     -> read result 0
-publish one complete A/B pair, sequence, timestamp, and status
+trigger ADC2 group 0, channel 2 (accelerator signal)
+    -> wait with interrupts enabled for COCO0
+    -> read result 0
+trigger ADC2 group 0, channel 3 (accelerator supply)
+    -> wait with interrupts enabled for COCO0
+    -> read result 0
+publish one complete four-channel frame with one shared success sequence
 ```
 
-Only group 0 initiates a software-triggered conversion. Register accesses may use short critical sections, but the approximately 171 µs polling interval must not be enclosed in a critical section that masks scheduler interrupts. A complete pair must finish within 300 µs of the first trigger. Failure of either channel, expiration of that deadline, or a superseding task release invalidates the complete pair; software must not combine one new channel with one previous channel.
+Only group 0 initiates a software-triggered conversion. Register accesses may use short critical sections, but the polling intervals must not be enclosed in a critical section that masks scheduler interrupts. The brake pair must finish within 300 µs and the full frame within 600 µs of the first trigger. Failure of any channel is fail-atomic for the initial implementation: both feature pairs are invalidated and the shared sequence does not advance. Software must not combine one new channel with one previous channel.
 
 The 32 raw conversions for `ADC_A` precede the 32 raw conversions for `ADC_B`, so the centers of the two averaging windows are approximately 85 µs apart. A physical switch transition can consequently produce a mixed pair. Apply the normal sum, difference, and unique-window checks: many mixed pairs will become fail-safe faults, but a transition occurring late in an averaging window could still alias a valid code. Dynamic-transition testing must characterize those cases and confirm the end-to-end inhibition timing; the decoder must never force a guard-band result to the nearest state.
 
@@ -282,16 +288,16 @@ The decoder should use integer difference, sum, and cross multiplication rather 
 ### Firmware implementation mapping
 
 - The generic RT1061 peripheral layer owns the register-level ADC implementation in `src/drv/adc`.
-- `src/mcu/brkhdlinput` owns ADC2 configuration, calibration, pad state, GPIO1/GPIO6 selection, paired conversion, timeout, sequence, and completion timestamp. No feature component directly reconfigures ADC2.
+- `src/mcu/analoginput` owns ADC2 configuration, calibration, all four pad states, GPIO1/GPIO6 selection, ordered conversion, timeout, shared sequence, and pair completion timestamps. No feature component directly reconfigures ADC2.
 - The software component is `BrkHdlInterface`; its single debugger-visible instance is named `BRKHDL`. Its mutually exclusive state is `Unpressed`, `A_Pressed`, `B_Pressed`, `AB_Pressed`, or `Error`. Handle A is the selected left-handle resistance signature and handle B is the selected right-handle signature; these names are independent of conductor labels `ADC_A` and `ADC_B`.
-- `tsk_1_5ms` runs the component once per release. A pressed or invalid result removes propulsion permission on the first sample. Permission returns only after five consecutive valid unpressed samples, spanning at least 20 ms at the 5 ms rate.
+- `tsk_1_5ms` runs the component once per release. A pressed or invalid result removes propulsion permission on the first sample. Permission returns only after five consecutive valid unpressed samples, nominally spanning 20 ms at the 5 ms task rate.
 - Consumers receive an immutable snapshot qualified for their current scheduler release. A missed producer release, acquisition error, repeated/out-of-order pair, stale timestamp, rail/sum/difference failure, or guard-band code yields `Error` with propulsion permission false.
 
 ### Shared ADC2 ownership
 
 ADC2 configuration and trigger state are peripheral-wide. A single MCU analog-acquisition component must therefore own the ADC2 instance and publish samples to feature-level consumers. Brake and throttle modules must not each create an independently configurable ADC2 object.
 
-The adjacent [throttle proposal](throttle-input.md) assigns `ADC2_IN2` and `ADC2_IN3` at 16,000 sample pairs/s, corresponding to a 62.5 µs pair period. One brake channel with the proposed 32-sample hardware average already takes approximately 85.3 µs, so this brake-only sequence cannot coexist unchanged with that throttle schedule. Before enabling both functions, define one combined acquisition schedule—likely a raw multichannel scan with software accumulation/filtering—and repeat the ADC error and timing analysis. Until then, the configuration in this document is exclusive to the brake acquisition.
+The adjacent [throttle implementation](throttle-input.md) uses `ADC2_IN2` and `ADC2_IN3`. `src/mcu/analoginput` now implements the ordered brake-then-accelerator frame and preserves the brake pair's 300 µs deadline. The complete four-channel settling/timing qualification and production ADC error analysis remain open.
 
 ## Firmware classification behavior
 
@@ -350,6 +356,8 @@ Therefore, if the system safety goal requires detection of every single fault th
 ### Current firmware bring-up evidence
 
 On 2026-08-28, the final RAM-debug build was exercised through the Atmel-ICE with neither handle pressed. Two snapshots separated by 5 seconds remained `Unpressed`, with sequence advancing from 403 to 1404 and acquisition/electrical error counters remaining zero. The observed values were `ADC_A = 3085–3086`, `ADC_B = 1111`, `K = 0.5625–0.5628`, and `ADC_A + ADC_B = 4196–4197` raw codes. ADC2 remained configured as `CFG = 0x0000C378`, `GC = 0x00000020`, `GS.CALF = 0`, and `OFS = 0`; the released-state confirmation reached five samples and propulsion permission was true.
+
+After adding the shared four-channel frame later on 2026-08-28, two further snapshots kept `BRKHDL` `Unpressed`, propulsion permission true, and all brake acquisition/electrical counters at zero. The shared sequence advanced by 624 over 3.120 s (200 Hz), with `ADC_A = 3083–3084`, `ADC_B = 1111`, and the unchanged ADC2 register configuration. This confirms that adding the accelerator channels did not disturb the observed released brake classification; it does not replace physical four-state or fault testing.
 
 The debug-profile 5 ms task required a 512-word stack after the ADC path was added. A breakpoint at the deepest classification path observed approximately 1,140 bytes used and 892 bytes remaining above the four-word guard. This is bring-up evidence, not a production worst-case stack proof. Physical actuation and fault injection were deliberately not performed in this unpressed-only run and remain required below.
 

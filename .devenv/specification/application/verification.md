@@ -36,12 +36,16 @@ This is the application-level release checklist. Passing a software build or a d
 - Run sustained simultaneous BMS and VD18MT traffic under scheduler load. For VD18MT, verify 9600 8N1 framing, both directions, checksum rejection, parser resynchronization, partial-frame timeout, UART errors, queue overflow, disconnect/reconnect, and the 100 ms transmit period.
 - Capture the level-shifted VD18MT RX and TX waveforms externally to close signal amplitude, baud timing, and far-end reception; debugger counters alone do not prove the complete physical TX path.
 - Verify that a VD18MT consumer rejects stale display requests after a defined timeout before any request can affect safety-relevant behavior.
-- Qualify the ESC route after its transceiver/isolation hardware is fixed.
+- Capture `ESC PWR` and both UART directions externally. Verify the selected 1,000,000-bit/s 8N1 timing, levels, directions, idle state, level-shifter/isolation behavior, cable loading, and powered/unpowered back-powering.
+- Qualify sustained 1 ms current-command and 10 ms telemetry operation at 1,000,000 bit/s. Measure response latency and loss under the final scheduler and motor load without weakening the 20 ms response timeout or 30 ms telemetry-freshness bound.
+- Qualify only the explicit firmware 6.02 / `75_300_R2` profile. Exercise unsupported firmware versions and hardware names, invalid CRC/framing, partial frames, stale telemetry, response timeout, unexpected or late replies, queue pressure, disconnect/reconnect, and simultaneous scheduler load; every failure must remain fail-closed.
+- On a mechanically safe unloaded rig, verify the 1 ms zero fallback, 5 ms current-request lease, firmware/telemetry/fault gating, request clearing across faults and power cycles, the selected application current ceiling, and that nonzero current is impossible until that ceiling is explicitly configured.
+- Measure worst-case task completion, watchdog-service margin, UART queue loading, and every task stack watermark while real ESC replies are active. The 57.569 s zero-current development run established loss-free 1,000,000-bit/s communication on the current bench setup, but did not establish production margins across motor load, supply, temperature, harness, or unit variation.
 - Record connector part numbers, keying, contact numbering, harness-side mirrored view, and all currently undocumented contacts.
 
 ## Operator inputs and safety-relevant output
 
-- Verify the paired ADC acquisition and all electrical tolerances/fault cases listed in [Throttle input](throttle-input.md).
+- Verify the implemented shared four-channel ADC2 frame, accelerator endpoint calibration, all throttle positions, and every electrical tolerance/fault case listed in [Throttle input](throttle-input.md).
 - Verify all four brake-handle states and every hard open/short signature listed in [Brake-handle input](brake-input.md).
 - Qualify the exact brake-switch contact at the selected minimum voltage/current load across life, contamination, vibration, and temperature before freezing the common resistance scale.
 - Sweep brake-loop series resistance and parallel leakage through every code boundary; document any fault values that alias a valid handle state.

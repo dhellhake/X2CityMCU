@@ -8,7 +8,7 @@ use core::{arch::asm, panic::PanicInfo};
 
 use crate::{
     mcu::{
-        deployment::{background, tsk_1_5ms, tsk_2_10ms, tsk_program_flow_10ms},
+        deployment::{background, tsk_0_1ms, tsk_1_5ms, tsk_2_10ms, tsk_program_flow_10ms},
         McuManager, SCHEDULER,
     },
     os::{
@@ -17,9 +17,11 @@ use crate::{
     },
 };
 
+pub mod achdl;
 pub mod bms;
 pub mod brkhdl;
 mod drv;
+pub mod esc;
 pub mod mcu;
 pub mod os;
 pub mod vd18mt;
@@ -32,23 +34,25 @@ pub extern "C" fn main() -> ! {
 
     /* Pre-OS Init */
     McuManager::McuClockTree_Init();
-    McuManager::BrkHdlInput_Init();
+    McuManager::AnalogInput_Init();
     McuManager::BoardLed_Init();
     McuManager::BmsCommunication_Init();
     McuManager::VD18MTCommunication_Init();
+    McuManager::EscCommunication_Init();
 
     /* OS Init */
     let stack = SCHEDULER.with(|scheduler| {
-        scheduler.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
-        scheduler.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS, TaskRole::Supervised);
+        scheduler.SetTask(0, tsk_0_1ms, TaskCycleTime::_1MS, TaskRole::Supervised);
+        scheduler.SetTask(1, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
+        scheduler.SetTask(2, tsk_2_10ms, TaskCycleTime::_10MS, TaskRole::Supervised);
         scheduler.SetTask(
-            2,
+            3,
             tsk_program_flow_10ms,
             TaskCycleTime::_10MS,
             TaskRole::Unsupervised,
         );
         scheduler.SetTask(
-            3,
+            4,
             background,
             TaskCycleTime::NonCyclic,
             TaskRole::Background,

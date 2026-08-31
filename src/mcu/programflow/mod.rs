@@ -4,18 +4,40 @@ use crate::os::task::{TaskConfiguration, TaskRole};
 
 pub const SUPERVISION_CYCLE_US: u32 = 10_000;
 pub const WATCHDOG_SERVICE_MIN_US: u32 = SUPERVISION_CYCLE_US;
-// The next 5 ms task release occurs at +15 ms and has higher scheduler
-// priority than the still-pending service task. Keep the service deadline
-// strictly before that release so the declared window is actually reachable.
-pub const WATCHDOG_SERVICE_MAX_US: u32 = 14_900;
+// A newly released 1 ms task belongs to the next supervision cycle. Complete
+// validation and watchdog service before +11 ms so that release cannot be
+// confused with unfinished work from the preceding cycle.
+pub const WATCHDOG_SERVICE_MAX_US: u32 = 10_900;
 
-const _: () = assert!(WATCHDOG_SERVICE_MAX_US < 15_000);
+const _: () = assert!(WATCHDOG_SERVICE_MAX_US < 11_000);
 
-const MAX_EXPECTED_CHECKPOINTS: usize = 16;
-const CHECKPOINT_EARLY_TOLERANCE_US: u32 = 1_000;
-const CHECKPOINT_START_LATE_TOLERANCE_US: u32 = 2_000;
-const CHECKPOINT_END_AFTER_START_US: u32 = 500;
-const SAME_RELEASE_PRIORITY_SLOT_US: u32 = 2_000;
+// One 1 ms, one 5 ms, and one 10 ms supervised task produce respectively
+// 20, four, and two start/end checkpoints in each 10 ms supervision cycle.
+const MAX_EXPECTED_CHECKPOINTS: usize = 26;
+const CHECKPOINT_EARLY_TOLERANCE_US: u32 = 100;
+// The start window of the 1 ms task must close well before its next release;
+// otherwise a completely omitted execution could be mistaken for the next
+// occurrence of the same start/end pair. At a shared release, each lower
+// priority task gets another 300 us before it must start. All work due at that
+// release must complete by +850 us, leaving 50 us for watchdog service and a
+// further 50 us before the next release's early window opens. This absolute
+// completion deadline accommodates the measured ~603 us ADC task without
+// implying that every lower-priority task gets another full execution budget.
+const CHECKPOINT_START_LATE_TOLERANCE_US: u32 = 100;
+const CHECKPOINT_COMPLETION_LATE_TOLERANCE_US: u32 = 850;
+const SAME_RELEASE_PRIORITY_START_SLOT_US: u32 = 300;
+
+const _: () = {
+    assert!(CHECKPOINT_START_LATE_TOLERANCE_US < 1_000);
+    assert!(
+        CHECKPOINT_START_LATE_TOLERANCE_US + 2 * SAME_RELEASE_PRIORITY_START_SLOT_US
+            < CHECKPOINT_COMPLETION_LATE_TOLERANCE_US
+    );
+    assert!(
+        SUPERVISION_CYCLE_US + CHECKPOINT_COMPLETION_LATE_TOLERANCE_US < WATCHDOG_SERVICE_MAX_US
+    );
+    assert!(CHECKPOINT_COMPLETION_LATE_TOLERANCE_US < 1_000 - CHECKPOINT_EARLY_TOLERANCE_US);
+};
 
 // Deliberately distant bit patterns reduce the chance that a single memory
 // fault can turn one valid controller phase into another valid phase.
@@ -660,11 +682,11 @@ impl ProgramFlowMonitor {
         nowUs: u64,
     ) {
         let minUs = releaseUs.saturating_sub(CHECKPOINT_EARLY_TOLERANCE_US);
-        let slotDelayUs = prioritySlot.saturating_mul(SAME_RELEASE_PRIORITY_SLOT_US);
+        let slotDelayUs = prioritySlot.saturating_mul(SAME_RELEASE_PRIORITY_START_SLOT_US);
         let startMaxUs = releaseUs
             .saturating_add(CHECKPOINT_START_LATE_TOLERANCE_US)
             .saturating_add(slotDelayUs);
-        let endMaxUs = startMaxUs.saturating_add(CHECKPOINT_END_AFTER_START_US);
+        let endMaxUs = releaseUs.saturating_add(CHECKPOINT_COMPLETION_LATE_TOLERANCE_US);
 
         self.InsertCheckpointSpec(
             CheckpointSpec::new(
@@ -994,12 +1016,13 @@ mod tests {
     use super::*;
     use crate::os::task::TaskCycleTime;
 
-    fn ValidConfiguration() -> [TaskConfiguration; 4] {
+    fn ValidConfiguration() -> [TaskConfiguration; 5] {
         [
-            TaskConfiguration::new(0, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(1, TaskCycleTime::_10MS, TaskRole::Supervised),
-            TaskConfiguration::new(2, TaskCycleTime::_10MS, TaskRole::Unsupervised),
-            TaskConfiguration::new(3, TaskCycleTime::NonCyclic, TaskRole::Background),
+            TaskConfiguration::new(0, TaskCycleTime::_1MS, TaskRole::Supervised),
+            TaskConfiguration::new(1, TaskCycleTime::_5MS, TaskRole::Supervised),
+            TaskConfiguration::new(2, TaskCycleTime::_10MS, TaskRole::Supervised),
+            TaskConfiguration::new(3, TaskCycleTime::_10MS, TaskRole::Unsupervised),
+            TaskConfiguration::new(4, TaskCycleTime::NonCyclic, TaskRole::Background),
         ]
     }
 
@@ -1022,18 +1045,35 @@ mod tests {
     }
 
     fn ReportValidCycle(monitor: &mut ProgramFlowMonitor, baseUs: u64) {
-        monitor.ReportTaskStart(0, baseUs + 5_000);
-        monitor.ReportTaskEnd(0, baseUs + 5_100);
-        monitor.ReportTaskStart(0, baseUs + 10_000);
-        monitor.ReportTaskEnd(0, baseUs + 10_100);
-        monitor.ReportTaskStart(1, baseUs + 10_200);
-        monitor.ReportTaskEnd(1, baseUs + 10_300);
+        let mut release = 1u64;
+        while release <= 10 {
+            let releaseUs = baseUs + release * 1_000;
+            monitor.ReportTaskStart(0, releaseUs);
+            monitor.ReportTaskEnd(0, releaseUs + 25);
+
+            if release.is_multiple_of(5) {
+                monitor.ReportTaskStart(1, releaseUs + 50);
+                monitor.ReportTaskEnd(1, releaseUs + 150);
+            }
+
+            if release == 10 {
+                monitor.ReportTaskStart(2, releaseUs + 200);
+                monitor.ReportTaskEnd(2, releaseUs + 300);
+            }
+
+            release += 1;
+        }
     }
 
     #[test]
     fn ConfiguresExpectedSequenceAndServicesConsecutiveCycles() {
         let mut monitor = ConfiguredMonitor();
-        assert_eq!(monitor._expectedCheckpointCount, 6);
+        assert_eq!(monitor._expectedCheckpointCount, 26);
+        assert_eq!(
+            monitor._expectedCheckpoints[24].checkpoint.Decode(),
+            ProgramFlowCheckpoint::new(2, ProgramFlowCheckpointKind::Start)
+        );
+        assert_eq!(monitor._expectedCheckpoints[24].releaseUs, 10_000);
         assert_eq!(monitor._resetStatusAtStartup, 0x81);
 
         ReportValidCycle(&mut monitor, 0);
@@ -1072,8 +1112,8 @@ mod tests {
     #[test]
     fn LatchesDuplicateCheckpoint() {
         let mut monitor = ConfiguredMonitor();
-        monitor.ReportTaskStart(0, 5_000);
-        monitor.ReportTaskStart(0, 5_100);
+        monitor.ReportTaskStart(0, 1_000);
+        monitor.ReportTaskStart(0, 1_010);
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
             ProgramFlowFault::DuplicateExecution
@@ -1083,7 +1123,7 @@ mod tests {
     #[test]
     fn LatchesEndWithoutExpectedStartAsOmission() {
         let mut monitor = ConfiguredMonitor();
-        monitor.ReportTaskEnd(0, 5_000);
+        monitor.ReportTaskEnd(0, 1_000);
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
             ProgramFlowFault::OmittedExecution
@@ -1093,8 +1133,8 @@ mod tests {
     #[test]
     fn RefusesIncompleteCycle() {
         let mut monitor = ConfiguredMonitor();
-        monitor.ReportTaskStart(0, 5_000);
-        monitor.ReportTaskEnd(0, 5_100);
+        monitor.ReportTaskStart(0, 1_000);
+        monitor.ReportTaskEnd(0, 1_025);
         assert!(!monitor.AuthorizeWatchdogService(10_000, 10_000));
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
@@ -1105,14 +1145,14 @@ mod tests {
     #[test]
     fn EnforcesCheckpointTiming() {
         let mut early = ConfiguredMonitor();
-        early.ReportTaskStart(0, 3_999);
+        early.ReportTaskStart(0, 899);
         assert_eq!(
             early.GetSnapshot().diagnostic.fault,
             ProgramFlowFault::TimingTooEarly
         );
 
         let mut late = ConfiguredMonitor();
-        late.ReportTaskStart(0, 7_001);
+        late.ReportTaskStart(0, 1_101);
         assert_eq!(
             late.GetSnapshot().diagnostic.fault,
             ProgramFlowFault::TimingTooLate
@@ -1123,9 +1163,10 @@ mod tests {
     fn RejectsMissingOrMisorderedServiceTask() {
         let mut missing = ProgramFlowMonitor::new();
         let missingService = [
-            TaskConfiguration::new(0, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(1, TaskCycleTime::_10MS, TaskRole::Supervised),
-            TaskConfiguration::new(2, TaskCycleTime::NonCyclic, TaskRole::Background),
+            TaskConfiguration::new(0, TaskCycleTime::_1MS, TaskRole::Supervised),
+            TaskConfiguration::new(1, TaskCycleTime::_5MS, TaskRole::Supervised),
+            TaskConfiguration::new(2, TaskCycleTime::_10MS, TaskRole::Supervised),
+            TaskConfiguration::new(3, TaskCycleTime::NonCyclic, TaskRole::Background),
         ];
         assert!(!missing.ConfigureAtSchedulerEpoch(&missingService, 0, 0));
         assert_eq!(
@@ -1135,10 +1176,11 @@ mod tests {
 
         let mut misordered = ProgramFlowMonitor::new();
         let misorderedService = [
-            TaskConfiguration::new(0, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(1, TaskCycleTime::_10MS, TaskRole::Unsupervised),
-            TaskConfiguration::new(2, TaskCycleTime::_10MS, TaskRole::Supervised),
-            TaskConfiguration::new(3, TaskCycleTime::NonCyclic, TaskRole::Background),
+            TaskConfiguration::new(0, TaskCycleTime::_1MS, TaskRole::Supervised),
+            TaskConfiguration::new(1, TaskCycleTime::_5MS, TaskRole::Supervised),
+            TaskConfiguration::new(2, TaskCycleTime::_10MS, TaskRole::Unsupervised),
+            TaskConfiguration::new(3, TaskCycleTime::_10MS, TaskRole::Supervised),
+            TaskConfiguration::new(4, TaskCycleTime::NonCyclic, TaskRole::Background),
         ];
         assert!(!misordered.ConfigureAtSchedulerEpoch(&misorderedService, 0, 0));
         assert_eq!(
@@ -1151,7 +1193,7 @@ mod tests {
     fn DetectsMonitorStateCorruption() {
         let mut monitor = ConfiguredMonitor();
         monitor._expectedIndexInv = 0;
-        monitor.ReportTaskStart(0, 5_000);
+        monitor.ReportTaskStart(0, 1_000);
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
             ProgramFlowFault::InternalMonitorFailure
@@ -1164,7 +1206,7 @@ mod tests {
         monitor._watchdogAlignmentTimestampUs = 1;
         monitor._watchdogAlignmentTimestampUsInv = !1;
 
-        monitor.ReportTaskStart(0, 5_000);
+        monitor.ReportTaskStart(0, 1_000);
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
             ProgramFlowFault::InternalMonitorFailure
@@ -1177,7 +1219,7 @@ mod tests {
         monitor._state = 0xA5A5_5A5A;
         monitor._stateInv = !monitor._state;
 
-        monitor.ReportTaskStart(0, 5_000);
+        monitor.ReportTaskStart(0, 1_000);
 
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
@@ -1191,7 +1233,7 @@ mod tests {
         let mut monitor = ConfiguredMonitor();
         monitor._expectedCheckpoints[0].checkpoint.kind = 0xA5A5_5A5A;
 
-        monitor.ReportTaskStart(0, 5_000);
+        monitor.ReportTaskStart(0, 1_000);
 
         assert_eq!(
             monitor.GetSnapshot().diagnostic.fault,
@@ -1207,6 +1249,15 @@ mod tests {
 
     #[test]
     fn EnforcesWatchdogServiceStateAndLateBoundary() {
+        let mut atLateBoundary = ConfiguredMonitor();
+        ReportValidCycle(&mut atLateBoundary, 0);
+        assert!(
+            atLateBoundary.AuthorizeWatchdogService(
+                SUPERVISION_CYCLE_US as u64,
+                WATCHDOG_SERVICE_MAX_US as u64,
+            )
+        );
+
         let mut late = ConfiguredMonitor();
         ReportValidCycle(&mut late, 0);
         assert!(!late.AuthorizeWatchdogService(
@@ -1262,11 +1313,11 @@ mod tests {
     #[test]
     fn FirstFaultRemainsLatched() {
         let mut monitor = ConfiguredMonitor();
-        monitor.ReportTaskStart(0, 5_000);
-        monitor.ReportTaskStart(0, 5_100);
+        monitor.ReportTaskStart(0, 1_000);
+        monitor.ReportTaskStart(0, 1_010);
         let firstDiagnostic = monitor.GetSnapshot().diagnostic;
 
-        monitor.ReportTaskEnd(1, 10_000);
+        monitor.ReportTaskEnd(2, 10_000);
 
         let finalDiagnostic = monitor.GetSnapshot().diagnostic;
         assert_eq!(finalDiagnostic.fault, firstDiagnostic.fault);
@@ -1315,13 +1366,10 @@ mod tests {
 
         let mut overflow = ProgramFlowMonitor::new();
         let overflowConfiguration = [
-            TaskConfiguration::new(0, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(1, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(2, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(3, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(4, TaskCycleTime::_5MS, TaskRole::Supervised),
-            TaskConfiguration::new(5, TaskCycleTime::_10MS, TaskRole::Unsupervised),
-            TaskConfiguration::new(6, TaskCycleTime::NonCyclic, TaskRole::Background),
+            TaskConfiguration::new(0, TaskCycleTime::_1MS, TaskRole::Supervised),
+            TaskConfiguration::new(1, TaskCycleTime::_1MS, TaskRole::Supervised),
+            TaskConfiguration::new(2, TaskCycleTime::_10MS, TaskRole::Unsupervised),
+            TaskConfiguration::new(3, TaskCycleTime::NonCyclic, TaskRole::Background),
         ];
         assert!(!overflow.ConfigureAtSchedulerEpoch(&overflowConfiguration, 0, 0));
         assert_eq!(

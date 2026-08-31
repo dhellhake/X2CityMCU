@@ -11,7 +11,8 @@
 | BMS | `BAT-` is permanently connected to battery negative. `BAT+` is permanently connected to battery positive and can reach 58.8 V. Its separate `GND` is tied to battery negative only while enabled by the BMS. | 9600 bit/s UART, TX and RX. The BMS provides no stated low-voltage rail for an isolator. |
 | ESC | `BAT+` is the intended power input. A 3.3 V output is provided by the ESC; its current capacity and back-power behavior are not yet specified. | TX, RX, and common ground. |
 | VD18MT | `BAT+` is the intended supply. Ground behavior beyond the interface label is not yet documented. | 9600 bit/s UART, TX and RX. The display-side 5 V UART is connected through the carrier's level-shifting interface. |
-| Controller/carrier | The external connector exposes `BAT+`, permanent `BAT-`, `12V`, and contacts labelled `GND`. | The carrier terminates the implemented BMS and level-shifted VD18MT UARTs and connects to the ESC elsewhere on the board. SoM UART pads are unbuffered 3.3 V logic. |
+| [Hall throttle](throttle-input.md) | The development assembly uses carrier-generated `3V3_THROTTLE`, measured as 3.3527 V at Molex `F2`; production protection remains open. The SoM exports no suitable peripheral 3.3 V rail. Its return is intended for the quiet controller analog-ground domain, whose relationship to the final controller reference must be fixed. | Three-wire interface on Molex `F2` (`AcHdl 3V3`), `F3` (`AcHdl Sig`), and `F4` (`AcHdl Gnd`); the Hall signal is 0.82–2.00 V. |
+| Controller/carrier | The external connector exposes `BAT+`, permanent `BAT-`, `12V`, and contacts labelled `GND`. | The carrier terminates the implemented BMS and level-shifted VD18MT UARTs and the ESC UART/`PWR_ON` interface on Molex E1-E4. SoM UART pads are unbuffered 3.3 V logic. |
 
 Traction-battery voltage must never be connected to a 3.3 V logic-supply pin, UART pin, debugger reference, or the SoM's backup rail.
 

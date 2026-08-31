@@ -3,7 +3,7 @@
 
 use crate::{
     drv::cortex::Shared,
-    mcu::{BrkHdlAdcPair, BrkHdlAdcPairStatus, McuManager},
+    mcu::{BrkHdlAdcPair, BrkHdlAdcPairStatus},
 };
 
 const ADC_MAX_CODE: u16 = 4_095;
@@ -88,11 +88,9 @@ pub struct BrkHdlInterface {
 static BRKHDL: Shared<BrkHdlInterface> = Shared::new(BrkHdlInterface::new());
 
 #[inline]
-pub fn BrkHdlInterface_Run(tstmp: u64) {
-    // The two averaged ADC conversions take about 171 us. Acquire them before
-    // taking the component-state lock so scheduler interrupts remain enabled
-    // throughout that wait; only coherent-pair publication is atomic.
-    let sample = McuManager::BrkHdlInput_ReadPair();
+pub fn BrkHdlInterface_Run(tstmp: u64, sample: BrkHdlAdcPair) {
+    // ADC2 acquisition is performed once by the 5 ms deployment runnable;
+    // only coherent-pair publication is atomic here.
     BRKHDL.with(|interface| interface.BrkHdlInterface_ProcessAcquisition(tstmp, sample));
 }
 

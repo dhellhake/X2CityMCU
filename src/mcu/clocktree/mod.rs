@@ -70,6 +70,15 @@ pub(super) fn EnableLpuart2AndIomuxcClocks() {
     });
 }
 
+pub(super) fn EnableLpuart3Gpio1AndIomuxcClocks() {
+    CCM.with(|ccm| {
+        ccm.Set_CCGR0_CG6(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR1_CG13(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR4_CG1(CLOCK_GATE::RUN_WAIT);
+        ccm.Set_CCGR4_CG2(CLOCK_GATE::RUN_WAIT);
+    });
+}
+
 pub(super) fn EnableLpuart6AndIomuxcClocks() {
     CCM.with(|ccm| {
         ccm.Set_CCGR3_CG3(CLOCK_GATE::RUN_WAIT);
@@ -90,6 +99,7 @@ impl McuManager {
             // Use the crystal directly for every LPUART root. This remains
             // deterministic while PLLs are reconfigured and gives the 9600
             // bit/s LPUART2 and LPUART6 links exact divisors.
+            ccm.Set_CCGR0_CG6(CLOCK_GATE::OFF);
             ccm.Set_CCGR0_CG14(CLOCK_GATE::OFF);
             ccm.Set_CCGR3_CG3(CLOCK_GATE::OFF);
             ccm.Set_CSCDR1_UART_CLK_SEL(UART_CLK_SEL::OSC_CLK);

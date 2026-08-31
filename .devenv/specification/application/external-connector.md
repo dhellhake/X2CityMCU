@@ -14,15 +14,22 @@ The view below looks **into the mating/contact face of the male end**. `A1` is t
 
 | Row ↓ / column → | `A` | `B` | `C` | `D` | `E` | `F` | `G` | `H` | `J` | `K` | `L` | `M` |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **`1` (top)** | — | — | — | — | — | — | — | `VD18MT Rx` | `BAT-` | `SWCLK` | — | `12V` |
-| **`2`** | — | — | — | — | — | — | `BrkHdl B` | `VD18MT Tx` | `BMS Tx` | `Vref` | — | `12V` |
-| **`3`** | — | — | — | — | — | — | `BrkHdl A` | `VD18MT B+` | `BMS Rx` | `GND` | — | `GND` |
-| **`4` (bottom)** | — | — | — | — | — | — | `VD18MT Gnd` | `BAT+` | `SWDIO` | `RESET` | — | `GND` |
+| **`1` (top)** | — | — | — | — | `ESC PWR` | — | — | `VD18MT Rx` | `BAT-` | `SWCLK` | — | `12V` |
+| **`2`** | — | — | — | — | `ESC Tx` | `AcHdl 3V3` | `BrkHdl B` | `VD18MT Tx` | `BMS Tx` | `Vref` | — | `12V` |
+| **`3`** | — | — | — | — | `ESC Rx` | `AcHdl Sig` | `BrkHdl A` | `VD18MT B+` | `BMS Rx` | `GND` | — | `GND` |
+| **`4` (bottom)** | — | — | — | — | `ESC Gnd` | `AcHdl Gnd` | `VD18MT Gnd` | `BAT+` | `SWDIO` | `RESET` | — | `GND` |
 
 ## Established assignments
 
 | Contact | Assignment | Direction or meaning |
 |:---:|---|---|
+| `E1` | `ESC PWR` | ESC power-on control input; intended to be driven by the controller through the carrier's level-shifting circuit. |
+| `E2` | `ESC Tx` | ESC-driven UART output; intended to reach controller LPUART3 RX. |
+| `E3` | `ESC Rx` | ESC UART receive input; intended to be driven by controller LPUART3 TX. |
+| `E4` | `ESC Gnd` | ESC UART and power-control reference; its relationship to the controller ground domain must be fixed in the schematic. |
+| `F2` | `AcHdl 3V3` | 3.3 V supply to the Hall accelerator handle; `THROTTLE_3V3` in the [throttle-input specification](throttle-input.md). Production protection remains open. |
+| `F3` | `AcHdl Sig` | Hall accelerator-handle analog output to the throttle signal front end; `THROTTLE_SIGNAL` in the [throttle-input specification](throttle-input.md). |
+| `F4` | `AcHdl Gnd` | Dedicated accelerator-handle signal and supply return; `THROTTLE_GND` in the [throttle-input specification](throttle-input.md). |
 | `G2` | `BrkHdl B` | Brake-handle coded-loop conductor B; see [Brake-handle input](brake-input.md). |
 | `G3` | `BrkHdl A` | Brake-handle coded-loop conductor A; see [Brake-handle input](brake-input.md). |
 | `G4` | `VD18MT Gnd` | VD18MT ground/reference connection; its relationship to the other ground domains must be fixed in the schematic. |
@@ -53,5 +60,6 @@ The view below looks **into the mating/contact face of the male end**. `A1` is t
 ## Related documents
 
 - [Communication interfaces](communication-interfaces.md)
+- [Throttle input](throttle-input.md)
 - [Brake-handle input](brake-input.md)
 - [Verification](verification.md)

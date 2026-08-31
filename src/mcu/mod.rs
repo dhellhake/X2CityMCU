@@ -14,31 +14,43 @@ use crate::{
     os::{task::Task, Scheduler},
 };
 
+mod analoginput;
 mod bmscommunication;
 mod boardled;
 #[cfg(feature = "qspi-boot")]
 mod boot;
-mod brkhdlinput;
 mod clocktree;
 pub mod deployment;
+mod esccommunication;
 mod programflow;
 mod vd18mtcommunication;
 
-pub use brkhdlinput::{BrkHdlAdcPair, BrkHdlAdcPairStatus};
+pub use analoginput::{
+    AcHdlAdcPair, AcHdlAdcPairStatus, AnalogInputFrame, AnalogInputStatus, BrkHdlAdcPair,
+    BrkHdlAdcPairStatus,
+};
 use clocktree::CORE_CLOCK_HZ;
 pub use programflow::{
     ProgramFlowCheckpoint, ProgramFlowCheckpointKind, ProgramFlowDiagnostic, ProgramFlowFault,
     ProgramFlowSnapshot, ProgramFlowState,
 };
 
-pub(crate) const TASK_COUNT: usize = 4;
+pub(crate) const TASK_COUNT: usize = 5;
 // The debug-profile ADC acquisition/classification call chain exceeds a
 // 256-word stack and would overwrite the adjacent SysTick bookkeeping before
 // returning. Keep enough headroom for both the measured path and exception
 // stacking; verify the watermark whenever this task grows.
+// The ESC task's debug-profile fault-reporting path exceeds a 256-word stack.
+// Keep the same headroom as the ADC task so a latched program-flow fault cannot
+// overwrite the adjacent SysTick state; verify the lifetime watermark under
+// simultaneous command, telemetry, and UART-interrupt load.
+// The debug-profile program-flow validation path also exceeds 256 words at its
+// deepest call even though its PSP has unwound by PendSV. The lifetime guard
+// detected that transient overflow on target, so give it the same headroom.
+pub(crate) const TASK_1MS_STACK_SIZE: usize = 512;
 pub(crate) const TASK_5MS_STACK_SIZE: usize = 512;
 pub(crate) const TASK_10MS_STACK_SIZE: usize = 256;
-pub(crate) const TASK_PROGRAM_FLOW_STACK_SIZE: usize = 256;
+pub(crate) const TASK_PROGRAM_FLOW_STACK_SIZE: usize = 512;
 pub(crate) const TASK_BACKGROUND_STACK_SIZE: usize = 256;
 
 // RT1061 automatically falls back from the 32.768 kHz crystal to its nominal
@@ -61,6 +73,7 @@ const _: () = {
 // Tasks are stable objects outside Scheduler. Each one owns its stack and may
 // select a different compile-time capacity; Scheduler stores only their
 // handles in scheduler order.
+pub(crate) static TASK_1MS: Task<TASK_1MS_STACK_SIZE> = Task::new();
 pub(crate) static TASK_5MS: Task<TASK_5MS_STACK_SIZE> = Task::new();
 pub(crate) static TASK_10MS: Task<TASK_10MS_STACK_SIZE> = Task::new();
 pub(crate) static TASK_PROGRAM_FLOW: Task<TASK_PROGRAM_FLOW_STACK_SIZE> = Task::new();
@@ -68,6 +81,7 @@ pub(crate) static TASK_BACKGROUND: Task<TASK_BACKGROUND_STACK_SIZE> = Task::new(
 
 pub(crate) static SCHEDULER: Shared<Scheduler<TASK_COUNT>> = Shared::new(unsafe {
     Scheduler::new([
+        TASK_1MS.handle(),
         TASK_5MS.handle(),
         TASK_10MS.handle(),
         TASK_PROGRAM_FLOW.handle(),

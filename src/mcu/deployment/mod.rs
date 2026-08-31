@@ -1,9 +1,18 @@
-use crate::{bms::BmsInterface_Run, brkhdl::BrkHdlInterface_Run, vd18mt::VD18MTInterface_Run};
+use crate::{
+    achdl::AcHdlInterface_Run, bms::BmsInterface_Run, brkhdl::BrkHdlInterface_Run,
+    esc::EscInterface_Run, vd18mt::VD18MTInterface_Run,
+};
 
 use super::McuManager;
 
+pub extern "C" fn tsk_0_1ms(tstmp: u64) {
+    EscInterface_Run(tstmp);
+}
+
 pub extern "C" fn tsk_1_5ms(tstmp: u64) {
-    BrkHdlInterface_Run(tstmp);
+    let analogInputs = McuManager::AnalogInput_ReadFrame();
+    BrkHdlInterface_Run(tstmp, analogInputs.Brake);
+    AcHdlInterface_Run(tstmp, analogInputs.AcHdl);
     McuManager::BoardLed_Step(tstmp);
 }
 
