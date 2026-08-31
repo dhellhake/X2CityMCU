@@ -4,7 +4,7 @@ use crate::{
     drv::{
         cortex::Shared,
         flash::Flash,
-        gpio::{Gpio, GPIOA_ADDR, GPIOB_ADDR, GPIOD_ADDR},
+        gpio::{Gpio, GPIOA_ADDR, GPIOB_ADDR, GPIOD_ADDR, GPIOH_ADDR},
         pwr::Pwr,
         rcc::Rcc,
         scb::Scb,
@@ -17,6 +17,7 @@ use crate::{
     os::{task::Task, Scheduler},
 };
 
+mod boardled;
 pub mod deployment;
 pub mod peripherals;
 pub mod program_flow;
@@ -57,6 +58,7 @@ pub static FLASH: Shared<Flash> = Shared::new(Flash::new());
 pub static GPIOA: Shared<Gpio> = Shared::new(Gpio::new(GPIOA_ADDR));
 pub static GPIOB: Shared<Gpio> = Shared::new(Gpio::new(GPIOB_ADDR));
 pub static GPIOD: Shared<Gpio> = Shared::new(Gpio::new(GPIOD_ADDR));
+pub static GPIOH: Shared<Gpio> = Shared::new(Gpio::new(GPIOH_ADDR));
 pub static USART1: Shared<Usart> = Shared::new(Usart::new(USART1_ADDR));
 pub static USART2: Shared<Usart> = Shared::new(Usart::new(USART2_ADDR));
 pub static USART3: Shared<Usart> = Shared::new(Usart::new(USART3_ADDR));

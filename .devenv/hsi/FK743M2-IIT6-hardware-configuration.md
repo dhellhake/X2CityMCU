@@ -156,6 +156,9 @@ Verification method codes are:
 | `HSI-UAR-008` | A safety-relevant UART protocol shall provide and verify message framing, length, checksum, value range, sequence/freshness or timeout as required by its allocated safety requirement. | BMS/display component | `I`, `T-SW`, `T-FI` | Partial; component parsers validate framing/checksums, but channel safety allocation and end-to-end safety metrics are `TBD`. |
 | `HSI-UAR-009` | External devices connected to MCU GPIO shall satisfy STM32H743II input/output voltage limits, share a defined ground reference and shall not back-power an unpowered participant. | Board/system integration | `I`, `A`, `T-HW` | Assumption; external wiring is not controlled by firmware. |
 | `HSI-UAR-010` | The 5 V VT8MT UART side shall connect to PA3/PD5 only through a level interface demonstrated to provide valid 3.3 V MCU levels across voltage, load, baud rate and temperature. | External level shifter, system integration | `A`, `T-HW` | Assumption; the installed bidirectional level-shifter behavior requires electrical validation. |
+| `HSI-LED-001` | PH7 shall drive the onboard active-low user LED as a low-speed push-pull GPIO output without an internal pull. Its output latch shall be set high before output mode is selected. | RCC, GPIOH, board LED | `I`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs); the initialization sequence prevents an unintended startup pulse. |
+| `HSI-LED-002` | The supervised 5 ms task shall drive a one-second heartbeat consisting of 100 ms on, 100 ms off, 100 ms on and 700 ms off using its scheduled timestamp. | Scheduler, 5 ms task, board LED | `I`, `T-SW`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) and [`src/mcu/deployment/mod.rs`](../../src/mcu/deployment/mod.rs); task-aligned edge assertions are evaluated at compile time. |
+| `HSI-LED-003` | The heartbeat shall be treated as a scheduler-activity indication only and shall not replace program-flow monitoring or the hardware watchdog. | System diagnostics | `I`, `A` | Implemented architecturally; WWDG1 remains the independent scheduler supervision reaction. |
 | `HSI-DBG-001` | SWD shall use PA13/SWDIO, PA14/SWCLK, NRST, target 3.3 V reference and common ground as listed for P1; four-wire JTAG operation shall not be assumed from J-Link signal labels. | Board P1, debugger configuration | `I`, `T-HW` | Implemented for development/debug connection. |
 | `HSI-DBG-002` | Safety-relevant operation shall not depend on an attached debugger, and production debug access shall follow the item safety and security concept. | System integration | `I`, `T-HW` | Partial; standalone execution works, but the production debug-access policy is `TBD`. |
 | `HSI-DBG-003` | The enclosure debug interface shall route J4 to PA13/SWDIO, K1 to PA14/SWCLK, K2 to the target 3.3 V reference, K3 to GND and K4 to NRST. J-Link TMS shall connect to J4/DIO, TCLK to K1/CLK, VCC/VTref to K2/3V3, GND to K3 and RESET to K4/RST. | Enclosure connector, internal harness and board P1 | `I`, `T-HW` | Assumption; the assignment is recorded and requires end-to-end continuity and isolation testing. |
@@ -169,7 +172,7 @@ Verification method codes are:
 | `HSI-PIN-003` | PC8, PC9, PC10, PC11, PC12 and PD2 shall remain available to the fitted microSD interface. PC9 shall not output MCO2 while an SD transaction is active. | Pin multiplexing, SDMMC1, RCC | `I`, `T-HW` | Implemented as a prohibition; SDMMC1 and MCO2 are currently unconfigured. |
 | `HSI-PIN-004` | PA11 and PA12 shall remain unconfigured until USB OTG FS, its electrical interface and a valid 48 MHz kernel clock are specified and verified. | GPIOA, RCC, USB OTG FS | `I`, `T-HW` | Implemented as a prohibition. |
 | `HSI-PIN-005` | LCD1 RGB, timing, touch and backlight pins shall remain unconfigured until ownership, timing, electrical and startup requirements for the attached panel are specified and verified. | LTDC, GPIO, touch interface | `I`, `T-HW` | Implemented as a prohibition. |
-| `HSI-PIN-006` | PC14/PC15, LSE, RTC, backup domain and PH7 user LED shall remain unconfigured until their use and fault behavior are added to this HSI. | RCC, RTC, GPIOH | `I` | Implemented as a prohibition. |
+| `HSI-PIN-006` | PC14/PC15, LSE, RTC and the backup domain shall remain unconfigured until their use and fault behavior are added to this HSI. | RCC, RTC | `I` | Implemented as a prohibition. |
 | `HSI-PIN-007` | Pins without an allocated software function shall remain in their documented reset state unless an approved pin-safety analysis specifies a deterministic alternative. | GPIO | `I`, `A`, `T-HW` | Implemented by absence of writes; pin-level safety analysis is open. |
 | `HSI-PIN-008` | Shared or multiply connected board pins shall have one declared owner at a time, and software shall prevent conflicting peripheral functions from being enabled concurrently. | MCU software architecture | `I`, `T-SW` | Partial; current configuration has no active conflict, but no generic ownership enforcement exists. |
 | `HSI-PIN-009` | Enclosure connector cavities M1 and M2 shall be assigned to the nominal 12 V supply, and cavities M3 and M4 shall be assigned to GND. The four power cavities shall not be assigned a signal function. | Enclosure connector and harness | `I`, `T-HW` | Assumption; assignment is based on the current physical integration and requires continuity and polarity verification. |
@@ -210,7 +213,7 @@ Verification method codes are:
 | microSD | Fitted and wired, but SDMMC1 is not initialized | Not configured |
 | USB Type-C data | PA11/PA12 are wired, but USB OTG FS is not initialized | Not configured |
 | RGB LCD/touch FPC | Fitted and wired, but LTDC/touch GPIO is not initialized | Not configured |
-| User LED | PH7 is wired to the active-low LED, but is not initialized | Not configured |
+| User LED | PH7 active-low heartbeat, updated by the supervised 5 ms task | [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) |
 | LSE/RTC | 32.768 kHz crystal is fitted, but LSE and RTC are not initialized | Not configured |
 | PC9 clock test | Previously used as a 32 MHz MCO2 verification output; code was removed | Historical only |
 
@@ -229,7 +232,7 @@ The reset and startup sequence is:
    write its address to `SCB.VTOR`.
 9. Unmask interrupts and enter `main()`.
 10. Configure power, Flash latency and the 480 MHz clock tree.
-11. Configure USART1, USART2 and USART3.
+11. Configure the PH7 heartbeat LED and USART1, USART2 and USART3.
 12. Create the OS tasks and component instances.
 13. Configure the program-flow monitor, start WWDG1 and arm the first SysTick
     deadline from the same time origin.
@@ -508,7 +511,7 @@ P1 is electrically a 2x4 header even when only one 1x4 strip is fitted.
 | 9 | B14 | PB14 | None | Reset state | B12 | PB12 | None | Reset state |
 | 10 | H12 | PH12 | LCD FPC R6 | Reset state | H8 | PH8 | LCD FPC R2 | Reset state |
 | 11 | H11 | PH11 | LCD FPC R5 | Reset state | H10 | PH10 | LCD FPC R4 | Reset state |
-| 12 | H9 | PH9 | LCD FPC R3 | Reset state | H7 | PH7 | Active-low user LED | Reset state |
+| 12 | H9 | PH9 | LCD FPC R3 | Reset state | H7 | PH7 | Active-low user LED | GPIO output; heartbeat |
 | 13 | B11 | PB11 | None | USART3_RX from BMS | H6 | PH6 | LCD FPC backlight PWM | Reset state |
 | 14 | I4 | PI4 | LCD FPC B4 | Reset state | B10 | PB10 | None | USART3_TX to BMS |
 | 15 | I5 | PI5 | LCD FPC B5 | Reset state | I6 | PI6 | LCD FPC B6 | Reset state |
@@ -562,7 +565,7 @@ the UART-connected VT8MT display.
 | PH1/OSC_OUT | 25 MHz HSE crystal output | Enabled as PLL1 source |
 | PC14/OSC32_IN | 32.768 kHz LSE crystal input | Not enabled |
 | PC15/OSC32_OUT | 32.768 kHz LSE crystal output | Not enabled |
-| PH7 | User LED cathode through onboard LED/resistor; active low | Not configured |
+| PH7 | User LED cathode through onboard LED/resistor; active low | GPIO output; 60 BPM heartbeat |
 | PA11 | USB OTG FS D- to Type-C connector and upper header | Not configured |
 | PA12 | USB OTG FS D+ to Type-C connector and upper header | Not configured |
 
@@ -619,7 +622,6 @@ current software:
 - USB OTG FS and a valid USB 48 MHz kernel clock.
 - RGB LCD LTDC signals, touch interface and LCD backlight PWM.
 - LSE, RTC and backup SRAM use.
-- PH7 user LED.
 - CPU instruction/data caches and MPU.
 - DMA and MDMA.
 - UART interrupts and NVIC configuration for USART1/2/3.

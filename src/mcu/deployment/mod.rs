@@ -5,7 +5,9 @@ pub(crate) static BMS: Shared<BmsInterface> = Shared::new(BmsInterface::new());
 
 #[unsafe(link_section = ".itcm_text.deployment")]
 #[inline(never)]
-pub extern "C" fn tsk_1_5ms(_tstmp: u64) {}
+pub extern "C" fn tsk_1_5ms(tstmp: u64) {
+    McuManager::BoardLed_Step(tstmp);
+}
 
 #[unsafe(link_section = ".itcm_text.deployment")]
 #[inline(never)]

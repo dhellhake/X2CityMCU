@@ -45,6 +45,7 @@ fn main() -> ! {
 
     /* Pre-OS Init */
     McuManager::McuClockTree_Init();
+    McuManager::BoardLed_Init();
     McuManager::UartCommunication_Init();
     McuManager::VD18MTCommunication_Init();
     McuManager::BmsCommunication_Init();
