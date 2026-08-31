@@ -4,149 +4,17 @@
         {
             "type": "cortex-debug",
             "request": "launch",
-            "name": "Debug i.MX RT1061 from RAM (Atmel-ICE SWD)",
+            "name": "Debug STM32H743 (Atmel-ICE SWD)",
             "servertype": "openocd",
-            "serverpath": "openocd",
-            "gdbPath": "C:/Program Files (x86)/Arm/GNU Toolchain mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Validate RAM image",
-            "executable": "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct",
-            "loadFiles": [],
+            "serverpath":"C:/Users/domin/AppData/Roaming/xPacks/openocd/xpack-openocd-0.12.0-6/bin/openocd.exe",
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "Cargo Build",
+            "executable": "./target/thumbv7em-none-eabihf/debug/ExhValveAct",
             "configFiles": [
-                "${workspaceFolder}/.devenv/openocd/atmel-ice-mimxrt1061.cfg"
+                "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.cfg"
             ],
-            "openOCDPreConfigLaunchCommands": [
-                "set X2_PROBE_SERIAL {${config:x2city.atmelIceSerial}}",
-                "set X2_ADAPTER_SPEED_KHZ ${config:x2city.atmelIceSpeedKHz}"
-            ],
-            "overrideLaunchCommands": [
-                "monitor halt",
-                "restore target/thumbv7em-none-eabihf/debug/ExhValveAct.bin binary 0x20200000",
-                "set $xpsr = 0x01000000",
-                "set $control = 0",
-                "set $basepri = 0",
-                "set $faultmask = 0",
-                "set $primask = 1",
-                "monitor mww 0xe000ed08 0x20200000",
-                "set $msp = 0x20280000",
-                "set $sp = 0x20280000",
-                "set $pc = 0x20200401"
-            ],
-            "overrideRestartCommands": [
-                "monitor halt",
-                "restore target/thumbv7em-none-eabihf/debug/ExhValveAct.bin binary 0x20200000",
-                "set $xpsr = 0x01000000",
-                "set $control = 0",
-                "set $basepri = 0",
-                "set $faultmask = 0",
-                "set $primask = 1",
-                "monitor mww 0xe000ed08 0x20200000",
-                "set $msp = 0x20280000",
-                "set $sp = 0x20280000",
-                "set $pc = 0x20200401"
-            ],
-            "overrideResetCommands": [
-                "monitor halt",
-                "restore target/thumbv7em-none-eabihf/debug/ExhValveAct.bin binary 0x20200000",
-                "set $xpsr = 0x01000000",
-                "set $control = 0",
-                "set $basepri = 0",
-                "set $faultmask = 0",
-                "set $primask = 1",
-                "monitor mww 0xe000ed08 0x20200000",
-                "set $msp = 0x20280000",
-                "set $sp = 0x20280000",
-                "set $pc = 0x20200401"
-            ]
-        },
-        {
-            "type": "cortex-debug",
-            "request": "attach",
-            "name": "Attach i.MX RT1061 QSPI (Atmel-ICE SWD)",
-            "servertype": "openocd",
-            "serverpath": "openocd",
-            "gdbPath": "C:/Program Files (x86)/Arm/GNU Toolchain mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
-            "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct-qspi.elf",
-            "configFiles": [
-                "${workspaceFolder}/.devenv/openocd/atmel-ice-mimxrt1061.cfg"
-            ],
-            "openOCDPreConfigLaunchCommands": [
-                "set X2_PROBE_SERIAL {${config:x2city.atmelIceSerial}}",
-                "set X2_ADAPTER_SPEED_KHZ ${config:x2city.atmelIceSpeedKHz}"
-            ]
-        },
-        {
-            "type": "cortex-debug",
-            "request": "attach",
-            "name": "Attach i.MX RT1061 QSPI release (Atmel-ICE SWD)",
-            "servertype": "openocd",
-            "serverpath": "openocd",
-            "gdbPath": "C:/Program Files (x86)/Arm/GNU Toolchain mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
-            "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/target/thumbv7em-none-eabihf/release/ExhValveAct-qspi.elf",
-            "configFiles": [
-                "${workspaceFolder}/.devenv/openocd/atmel-ice-mimxrt1061.cfg"
-            ],
-            "openOCDPreConfigLaunchCommands": [
-                "set X2_PROBE_SERIAL {${config:x2city.atmelIceSerial}}",
-                "set X2_ADAPTER_SPEED_KHZ ${config:x2city.atmelIceSpeedKHz}"
-            ]
-        },
-        {
-            "type": "cortex-debug",
-            "request": "launch",
-            "name": "Program and debug i.MX RT1061 QSPI (Atmel-ICE SWD)",
-            "servertype": "openocd",
-            "serverpath": "openocd",
-            "gdbPath": "C:/Program Files (x86)/Arm/GNU Toolchain mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Program QSPI image (debug)",
-            "executable": "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct-qspi.elf",
-            "loadFiles": [],
-            "configFiles": [
-                "${workspaceFolder}/.devenv/openocd/atmel-ice-mimxrt1061.cfg"
-            ],
-            "openOCDPreConfigLaunchCommands": [
-                "set X2_PROBE_SERIAL {${config:x2city.atmelIceSerial}}",
-                "set X2_ADAPTER_SPEED_KHZ ${config:x2city.atmelIceSpeedKHz}"
-            ],
-            "overrideLaunchCommands": [
-                "monitor halt",
-                "set $xpsr = 0x01000000",
-                "set $control = 0",
-                "set $basepri = 0",
-                "set $faultmask = 0",
-                "set $primask = 1",
-                "monitor mww 0xe000ed08 0x60002000",
-                "set $msp = 0x20280000",
-                "set $sp = 0x20280000",
-                "set $pc = 0x60002401"
-            ],
-            "overrideRestartCommands": [
-                "monitor halt",
-                "set $xpsr = 0x01000000",
-                "set $control = 0",
-                "set $basepri = 0",
-                "set $faultmask = 0",
-                "set $primask = 1",
-                "monitor mww 0xe000ed08 0x60002000",
-                "set $msp = 0x20280000",
-                "set $sp = 0x20280000",
-                "set $pc = 0x60002401"
-            ],
-            "overrideResetCommands": [
-                "monitor halt",
-                "set $xpsr = 0x01000000",
-                "set $control = 0",
-                "set $basepri = 0",
-                "set $faultmask = 0",
-                "set $primask = 1",
-                "monitor mww 0xe000ed08 0x60002000",
-                "set $msp = 0x20280000",
-                "set $sp = 0x20280000",
-                "set $pc = 0x60002401"
-            ]
+            "svdFile": "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.svd",
+            "showDevDebugOutput": "raw"
         }
     ]
 }

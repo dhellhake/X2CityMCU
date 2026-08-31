@@ -1,5 +1,4 @@
 #![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
 
 use core::ops::BitOr;
 
@@ -8,6 +7,7 @@ pub const VT8MT_FRAME_LENGTH: usize = 9;
 pub const VT8MT_STATIONARY_WHEEL_PULSE_PERIOD: u16 = 0x0707;
 
 const VT8MT_BATTERY_CURRENT_PROTOCOL_UNITS_PER_AMPERE: f32 = 5.0;
+const VT8MT_BATTERY_CURRENT_QUANTIZATION_TOLERANCE: f32 = 0.001;
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -70,14 +70,17 @@ pub struct VT8MTBatteryCurrent(u8);
 impl VT8MTBatteryCurrent {
     pub const Zero: Self = Self(0);
 
-    /// Quantizes a non-negative current to the protocol's 0.2 A units.
     pub fn FromAmperes(amperes: f32) -> Self {
         assert!(amperes >= 0.0);
 
         let protocolUnits = amperes * VT8MT_BATTERY_CURRENT_PROTOCOL_UNITS_PER_AMPERE;
         assert!(protocolUnits <= f32::from(u8::MAX));
 
-        Self((protocolUnits + 0.5) as u8)
+        let roundedProtocolUnits = (protocolUnits + 0.5) as u8;
+        let quantizationError = protocolUnits - f32::from(roundedProtocolUnits);
+        assert!(quantizationError.abs() <= VT8MT_BATTERY_CURRENT_QUANTIZATION_TOLERANCE);
+
+        Self(roundedProtocolUnits)
     }
 
     pub fn Amperes(self) -> f32 {

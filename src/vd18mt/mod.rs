@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::{drv::cortex::Shared, mcu::McuManager};
+use crate::mcu::McuManager;
 
 mod frame;
 
@@ -48,22 +48,9 @@ pub struct VD18MTInterface {
     pub InvalidAssistFlagCount: u32,
     pub InvalidWheelDiameterCount: u32,
     pub RejectedByteCount: u32,
-    pub ReceiveResynchronizationCount: u32,
     pub PartialFrameTimeoutCount: u32,
-    pub UartErrorCount: u32,
-    pub UartParityErrorCount: u32,
-    pub UartFramingErrorCount: u32,
-    pub UartNoiseErrorCount: u32,
-    pub UartOverrunErrorCount: u32,
     pub NewFrameAvailable: bool,
     pub LastStepTimestampUs: u64,
-}
-
-pub static VD18MT: Shared<VD18MTInterface> = Shared::new(VD18MTInterface::new());
-
-#[inline]
-pub fn VD18MTInterface_Run(tstmp: u64) {
-    VD18MT.with(|vd18mt| vd18mt.VD18MTInterface_Step(tstmp));
 }
 
 impl VD18MTInterface {
@@ -87,52 +74,51 @@ impl VD18MTInterface {
             InvalidAssistFlagCount: 0,
             InvalidWheelDiameterCount: 0,
             RejectedByteCount: 0,
-            ReceiveResynchronizationCount: 0,
             PartialFrameTimeoutCount: 0,
-            UartErrorCount: 0,
-            UartParityErrorCount: 0,
-            UartFramingErrorCount: 0,
-            UartNoiseErrorCount: 0,
-            UartOverrunErrorCount: 0,
             NewFrameAvailable: false,
             LastStepTimestampUs: 0,
         }
     }
 
-    pub fn VD18MTInterface_ReceiveByte(&mut self, byte: u8, timestampUs: u64) {
-        self._lastByteTimestampUs = timestampUs;
+    pub fn VD18MTInterface_ReceiveByte(&mut self, byte: u8, timestamp_us: u64) {
+        self._lastByteTimestampUs = timestamp_us;
 
-        if self._receiveIndex == 0 {
-            if byte == VD18MT_START_BYTE {
-                self._receiveBuffer[0] = byte;
-                self._receiveIndex = 1;
-            } else {
-                self.RejectedByteCount = self.RejectedByteCount.saturating_add(1);
+        match self._receiveIndex {
+            0 => {
+                if byte == VD18MT_START_BYTE {
+                    self._receiveBuffer[0] = byte;
+                    self._receiveIndex = 1;
+                } else {
+                    self.RejectedByteCount = self.RejectedByteCount.saturating_add(1);
+                }
             }
-            return;
-        }
+            _ => {
+                self._receiveBuffer[self._receiveIndex] = byte;
+                self._receiveIndex += 1;
 
-        self._receiveBuffer[self._receiveIndex] = byte;
-        self._receiveIndex += 1;
-
-        if self._receiveIndex == VD18MT_FRAME_LENGTH {
-            if self.VD18MTInterface_InterpretFrame(timestampUs) {
-                self._receiveIndex = 0;
-            } else {
-                self.VD18MTInterface_ResynchronizeAfterInvalidFrame();
+                if self._receiveIndex == VD18MT_FRAME_LENGTH {
+                    self.VD18MTInterface_InterpretFrame(timestamp_us);
+                    self._receiveIndex = 0;
+                }
             }
         }
     }
 
     pub fn VD18MTInterface_Step(&mut self, tstmp: u64) {
+        for _ in 0..VD18MT_MAX_RECEIVE_BYTES_PER_STEP {
+            let Some(byte) = McuManager::VD18MTCommunication_TryReadByte() else {
+                break;
+            };
+
+            self.VD18MTInterface_ReceiveByte(byte, tstmp);
+        }
+
         self.LastStepTimestampUs = tstmp;
-        self.VD18MTInterface_ProcessReceive(tstmp);
 
         if self._receiveIndex != 0
             && tstmp.saturating_sub(self._lastByteTimestampUs) > VD18MT_PARTIAL_FRAME_TIMEOUT_US
         {
             self._receiveIndex = 0;
-            self.InvalidFrameCount = self.InvalidFrameCount.saturating_add(1);
             self.PartialFrameTimeoutCount = self.PartialFrameTimeoutCount.saturating_add(1);
         }
 
@@ -152,45 +138,13 @@ impl VD18MTInterface {
         Some(self.LatestFrame)
     }
 
-    fn VD18MTInterface_ProcessReceive(&mut self, tstmp: u64) {
-        for _ in 0..VD18MT_MAX_RECEIVE_BYTES_PER_STEP {
-            let readResult = McuManager::VD18MTCommunication_TryReadByteWithErrors();
-
-            if readResult.HasError() {
-                self.UartErrorCount = self.UartErrorCount.saturating_add(1);
-                if readResult.Errors.parityError {
-                    self.UartParityErrorCount = self.UartParityErrorCount.saturating_add(1);
-                }
-                if readResult.Errors.framingError {
-                    self.UartFramingErrorCount = self.UartFramingErrorCount.saturating_add(1);
-                }
-                if readResult.Errors.noiseDetected {
-                    self.UartNoiseErrorCount = self.UartNoiseErrorCount.saturating_add(1);
-                }
-                if readResult.Errors.overrunError {
-                    self.UartOverrunErrorCount = self.UartOverrunErrorCount.saturating_add(1);
-                }
-                if readResult.Byte.is_some() {
-                    self.RejectedByteCount = self.RejectedByteCount.saturating_add(1);
-                }
-                self._receiveIndex = 0;
-                continue;
-            }
-
-            let Some(byte) = readResult.Byte else {
-                break;
-            };
-            self.VD18MTInterface_ReceiveByte(byte, tstmp);
-        }
-    }
-
-    fn VD18MTInterface_InterpretFrame(&mut self, timestampUs: u64) -> bool {
+    fn VD18MTInterface_InterpretFrame(&mut self, timestamp_us: u64) {
         if Self::VD18MTInterface_CalculateChecksum(&self._receiveBuffer)
             != self._receiveBuffer[VD18MT_CHECKSUM_INDEX]
         {
             self.InvalidFrameCount = self.InvalidFrameCount.saturating_add(1);
             self.ChecksumErrorCount = self.ChecksumErrorCount.saturating_add(1);
-            return false;
+            return;
         }
 
         let assistAndHeadlightFlags = self._receiveBuffer[VD18MT_ASSIST_FLAG_INDEX];
@@ -199,7 +153,7 @@ impl VD18MTInterface {
         else {
             self.InvalidFrameCount = self.InvalidFrameCount.saturating_add(1);
             self.InvalidAssistFlagCount = self.InvalidAssistFlagCount.saturating_add(1);
-            return false;
+            return;
         };
 
         let wheelDiameterInches = self._receiveBuffer[VD18MT_WHEEL_DIAMETER_INDEX];
@@ -208,12 +162,12 @@ impl VD18MTInterface {
         {
             self.InvalidFrameCount = self.InvalidFrameCount.saturating_add(1);
             self.InvalidWheelDiameterCount = self.InvalidWheelDiameterCount.saturating_add(1);
-            return false;
+            return;
         }
 
         self.LatestFrame = VD18MTFrame {
             bytes: self._receiveBuffer,
-            timestamp_us: timestampUs,
+            timestamp_us,
         };
         self.LatestData = VD18MTData {
             AssistLevel: assistLevel,
@@ -223,28 +177,6 @@ impl VD18MTInterface {
         };
         self.ReceivedFrameCount = self.ReceivedFrameCount.saturating_add(1);
         self.NewFrameAvailable = true;
-        true
-    }
-
-    fn VD18MTInterface_ResynchronizeAfterInvalidFrame(&mut self) {
-        let mut possibleStart = VD18MT_FRAME_LENGTH;
-        while possibleStart > 1 {
-            possibleStart -= 1;
-            if self._receiveBuffer[possibleStart] == VD18MT_START_BYTE {
-                let retainedLength = VD18MT_FRAME_LENGTH - possibleStart;
-                let mut index = 0;
-                while index < retainedLength {
-                    self._receiveBuffer[index] = self._receiveBuffer[possibleStart + index];
-                    index += 1;
-                }
-                self._receiveIndex = retainedLength;
-                self.ReceiveResynchronizationCount =
-                    self.ReceiveResynchronizationCount.saturating_add(1);
-                return;
-            }
-        }
-
-        self._receiveIndex = 0;
     }
 
     fn VD18MTInterface_CalculateChecksum(frame: &[u8; VD18MT_FRAME_LENGTH]) -> u8 {
@@ -270,11 +202,12 @@ impl VD18MTInterface {
             self.LatestTransmittedFrame = frame;
             self._transmitIndex = 0;
             self._transmitActive = true;
-            self._nextTransmitTimestampUs = Self::VD18MTInterface_AdvanceDeadline(
-                self._nextTransmitTimestampUs,
-                tstmp,
-                VT8MT_TRANSMISSION_PERIOD_US,
-            );
+
+            while self._nextTransmitTimestampUs <= tstmp {
+                self._nextTransmitTimestampUs = self
+                    ._nextTransmitTimestampUs
+                    .saturating_add(VT8MT_TRANSMISSION_PERIOD_US);
+            }
         }
 
         while self._transmitActive && self._transmitIndex < VT8MT_FRAME_LENGTH {
@@ -293,7 +226,7 @@ impl VD18MTInterface {
         }
     }
 
-    fn VD18MTInterface_EncodeVT8MTFrame(&self, timestampUs: u64) -> VT8MTFrame {
+    fn VD18MTInterface_EncodeVT8MTFrame(&self, timestamp_us: u64) -> VT8MTFrame {
         let wheelPulsePeriod = Self::VD18MTInterface_CalculateWheelPulsePeriod(
             self.TransmitData.SpeedKmh,
             self.LatestData.WheelDiameterInches,
@@ -315,7 +248,7 @@ impl VD18MTInterface {
 
         VT8MTFrame {
             bytes,
-            timestamp_us: timestampUs,
+            timestamp_us,
         }
     }
 
@@ -355,10 +288,5 @@ impl VD18MTInterface {
         }
 
         checksum
-    }
-
-    fn VD18MTInterface_AdvanceDeadline(deadline: u64, now: u64, period: u64) -> u64 {
-        let elapsedPeriods = now.saturating_sub(deadline) / period;
-        deadline.saturating_add(elapsedPeriods.saturating_add(1).saturating_mul(period))
     }
 }

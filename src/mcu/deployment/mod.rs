@@ -1,32 +1,21 @@
-use crate::{
-    achdl::AcHdlInterface_Run, bms::BmsInterface_Run, brkhdl::BrkHdlInterface_Run,
-    esc::EscInterface_Run, vd18mt::VD18MTInterface_Run,
-};
+use crate::{bms::BmsInterface, drv::cortex::Shared, mcu::McuManager, vd18mt::VD18MTInterface};
 
-use super::McuManager;
+pub(crate) static VD18MT: Shared<VD18MTInterface> = Shared::new(VD18MTInterface::new());
+pub(crate) static BMS: Shared<BmsInterface> = Shared::new(BmsInterface::new());
 
-pub extern "C" fn tsk_0_1ms(tstmp: u64) {
-    EscInterface_Run(tstmp);
-}
+#[unsafe(link_section = ".itcm_text.deployment")]
+#[inline(never)]
+pub extern "C" fn tsk_1_5ms(_tstmp: u64) {}
 
-pub extern "C" fn tsk_1_5ms(tstmp: u64) {
-    let analogInputs = McuManager::AnalogInput_ReadFrame();
-    BrkHdlInterface_Run(tstmp, analogInputs.Brake);
-    AcHdlInterface_Run(tstmp, analogInputs.AcHdl);
-    McuManager::BoardLed_Step(tstmp);
-}
-
+#[unsafe(link_section = ".itcm_text.deployment")]
+#[inline(never)]
 pub extern "C" fn tsk_2_10ms(tstmp: u64) {
-    VD18MTInterface_Run(tstmp);
-    BmsInterface_Run(tstmp);
+    VD18MT.with(|vd18mt| vd18mt.VD18MTInterface_Step(tstmp));
+    BMS.with(|bms| bms.BmsInterface_Step(tstmp));
 }
 
-pub extern "C" fn tsk_program_flow_10ms(tstmp: u64) {
-    McuManager::ProgramFlow_ValidateAndServiceWatchdog(tstmp);
-}
-
-pub extern "C" fn background(_tstmp: u64) {
-    loop {
-        core::hint::spin_loop();
-    }
+#[unsafe(link_section = ".itcm_text.deployment")]
+#[inline(never)]
+pub extern "C" fn tsk_pfm_10ms(_tstmp: u64) {
+    McuManager::PFM_ValidateAndServiceWatchdog();
 }

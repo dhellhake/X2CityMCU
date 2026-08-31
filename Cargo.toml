@@ -3,12 +3,4 @@ name = "ExhValveAct"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = []
-qspi-boot = []
-
-[[bin]]
-name = "ExhValveAct"
-path = "src/main.rs"
-test = false
-bench = false
+[dependencies]

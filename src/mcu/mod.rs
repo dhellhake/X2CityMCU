@@ -1,87 +1,45 @@
-#![allow(unused_variables)]
+#![allow(static_mut_refs)]
 
 use crate::{
     drv::{
         cortex::Shared,
-        nvic::Nvic,
-        rtwdog::{
-            Rtwdog, RTWDOG_CLOCK_SOURCE, RTWDOG_CONFIGURATION, RTWDOG_PRESCALER, RTWDOG_TEST_MODE,
-        },
+        flash::Flash,
+        gpio::{Gpio, GPIOA_ADDR, GPIOB_ADDR, GPIOD_ADDR},
+        pwr::Pwr,
+        rcc::Rcc,
         scb::Scb,
-        src::Src,
+        syscfg::Syscfg,
         systick::Systick,
+        usart::{Usart, USART1_ADDR, USART2_ADDR, USART3_ADDR, USART_ERROR_FLAGS},
+        wwdg::Wwdg,
     },
+    mcu::program_flow::ProgramFlowMonitor,
     os::{task::Task, Scheduler},
 };
 
-mod analoginput;
-mod bmscommunication;
-mod boardled;
-#[cfg(feature = "qspi-boot")]
-mod boot;
-mod clocktree;
 pub mod deployment;
-mod esccommunication;
-mod programflow;
-mod vd18mtcommunication;
-
-pub use analoginput::{
-    AcHdlAdcPair, AcHdlAdcPairStatus, AnalogInputFrame, AnalogInputStatus, BrkHdlAdcPair,
-    BrkHdlAdcPairStatus,
-};
-use clocktree::CORE_CLOCK_HZ;
-pub use programflow::{
-    ProgramFlowCheckpoint, ProgramFlowCheckpointKind, ProgramFlowDiagnostic, ProgramFlowFault,
-    ProgramFlowSnapshot, ProgramFlowState,
-};
-
-pub(crate) const TASK_COUNT: usize = 5;
-// The debug-profile ADC acquisition/classification call chain exceeds a
-// 256-word stack and would overwrite the adjacent SysTick bookkeeping before
-// returning. Keep enough headroom for both the measured path and exception
-// stacking; verify the watermark whenever this task grows.
-// The ESC task's debug-profile fault-reporting path exceeds a 256-word stack.
-// Keep the same headroom as the ADC task so a latched program-flow fault cannot
-// overwrite the adjacent SysTick state; verify the lifetime watermark under
-// simultaneous command, telemetry, and UART-interrupt load.
-// The debug-profile program-flow validation path also exceeds 256 words at its
-// deepest call even though its PSP has unwound by PendSV. The lifetime guard
-// detected that transient overflow on target, so give it the same headroom.
-pub(crate) const TASK_1MS_STACK_SIZE: usize = 512;
-pub(crate) const TASK_5MS_STACK_SIZE: usize = 512;
-pub(crate) const TASK_10MS_STACK_SIZE: usize = 256;
-pub(crate) const TASK_PROGRAM_FLOW_STACK_SIZE: usize = 512;
-pub(crate) const TASK_BACKGROUND_STACK_SIZE: usize = 256;
-
-// RT1061 automatically falls back from the 32.768 kHz crystal to its nominal
-// 40 kHz ring oscillator. NXP characterizes that oscillator at approximately
-// +/-50%, so 60 kHz is the conservative engineering bound used for the
-// minimum-timeout proof below (the data sheet does not specify a hard limit).
-const RTWDOG_CLOCK_MAX_ENGINEERING_HZ: u32 = 60_000;
-const RTWDOG_TIMEOUT_TICKS: u16 = 3_277;
-const RTWDOG_ALIGNMENT_MAX_US: u64 = 500;
+pub mod peripherals;
+pub mod program_flow;
+pub(crate) const TASK_COUNT: usize = 4;
+pub(crate) const STACK_SIZE: usize = 256;
+const PROGRAM_FLOW_START_US: u64 = 0;
+const INITIAL_SCHEDULER_WAKEUP_US: u64 = 1_000;
 const SVC_PRIORITY: u8 = 0xD0;
 const SYSTICK_PRIORITY: u8 = 0xE0;
 const PENDSV_PRIORITY: u8 = 0xF0;
 
-const _: () = {
-    let timeoutUs =
-        RTWDOG_TIMEOUT_TICKS as u64 * 1_000_000 / RTWDOG_CLOCK_MAX_ENGINEERING_HZ as u64;
-    assert!(timeoutUs > programflow::WATCHDOG_SERVICE_MAX_US as u64 + RTWDOG_ALIGNMENT_MAX_US);
-};
+#[unsafe(link_section = ".dtcm_bss.os")]
+pub(crate) static TASK_5MS: Task<STACK_SIZE> = Task::new();
+#[unsafe(link_section = ".dtcm_bss.os")]
+pub(crate) static TASK_10MS: Task<STACK_SIZE> = Task::new();
+#[unsafe(link_section = ".dtcm_bss.os")]
+pub(crate) static TASK_PROGRAM_FLOW: Task<STACK_SIZE> = Task::new();
+#[unsafe(link_section = ".dtcm_bss.os")]
+pub(crate) static TASK_BACKGROUND: Task<STACK_SIZE> = Task::new();
 
-// Tasks are stable objects outside Scheduler. Each one owns its stack and may
-// select a different compile-time capacity; Scheduler stores only their
-// handles in scheduler order.
-pub(crate) static TASK_1MS: Task<TASK_1MS_STACK_SIZE> = Task::new();
-pub(crate) static TASK_5MS: Task<TASK_5MS_STACK_SIZE> = Task::new();
-pub(crate) static TASK_10MS: Task<TASK_10MS_STACK_SIZE> = Task::new();
-pub(crate) static TASK_PROGRAM_FLOW: Task<TASK_PROGRAM_FLOW_STACK_SIZE> = Task::new();
-pub(crate) static TASK_BACKGROUND: Task<TASK_BACKGROUND_STACK_SIZE> = Task::new();
-
+#[unsafe(link_section = ".dtcm_data.os")]
 pub(crate) static SCHEDULER: Shared<Scheduler<TASK_COUNT>> = Shared::new(unsafe {
     Scheduler::new([
-        TASK_1MS.handle(),
         TASK_5MS.handle(),
         TASK_10MS.handle(),
         TASK_PROGRAM_FLOW.handle(),
@@ -89,36 +47,36 @@ pub(crate) static SCHEDULER: Shared<Scheduler<TASK_COUNT>> = Shared::new(unsafe 
     ])
 });
 
-pub static SYSTICK: Shared<Systick> = Shared::new(Systick::new());
 pub static SCB: Shared<Scb> = Shared::new(Scb::new());
-pub static NVIC: Shared<Nvic> = Shared::new(Nvic::new());
-// Only the program-flow controller may refresh RTWDOG or change its reset
-// route. Keeping these global instances private preserves the established
-// peripheral-access model without exposing a path around supervision.
-static RTWDOG: Shared<Rtwdog> = Shared::new(unsafe { Rtwdog::new() });
-static SRC: Shared<Src> = Shared::new(unsafe { Src::new() });
-static PROGRAM_FLOW_START_GUARD: Shared<programflow::ProgramFlowStartGuard> =
-    Shared::new(programflow::ProgramFlowStartGuard::new());
-static PROGRAM_FLOW_MONITOR: Shared<programflow::ProgramFlowMonitor> =
-    Shared::new(programflow::ProgramFlowMonitor::new());
+#[unsafe(link_section = ".dtcm_bss.systick")]
+pub static SYSTICK: Shared<Systick> = Shared::new(Systick::new());
+pub static RCC: Shared<Rcc> = Shared::new(Rcc::new());
+pub static PWR: Shared<Pwr> = Shared::new(Pwr::new());
+pub static SYSCFG: Shared<Syscfg> = Shared::new(Syscfg::new());
+pub static FLASH: Shared<Flash> = Shared::new(Flash::new());
+pub static GPIOA: Shared<Gpio> = Shared::new(Gpio::new(GPIOA_ADDR));
+pub static GPIOB: Shared<Gpio> = Shared::new(Gpio::new(GPIOB_ADDR));
+pub static GPIOD: Shared<Gpio> = Shared::new(Gpio::new(GPIOD_ADDR));
+pub static USART1: Shared<Usart> = Shared::new(Usart::new(USART1_ADDR));
+pub static USART2: Shared<Usart> = Shared::new(Usart::new(USART2_ADDR));
+pub static USART3: Shared<Usart> = Shared::new(Usart::new(USART3_ADDR));
+#[unsafe(link_section = ".dtcm_bss.wwdg")]
+static WWDG: Shared<Wwdg> = Shared::new(Wwdg::new());
+#[unsafe(link_section = ".dtcm_bss.pfm")]
+static PFM: Shared<ProgramFlowMonitor> = Shared::new(ProgramFlowMonitor::new());
 
-// Keep this field group word-aligned inside UartByteReadResult. Without the
-// explicit alignment, arrays have a six-byte stride and Rust can emit an
-// unaligned word store for the four flags in Cortex-M7 TCM.
-#[repr(C, align(4))]
-#[derive(Copy, Clone)]
-pub struct USART_ERROR_FLAGS {
-    pub parityError: bool,
-    pub framingError: bool,
-    pub noiseDetected: bool,
-    pub overrunError: bool,
-}
-
-impl USART_ERROR_FLAGS {
-    pub const fn Any(self) -> bool {
-        self.parityError || self.framingError || self.noiseDetected || self.overrunError
+// CortexOs requires a way to re-pend SysTick if a requested absolute timer
+// deadline is already due. The latest STM32 driver exposes the typed ICSR bit
+// operation, so keep this target-specific compatibility method in the
+// superproject while leaving the driver submodule at its upstream tip.
+impl Scb {
+    #[inline]
+    pub fn SetSysTickPending(&mut self) {
+        self.Set_ICSR_PENDSTSET(crate::drv::BIT::VALUE_1);
     }
 }
+
+pub struct McuManager {}
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -127,162 +85,245 @@ pub struct UartByteReadResult {
     pub Errors: USART_ERROR_FLAGS,
 }
 
-const _: () = {
-    assert!(core::mem::align_of::<USART_ERROR_FLAGS>() == 4);
-    assert!(core::mem::size_of::<USART_ERROR_FLAGS>() == 4);
-    assert!(core::mem::align_of::<UartByteReadResult>() == 4);
-    assert!(core::mem::size_of::<UartByteReadResult>() == 8);
-    assert!(core::mem::offset_of!(UartByteReadResult, Errors) == 4);
-};
-
 impl UartByteReadResult {
     pub const fn HasError(self) -> bool {
         self.Errors.Any()
     }
 }
 
-pub struct McuManager {}
-
 impl McuManager {
-    pub fn Scheduler_Start() {
-        // The scheduler owns the complete operational supervision handoff.
-        // Re-entry must not restart the watchdog counter independently from
-        // the already-running cyclic timeline.
-        if !PROGRAM_FLOW_START_GUARD.with(|guard| guard.EnterRunning()) {
-            SCB.with(|scb| scb.SystemReset());
+    pub fn McuClockTree_Init() {
+        PWR.with(|pwr| {
+            peripherals::pwr::ConfigureLdoSupply(pwr);
+        });
+
+        RCC.with(|rcc| {
+            rcc.EnableSyscfgClock();
+        });
+
+        PWR.with(|pwr| {
+            SYSCFG.with(|syscfg| {
+                peripherals::pwr::ConfigureVoltageScale0For480Mhz(pwr, syscfg);
+            });
+        });
+
+        FLASH.with(|flash| {
+            peripherals::flash::ConfigureFor480Mhz(flash);
+        });
+
+        RCC.with(|rcc| {
+            peripherals::rcc::ConfigurePll1Hse25MhzTo480Mhz(rcc);
+        });
+    }
+
+    pub fn UartCommunication_Init() {
+        RCC.with(|rcc| {
+            peripherals::usart::ConfigureUsart1DebugHeaderClocks(rcc);
+        });
+
+        GPIOA.with(|gpioa| {
+            peripherals::usart::ConfigureUsart1DebugHeaderPins(gpioa);
+        });
+
+        USART1.with(|usart1| {
+            peripherals::usart::ConfigureUsart1DebugHeader115200(usart1);
+        });
+    }
+
+    pub fn UartCommunication_Write(bytes: &[u8]) {
+        for byte in bytes {
+            while !Self::UartCommunication_TryWriteByte(*byte) {}
         }
 
+        while !USART1.with(|usart1| usart1.IsTransmissionComplete()) {}
+    }
+
+    pub fn UartCommunication_TryReadByte() -> Option<u8> {
+        USART1.with(|usart1| {
+            usart1.TryReadWord().and_then(|word| {
+                if word <= u8::MAX as u16 {
+                    Some(word as u8)
+                } else {
+                    None
+                }
+            })
+        })
+    }
+
+    pub fn UartCommunication_TryWriteByte(byte: u8) -> bool {
+        USART1.with(|usart1| usart1.TryWriteWord(byte as u16))
+    }
+
+    pub fn VD18MTCommunication_Init() {
+        RCC.with(|rcc| {
+            peripherals::usart::ConfigureUsart2Vd18mtClocks(rcc);
+        });
+
+        GPIOA.with(|gpioa| {
+            peripherals::usart::ConfigureUsart2Vd18mtRxPin(gpioa);
+        });
+
+        GPIOD.with(|gpiod| {
+            peripherals::usart::ConfigureUsart2Vd18mtTxPin(gpiod);
+        });
+
+        USART2.with(|usart2| {
+            peripherals::usart::ConfigureUsart2Vd18mt9600(usart2);
+        });
+    }
+
+    pub fn VD18MTCommunication_Write(bytes: &[u8]) {
+        for byte in bytes {
+            while !Self::VD18MTCommunication_TryWriteByte(*byte) {}
+        }
+
+        while !USART2.with(|usart2| usart2.IsTransmissionComplete()) {}
+    }
+
+    pub fn VD18MTCommunication_TryReadByte() -> Option<u8> {
+        USART2.with(|usart2| {
+            usart2.TryReadWord().and_then(|word| {
+                if word <= u8::MAX as u16 {
+                    Some(word as u8)
+                } else {
+                    None
+                }
+            })
+        })
+    }
+
+    pub fn VD18MTCommunication_TryWriteByte(byte: u8) -> bool {
+        USART2.with(|usart2| usart2.TryWriteWord(byte as u16))
+    }
+
+    pub fn BmsCommunication_Init() {
+        RCC.with(|rcc| {
+            peripherals::usart::ConfigureUsart3BmsClocks(rcc);
+        });
+
+        GPIOB.with(|gpiob| {
+            peripherals::usart::ConfigureUsart3BmsPins(gpiob);
+        });
+
+        USART3.with(|usart3| {
+            peripherals::usart::ConfigureUsart3Bms9600(usart3);
+        });
+    }
+
+    pub fn BmsCommunication_Write(bytes: &[u8]) {
+        for byte in bytes {
+            while !Self::BmsCommunication_TryWriteByte(*byte) {}
+        }
+
+        while !USART3.with(|usart3| usart3.IsTransmissionComplete()) {}
+    }
+
+    pub fn BmsCommunication_TryReadByte() -> Option<u8> {
+        USART3.with(|usart3| {
+            usart3.TryReadWord().and_then(|word| {
+                if word <= u8::MAX as u16 {
+                    Some(word as u8)
+                } else {
+                    None
+                }
+            })
+        })
+    }
+
+    pub fn BmsCommunication_TryReadByteWithErrors() -> UartByteReadResult {
+        USART3.with(|usart3| {
+            let result = usart3.TryReadWordWithErrors();
+            UartByteReadResult {
+                Byte: result.word.and_then(|word| {
+                    if word <= u8::MAX as u16 {
+                        Some(word as u8)
+                    } else {
+                        None
+                    }
+                }),
+                Errors: result.errors,
+            }
+        })
+    }
+
+    pub fn BmsCommunication_TryWriteByte(byte: u8) -> bool {
+        USART3.with(|usart3| usart3.TryWriteWord(byte as u16))
+    }
+
+    pub fn ProgramFlowSupervision_Start(systickClockHz: u32) {
         SCB.with(|scb| {
-            // RT1061 implements the upper four priority bits. Keep SVC and
-            // SysTick above PendSV so a context switch only happens after the
-            // scheduling handler has released the OS state.
+            // Cortex-M7 implements priority preemption numerically: keep SVC
+            // and SysTick above PendSV so scheduling state is complete before
+            // the context switch executes.
             scb.Set_SHPR2_PRI_11(SVC_PRIORITY);
             scb.Set_SHPR3_PRI_14(PENDSV_PRIORITY);
             scb.Set_SHPR3_PRI_15(SYSTICK_PRIORITY);
         });
 
-        let taskConfigurations = SCHEDULER.with(|scheduler| scheduler.GetTaskConfigurations());
-
-        let (resetStatus, resetRouteReady) = SRC.with(|src| {
-            let resetStatus = src.ReadRaw_SRSR();
-            src.SetRtwdogResetMasked(false);
-            // Preserve the complete cause bitmask in the monitor, then clear
-            // all captured W1C flags so the next boot observes fresh causes.
-            src.ClearResetStatus(resetStatus);
-            (resetStatus, !src.IsRtwdogResetMasked())
+        SYSTICK.with(|syst| {
+            syst.Configure(systickClockHz);
         });
 
-        if !resetRouteReady {
-            SCB.with(|scb| scb.SystemReset());
-        }
-
-        let configured = RTWDOG.with(|rtwdog| {
-            rtwdog.Configure(RTWDOG_CONFIGURATION {
-                // On RT1061, INTCLK is the 32.768 kHz crystal-derived source
-                // with automatic 32 kHz RC-oscillator fallback. It therefore
-                // remains independent from the overclocked CPU/IPG tree.
-                clockSource: RTWDOG_CLOCK_SOURCE::INTERNAL_CLOCK,
-                prescaler: RTWDOG_PRESCALER::DIVIDE_1,
-                timeoutTicks: RTWDOG_TIMEOUT_TICKS,
-                windowTicks: 0,
-                enableInWait: true,
-                enableInStop: false,
-                // Halted debug sessions must not create artificial resets.
-                enableInDebug: false,
-                enableInterrupt: false,
-                enableWindow: false,
-                // Reset() may also be entered directly by a RAM-debug launch.
-                // UPDATE therefore remains permitted so startup can return
-                // the peripheral to its disabled handoff state. Every normal
-                // refresh still verifies CS, TOVAL and WIN against the private
-                // software-owned configuration first.
-                allowUpdate: true,
-                testMode: RTWDOG_TEST_MODE::DISABLED,
-            })
+        RCC.with(|rcc| {
+            rcc.EnableWwdg1Clock();
         });
 
-        if !configured {
-            SCB.with(|scb| scb.SystemReset());
-        }
-
-        // Start the hardware-backed timebase only after the fallible RTWDOG
-        // update. It now spans just the bounded alignment handoff, and no task
-        // can run because interrupts remain masked until main's final switch.
-        SYSTICK.with(|systick| {
-            systick.Configure(CORE_CLOCK_HZ);
-            systick.StartTimebase();
+        WWDG.with(|wwdg| {
+            peripherals::wwdg::ConfigureWwdg1For10MsProgramFlow(wwdg);
         });
 
-        // Capture one shared epoch before the initialization-only refresh.
-        // The monitor is fully validated and the release base is committed
-        // before the refresh, so only bounded non-failing scheduler arming
-        // remains after RTWDOG's operational counter origin is established.
-        let schedulerEpochUs = SYSTICK.with(|systick| systick.GetElapsedMicroseconds());
-        let monitorReady = PROGRAM_FLOW_MONITOR.with(|monitor| {
-            monitor.ConfigureAtSchedulerEpoch(&taskConfigurations, schedulerEpochUs, resetStatus)
+        let taskConfigurations = SCHEDULER.with(|scheduler| {
+            scheduler.SetCyclicReleaseBase(PROGRAM_FLOW_START_US);
+            scheduler.GetTaskConfigurations()
+        });
+        PFM.with(|pfm| {
+            pfm.ConfigureFromTasks(&taskConfigurations, PROGRAM_FLOW_START_US);
         });
 
-        if !monitorReady {
-            SCB.with(|scb| scb.SystemReset());
-        }
-
-        SCHEDULER.with(|scheduler| scheduler.SetCyclicReleaseBase(schedulerEpochUs));
-
-        // Configure() has already started the counter. This deliberately
-        // separate non-task refresh aligns its operational interval to the
-        // scheduler epoch above. The complete setup-to-refresh span is
-        // measured and bounded instead of assumed from instruction timing.
-        let aligned = RTWDOG.with(|rtwdog| rtwdog.Refresh());
-        let alignmentEndUs = SYSTICK.with(|systick| systick.GetElapsedMicroseconds());
-        if !aligned
-            || alignmentEndUs < schedulerEpochUs
-            || alignmentEndUs - schedulerEpochUs > RTWDOG_ALIGNMENT_MAX_US
-        {
-            SCB.with(|scb| scb.SystemReset());
-        }
-
-        SCHEDULER.with(|scheduler| {
-            scheduler.InvokeSchedule(schedulerEpochUs);
-        });
-    }
-
-    #[inline(never)]
-    pub fn ProgramFlow_ReportTaskEnd(taskId: u32) {
-        SYSTICK.with(|systick| {
-            let nowUs = systick.GetElapsedMicroseconds();
-            PROGRAM_FLOW_MONITOR.with(|monitor| monitor.ReportTaskEnd(taskId, nowUs));
-        });
-    }
-
-    #[inline(never)]
-    pub fn ProgramFlow_ReportTaskStart(taskId: u32) {
-        SYSTICK.with(|systick| {
-            let nowUs = systick.GetElapsedMicroseconds();
-            PROGRAM_FLOW_MONITOR.with(|monitor| monitor.ReportTaskStart(taskId, nowUs));
-        });
-    }
-
-    #[inline(never)]
-    pub fn ProgramFlow_ValidateAndServiceWatchdog(scheduledReleaseUs: u64) {
-        SYSTICK.with(|systick| {
-            let nowUs = systick.GetElapsedMicroseconds();
-            PROGRAM_FLOW_MONITOR.with(|monitor| {
-                if monitor.AuthorizeWatchdogService(scheduledReleaseUs, nowUs) {
-                    let resetRouteReady = SRC.with(|src| !src.IsRtwdogResetMasked());
-                    if resetRouteReady && RTWDOG.with(|rtwdog| rtwdog.Refresh()) {
-                        monitor.ConfirmWatchdogService(nowUs);
-                    } else {
-                        monitor.RejectWatchdogService(nowUs);
-                        // A disabled watchdog or masked reset route cannot be
-                        // trusted to recover the system by timing out.
-                        SCB.with(|scb| scb.SystemReset());
-                    }
-                }
+        // The outer critical section keeps the watchdog and SysTick start writes
+        // adjacent. Both hardware and software supervision therefore use epoch 0.
+        WWDG.with(|wwdg| {
+            SYSTICK.with(|syst| {
+                peripherals::wwdg::StartWwdg1For10MsProgramFlow(wwdg);
+                let armed = syst
+                    .SetTimerAt(PROGRAM_FLOW_START_US.saturating_add(INITIAL_SCHEDULER_WAKEUP_US));
+                assert!(armed);
             });
         });
     }
 
-    pub fn ProgramFlow_GetSnapshot() -> ProgramFlowSnapshot {
-        PROGRAM_FLOW_MONITOR.with(|monitor| monitor.GetSnapshot())
+    pub fn ProgramFlow_ReportTaskStart(taskId: u32) {
+        let mut now_us = 0;
+        SYSTICK.with(|syst| {
+            now_us = syst.GetElapsedMicroseconds();
+        });
+
+        PFM.with(|pfm| {
+            pfm.ReportTaskStart(taskId, now_us);
+        });
+    }
+
+    pub fn ProgramFlow_ReportTaskEnd(taskId: u32) {
+        let mut now_us = 0;
+        SYSTICK.with(|syst| {
+            now_us = syst.GetElapsedMicroseconds();
+        });
+
+        PFM.with(|pfm| {
+            pfm.ReportTaskEnd(taskId, now_us);
+        });
+    }
+
+    pub fn PFM_ValidateAndServiceWatchdog() {
+        let mut now_us = 0;
+        SYSTICK.with(|syst| {
+            now_us = syst.GetElapsedMicroseconds();
+        });
+
+        PFM.with(|pfm| {
+            WWDG.with(|wwdg| {
+                pfm.ValidateAndServiceWatchdog(now_us, wwdg);
+            });
+        });
     }
 }

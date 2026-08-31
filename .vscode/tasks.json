@@ -5,14 +5,7 @@
             "label": "Cargo Build",
             "type": "process",
             "command": "cargo",
-            "args": [
-                "build"
-            ],
-            "options": {
-                "env": {
-                    "CARGO_TARGET_DIR": "${workspaceFolder}/target"
-                }
-            },
+            "args": ["build"],
             "problemMatcher": [
                 "$rustc"
             ],
@@ -22,133 +15,12 @@
             }
         },
         {
-            "label": "Create RAM image",
-            "type": "process",
-            "command": "arm-none-eabi-objcopy",
-            "args": [
-                "-O",
-                "binary",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin"
-            ],
-            "dependsOn": "Cargo Build",
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "Validate RAM image",
-            "type": "process",
-            "command": "powershell",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}/.devenv/verify-ram-image.ps1",
-                "-ElfPath",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct",
-                "-BinaryPath",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct.bin"
-            ],
-            "dependsOn": "Create RAM image",
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
             "label": "Cargo Clean",
             "type": "process",
             "command": "cargo",
-            "args": [
-                "clean"
-            ],
-            "options": {
-                "env": {
-                    "CARGO_TARGET_DIR": "${workspaceFolder}/target"
-                }
-            },
+            "args": ["clean"],
             "problemMatcher": [],
             "group": "build"
         },
-        {
-            "label": "Build QSPI image (debug)",
-            "type": "process",
-            "command": "powershell",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}/.devenv/build-qspi-image.ps1",
-                "-Configuration",
-                "Debug"
-            ],
-            "problemMatcher": [
-                "$rustc"
-            ]
-        },
-        {
-            "label": "Build QSPI image (release)",
-            "type": "process",
-            "command": "powershell",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}/.devenv/build-qspi-image.ps1",
-                "-Configuration",
-                "Release"
-            ],
-            "problemMatcher": [
-                "$rustc"
-            ]
-        },
-        {
-            "label": "Program QSPI image (debug)",
-            "type": "process",
-            "command": "powershell",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}/.devenv/program-qspi.ps1",
-                "-ElfPath",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct-qspi.elf",
-                "-BinaryPath",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/debug/ExhValveAct-qspi.bin",
-                "-ProbeSerial",
-                "${config:x2city.atmelIceSerial}",
-                "-AdapterSpeedKHz",
-                "${config:x2city.atmelIceSpeedKHz}",
-                "-NoReset"
-            ],
-            "dependsOn": "Build QSPI image (debug)",
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "Program QSPI image (release)",
-            "type": "process",
-            "command": "powershell",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}/.devenv/program-qspi.ps1",
-                "-ElfPath",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/release/ExhValveAct-qspi.elf",
-                "-BinaryPath",
-                "${workspaceFolder}/target/thumbv7em-none-eabihf/release/ExhValveAct-qspi.bin",
-                "-ProbeSerial",
-                "${config:x2city.atmelIceSerial}",
-                "-AdapterSpeedKHz",
-                "${config:x2city.atmelIceSpeedKHz}"
-            ],
-            "dependsOn": "Build QSPI image (release)",
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        }
     ]
 }

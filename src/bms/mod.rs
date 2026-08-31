@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::{drv::cortex::Shared, mcu::McuManager};
+use crate::mcu::McuManager;
 
 mod frame;
 
@@ -87,13 +87,6 @@ pub struct BmsInterface {
     pub NewCellVoltageDataAvailable: bool,
     pub Diagnostics: BmsDiagnostics,
     pub LastStepTimestampUs: u64,
-}
-
-pub static BMS: Shared<BmsInterface> = Shared::new(BmsInterface::new());
-
-#[inline]
-pub fn BmsInterface_Run(tstmp: u64) {
-    BMS.with(|bms| bms.BmsInterface_Step(tstmp));
 }
 
 impl BmsInterface {
@@ -336,8 +329,7 @@ impl BmsInterface {
             self._nextCellVoltageRequestTimestampUs = tstmp;
         }
 
-        if self._responseReady
-            || self._transmitRequest != JdbReadCommand::None
+        if self._transmitRequest != JdbReadCommand::None
             || self._pendingRequest != JdbReadCommand::None
             || self._receiveState != JdbReceiveState::WaitingForStart
         {
