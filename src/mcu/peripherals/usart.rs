@@ -38,7 +38,7 @@ pub fn ConfigureUsart1DebugHeaderPins(gpioa: &Gpio) {
     );
 }
 
-/// Configures USART1 for the CH343 connection: 115200 baud, 8 data bits,
+/// Configures USART1 on the board's P1 debug header: 115200 baud, 8 data bits,
 /// no parity, one stop bit, transmit and receive enabled.
 pub fn ConfigureUsart1DebugHeader115200(usart1: &Usart) {
     usart1.ConfigureAsync(

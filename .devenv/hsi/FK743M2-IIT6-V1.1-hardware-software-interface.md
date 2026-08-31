@@ -1,14 +1,23 @@
 # FK743M2-IIT6 V1.1 Hardware/Software Interface Specification
 
 This document specifies the hardware/software interface (HSI) and records the
-hardware configuration performed by the current X2CityMCU firmware. The target
-is the FK743M2-IIT6 V1.1 board with an STM32H743IIT6 in the LQFP176 package.
+MCU configuration performed by the current firmware on an FK743M2-IIT6 V1.1
+board populated with an STM32H743IIT6 in the LQFP176 package.
+
+Physical board information is maintained separately and is part of the
+controlled configuration set:
+
+- [FK743M2-IIT6 V1.1 board profile](../STM32H743IIT6/FK743M2-IIT6-V1.1-board.md)
+- [FK743M2-IIT6 V1.1 connector reference](../STM32H743IIT6/FK743M2-IIT6-V1.1-connectors.md)
+
+Those documents are the single source of truth for fitted parts, fixed PCB
+nets and physical board connectors.
 
 | Document attribute | Value |
 | --- | --- |
 | Document ID | `X2C-HSI-001` |
 | Lifecycle status | Draft; not released for a safety-related production item |
-| Configuration item | This Git-controlled Markdown file and its referenced implementation files |
+| Configuration item | This Git-controlled Markdown file, its board-profile companions and referenced implementation files |
 | Applicable safety-process baseline | ISO 26262:2018 Parts 4, 6 and 8 |
 | Item-level ASIL allocation | `TBD` by the hazard analysis and risk assessment |
 | Parent technical/software safety requirements | `TBD` by the technical safety concept and software safety requirements specification |
@@ -20,7 +29,7 @@ HARA, ASIL allocation, parent-requirement traceability, confirmation measures,
 tool confidence, independence arguments, production release and the safety case
 remain outside this document until supplied by the applicable safety plan.
 
-The requirement tables are normative. The later configuration, memory and pinout
+The requirement tables are normative. The later configuration and memory
 sections are informative design description and implementation evidence. If the
 two conflict, the conflict shall be resolved through change control before a
 safety release; the requirement shall not silently be weakened to match the code.
@@ -29,13 +38,8 @@ The following terms are used throughout the document:
 
 - **Configured** means that the current firmware writes the relevant MCU
   registers during startup.
-- **Board connection** means that the PCB permanently connects the MCU pin to
-  an onboard device or another board connector. It does not imply that the
-  firmware initializes that device.
 - **Reset state** means that the firmware does not intentionally configure the
   pin after reset.
-- Board silkscreen names omit the `P` prefix. For example, `A3` is MCU pin
-  `PA3`, and `I11` is MCU pin `PI11`.
 
 For normative statements, **shall** denotes a mandatory requirement, **should**
 denotes a recommendation requiring justification if not followed, and **may**
@@ -70,13 +74,13 @@ Verification method codes are:
 
 | ID | Requirement | Allocated element | Verification | Current status and evidence |
 | --- | --- | --- | --- | --- |
-| `HSI-GEN-001` | The software shall execute only on an FK743M2-IIT6 V1.1 board populated with an STM32H743IIT6 in the LQFP176 package unless a controlled HSI variant is released. | System integration | `I`, `T-HW` | Assumption; board identity must be recorded for each test/release unit. |
+| `HSI-GEN-001` | The software shall execute only on an FK743M2-IIT6 V1.1 board populated with an STM32H743IIT6 in the LQFP176 package unless a controlled HSI variant is released. | System integration | `I`, `T-HW` | Assumption; board identity must be recorded for each test or release unit. |
 | `HSI-GEN-002` | The linker memory map, startup code and peripheral base addresses shall match the STM32H743IIT6 memory and peripheral map. | Linker, startup, generic drivers | `I`, `A` | Implemented in [`memory.x`](../../memory.x), [`src/drv/startup`](../../src/drv/startup) and the drivers. |
 | `HSI-GEN-003` | All required MCU hardware initialization shall complete before the scheduler can execute an application task. | `main`, `McuManager` | `I`, `T-SW` | Implemented by the startup order in [`src/main.rs`](../../src/main.rs). |
 | `HSI-GEN-004` | Project-specific board and use-case configuration shall reside in `src/mcu`; reusable register-level access shall reside in the `src/drv` submodule. | Software architecture | `I` | Implemented by [`src/mcu/peripherals`](../../src/mcu/peripherals) and [`src/drv`](../../src/drv). |
 | `HSI-GEN-005` | A peripheral not explicitly identified as configured by this HSI shall not be enabled or used by application software. | MCU software | `I`, `T-SW` | Implemented by inspection; listed under [Intentionally Unconfigured Hardware](#intentionally-unconfigured-hardware). |
 | `HSI-GEN-006` | Failure to establish a required hardware configuration shall prevent execution of safety-relevant application functions and shall cause the allocated safe reaction within the item FTTI. | Startup and system safety mechanism | `T-FI`, `T-HW` | Open; several pre-watchdog readiness waits and assertion paths can wait indefinitely. Safe reaction and FTTI are `TBD`. |
-| `HSI-GEN-007` | A change to target part, board revision, clock, memory allocation, peripheral configuration or pin assignment shall update this HSI, its parent traces and affected verification before release. | Configuration/change management | `I` | Partial; this file is version controlled, but parent traces and release workflow are `TBD`. |
+| `HSI-GEN-007` | A change to target part, FK743M2 board revision, clock, memory allocation, peripheral configuration or pin assignment shall update the owning controlled document, its parent traces and affected verification before release. | Configuration/change management | `I` | Partial; the documents are version controlled, but parent traces and release workflow are `TBD`. |
 | `HSI-GEN-008` | Safety-relevant hardware configuration values shall be represented by named constants or typed values and shall not be modified during normal operation except by an approved safety mechanism. | MCU software | `I`, `T-SW` | Partial; typed driver values and project constants exist, but a formal write-protection and call-graph verification record is absent. |
 
 ### Reset, Core And Internal Memory
@@ -109,11 +113,11 @@ Verification method codes are:
 | --- | --- | --- | --- | --- |
 | `HSI-CLK-001` | Startup shall select the internal LDO supply by setting `PWR_CR3.LDOEN=1`, `BYPASS=0` and `SCUEN=0`, and shall wait for the applicable supply-ready indication. | PWR | `I`, `T-HW` | Implemented by [`ConfigureLdoSupply`](../../src/mcu/peripherals/pwr.rs). |
 | `HSI-CLK-002` | Before selecting a 480 MHz CPU clock, startup shall select voltage scale 1, wait for readiness, enable SYSCFG overdrive to voltage scale 0, and wait for voltage readiness. | PWR, SYSCFG | `I`, `T-HW` | Implemented by [`ConfigureVoltageScale0For480Mhz`](../../src/mcu/peripherals/pwr.rs). |
-| `HSI-CLK-003` | The system clock source shall be the fitted 25 MHz HSE crystal on PH0/PH1 in crystal mode with HSE bypass disabled. | Board oscillator, RCC | `I`, `A`, `T-HW` | Implemented by [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs); crystal frequency is a board assumption. |
+| `HSI-CLK-003` | The system clock source shall be the FK743M2-IIT6 V1.1 board's 25 MHz HSE crystal on PH0/PH1 in crystal mode with HSE bypass disabled. | Board oscillator, RCC | `I`, `A`, `T-HW` | Implemented by [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs); the physical source is specified by the [board profile](../STM32H743IIT6/FK743M2-IIT6-V1.1-board.md). |
 | `HSI-CLK-004` | PLL1 shall use HSE with `DIVM1=5`, `DIVN1=192`, `DIVP1=2`, wide VCO, 4-to-8-MHz input range and fractional mode disabled. PLL1P shall be enabled; PLL1Q and PLL1R shall remain disabled. | RCC PLL1 | `I`, `A`, `T-HW` | Implemented by [`ConfigurePll1Hse25MhzTo480Mhz`](../../src/mcu/peripherals/rcc.rs). |
 | `HSI-CLK-005` | Startup shall wait for HSE and PLL1 readiness and shall confirm that the system-clock status selects PLL1 before continuing. | RCC | `I`, `T-FI`, `T-HW` | Implemented with blocking ready/status waits. The waits are not time bounded. |
 | `HSI-CLK-006` | `D1CPRE` shall divide SYSCLK by 1, `HPRE` shall divide SYSCLK by 2, and each APB prescaler shall divide HCLK by 2. | RCC bus clocks | `I`, `A`, `T-HW` | Implemented by [`SetBusPrescalersFor480Mhz`](../../src/mcu/peripherals/rcc.rs). |
-| `HSI-CLK-007` | The configured clock tree shall produce a 480 MHz CPU clock, 240 MHz HCLK/AXI clock and 120 MHz PCLK1, PCLK2, PCLK3 and PCLK4 from a 25 MHz HSE. | RCC, board oscillator | `A`, `T-HW` | Implemented; calculations are recorded under [Resulting Clock Domains](#resulting-clock-domains). |
+| `HSI-CLK-007` | The configured clock tree shall produce a 480 MHz CPU clock, 240 MHz HCLK/AXI clock and 120 MHz PCLK1, PCLK2, PCLK3 and PCLK4 from a 25 MHz HSE. | RCC | `A`, `T-HW` | Implemented; calculations are recorded under [Resulting Clock Domains](#resulting-clock-domains). |
 | `HSI-CLK-008` | Before switching SYSCLK to PLL1, the Flash interface shall be configured for at least four wait states at the configured voltage and clock. | Flash, startup sequence | `I`, `A`, `T-HW` | Implemented by [`ConfigureFor480Mhz`](../../src/mcu/peripherals/flash.rs), called before the PLL1 switch. |
 | `HSI-CLK-009` | Before switching SYSCLK to PLL1, `FLASH_ACR.WRHIGHFREQ` shall be set to the value required by the controlled STM32H743II datasheet/reference-manual revision for voltage scale 0 and a 240 MHz AXI clock. | Flash | `I`, `A`, `T-HW` | Open; the driver supports the field, but project configuration changes only `LATENCY`. |
 | `HSI-CLK-010` | The software shall not claim or use a 48 MHz USB kernel clock while PLL1Q is disabled and no alternative 48 MHz source is configured. | RCC, USB software | `I` | Implemented; USB is intentionally unconfigured. |
@@ -147,33 +151,28 @@ Verification method codes are:
 | ID | Requirement | Allocated element | Verification | Current status and evidence |
 | --- | --- | --- | --- | --- |
 | `HSI-UAR-001` | USART1 shall use asynchronous 8N1, LSB-first, non-inverted signaling, oversampling by 16, prescaler 1, enabled transmit/receive and enabled FIFO mode. | USART1 | `I`, `T-HW` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
-| `HSI-UAR-002` | USART1 shall use a 120 MHz PCLK2 kernel clock, 115200 baud, PA9/AF7 as push-pull TX and PA10/AF7 with pull-up as RX. | RCC, GPIOA, USART1 | `I`, `A`, `T-HW` | Implemented for the P1 CH343/debug UART. |
+| `HSI-UAR-002` | USART1 shall use a 120 MHz PCLK2 kernel clock, 115200 baud, PA9/AF7 as push-pull TX and PA10/AF7 with pull-up as RX. | RCC, GPIOA, USART1 | `I`, `A`, `T-HW` | Implemented; PA9 and PA10 are routed to P1 as defined by the [connector reference](../STM32H743IIT6/FK743M2-IIT6-V1.1-connectors.md#p1-debug-uart-and-power-header). |
 | `HSI-UAR-005` | UART initialization shall enable only the required GPIOA and USART1 peripheral clocks. | RCC | `I` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
 | `HSI-UAR-006` | USART1 communication shall remain polled with DMA, hardware flow control and USART interrupts disabled until an approved HSI change allocates and verifies those resources. | USART1, NVIC, DMA | `I` | Implemented as the current configuration. |
 | `HSI-UAR-007` | A communication channel allocated a safety requirement shall detect UART framing, noise, overrun and parity indications, clear them deterministically and communicate invalidity to its consumer. | USART driver, component | `I`, `T-SW`, `T-FI` | Open; USART1 has no allocated safety requirement and its project wrapper does not expose error status. |
-| `HSI-UAR-009` | External devices connected to MCU GPIO shall satisfy STM32H743II input/output voltage limits, share a defined ground reference and shall not back-power an unpowered participant. | Board/system integration | `I`, `A`, `T-HW` | Assumption; external wiring is not controlled by firmware. |
-| `HSI-LED-001` | PH7 shall drive the onboard active-low user LED as a low-speed push-pull GPIO output without an internal pull. Its output latch shall be set high before output mode is selected. | RCC, GPIOH, board LED | `I`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs); the initialization sequence prevents an unintended startup pulse. |
-| `HSI-LED-002` | The supervised 5 ms task shall drive a one-second heartbeat consisting of 100 ms on, 100 ms off, 100 ms on and 700 ms off using its scheduled timestamp. | Scheduler, 5 ms task, board LED | `I`, `T-SW`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) and [`src/mcu/deployment/mod.rs`](../../src/mcu/deployment/mod.rs); task-aligned edge assertions are evaluated at compile time. |
+| `HSI-UAR-009` | Equipment connected to GPIO through an FK743M2-IIT6 V1.1 board header shall satisfy STM32H743II input/output voltage limits, share a defined ground reference and shall not back-power an unpowered participant. | FK743M2 board-header integration | `I`, `A`, `T-HW` | Assumption; equipment attached to the board headers is not controlled by firmware. |
+| `HSI-LED-001` | PH7 shall be configured as an active-low, low-speed push-pull GPIO output without an internal pull. Its output latch shall be set high before output mode is selected. | RCC, GPIOH, heartbeat output | `I`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs); the [board profile](../STM32H743IIT6/FK743M2-IIT6-V1.1-board.md) maps PH7 to the user LED. |
+| `HSI-LED-002` | The supervised 5 ms task shall drive a one-second heartbeat consisting of 100 ms on, 100 ms off, 100 ms on and 700 ms off using its scheduled timestamp. | Scheduler, 5 ms task, heartbeat output | `I`, `T-SW`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) and [`src/mcu/deployment/mod.rs`](../../src/mcu/deployment/mod.rs); task-aligned edge assertions are evaluated at compile time. |
 | `HSI-LED-003` | The heartbeat shall be treated as a scheduler-activity indication only and shall not replace program-flow monitoring or the hardware watchdog. | System diagnostics | `I`, `A` | Implemented architecturally; WWDG1 remains the independent scheduler supervision reaction. |
-| `HSI-DBG-001` | SWD shall use PA13/SWDIO, PA14/SWCLK, NRST, target 3.3 V reference and common ground as listed for P1; four-wire JTAG operation shall not be assumed. | Board P1, debugger configuration | `I`, `T-HW` | Implemented for development/debug connection. |
-| `HSI-DBG-002` | Safety-relevant operation shall not depend on an attached debugger, and production debug access shall follow the item safety and security concept. | System integration | `I`, `T-HW` | Partial; standalone execution works, but the production debug-access policy is `TBD`. |
-| `HSI-DBG-003` | The enclosure debug interface shall route J4 to PA13/SWDIO, K1 to PA14/SWCLK, K2 to the target 3.3 V reference, K3 to GND and K4 to NRST. The Atmel-ICE SWDIO, SWCLK, VTref, GND and nRESET signals shall connect to those respective enclosure signals. | Enclosure connector, internal harness and board P1 | `I`, `T-HW` | Implemented for the current development connection; end-to-end continuity and isolation evidence remains external. |
+| `HSI-DBG-001` | Development debug shall use the MCU SWD interface on PA13/SWDIO, PA14/SWCLK and NRST through board header P1; four-wire JTAG operation shall not be assumed. | Board P1, MCU debug interface, debugger configuration | `I`, `T-HW` | Implemented; target reference, ground and SWD routing are defined by the [connector reference](../STM32H743IIT6/FK743M2-IIT6-V1.1-connectors.md#p1-debug-uart-and-power-header). |
+| `HSI-DBG-002` | Safety-relevant operation on the FK743M2-IIT6 V1.1 board shall not depend on an attached debugger, and production debug access shall follow the item safety and security concept. | Board and system integration | `I`, `T-HW` | Partial; standalone execution works, but the production debug-access policy is `TBD`. |
 
-### Board Resources And Pin Ownership
+### Pin Ownership
 
 | ID | Requirement | Allocated element | Verification | Current status and evidence |
 | --- | --- | --- | --- | --- |
-| `HSI-PIN-001` | Configured MCU pins and externally connected signals shall match the assignments in [Current External Assignments](#current-external-assignments), [Enclosure 48-Pin Molex Connector](#enclosure-48-pin-molex-connector) and [Board Connector Pinout](#board-connector-pinout). | MCU GPIO, board/system wiring | `I`, `T-HW` | Partial; software assignments are implemented, while production wiring continuity evidence is external. |
-| `HSI-PIN-002` | FMC-connected SDRAM pins shall not be reassigned as application GPIO while the fitted W9825G6KH-6I is present, unless the electrical effect is analyzed and approved. | Pin multiplexing, board SDRAM | `I`, `A` | Implemented as a prohibition; FMC is currently unconfigured. |
-| `HSI-PIN-003` | PC8, PC9, PC10, PC11, PC12 and PD2 shall remain available to the fitted microSD interface. PC9 shall not output MCO2 while an SD transaction is active. | Pin multiplexing, SDMMC1, RCC | `I`, `T-HW` | Implemented as a prohibition; SDMMC1 and MCO2 are currently unconfigured. |
-| `HSI-PIN-004` | PA11 and PA12 shall remain unconfigured until USB OTG FS, its electrical interface and a valid 48 MHz kernel clock are specified and verified. | GPIOA, RCC, USB OTG FS | `I`, `T-HW` | Implemented as a prohibition. |
-| `HSI-PIN-005` | LCD1 RGB, timing, touch and backlight pins shall remain unconfigured until ownership, timing, electrical and startup requirements for the attached panel are specified and verified. | LTDC, GPIO, touch interface | `I`, `T-HW` | Implemented as a prohibition. |
-| `HSI-PIN-006` | PC14/PC15, LSE, RTC and the backup domain shall remain unconfigured until their use and fault behavior are added to this HSI. | RCC, RTC | `I` | Implemented as a prohibition. |
 | `HSI-PIN-007` | Pins without an allocated software function shall remain in their documented reset state unless an approved pin-safety analysis specifies a deterministic alternative. | GPIO | `I`, `A`, `T-HW` | Implemented by absence of writes; pin-level safety analysis is open. |
 | `HSI-PIN-008` | Shared or multiply connected board pins shall have one declared owner at a time, and software shall prevent conflicting peripheral functions from being enabled concurrently. | MCU software architecture | `I`, `T-SW` | Partial; current configuration has no active conflict, but no generic ownership enforcement exists. |
-| `HSI-PIN-009` | Enclosure connector cavities M1 and M2 shall be assigned to the nominal 12 V supply, and cavities M3 and M4 shall be assigned to GND. The four power cavities shall not be assigned a signal function. | Enclosure connector and harness | `I`, `T-HW` | Assumption; assignment is based on the current physical integration and requires continuity and polarity verification. |
-| `HSI-PIN-010` | An enclosure-connector cavity marked `TBD` in this HSI shall remain electrically unassigned until its function, direction, electrical limits, internal destination and verification are approved. | System integration | `I`, `T-HW` | Implemented as an interface prohibition; 39 cavities are currently unassigned. |
-| `HSI-PIN-011` | Before a safety release, the exact Molex part number, keying orientation, mating-face reference view and cavity-label sequence shall be recorded and verified against the physical enclosure connector. | System integration and configuration management | `I`, `T-HW` | Open; the 48-cavity count implies that one letter between A and M is omitted, provisionally documented as column I. |
+
+Board-connected pin constraints are normative in the
+[board profile](../STM32H743IIT6/FK743M2-IIT6-V1.1-board.md), with physical
+routes recorded in the
+[connector reference](../STM32H743IIT6/FK743M2-IIT6-V1.1-connectors.md).
 
 ### Verification And Safety Release
 
@@ -181,11 +180,11 @@ Verification method codes are:
 | --- | --- | --- | --- | --- |
 | `HSI-VER-001` | A release build shall fail when Flash, ITCM, DTCM, AXI SRAM or reserved-stack bounds in `memory.x` are exceeded. | Linker/build system | `T-SW` | Implemented for ITCM, DTCM, AXI SRAM and main-stack relations; Flash overflow is enforced by linker region size. |
 | `HSI-VER-002` | Each safety release shall archive a linker map demonstrating the address and size of the vector table, `.itcm_text`, DTCM objects, each task stack, main stack, `.data` and `.bss`. | Build/configuration management | `I` | Open; linker placement is inspectable, but no release evidence archive is defined. |
-| `HSI-VER-003` | Target verification shall demonstrate 480 MHz CPU timing and the derived bus clocks using an independent measurement or a traceable timing test. | Verification | `A`, `T-HW` | Partial; a 32 MHz MCO2 test on PC9 previously confirmed the derived clock, but the test code and formal record are not retained. |
+| `HSI-VER-003` | Target verification shall demonstrate 480 MHz CPU timing and the derived bus clocks using an independent measurement or a traceable timing test. | Verification | `A`, `T-HW` | Partial; a prior manual measurement confirmed the derived clock, but the test code and formal record are not retained. The historical setup is recorded in the [board profile](../STM32H743IIT6/FK743M2-IIT6-V1.1-board.md#historical-board-verification). |
 | `HSI-VER-004` | Target verification shall demonstrate execution inside and outside ITCM, valid DTCM data/stack use, vector-table relocation and correct interrupt dispatch after relocation. | Verification | `T-HW` | Partial; development smoke tests were performed, but a controlled verification report is absent. |
 | `HSI-VER-005` | Target verification shall exercise nominal, early, late, missing, duplicate, out-of-sequence and internally corrupted PFM/watchdog cases and record the resulting diagnostic and reset timing. | Verification | `T-FI`, `T-HW` | Open; implementation exists, but complete recorded fault-injection evidence is absent. |
 | `HSI-VER-006` | Target verification shall measure baud rate and validate transmit, receive and error behavior for all configured UARTs at the connector/device boundary. | Verification | `T-HW`, `T-FI` | Partial; nominal communication has been manually observed, but controlled error/tolerance records are absent. |
-| `HSI-VER-007` | Before safety release, every HSI requirement shall have an allocated ASIL, parent safety-requirement trace, responsible owner, verification result and controlled evidence reference, or an approved rationale for non-applicability. | Safety/configuration management | `I` | Open; this draft intentionally exposes the missing allocations and evidence. |
+| `HSI-VER-007` | Before safety release, every normative requirement in this HSI and its controlled board-profile companions shall have an allocated ASIL, parent safety-requirement trace, responsible owner, verification result and controlled evidence reference, or an approved rationale for non-applicability. | Safety/configuration management | `I` | Open; these drafts intentionally expose the missing allocations and evidence. |
 | `HSI-VER-008` | Tool confidence, compiler/linker assumptions and verification-tool suitability shall be assessed according to the project safety plan before their outputs are used as sole safety evidence. | Safety management | `I`, `A` | Open; no tool-confidence assessment is present in this repository. |
 
 ## Configuration Summary
@@ -193,23 +192,17 @@ Verification method codes are:
 | Subsystem | Current software state | Principal source |
 | --- | --- | --- |
 | CPU supply/performance | Internal MCU LDO selected; voltage scale 0/overdrive selected | [`src/mcu/peripherals/pwr.rs`](../../src/mcu/peripherals/pwr.rs) |
-| System clock | 25 MHz HSE crystal through PLL1 to 480 MHz CPU clock | [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs) |
+| System clock | 25 MHz HSE input through PLL1 to 480 MHz CPU clock | [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs) |
 | Flash interface | 4 wait states | [`src/mcu/peripherals/flash.rs`](../../src/mcu/peripherals/flash.rs) |
 | FPU | CP10 and CP11 full access enabled before Rust code executes | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
 | ITCM/DTCM | Enabled during reset; selected code/data relocated before `main` | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`memory.x`](../../memory.x) |
 | Vector table | Copied from Flash to DTCM and `VTOR` redirected to the RAM copy | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
-| SWD | Atmel-ICE CMSIS-DAP connection on PA13, PA14 and NRST through enclosure cavities J4, K1 and K4; K2/K3 provide reference and ground | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
-| Enclosure connector | 48-pin Molex matrix; M1/M2 = nominal 12 V, M3/M4 = GND, J4/K1/K2/K3/K4 = debugger interface, all other cavities TBD | Physical integration record |
-| USART1 | Debug/PC UART, 115200 8N1, PA9/PA10 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
+| SWD | MCU SWD interface on PA13, PA14 and NRST | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
+| USART1 | 115200 8N1, PA9/PA10, polled I/O | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
 | SysTick | Processor clock source at 480 MHz; interrupt-driven scheduler deadlines | [`src/drv/systick/mod.rs`](../../src/drv/systick/mod.rs) |
 | WWDG1 | Window watchdog enabled for program-flow supervision | [`src/mcu/peripherals/wwdg.rs`](../../src/mcu/peripherals/wwdg.rs) |
-| External SDRAM | Fitted and wired, but not initialized or mapped by this firmware | Not configured |
-| microSD | Fitted and wired, but SDMMC1 is not initialized | Not configured |
-| USB Type-C data | PA11/PA12 are wired, but USB OTG FS is not initialized | Not configured |
-| RGB LCD/touch FPC | Fitted and wired, but LTDC/touch GPIO is not initialized | Not configured |
-| User LED | PH7 active-low heartbeat, updated by the supervised 5 ms task | [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) |
-| LSE/RTC | 32.768 kHz crystal is fitted, but LSE and RTC are not initialized | Not configured |
-| PC9 clock test | Previously used as a 32 MHz MCO2 verification output; code was removed | Historical only |
+| Heartbeat output | PH7 active-low output, updated by the supervised 5 ms task | [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) |
+| Physical target | FK743M2-IIT6 V1.1 resources and connectors | [Board documentation](../STM32H743IIT6/README.md) |
 
 ## Startup Configuration
 
@@ -226,7 +219,7 @@ The reset and startup sequence is:
    write its address to `SCB.VTOR`.
 9. Unmask interrupts and enter `main()`.
 10. Configure power, Flash latency and the 480 MHz clock tree.
-11. Configure the PH7 heartbeat LED and USART1.
+11. Configure the PH7 heartbeat output and USART1.
 12. Create the OS tasks.
 13. Configure the program-flow monitor, start WWDG1 and arm the first SysTick
     deadline from the same time origin.
@@ -255,8 +248,8 @@ CPU cache enablement are not explicitly configured by the current software.
 
 | Parameter | Value |
 | --- | --- |
-| Clock source | Board HSE crystal, 25 MHz, crystal mode (`HSEBYP=0`) |
-| HSE pins | PH0/OSC_IN and PH1/OSC_OUT, dedicated onboard connection |
+| Clock source | External HSE, 25 MHz, crystal mode (`HSEBYP=0`) |
+| HSE pins | PH0/OSC_IN and PH1/OSC_OUT |
 | `DIVM1` | 5 |
 | PLL1 input | 25 MHz / 5 = 5 MHz |
 | Input range | 4 to 8 MHz |
@@ -311,8 +304,9 @@ deployment functions `tsk_1_5ms` and `tsk_pfm_10ms` execute from
 ITCM. Functions called by those wrappers remain in Flash unless they have their
 own ITCM section attribute.
 
-The fitted W9825G6KH-6I SDRAM is not present in `memory.x`; it cannot be used as
-normal linked memory until FMC GPIO, timing and SDRAM initialization are added.
+No external-memory region is present in `memory.x`; external memory cannot be
+used as normal linked memory until its controller, GPIO, timing, initialization
+and startup diagnostics are defined.
 
 ## Scheduler And Watchdog Hardware
 
@@ -351,258 +345,22 @@ one stop bit, oversampling by 16, prescaler `/1`, non-inverted signaling, LSB
 first and enabled FIFOs. Hardware flow control, DMA and USART interrupts are
 not enabled; communication is polled.
 
-| Use | MCU TX | MCU RX | AF | Baud | GPIO electrical setup | External connection |
-| --- | --- | --- | ---: | ---: | --- | --- |
-| PC/debug UART, USART1 | PA9 | PA10 | 7 | 115200 | TX very-high speed/no pull; RX very-high speed/pull-up; push-pull | P1 TX -> CH343 RX, P1 RX <- CH343 TX |
+| Interface | MCU TX | MCU RX | AF | Baud | GPIO electrical setup |
+| --- | --- | --- | ---: | ---: | --- |
+| USART1 | PA9 | PA10 | 7 | 115200 | TX very-high speed/no pull; RX very-high speed/pull-up; push-pull |
 
 The GPIOA AHB4 clock is enabled as a consequence of this UART configuration.
-The CH343 is currently enumerated by the PC as COM5.
-
-## Current External Assignments
-
-| External device | Board signal | MCU pin | Direction relative to MCU | Status |
-| --- | --- | --- | --- | --- |
-| Atmel-ICE via enclosure | J4 DIO / SWDIO | PA13/SWDIO | Bidirectional | Active enclosure debug route |
-| Atmel-ICE via enclosure | K1 CLK / SWCLK | PA14/SWCLK | Input | Active enclosure debug route |
-| Atmel-ICE via enclosure | K4 RST / nRESET | NRST | Input to reset circuit | Active enclosure debug route |
-| Atmel-ICE via enclosure | K2 3V3 / VTref | 3.3V target reference | Power sense | Active enclosure debug route |
-| Atmel-ICE via enclosure | K3 GND | GND | Reference | Active enclosure debug route |
-| CH343 USB/UART | TX | PA10/USART1_RX | Input | Active |
-| CH343 USB/UART | RX | PA9/USART1_TX | Output | Active |
-| CH343 USB/UART | GND | GND | Reference | Active |
-| Oscilloscope clock test | MCO2 | PC9 | Output | Removed; PC9 is now unconfigured |
-
-The Atmel-ICE is operated in SWD mode; the four-wire JTAG data signals are not
-used by this connection.
-
-## Enclosure 48-Pin Molex Connector
-
-This is the external connector fitted to the enclosure around the board. The
-view below is the mating-face view looking into the male connector, using the
-cavity labels molded into the connector. A wire-side view is mirrored and shall
-not be inferred from this table.
-
-The connector is described as having 48 cavities in four numbered rows. Four
-rows and labels A through M would yield 52 positions if every letter were used.
-This draft therefore interprets the cavity sequence as `A` through `H`, followed
-by `J` through `M`, with `I` omitted. The exact part number and molded labels
-shall be checked before this overview is used to manufacture or test a harness.
-
-`TBD` means that no electrical function has yet been assigned to the cavity.
-
-| Row | A | B | C | D | E | F | G | H | J | K | L | M |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | SWD CLK | TBD | 12 V supply |
-| 2 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | 3.3 V target reference | TBD | 12 V supply |
-| 3 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | GND | TBD | GND |
-| 4 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | SWD DIO | RST | TBD | GND |
-
-| Cavity | Assigned function | Direction at enclosure | Internal destination | Verification state |
-| --- | --- | --- | --- | --- |
-| J4 | SWD DIO | Bidirectional | PA13/SWDIO through board P1 DIO | Assignment recorded; end-to-end continuity test pending |
-| K1 | SWD CLK | Input to enclosure | PA14/SWCLK through board P1 CLK | Assignment recorded; end-to-end continuity test pending |
-| K2 | 3.3 V target reference / VTref | Output reference from enclosure | Board 3.3 V rail through P1 3V3 | Assignment recorded; voltage and isolation test pending |
-| K3 | Debug ground | Reference | Board GND through P1 GND | Assignment recorded; end-to-end continuity test pending |
-| K4 | Debug reset / nRESET | Input to enclosure | NRST through board P1 RST | Assignment recorded; end-to-end continuity test pending |
-| M1 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
-| M2 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
-| M3 | GND / supply return | Power return | TBD | Assignment recorded; continuity test pending |
-| M4 | GND / supply return | Power return | TBD | Assignment recorded; continuity test pending |
-
-The permitted supply range, current allocation between M1/M2 and M3/M4,
-contact derating, wire gauge, fusing, reverse-polarity protection and internal
-power destination remain `TBD` system-level interface properties. The nominal
-12 V assignment shall not be interpreted as permission to connect 12 V directly
-to an STM32H743II supply or GPIO pin.
-
-K2 is a target-voltage reference for the debugger. It shall not be used to power
-the enclosure from the debugger unless a separately reviewed hardware design
-explicitly permits that operating mode.
-
-## Board Connector Pinout
-
-### Orientation And Numbering
-
-For the two long headers, view the PCB from the underside with the P1 debug/UART
-header on the left and the microSD socket on the right. Positions below run
-left-to-right. `Row A` is the first printed silkscreen line and `Row B` is the
-second printed line. These row names deliberately do not infer undocumented
-odd/even connector numbering.
-
-`None` under board connection means that no additional fixed onboard load was
-identified. It does not mean that the MCU pin lacks alternate functions; consult
-the STM32H743II datasheet for the complete alternate-function matrix.
-
-### P1 Debug, UART And Power Header
-
-P1 is electrically a 2x4 header even when only one 1x4 strip is fitted.
-
-| P1 pin | Board signal | MCU/rail | Board function | Current use |
-| ---: | --- | --- | --- | --- |
-| 1 | CLK | PA14 | SWCLK | Atmel-ICE SWCLK |
-| 2 | DIO | PA13 | SWDIO | Atmel-ICE SWDIO |
-| 3 | GND | GND | Ground | Atmel-ICE/CH343 ground |
-| 4 | 5V | 5V rail | Board 5 V rail | Not used by debugger |
-| 5 | RX | PA10 | USART1_RX | CH343 TX -> board RX |
-| 6 | TX | PA9 | USART1_TX | Board TX -> CH343 RX |
-| 7 | RST | NRST through 1 kohm | Reset net and reset button | Atmel-ICE nRESET |
-| 8 | 3V3 | 3.3V rail | Board 3.3 V rail/reference | Atmel-ICE VTref |
-
-### Upper 2x26 Edge Header
-
-| Pos. | Row A | MCU/rail | Board connection | Current firmware | Row B | MCU/rail | Board connection | Current firmware |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 5V | 5V rail | Board supply rail | None | 5V | 5V rail | Board supply rail | None |
-| 2 | RST | NRST | Reset button and P1-7 | Atmel-ICE reset | BT0 | BOOT0 | Boot button/strap | None |
-| 3 | A12 | PA12 | USB OTG FS D+ | Reset state | A11 | PA11 | USB OTG FS D- | Reset state |
-| 4 | I0 | PI0 | LCD FPC G5 | Reset state | I1 | PI1 | LCD FPC G6 | Reset state |
-| 5 | H14 | PH14 | LCD FPC G3 | Reset state | H15 | PH15 | LCD FPC G4 | Reset state |
-| 6 | C6 | PC6 | None | Reset state | H13 | PH13 | LCD FPC G2 | Reset state |
-| 7 | G6 | PG6 | LCD FPC R7 | Reset state | C7 | PC7 | None | Reset state |
-| 8 | C8 | PC8 | microSD D0, 10 kohm pull-up | Reset state | G7 | PG7 | LCD FPC pixel clock | Reset state |
-| 9 | A8 | PA8 | LCD FPC B3 | Reset state | C9 | PC9 | microSD D1, 10 kohm pull-up | Reset state; former MCO2 test |
-| 10 | D2 | PD2 | microSD CMD, 10 kohm pull-up | Reset state | C12 | PC12 | microSD clock | Reset state |
-| 11 | G12 | PG12 | LCD FPC B1 | Reset state | D6 | PD6 | LCD FPC B2 | Reset state |
-| 12 | I2 | PI2 | LCD FPC G7 | Reset state | G14 | PG14 | LCD FPC B0 | Reset state |
-| 13 | C10 | PC10 | microSD D2, 10 kohm pull-up | Reset state | I3 | PI3 | None | Reset state |
-| 14 | C11 | PC11 | microSD D3, 10 kohm pull-up | Reset state | A15 | PA15 | None | Reset state |
-| 15 | D4 | PD4 | None | Reset state | D3 | PD3 | None | Reset state |
-| 16 | D7 | PD7 | None | Reset state | D5 | PD5 | None | Reset state |
-| 17 | G10 | PG10 | None | Reset state | G9 | PG9 | None | Reset state |
-| 18 | B3 | PB3 | None | Reset state | G11 | PG11 | None | Reset state |
-| 19 | B5 | PB5 | None | Reset state | B4 | PB4 | None | Reset state |
-| 20 | B8 | PB8 | None | Reset state | B7 | PB7 | None | Reset state |
-| 21 | C13 | PC13 | None | Reset state | B9 | PB9 | None | Reset state |
-| 22 | E6 | PE6 | LCD FPC G1 | Reset state | E5 | PE5 | LCD FPC G0 | Reset state |
-| 23 | E4 | PE4 | None | Reset state | E3 | PE3 | None | Reset state |
-| 24 | F10 | PF10 | LCD FPC data enable | Reset state | G13 | PG13 | LCD FPC R0 | Reset state |
-| 25 | I9 | PI9 | LCD FPC VSYNC | Reset state | I10 | PI10 | LCD FPC HSYNC | Reset state |
-| 26 | VBT | VBAT | MCU backup supply rail | None | H4 | PH4 | LCD FPC touch reset | Reset state |
-
-### Lower 2x24 Edge Header
-
-| Pos. | Row A | MCU/rail | Board connection | Current firmware | Row B | MCU/rail | Board connection | Current firmware |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | D12 | PD12 | None | Reset state | B6 | PB6 | None | Reset state |
-| 2 | E2 | PE2 | None | Reset state | D13 | PD13 | None | Reset state |
-| 3 | D11 | PD11 | None | Reset state | B2 | PB2 | None | Reset state |
-| 4 | F6 | PF6 | None | Reset state | F7 | PF7 | None | Reset state |
-| 5 | F8 | PF8 | None | Reset state | F9 | PF9 | None | Reset state |
-| 6 | C0 | PC0 | None | Reset state | C1 | PC1 | None | Reset state |
-| 7 | C2 | PC2 | None | Reset state | C3 | PC3 | None | Reset state |
-| 8 | B13 | PB13 | None | Reset state | B15 | PB15 | None | Reset state |
-| 9 | B14 | PB14 | None | Reset state | B12 | PB12 | None | Reset state |
-| 10 | H12 | PH12 | LCD FPC R6 | Reset state | H8 | PH8 | LCD FPC R2 | Reset state |
-| 11 | H11 | PH11 | LCD FPC R5 | Reset state | H10 | PH10 | LCD FPC R4 | Reset state |
-| 12 | H9 | PH9 | LCD FPC R3 | Reset state | H7 | PH7 | Active-low user LED | GPIO output; heartbeat |
-| 13 | B11 | PB11 | None | Reset state | H6 | PH6 | LCD FPC backlight PWM | Reset state |
-| 14 | I4 | PI4 | LCD FPC B4 | Reset state | B10 | PB10 | None | Reset state |
-| 15 | I5 | PI5 | LCD FPC B5 | Reset state | I6 | PI6 | LCD FPC B6 | Reset state |
-| 16 | I7 | PI7 | LCD FPC B7 | Reset state | B1 | PB1 | None | Reset state |
-| 17 | B0 | PB0 | None | Reset state | C5 | PC5 | None | Reset state |
-| 18 | A7 | PA7 | None | Reset state | C4 | PC4 | None | Reset state |
-| 19 | A4 | PA4 | None | Reset state | A6 | PA6 | None | Reset state |
-| 20 | A3 | PA3 | None | Reset state | A5 | PA5 | None | Reset state |
-| 21 | A1 | PA1 | None | Reset state | A2 | PA2 | LCD FPC R1 | Reset state |
-| 22 | I8 | PI8 | LCD FPC touch SDA through 120 ohm | Reset state | A0 | PA0 | None | Reset state |
-| 23 | I11 | PI11 | LCD FPC touch SCL through 120 ohm | Reset state | G3 | PG3 | LCD FPC touch interrupt through 1 kohm | Reset state |
-| 24 | Vref | VREF+ | MCU analog reference | None | GND | GND | Ground | External common ground |
-
-### LCD1 40-Pin RGB And Touch FPC
-
-The connector is a 40-pin, 0.5 mm-pitch, bottom-contact FPC. The current
-firmware does not configure any LTDC or touch function on this connector. Its
-5 V LED supply requirement is a board-interface property.
-
-| FPC pin | Net/function | MCU/rail | FPC pin | Net/function | MCU/rail |
-| ---: | --- | --- | ---: | --- | --- |
-| 1 | VLED | 5V | 21 | LCD_G7 | PI2 |
-| 2 | VLED | 5V | 22 | LCD_G6 | PI1 |
-| 3 | LCD_BL | PH6 | 23 | LCD_G5 | PI0 |
-| 4 | GLED | GND | 24 | LCD_G0 | PE5 |
-| 5 | GLED | GND | 25 | LCD_G4 | PH15 |
-| 6 | VCC | 3.3V | 26 | LCD_G3 | PH14 |
-| 7 | VCC | 3.3V | 27 | LCD_G2 | PH13 |
-| 8 | TOUCH_RST | PH4 | 28 | LCD_R0 | PG13 |
-| 9 | LCD_DE | PF10 | 29 | LCD_R7 | PG6 |
-| 10 | LCD_VS | PI9 | 30 | LCD_R6 | PH12 |
-| 11 | LCD_HS | PI10 | 31 | LCD_R5 | PH11 |
-| 12 | LCD_B0 | PG14 | 32 | LCD_R1 | PA2 |
-| 13 | LCD_B7 | PI7 | 33 | LCD_R4 | PH10 |
-| 14 | LCD_B6 | PI6 | 34 | LCD_R3 | PH9 |
-| 15 | LCD_B5 | PI5 | 35 | LCD_R2 | PH8 |
-| 16 | LCD_B1 | PG12 | 36 | GND | GND |
-| 17 | LCD_B4 | PI4 | 37 | LCD_CLK | PG7 |
-| 18 | LCD_B3 | PA8 | 38 | TOUCH_INT through 1 kohm | PG3 |
-| 19 | LCD_B2 | PD6 | 39 | TOUCH_SCLK through 120 ohm | PI11 |
-| 20 | LCD_G1 | PE6 | 40 | TOUCH_SDA through 120 ohm | PI8 |
-
-## Fixed Onboard MCU Connections
-
-### Oscillators And Indicators
-
-| MCU pin | Board function | Current firmware state |
-| --- | --- | --- |
-| PH0/OSC_IN | 25 MHz HSE crystal input | Enabled as PLL1 source |
-| PH1/OSC_OUT | 25 MHz HSE crystal output | Enabled as PLL1 source |
-| PC14/OSC32_IN | 32.768 kHz LSE crystal input | Not enabled |
-| PC15/OSC32_OUT | 32.768 kHz LSE crystal output | Not enabled |
-| PH7 | User LED cathode through onboard LED/resistor; active low | GPIO output; 60 BPM heartbeat |
-| PA11 | USB OTG FS D- to Type-C connector and upper header | Not configured |
-| PA12 | USB OTG FS D+ to Type-C connector and upper header | Not configured |
-
-### microSD Socket
-
-| microSD signal | MCU pin | Additional board connection | Current firmware state |
-| --- | --- | --- | --- |
-| DAT0 | PC8 | Upper header C8, 10 kohm pull-up | Not configured |
-| DAT1 | PC9 | Upper header C9, 10 kohm pull-up | Not configured; former MCO2 test |
-| DAT2 | PC10 | Upper header C10, 10 kohm pull-up | Not configured |
-| DAT3 | PC11 | Upper header C11, 10 kohm pull-up | Not configured |
-| CMD | PD2 | Upper header D2, 10 kohm pull-up | Not configured |
-| CLK | PC12 | Upper header C12 | Not configured |
-| VDD | 3.3V | Board rail | Always physically supplied with board 3.3 V |
-| VSS/shield | GND | Board ground | Ground |
-
-PC9 must not be used as MCO2 while an SD card transaction is active. The old
-32 MHz verification implementation was intentionally removed.
-
-### W9825G6KH-6I SDRAM
-
-The board carries a 256-Mbit, 16-bit-wide SDR SDRAM, equivalent to 32 MiB. The
-following nets are permanently wired to FMC-capable MCU pins but are not
-initialized by the current software.
-
-| SDRAM signals | MCU pins | FMC function |
-| --- | --- | --- |
-| A0..A5 | PF0..PF5 | FMC_A0..FMC_A5 |
-| A6..A9 | PF12..PF15 | FMC_A6..FMC_A9 |
-| A10..A12 | PG0..PG2 | FMC_A10..FMC_A12 |
-| BA0, BA1 | PG4, PG5 | FMC_BA0, FMC_BA1 |
-| D0..D3 | PD14, PD15, PD0, PD1 | FMC_D0..FMC_D3 |
-| D4..D12 | PE7..PE15 | FMC_D4..FMC_D12 |
-| D13..D15 | PD8..PD10 | FMC_D13..FMC_D15 |
-| LDQM, UDQM | PE0, PE1 | FMC_NBL0, FMC_NBL1 |
-| SDCLK | PG8 | FMC_SDCLK |
-| CKE | PH2 | FMC_SDCKE0 |
-| CS | PH3 | FMC_SDNE0 |
-| RAS | PF11 | FMC_SDNRAS |
-| CAS | PG15 | FMC_SDNCAS |
-| WE | PH5 | FMC_SDNWE |
-
-Until FMC clocks, all FMC GPIO alternate functions, timing registers and the
-JEDEC SDRAM command sequence are implemented, accesses to the external SDRAM
-address range are invalid.
 
 ## Intentionally Unconfigured Hardware
 
-The following board or MCU facilities are present but are not enabled by the
-current software:
+The following MCU facilities are not enabled by the current software. The
+board profile separately identifies which related components are physically
+fitted:
 
-- W9825G6KH-6I external SDRAM and FMC.
-- microSD socket and SDMMC1.
+- External-memory controllers and external-memory address ranges.
+- SDMMC1.
 - USB OTG FS and a valid USB 48 MHz kernel clock.
-- RGB LCD LTDC signals, touch interface and LCD backlight PWM.
+- LTDC, touch-interface GPIO and display backlight PWM.
 - LSE, RTC and backup SRAM use.
 - USART2 and USART3, including PA3, PD5, PB10 and PB11.
 - CPU instruction/data caches and MPU.
@@ -629,24 +387,10 @@ Firmware configuration is derived directly from this repository, especially:
 - [`memory.x`](../../memory.x)
 - [`.cargo/config.toml`](../../.cargo/config.toml)
 
-The enclosure connector assignments are based on the integrator's physical
-wiring record: M1/M2 are nominal 12 V; M3/M4 are GND; J4 is SWD DIO; and
-K1/K2/K3/K4 are SWD CLK, 3.3 V target reference, GND and RST respectively. No
-controlled Molex part drawing, harness drawing or internal power schematic has
-yet been supplied.
+MCU reference sources are:
 
-Board-level pin and fixed-net information was cross-checked against:
-
-- [FK743M2-IIT6 V1.1 underside/pin-label photograph](https://images.prom.ua/6492762220_w700_h500_otladochnaya-plata-stm32h743iit6.jpg)
-- [FK743M2-IIT6 mechanical drawing](https://shuaiwen-cui.github.io/Warehouse/DEV/FK-STM32H743/FK743-MECHANICAL-DESIGN.pdf)
-- [P1 SWD/USART1 circuit](https://github.com/Shuaiwen-Cui/MCU_NODE_STM32/blob/main/MCU_DOC/docs/MAIN-CONTROL/USART/usart_circuit.png)
-- [SDRAM circuit](https://github.com/Shuaiwen-Cui/MCU_NODE_STM32/blob/main/MCU_DOC/docs/MAIN-CONTROL/SDRAM/sdram_circuit.png)
-- [microSD circuit](https://github.com/Shuaiwen-Cui/MCU_NODE_STM32/blob/main/MCU_DOC/docs/MAIN-CONTROL/SDCARD/sdcard_circuit.png)
-- [FK743 RGB LCD/touch interface circuit](https://www.cnblogs.com/Skyrim-sssuuu/p/19187288)
 - [STM32H743II product and datasheet page](https://www.st.com/en/microcontrollers-microprocessors/stm32h743ii.html)
 - [STM32H743 reference manual RM0433](https://www.st.com/resource/en/reference_manual/rm0433-stm32h743-753-and-stm32h750-value-line-advanced-arm-based-32-bit-mcus-stmicroelectronics.pdf)
 
-The board documents available online are vendor/community-hosted rather than a
-version-controlled artifact in this repository. For any production wiring,
-verify the V1.1 silkscreen and continuity on the actual board, especially the
-orientation of headers and FPC pin 1.
+Physical-board sources are recorded with the corresponding
+[board documentation](../STM32H743IIT6/README.md).
