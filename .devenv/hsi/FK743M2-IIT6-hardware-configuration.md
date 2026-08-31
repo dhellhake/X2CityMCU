@@ -94,7 +94,7 @@ Verification method codes are:
 | `HSI-STA-009` | The complete interrupt vector table shall be copied from Flash to a 1024-byte-aligned DTCM allocation, and `SCB.VTOR` shall reference that copy before interrupts are unmasked. | Reset handler, SCB, linker | `I`, `T-HW` | Implemented in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) and [`memory.x`](../../memory.x). |
 | `HSI-STA-010` | Startup shall unmask interrupts only after all runtime memory relocation, zeroing and vector-table redirection are complete. | Reset handler | `I`, `T-HW` | Implemented by `cpsie i` immediately before `main`. |
 | `HSI-STA-011` | The linker shall reserve a non-overlapping 4 KiB, 8-byte-aligned main stack at the top of DTCM and shall place its end in the initial vector-table stack entry. | Linker, reset vector | `I`, `T-SW` | Implemented in [`memory.x`](../../memory.x). |
-| `HSI-STA-012` | Each configured OS task shall have a 1024-byte stack in DTCM, and the configured task count shall not exceed the statically allocated task array. | OS, linker | `I`, `T-SW` | Implemented for four tasks by `STACK_SIZE = 256` words and the DTCM OS object. Stack-depth evidence remains open. |
+| `HSI-STA-012` | Each configured OS task shall have a 1024-byte stack in DTCM, and the configured task count shall not exceed the statically allocated task array. | OS, linker | `I`, `T-SW` | Implemented for three tasks by `STACK_SIZE = 256` words and the DTCM OS object. Stack-depth evidence remains open. |
 | `HSI-STA-013` | Thread mode shall use the process stack pointer in privileged mode before the background task is entered. | `main`, Cortex-M7 core | `I`, `T-HW` | Implemented by the `PSP` and `CONTROL=0x2` writes in [`src/main.rs`](../../src/main.rs). |
 | `HSI-STA-014` | A processor exception or panic shall invoke the allocated safe reaction and shall not leave outputs in an unidentified state beyond the item FTTI. | Exception handlers, system safety mechanism | `T-FI`, `T-HW` | Partial; handlers stop in a loop and WWDG1 can reset only after it has started. Pre-watchdog reaction, output state and FTTI are `TBD`. |
 | `HSI-MEM-001` | Ordinary initialized and zero-initialized objects not explicitly selected for DTCM shall be allocated in the 512 KiB AXI SRAM range `0x2400_0000..0x2408_0000`. | Linker | `I`, `T-SW` | Implemented by `.data` and `.bss` placement and an AXI SRAM bounds assertion. |
@@ -146,22 +146,18 @@ Verification method codes are:
 
 | ID | Requirement | Allocated element | Verification | Current status and evidence |
 | --- | --- | --- | --- | --- |
-| `HSI-UAR-001` | USART1, USART2 and USART3 shall use asynchronous 8N1, LSB-first, non-inverted signaling, oversampling by 16, prescaler 1, enabled transmit/receive and enabled FIFO mode. | USART1/2/3 | `I`, `T-HW` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
+| `HSI-UAR-001` | USART1 shall use asynchronous 8N1, LSB-first, non-inverted signaling, oversampling by 16, prescaler 1, enabled transmit/receive and enabled FIFO mode. | USART1 | `I`, `T-HW` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
 | `HSI-UAR-002` | USART1 shall use a 120 MHz PCLK2 kernel clock, 115200 baud, PA9/AF7 as push-pull TX and PA10/AF7 with pull-up as RX. | RCC, GPIOA, USART1 | `I`, `A`, `T-HW` | Implemented for the P1 CH343/debug UART. |
-| `HSI-UAR-003` | USART2 shall use a 120 MHz PCLK1 kernel clock, 9600 baud, PD5/AF7 as push-pull TX and PA3/AF7 with pull-up as RX. | RCC, GPIOA/GPIOD, USART2 | `I`, `A`, `T-HW` | Implemented for the VD18MT/VT8MT interface. |
-| `HSI-UAR-004` | USART3 shall use a 120 MHz PCLK1 kernel clock, 9600 baud, PB10/AF7 as push-pull TX and PB11/AF7 with pull-up as RX. | RCC, GPIOB, USART3 | `I`, `A`, `T-HW` | Implemented for the JDB BMS interface. |
-| `HSI-UAR-005` | UART initialization shall enable only the required GPIOA, GPIOB, GPIOD and USART1/2/3 peripheral clocks for these interfaces. | RCC | `I` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
-| `HSI-UAR-006` | USART1/2/3 communication shall remain polled with DMA, hardware flow control and USART interrupts disabled until an approved HSI change allocates and verifies those resources. | USART1/2/3, NVIC, DMA | `I` | Implemented as the current configuration. |
-| `HSI-UAR-007` | A communication channel allocated a safety requirement shall detect UART framing, noise, overrun and parity indications, clear them deterministically and communicate invalidity to its consumer. | USART driver, component | `I`, `T-SW`, `T-FI` | Partial; the BMS path exposes and handles USART errors. USART1/USART2 safety allocation and error handling are `TBD`. |
-| `HSI-UAR-008` | A safety-relevant UART protocol shall provide and verify message framing, length, checksum, value range, sequence/freshness or timeout as required by its allocated safety requirement. | BMS/display component | `I`, `T-SW`, `T-FI` | Partial; component parsers validate framing/checksums, but channel safety allocation and end-to-end safety metrics are `TBD`. |
+| `HSI-UAR-005` | UART initialization shall enable only the required GPIOA and USART1 peripheral clocks. | RCC | `I` | Implemented by [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs). |
+| `HSI-UAR-006` | USART1 communication shall remain polled with DMA, hardware flow control and USART interrupts disabled until an approved HSI change allocates and verifies those resources. | USART1, NVIC, DMA | `I` | Implemented as the current configuration. |
+| `HSI-UAR-007` | A communication channel allocated a safety requirement shall detect UART framing, noise, overrun and parity indications, clear them deterministically and communicate invalidity to its consumer. | USART driver, component | `I`, `T-SW`, `T-FI` | Open; USART1 has no allocated safety requirement and its project wrapper does not expose error status. |
 | `HSI-UAR-009` | External devices connected to MCU GPIO shall satisfy STM32H743II input/output voltage limits, share a defined ground reference and shall not back-power an unpowered participant. | Board/system integration | `I`, `A`, `T-HW` | Assumption; external wiring is not controlled by firmware. |
-| `HSI-UAR-010` | The 5 V VT8MT UART side shall connect to PA3/PD5 only through a level interface demonstrated to provide valid 3.3 V MCU levels across voltage, load, baud rate and temperature. | External level shifter, system integration | `A`, `T-HW` | Assumption; the installed bidirectional level-shifter behavior requires electrical validation. |
 | `HSI-LED-001` | PH7 shall drive the onboard active-low user LED as a low-speed push-pull GPIO output without an internal pull. Its output latch shall be set high before output mode is selected. | RCC, GPIOH, board LED | `I`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs); the initialization sequence prevents an unintended startup pulse. |
 | `HSI-LED-002` | The supervised 5 ms task shall drive a one-second heartbeat consisting of 100 ms on, 100 ms off, 100 ms on and 700 ms off using its scheduled timestamp. | Scheduler, 5 ms task, board LED | `I`, `T-SW`, `T-HW` | Implemented by [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) and [`src/mcu/deployment/mod.rs`](../../src/mcu/deployment/mod.rs); task-aligned edge assertions are evaluated at compile time. |
 | `HSI-LED-003` | The heartbeat shall be treated as a scheduler-activity indication only and shall not replace program-flow monitoring or the hardware watchdog. | System diagnostics | `I`, `A` | Implemented architecturally; WWDG1 remains the independent scheduler supervision reaction. |
-| `HSI-DBG-001` | SWD shall use PA13/SWDIO, PA14/SWCLK, NRST, target 3.3 V reference and common ground as listed for P1; four-wire JTAG operation shall not be assumed from J-Link signal labels. | Board P1, debugger configuration | `I`, `T-HW` | Implemented for development/debug connection. |
+| `HSI-DBG-001` | SWD shall use PA13/SWDIO, PA14/SWCLK, NRST, target 3.3 V reference and common ground as listed for P1; four-wire JTAG operation shall not be assumed. | Board P1, debugger configuration | `I`, `T-HW` | Implemented for development/debug connection. |
 | `HSI-DBG-002` | Safety-relevant operation shall not depend on an attached debugger, and production debug access shall follow the item safety and security concept. | System integration | `I`, `T-HW` | Partial; standalone execution works, but the production debug-access policy is `TBD`. |
-| `HSI-DBG-003` | The enclosure debug interface shall route J4 to PA13/SWDIO, K1 to PA14/SWCLK, K2 to the target 3.3 V reference, K3 to GND and K4 to NRST. J-Link TMS shall connect to J4/DIO, TCLK to K1/CLK, VCC/VTref to K2/3V3, GND to K3 and RESET to K4/RST. | Enclosure connector, internal harness and board P1 | `I`, `T-HW` | Assumption; the assignment is recorded and requires end-to-end continuity and isolation testing. |
+| `HSI-DBG-003` | The enclosure debug interface shall route J4 to PA13/SWDIO, K1 to PA14/SWCLK, K2 to the target 3.3 V reference, K3 to GND and K4 to NRST. The Atmel-ICE SWDIO, SWCLK, VTref, GND and nRESET signals shall connect to those respective enclosure signals. | Enclosure connector, internal harness and board P1 | `I`, `T-HW` | Implemented for the current development connection; end-to-end continuity and isolation evidence remains external. |
 
 ### Board Resources And Pin Ownership
 
@@ -202,11 +198,9 @@ Verification method codes are:
 | FPU | CP10 and CP11 full access enabled before Rust code executes | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
 | ITCM/DTCM | Enabled during reset; selected code/data relocated before `main` | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`memory.x`](../../memory.x) |
 | Vector table | Copied from Flash to DTCM and `VTOR` redirected to the RAM copy | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
-| SWD | J-Link target connection on PA13, PA14 and NRST through enclosure cavities J4, K1 and K4; K2/K3 provide reference and ground | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
+| SWD | Atmel-ICE CMSIS-DAP connection on PA13, PA14 and NRST through enclosure cavities J4, K1 and K4; K2/K3 provide reference and ground | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
 | Enclosure connector | 48-pin Molex matrix; M1/M2 = nominal 12 V, M3/M4 = GND, J4/K1/K2/K3/K4 = debugger interface, all other cavities TBD | Physical integration record |
 | USART1 | Debug/PC UART, 115200 8N1, PA9/PA10 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
-| USART2 | VD18MT/VT8MT display UART, 9600 8N1, PA3/PD5 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
-| USART3 | JDB BMS UART, 9600 8N1, PB10/PB11 | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
 | SysTick | Processor clock source at 480 MHz; interrupt-driven scheduler deadlines | [`src/drv/systick/mod.rs`](../../src/drv/systick/mod.rs) |
 | WWDG1 | Window watchdog enabled for program-flow supervision | [`src/mcu/peripherals/wwdg.rs`](../../src/mcu/peripherals/wwdg.rs) |
 | External SDRAM | Fitted and wired, but not initialized or mapped by this firmware | Not configured |
@@ -232,15 +226,16 @@ The reset and startup sequence is:
    write its address to `SCB.VTOR`.
 9. Unmask interrupts and enter `main()`.
 10. Configure power, Flash latency and the 480 MHz clock tree.
-11. Configure the PH7 heartbeat LED and USART1, USART2 and USART3.
-12. Create the OS tasks and component instances.
+11. Configure the PH7 heartbeat LED and USART1.
+12. Create the OS tasks.
 13. Configure the program-flow monitor, start WWDG1 and arm the first SysTick
     deadline from the same time origin.
 14. Select PSP for privileged thread mode and start the background task.
 
 No MCU I-cache, D-cache, MPU, DMA or MDMA configuration is currently made.
-No explicit SysTick, PendSV or SVCall priority is programmed, so their reset
-priority values remain in effect.
+SVCall, SysTick and PendSV are explicitly programmed to `0xD0`, `0xE0` and
+`0xF0` respectively. The numerically lower SVCall and SysTick priorities allow
+scheduler bookkeeping to complete before PendSV context switching.
 
 ## Clock And Power Tree
 
@@ -287,7 +282,6 @@ other 48 MHz source is configured.
 | PCLK2 / APB2 | HCLK / 2 | 120 MHz |
 | PCLK4 / APB4 | HCLK / 2 | 120 MHz |
 | USART1 kernel | PCLK2 | 120 MHz |
-| USART2/USART3 kernel | PCLK1 | 120 MHz |
 | SysTick | Processor clock | 480 MHz |
 | WWDG1 | PCLK3 before watchdog divider | 120 MHz |
 
@@ -299,10 +293,10 @@ otherwise initialized by this firmware.
 
 | Region | Address | Size | Current use |
 | --- | ---: | ---: | --- |
-| ITCM | `0x0000_0000` | 64 KiB | `.itcm_text`; the three task deployment wrappers |
+| ITCM | `0x0000_0000` | 64 KiB | `.itcm_text`; the two task deployment wrappers |
 | Internal Flash | `0x0800_0000` | 2 MiB | Vector load image, ordinary code/const data, RAM load images |
 | DTCM | `0x2000_0000` | 128 KiB | RAM vector table, OS/task stacks, SysTick/WWDG/PFM state, 4 KiB MSP stack |
-| AXI SRAM | `0x2400_0000` | 512 KiB | Ordinary `.data` and `.bss`, including component instances |
+| AXI SRAM | `0x2400_0000` | 512 KiB | Ordinary `.data` and `.bss`, including peripheral handles |
 | D2 SRAM | `0x3000_0000` | 288 KiB | Exposed by linker symbols, no section allocated currently |
 | D3 SRAM | `0x3800_0000` | 64 KiB | Exposed by linker symbols, no section allocated currently |
 | Backup SRAM | `0x3880_0000` | 4 KiB | Exposed by linker symbols, no section allocated currently |
@@ -312,8 +306,8 @@ cannot overlap the reserved MSP stack. Ordinary AXI SRAM allocations are also
 bounds-checked.
 
 `STACK_SIZE` is 256 `u32` words per OS task, or 1024 bytes per task. The OS
-object contains all four task stacks and is explicitly placed in DTCM. The
-deployment functions `tsk_1_5ms`, `tsk_2_10ms` and `tsk_pfm_10ms` execute from
+object contains all three task stacks and is explicitly placed in DTCM. The
+deployment functions `tsk_1_5ms` and `tsk_pfm_10ms` execute from
 ITCM. Functions called by those wrappers remain in Flash unless they have their
 own ITCM section attribute.
 
@@ -350,9 +344,9 @@ that calls `Wwdg::Refresh`. It services WWDG1 only after all expected supervised
 task checkpoints have been validated. A PFM fault inhibits all later refreshes
 and leaves the hardware watchdog to reset the MCU.
 
-## Configured UART Interfaces
+## Configured UART Interface
 
-All three USARTs use asynchronous transmit and receive, 8 data bits, no parity,
+USART1 uses asynchronous transmit and receive, 8 data bits, no parity,
 one stop bit, oversampling by 16, prescaler `/1`, non-inverted signaling, LSB
 first and enabled FIFOs. Hardware flow control, DMA and USART interrupts are
 not enabled; communication is polled.
@@ -360,37 +354,26 @@ not enabled; communication is polled.
 | Use | MCU TX | MCU RX | AF | Baud | GPIO electrical setup | External connection |
 | --- | --- | --- | ---: | ---: | --- | --- |
 | PC/debug UART, USART1 | PA9 | PA10 | 7 | 115200 | TX very-high speed/no pull; RX very-high speed/pull-up; push-pull | P1 TX -> CH343 RX, P1 RX <- CH343 TX |
-| VD18MT/VT8MT display, USART2 | PD5 | PA3 | 7 | 9600 | TX low speed/no pull; RX low speed/pull-up; push-pull | PD5 -> display RX, PA3 <- display TX |
-| JDB BMS, USART3 | PB10 | PB11 | 7 | 9600 | TX low speed/no pull; RX low speed/pull-up; push-pull | PB10 -> BMS RX, PB11 <- BMS TX |
 
-GPIOA, GPIOB and GPIOD AHB4 clocks are enabled as a consequence of these UART
-configurations. The UART-connected VT8MT display is independent of the unused
-40-pin RGB LCD connector. The CH343 is currently enumerated by the PC as COM5.
-The VT8MT wiring includes an external bidirectional 3.3 V/5 V level-shifter
-module; its electrical behavior is outside the firmware configuration.
+The GPIOA AHB4 clock is enabled as a consequence of this UART configuration.
+The CH343 is currently enumerated by the PC as COM5.
 
 ## Current External Assignments
 
 | External device | Board signal | MCU pin | Direction relative to MCU | Status |
 | --- | --- | --- | --- | --- |
-| J-Link EDU Mini V2 via enclosure | J4 DIO / J-Link TMS | PA13/SWDIO | Bidirectional | Active enclosure debug route |
-| J-Link EDU Mini V2 via enclosure | K1 CLK / J-Link TCLK | PA14/SWCLK | Input | Active enclosure debug route |
-| J-Link EDU Mini V2 via enclosure | K4 RST / J-Link RESET | NRST | Input to reset circuit | Active enclosure debug route |
-| J-Link EDU Mini V2 via enclosure | K2 3V3 / J-Link VCC | 3.3V target reference | Power sense | Active enclosure debug route |
-| J-Link EDU Mini V2 via enclosure | K3 GND | GND | Reference | Active enclosure debug route |
+| Atmel-ICE via enclosure | J4 DIO / SWDIO | PA13/SWDIO | Bidirectional | Active enclosure debug route |
+| Atmel-ICE via enclosure | K1 CLK / SWCLK | PA14/SWCLK | Input | Active enclosure debug route |
+| Atmel-ICE via enclosure | K4 RST / nRESET | NRST | Input to reset circuit | Active enclosure debug route |
+| Atmel-ICE via enclosure | K2 3V3 / VTref | 3.3V target reference | Power sense | Active enclosure debug route |
+| Atmel-ICE via enclosure | K3 GND | GND | Reference | Active enclosure debug route |
 | CH343 USB/UART | TX | PA10/USART1_RX | Input | Active |
 | CH343 USB/UART | RX | PA9/USART1_TX | Output | Active |
 | CH343 USB/UART | GND | GND | Reference | Active |
-| VD18MT/VT8MT | TX | PA3/USART2_RX | Input | Active |
-| VD18MT/VT8MT | RX | PD5/USART2_TX | Output | Active |
-| VD18MT/VT8MT | GND | GND | Reference | Active |
-| JDB BMS | TX | PB11/USART3_RX | Input | Active |
-| JDB BMS | RX | PB10/USART3_TX | Output | Active |
-| JDB BMS | GND | GND | Reference | Active |
 | Oscilloscope clock test | MCO2 | PC9 | Output | Removed; PC9 is now unconfigured |
 
-The J-Link connector names TMS and TCLK carry SWDIO and SWCLK respectively
-because the debug transport is configured for SWD, not four-wire JTAG.
+The Atmel-ICE is operated in SWD mode; the four-wire JTAG data signals are not
+used by this connection.
 
 ## Enclosure 48-Pin Molex Connector
 
@@ -416,11 +399,11 @@ shall be checked before this overview is used to manufacture or test a harness.
 
 | Cavity | Assigned function | Direction at enclosure | Internal destination | Verification state |
 | --- | --- | --- | --- | --- |
-| J4 | SWD DIO / J-Link TMS | Bidirectional | PA13/SWDIO through board P1 DIO | Assignment recorded; end-to-end continuity test pending |
-| K1 | SWD CLK / J-Link TCLK | Input to enclosure | PA14/SWCLK through board P1 CLK | Assignment recorded; end-to-end continuity test pending |
-| K2 | 3.3 V target reference / J-Link VCC | Output reference from enclosure | Board 3.3 V rail through P1 3V3 | Assignment recorded; voltage and isolation test pending |
+| J4 | SWD DIO | Bidirectional | PA13/SWDIO through board P1 DIO | Assignment recorded; end-to-end continuity test pending |
+| K1 | SWD CLK | Input to enclosure | PA14/SWCLK through board P1 CLK | Assignment recorded; end-to-end continuity test pending |
+| K2 | 3.3 V target reference / VTref | Output reference from enclosure | Board 3.3 V rail through P1 3V3 | Assignment recorded; voltage and isolation test pending |
 | K3 | Debug ground | Reference | Board GND through P1 GND | Assignment recorded; end-to-end continuity test pending |
-| K4 | Debug reset / J-Link RESET | Input to enclosure | NRST through board P1 RST | Assignment recorded; end-to-end continuity test pending |
+| K4 | Debug reset / nRESET | Input to enclosure | NRST through board P1 RST | Assignment recorded; end-to-end continuity test pending |
 | M1 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
 | M2 | Nominal 12 V supply | Power into enclosure | TBD | Assignment recorded; polarity/continuity test pending |
 | M3 | GND / supply return | Power return | TBD | Assignment recorded; continuity test pending |
@@ -456,21 +439,21 @@ P1 is electrically a 2x4 header even when only one 1x4 strip is fitted.
 
 | P1 pin | Board signal | MCU/rail | Board function | Current use |
 | ---: | --- | --- | --- | --- |
-| 1 | CLK | PA14 | SWCLK | J-Link TCLK |
-| 2 | DIO | PA13 | SWDIO | J-Link TMS |
-| 3 | GND | GND | Ground | J-Link/CH343 ground |
+| 1 | CLK | PA14 | SWCLK | Atmel-ICE SWCLK |
+| 2 | DIO | PA13 | SWDIO | Atmel-ICE SWDIO |
+| 3 | GND | GND | Ground | Atmel-ICE/CH343 ground |
 | 4 | 5V | 5V rail | Board 5 V rail | Not used by debugger |
 | 5 | RX | PA10 | USART1_RX | CH343 TX -> board RX |
 | 6 | TX | PA9 | USART1_TX | Board TX -> CH343 RX |
-| 7 | RST | NRST through 1 kohm | Reset net and reset button | J-Link RESET |
-| 8 | 3V3 | 3.3V rail | Board 3.3 V rail/reference | J-Link VCC sense |
+| 7 | RST | NRST through 1 kohm | Reset net and reset button | Atmel-ICE nRESET |
+| 8 | 3V3 | 3.3V rail | Board 3.3 V rail/reference | Atmel-ICE VTref |
 
 ### Upper 2x26 Edge Header
 
 | Pos. | Row A | MCU/rail | Board connection | Current firmware | Row B | MCU/rail | Board connection | Current firmware |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 5V | 5V rail | Board supply rail | None | 5V | 5V rail | Board supply rail | None |
-| 2 | RST | NRST | Reset button and P1-7 | J-Link reset | BT0 | BOOT0 | Boot button/strap | None |
+| 2 | RST | NRST | Reset button and P1-7 | Atmel-ICE reset | BT0 | BOOT0 | Boot button/strap | None |
 | 3 | A12 | PA12 | USB OTG FS D+ | Reset state | A11 | PA11 | USB OTG FS D- | Reset state |
 | 4 | I0 | PI0 | LCD FPC G5 | Reset state | I1 | PI1 | LCD FPC G6 | Reset state |
 | 5 | H14 | PH14 | LCD FPC G3 | Reset state | H15 | PH15 | LCD FPC G4 | Reset state |
@@ -484,7 +467,7 @@ P1 is electrically a 2x4 header even when only one 1x4 strip is fitted.
 | 13 | C10 | PC10 | microSD D2, 10 kohm pull-up | Reset state | I3 | PI3 | None | Reset state |
 | 14 | C11 | PC11 | microSD D3, 10 kohm pull-up | Reset state | A15 | PA15 | None | Reset state |
 | 15 | D4 | PD4 | None | Reset state | D3 | PD3 | None | Reset state |
-| 16 | D7 | PD7 | None | Reset state | D5 | PD5 | None | USART2_TX to VT8MT |
+| 16 | D7 | PD7 | None | Reset state | D5 | PD5 | None | Reset state |
 | 17 | G10 | PG10 | None | Reset state | G9 | PG9 | None | Reset state |
 | 18 | B3 | PB3 | None | Reset state | G11 | PG11 | None | Reset state |
 | 19 | B5 | PB5 | None | Reset state | B4 | PB4 | None | Reset state |
@@ -512,14 +495,14 @@ P1 is electrically a 2x4 header even when only one 1x4 strip is fitted.
 | 10 | H12 | PH12 | LCD FPC R6 | Reset state | H8 | PH8 | LCD FPC R2 | Reset state |
 | 11 | H11 | PH11 | LCD FPC R5 | Reset state | H10 | PH10 | LCD FPC R4 | Reset state |
 | 12 | H9 | PH9 | LCD FPC R3 | Reset state | H7 | PH7 | Active-low user LED | GPIO output; heartbeat |
-| 13 | B11 | PB11 | None | USART3_RX from BMS | H6 | PH6 | LCD FPC backlight PWM | Reset state |
-| 14 | I4 | PI4 | LCD FPC B4 | Reset state | B10 | PB10 | None | USART3_TX to BMS |
+| 13 | B11 | PB11 | None | Reset state | H6 | PH6 | LCD FPC backlight PWM | Reset state |
+| 14 | I4 | PI4 | LCD FPC B4 | Reset state | B10 | PB10 | None | Reset state |
 | 15 | I5 | PI5 | LCD FPC B5 | Reset state | I6 | PI6 | LCD FPC B6 | Reset state |
 | 16 | I7 | PI7 | LCD FPC B7 | Reset state | B1 | PB1 | None | Reset state |
 | 17 | B0 | PB0 | None | Reset state | C5 | PC5 | None | Reset state |
 | 18 | A7 | PA7 | None | Reset state | C4 | PC4 | None | Reset state |
 | 19 | A4 | PA4 | None | Reset state | A6 | PA6 | None | Reset state |
-| 20 | A3 | PA3 | None | USART2_RX from VT8MT | A5 | PA5 | None | Reset state |
+| 20 | A3 | PA3 | None | Reset state | A5 | PA5 | None | Reset state |
 | 21 | A1 | PA1 | None | Reset state | A2 | PA2 | LCD FPC R1 | Reset state |
 | 22 | I8 | PI8 | LCD FPC touch SDA through 120 ohm | Reset state | A0 | PA0 | None | Reset state |
 | 23 | I11 | PI11 | LCD FPC touch SCL through 120 ohm | Reset state | G3 | PG3 | LCD FPC touch interrupt through 1 kohm | Reset state |
@@ -529,8 +512,7 @@ P1 is electrically a 2x4 header even when only one 1x4 strip is fitted.
 
 The connector is a 40-pin, 0.5 mm-pitch, bottom-contact FPC. The current
 firmware does not configure any LTDC or touch function on this connector. Its
-5 V LED supply requirement is a board-interface property and is unrelated to
-the UART-connected VT8MT display.
+5 V LED supply requirement is a board-interface property.
 
 | FPC pin | Net/function | MCU/rail | FPC pin | Net/function | MCU/rail |
 | ---: | --- | --- | ---: | --- | --- |
@@ -622,9 +604,10 @@ current software:
 - USB OTG FS and a valid USB 48 MHz kernel clock.
 - RGB LCD LTDC signals, touch interface and LCD backlight PWM.
 - LSE, RTC and backup SRAM use.
+- USART2 and USART3, including PA3, PD5, PB10 and PB11.
 - CPU instruction/data caches and MPU.
 - DMA and MDMA.
-- UART interrupts and NVIC configuration for USART1/2/3.
+- UART interrupts and NVIC configuration for USART1.
 - HSE clock-security system and MCO outputs.
 
 ## Sources And Traceability

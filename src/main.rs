@@ -5,27 +5,20 @@
 #![allow(non_snake_case)]
 #![allow(unused_assignments)]
 
-pub mod bms;
 pub mod drv;
 pub mod mcu;
 pub mod os;
-pub mod vd18mt;
 
 use core::{arch::asm, panic::PanicInfo};
 
 use crate::{
-    bms::BmsInterface,
     mcu::{
-        deployment::{tsk_1_5ms, tsk_2_10ms, tsk_pfm_10ms, BMS, VD18MT},
+        deployment::{tsk_1_5ms, tsk_pfm_10ms},
         McuManager, SCHEDULER,
     },
     os::{
         task::{TaskCycleTime, TaskRole},
         task_return_trap,
-    },
-    vd18mt::{
-        VT8MTBatteryCurrent, VT8MTBatteryIndication, VT8MTControllerStatusFlags, VT8MTData,
-        VT8MTErrorCode,
     },
 };
 
@@ -47,39 +40,24 @@ fn main() -> ! {
     McuManager::McuClockTree_Init();
     McuManager::BoardLed_Init();
     McuManager::UartCommunication_Init();
-    McuManager::VD18MTCommunication_Init();
-    McuManager::BmsCommunication_Init();
 
     /* OS Init */
     let stack = SCHEDULER.with(|scheduler| {
         scheduler.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
-        scheduler.SetTask(1, tsk_2_10ms, TaskCycleTime::_10MS, TaskRole::Supervised);
         scheduler.SetTask(
-            2,
+            1,
             tsk_pfm_10ms,
             TaskCycleTime::_10MS,
             TaskRole::Unsupervised,
         );
         scheduler.SetTask(
-            3,
+            2,
             background,
             TaskCycleTime::NonCyclic,
             TaskRole::Background,
         );
         scheduler.ActivateBackgroundTask()
     });
-
-    /* Post-OS Init */
-    VD18MT.with(|vd18mt| {
-        vd18mt.VD18MTInterface_SetVT8MTData(VT8MTData {
-            BatteryIndication: VT8MTBatteryIndication::FourSixths,
-            ControllerStatus: VT8MTControllerStatusFlags::ControllerWorking,
-            BatteryCurrentAmperes: VT8MTBatteryCurrent::FromAmperes(0.0),
-            ErrorCode: VT8MTErrorCode::NoError,
-            SpeedKmh: 0,
-        })
-    });
-    BMS.with(|bms| *bms = BmsInterface::new());
 
     /* Program Flow Start */
     McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);
