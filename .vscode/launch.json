@@ -9,7 +9,7 @@
             "serverpath":"C:/Users/domin/AppData/Roaming/xPacks/openocd/xpack-openocd-0.12.0-6/bin/openocd.exe",
             "cwd": "${workspaceRoot}",
             "preLaunchTask": "Cargo Build",
-            "executable": "./target/thumbv7em-none-eabihf/debug/ExhValveAct",
+            "executable": "./target/thumbv7em-none-eabihf/debug/X2CityMCU",
             "configFiles": [
                 "${workspaceRoot}/.devenv/STM32H743IIT6/STM32H743IIT6.cfg"
             ],

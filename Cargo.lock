@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "ExhValveAct"
+name = "X2CityMCU"
 version = "0.1.0"
