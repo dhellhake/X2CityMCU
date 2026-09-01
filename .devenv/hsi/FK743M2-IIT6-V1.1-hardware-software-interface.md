@@ -132,6 +132,7 @@ Verification method codes are:
 | `HSI-TIM-002` | Every programmed SysTick interval shall fit the 24-bit reload field; longer intervals shall be represented without truncating the requested deadline. | SysTick driver | `I`, `T-SW` | Implemented by bounded deadline arming in [`src/drv/systick`](../../src/drv/systick). |
 | `HSI-TIM-003` | The first scheduler deadline shall be armed for 1000 us after the program-flow epoch. | MCU manager, SysTick | `I`, `T-HW` | Implemented by `INITIAL_SCHEDULER_WAKEUP_US`. |
 | `HSI-TIM-004` | The scheduler and program-flow monitor shall use the same monotonic microsecond time base. | SysTick, OS, PFM | `I`, `T-SW` | Implemented through `Systick::GetElapsedMicroseconds`. Independent timing plausibility evidence is open. |
+| `HSI-TIM-005` | A scheduler deadline less than 4096 processor-clock ticks away shall not be programmed as a short SysTick interval. The driver shall install a valid maximum-length fallback and report `ImmediateRescanRequired`; the OS shall then software-pend SysTick for a fresh scheduler scan. Reload value zero shall not be used as a wakeup. | SysTick driver, SCB, OS | `I`, `T-SW`, `T-HW` | Implemented by `TimerArmResult`, compile-time boundary checks and the exhaustive scheduler response in [`src/drv/systick`](../../src/drv/systick) and [`src/os`](../../src/os). On-target release-build testing over six reset campaigns measured a maximum 794-cycle post-arm path, 3302-cycle guard margin and zero early expiries in 600000 exact-boundary switches; see [the 2026-09-01 evidence record](evidence/2026-09-01-systick-contract-and-cycle-guard.md). Revalidation is required when interrupt load, scheduler structure, compiler, clock/cache configuration or target hardware changes. |
 | `HSI-WDG-001` | WWDG1 shall be clocked from PCLK3 at 120 MHz and configured with divider 32768, reload counter `0x7F`, window counter `0x61` and early-wakeup interrupt disabled. | RCC, WWDG1 | `I`, `A`, `T-HW` | Implemented by [`src/mcu/peripherals/wwdg.rs`](../../src/mcu/peripherals/wwdg.rs). |
 | `HSI-WDG-002` | The WWDG1 configuration shall provide an approximate hardware window opening at 8.2 ms and reset timeout at 17.5 ms after each reload. | WWDG1 | `A`, `T-HW` | Implemented by the values in `HSI-WDG-001`; tolerance analysis against PCLK3 accuracy is open. |
 | `HSI-WDG-003` | WWDG1 start and the first SysTick deadline shall be performed in one interrupt-masked critical section using program-flow epoch 0. | MCU manager | `I`, `T-HW` | Implemented by [`ProgramFlowSupervision_Start`](../../src/mcu/mod.rs). |
@@ -317,6 +318,15 @@ and startup diagnostics are defined.
 - Interrupt: enabled whenever a scheduler deadline is armed.
 - Initial deadline: 1000 us after the common program-flow epoch.
 - Later deadlines: dynamically armed to the next cyclic task release.
+- Maximum single hardware interval: 16777216 ticks, approximately 34.95 ms.
+- Deadlines less than 4096 processor ticks, approximately 8.53 us, away use
+  the maximum-length fallback and a software-pended immediate scheduler rescan.
+- The measured release-build path from the final timer-enable operation through
+  PendSV interrupt readiness was at most 794 processor cycles (approximately
+  1.65 us), leaving 3302 cycles (approximately 6.88 us) of the configured
+  guard in the tested configuration.
+- SysTick pauses briefly while it is reprogrammed; cumulative wall-clock drift
+  remains part of the open independent timing-plausibility verification.
 - The vector table entry is the shared OS symbol `SysTick_Isr`.
 
 ### WWDG1

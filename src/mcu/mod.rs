@@ -9,7 +9,7 @@ use crate::{
         rcc::Rcc,
         scb::Scb,
         syscfg::Syscfg,
-        systick::Systick,
+        systick::{Systick, TimerArmResult},
         usart::{Usart, USART1_ADDR},
         wwdg::Wwdg,
     },
@@ -171,9 +171,14 @@ impl McuManager {
         WWDG.with(|wwdg| {
             SYSTICK.with(|syst| {
                 peripherals::wwdg::StartWwdg1For10MsProgramFlow(wwdg);
-                let armed = syst
-                    .SetTimerAt(PROGRAM_FLOW_START_US.saturating_add(INITIAL_SCHEDULER_WAKEUP_US));
-                assert!(armed);
+                match syst
+                    .SetTimerAt(PROGRAM_FLOW_START_US.saturating_add(INITIAL_SCHEDULER_WAKEUP_US))
+                {
+                    TimerArmResult::Armed => {}
+                    TimerArmResult::ImmediateRescanRequired => {
+                        panic!("initial scheduler deadline is not safely armable")
+                    }
+                }
             });
         });
     }
