@@ -101,6 +101,7 @@ Verification method codes are:
 | `HSI-STA-012` | Each configured OS task shall have a 1024-byte stack in DTCM, and the configured task count shall not exceed the statically allocated task array. | OS, linker | `I`, `T-SW` | Implemented for three tasks by `STACK_SIZE = 256` words and the DTCM OS object. Stack-depth evidence remains open. |
 | `HSI-STA-013` | Thread mode shall use the process stack pointer in privileged mode before the background task is entered. | `main`, Cortex-M7 core | `I`, `T-HW` | Implemented by the `PSP` and `CONTROL=0x2` writes in [`src/main.rs`](../../src/main.rs). |
 | `HSI-STA-014` | A processor exception or panic shall invoke the allocated safe reaction and shall not leave outputs in an unidentified state beyond the item FTTI. | Exception handlers, system safety mechanism | `T-FI`, `T-HW` | Partial; handlers stop in a loop and WWDG1 can reset only after it has started. Pre-watchdog reaction, output state and FTTI are `TBD`. |
+| `HSI-STA-015` | When the Rust target exposes floating-point registers, the OS shall select eager automatic FP stacking, preserve each task's complete `EXC_RETURN`, and conditionally preserve `s16-s31`. A target without `fpregs` shall select a context switch containing no FP instructions. | OS, Cortex-M port | `I`, `T-SW`, `T-HW` | Implemented by the compile-selected PendSV ports in [`src/os/isr`](../../src/os/isr) and `InitializeContextSwitching`. On-target mixed-frame testing completed 100000 register comparisons without a mismatch; see [the FP context evidence record](evidence/2026-09-01-fpu-context-switch.md). |
 | `HSI-MEM-001` | Ordinary initialized and zero-initialized objects not explicitly selected for DTCM shall be allocated in the 512 KiB AXI SRAM range `0x2400_0000..0x2408_0000`. | Linker | `I`, `T-SW` | Implemented by `.data` and `.bss` placement and an AXI SRAM bounds assertion. |
 | `HSI-MEM-002` | D2 SRAM, D3 SRAM and backup SRAM shall remain unallocated until startup initialization, ownership and diagnostic requirements are defined for them. | Linker, MCU software | `I` | Implemented; only region symbols are currently exposed by [`memory.x`](../../memory.x). |
 | `HSI-MEM-003` | External SDRAM shall not be linked, dereferenced or exposed to application software until FMC pin setup, SDRAM timing, JEDEC initialization and a startup memory test have completed successfully. | FMC configuration, linker, system integration | `I`, `T-HW`, `T-FI` | Implemented as a prohibition; SDRAM is absent from [`memory.x`](../../memory.x). FMC initialization and test are not implemented. |
@@ -132,7 +133,7 @@ Verification method codes are:
 | `HSI-TIM-002` | Every programmed SysTick interval shall fit the 24-bit reload field; longer intervals shall be represented without truncating the requested deadline. | SysTick driver | `I`, `T-SW` | Implemented by bounded deadline arming in [`src/drv/systick`](../../src/drv/systick). |
 | `HSI-TIM-003` | The first scheduler deadline shall be armed for 1000 us after the program-flow epoch. | MCU manager, SysTick | `I`, `T-HW` | Implemented by `INITIAL_SCHEDULER_WAKEUP_US`. |
 | `HSI-TIM-004` | The scheduler and program-flow monitor shall use the same monotonic microsecond time base. | SysTick, OS, PFM | `I`, `T-SW` | Implemented through `Systick::GetElapsedMicroseconds`. Independent timing plausibility evidence is open. |
-| `HSI-TIM-005` | A scheduler deadline less than 4096 processor-clock ticks away shall not be programmed as a short SysTick interval. The driver shall install a valid maximum-length fallback and report `ImmediateRescanRequired`; the OS shall then software-pend SysTick for a fresh scheduler scan. Reload value zero shall not be used as a wakeup. | SysTick driver, SCB, OS | `I`, `T-SW`, `T-HW` | Implemented by `TimerArmResult`, compile-time boundary checks and the exhaustive scheduler response in [`src/drv/systick`](../../src/drv/systick) and [`src/os`](../../src/os). On-target release-build testing over six reset campaigns measured a maximum 794-cycle post-arm path, 3302-cycle guard margin and zero early expiries in 600000 exact-boundary switches; see [the 2026-09-01 evidence record](evidence/2026-09-01-systick-contract-and-cycle-guard.md). Revalidation is required when interrupt load, scheduler structure, compiler, clock/cache configuration or target hardware changes. |
+| `HSI-TIM-005` | A scheduler deadline less than 4096 processor-clock ticks away shall not be programmed as a short SysTick interval. The driver shall install a valid maximum-length fallback and report `ImmediateRescanRequired`; the OS shall then software-pend SysTick for a fresh scheduler scan. Reload value zero shall not be used as a wakeup. | SysTick driver, SCB, OS | `I`, `T-SW`, `T-HW` | Implemented by `TimerArmResult`, compile-time boundary checks and the exhaustive scheduler response in [`src/drv/systick`](../../src/drv/systick) and [`src/os`](../../src/os). The original campaign measured a maximum 794-cycle path and zero early expiries in 600000 exact-boundary switches; see [the SysTick evidence record](evidence/2026-09-01-systick-contract-and-cycle-guard.md). Supplemental eager-FP measurements covered 273920 natural context switches across all frame transitions, measured a maximum 809-cycle path and no guard overruns; see [the FP context evidence record](evidence/2026-09-01-fpu-context-switch.md). Revalidation is required when interrupt load, scheduler structure, compiler, clock/cache configuration or target hardware changes. |
 | `HSI-WDG-001` | WWDG1 shall be clocked from PCLK3 at 120 MHz and configured with divider 32768, reload counter `0x7F`, window counter `0x61` and early-wakeup interrupt disabled. | RCC, WWDG1 | `I`, `A`, `T-HW` | Implemented by [`src/mcu/peripherals/wwdg.rs`](../../src/mcu/peripherals/wwdg.rs). |
 | `HSI-WDG-002` | The WWDG1 configuration shall provide an approximate hardware window opening at 8.2 ms and reset timeout at 17.5 ms after each reload. | WWDG1 | `A`, `T-HW` | Implemented by the values in `HSI-WDG-001`; tolerance analysis against PCLK3 accuracy is open. |
 | `HSI-WDG-003` | WWDG1 start and the first SysTick deadline shall be performed in one interrupt-masked critical section using program-flow epoch 0. | MCU manager | `I`, `T-HW` | Implemented by [`ProgramFlowSupervision_Start`](../../src/mcu/mod.rs). |
@@ -195,7 +196,7 @@ routes recorded in the
 | CPU supply/performance | Internal MCU LDO selected; voltage scale 0/overdrive selected | [`src/mcu/peripherals/pwr.rs`](../../src/mcu/peripherals/pwr.rs) |
 | System clock | 25 MHz HSE input through PLL1 to 480 MHz CPU clock | [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs) |
 | Flash interface | 4 wait states | [`src/mcu/peripherals/flash.rs`](../../src/mcu/peripherals/flash.rs) |
-| FPU | CP10 and CP11 full access enabled before Rust code executes | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
+| FPU | CP10 and CP11 enabled for `fpregs`; eager automatic low-FP stacking and task-local high-FP context | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`src/os/isr`](../../src/os/isr) |
 | ITCM/DTCM | Enabled during reset; selected code/data relocated before `main` | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`memory.x`](../../memory.x) |
 | Vector table | Copied from Flash to DTCM and `VTOR` redirected to the RAM copy | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
 | SWD | MCU SWD interface on PA13, PA14 and NRST | [`.devenv/STM32H743IIT6/STM32H743IIT6.cfg`](../STM32H743IIT6/STM32H743IIT6.cfg) |
@@ -219,12 +220,14 @@ The reset and startup sequence is:
 8. Copy the complete vector table to a 1024-byte-aligned DTCM allocation and
    write its address to `SCB.VTOR`.
 9. Unmask interrupts and enter `main()`.
-10. Configure power, Flash latency and the 480 MHz clock tree.
-11. Configure the PH7 heartbeat output and USART1.
-12. Create the OS tasks.
-13. Configure the program-flow monitor, start WWDG1 and arm the first SysTick
+10. Mask interrupts again and select eager FP context stacking when `fpregs` is
+    available.
+11. Configure power, Flash latency and the 480 MHz clock tree.
+12. Configure the PH7 heartbeat output and USART1.
+13. Create the OS tasks.
+14. Configure the program-flow monitor, start WWDG1 and arm the first SysTick
     deadline from the same time origin.
-14. Select PSP for privileged thread mode and start the background task.
+15. Select PSP for privileged thread mode and start the background task.
 
 No MCU I-cache, D-cache, MPU, DMA or MDMA configuration is currently made.
 SVCall, SysTick and PendSV are explicitly programmed to `0xD0`, `0xE0` and

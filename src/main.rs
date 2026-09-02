@@ -36,6 +36,11 @@ fn main() -> ! {
     // scheduler quiescent until PSP and CONTROL are installed below.
     unsafe { asm!("cpsid i", options(nomem, nostack, preserves_flags)) };
 
+    // Select the context-preservation policy before application or interrupt
+    // code can establish a floating-point context. This is a no-op when the
+    // compiler target has no floating-point registers.
+    unsafe { os::InitializeContextSwitching() };
+
     /* Pre-OS Init */
     McuManager::McuClockTree_Init();
     McuManager::BoardLed_Init();
