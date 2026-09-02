@@ -135,6 +135,38 @@ enabled. In both cases:
 The final release image was resumed after inspection and left running on the
 target.
 
+## Supplemental Affine-Token Revalidation — 2026-09-02
+
+The scheduler and peripheral access paths were restructured to use one affine
+`AccessToken` per interrupt-masked transaction. Because this changed the
+scheduler control flow covered by the cycle guard, the natural production-task
+measurement was repeated on the same board and probe.
+
+The temporary release image sampled DWT `CYCCNT` immediately before the final
+SysTick-enable write and near the end of PendSV, before restoring `PRIMASK`.
+The timestamp-record store after timer enable is included in the measured
+interval, making the result slightly conservative for the uninstrumented path.
+
+| Observation | Result |
+| --- | ---: |
+| Natural context switches measured | 107907 |
+| Maximum final-enable-to-PendSV cycles | **697** |
+| Samples at or above 4096 cycles | 0 |
+| Remaining guard margin | 3399 cycles / 7.081 us |
+| SCB `SHCSR`, `CFSR`, `HFSR` | all zero |
+| Diagnostic ELF SHA-256 | `AB8DAE7CD7DDBBFCCF8834B11CA914F2EBB8BC7DE4768B0DBF58EBC687B054BE` |
+| Raw 32-byte telemetry SHA-256 | `9CF87152A2111BEE102F9D154887D38BC5247FE891FDC095DF21B771C9242E9A` |
+
+The maximum consumed 17.0% of the configured guard. This supplemental run did
+not repeat the synchronized exact-4096-cycle campaign or the mixed-FP-frame
+stress test; those remain covered by the earlier records. It specifically
+revalidates the changed natural scheduler path.
+
+All temporary timing code was then removed. The exact uninstrumented release
+ELF (`90DDAB4CDAEA2A0CCCD503CB88E62D06649C4A46C7195FAEB0347D4934B10251`)
+was programmed and verified, soaked for 30 seconds, inspected with WWDG1 and
+SysTick active and all SCB fault registers clear, resumed, and left running.
+
 ## Limitations And Revalidation Triggers
 
 - The current application configures no higher-priority external interrupt

@@ -2,7 +2,7 @@
 
 use crate::{
     drv::{
-        cortex::Shared,
+        cortex::{with_access, AccessToken, Shared},
         flash::Flash,
         gpio::{Gpio, GPIOA_ADDR, GPIOH_ADDR},
         pwr::Pwr,
@@ -37,28 +37,28 @@ pub(crate) static TASK_PROGRAM_FLOW: Task<STACK_SIZE> = Task::new();
 pub(crate) static TASK_BACKGROUND: Task<STACK_SIZE> = Task::new();
 
 #[unsafe(link_section = ".dtcm_data.os")]
-pub(crate) static SCHEDULER: Shared<Scheduler<TASK_COUNT>> = Shared::new(unsafe {
-    Scheduler::new([
+pub(crate) static SCHEDULER: Shared<Scheduler<TASK_COUNT>> = unsafe {
+    Shared::new(Scheduler::new([
         TASK_5MS.handle(),
         TASK_PROGRAM_FLOW.handle(),
         TASK_BACKGROUND.handle(),
-    ])
-});
+    ]))
+};
 
-pub static SCB: Shared<Scb> = Shared::new(Scb::new());
+pub static SCB: Shared<Scb> = unsafe { Shared::new(Scb::new()) };
 #[unsafe(link_section = ".dtcm_bss.systick")]
-pub static SYSTICK: Shared<Systick> = Shared::new(Systick::new());
-pub static RCC: Shared<Rcc> = Shared::new(Rcc::new());
-pub static PWR: Shared<Pwr> = Shared::new(Pwr::new());
-pub static SYSCFG: Shared<Syscfg> = Shared::new(Syscfg::new());
-pub static FLASH: Shared<Flash> = Shared::new(Flash::new());
-pub static GPIOA: Shared<Gpio> = Shared::new(Gpio::new(GPIOA_ADDR));
-pub static GPIOH: Shared<Gpio> = Shared::new(Gpio::new(GPIOH_ADDR));
-pub static USART1: Shared<Usart> = Shared::new(Usart::new(USART1_ADDR));
+pub static SYSTICK: Shared<Systick> = unsafe { Shared::new(Systick::new()) };
+pub static RCC: Shared<Rcc> = unsafe { Shared::new(Rcc::new()) };
+pub static PWR: Shared<Pwr> = unsafe { Shared::new(Pwr::new()) };
+pub static SYSCFG: Shared<Syscfg> = unsafe { Shared::new(Syscfg::new()) };
+pub static FLASH: Shared<Flash> = unsafe { Shared::new(Flash::new()) };
+pub static GPIOA: Shared<Gpio> = unsafe { Shared::new(Gpio::new(GPIOA_ADDR)) };
+pub static GPIOH: Shared<Gpio> = unsafe { Shared::new(Gpio::new(GPIOH_ADDR)) };
+pub static USART1: Shared<Usart> = unsafe { Shared::new(Usart::new(USART1_ADDR)) };
 #[unsafe(link_section = ".dtcm_bss.wwdg")]
-static WWDG: Shared<Wwdg> = Shared::new(Wwdg::new());
+static WWDG: Shared<Wwdg> = unsafe { Shared::new(Wwdg::new()) };
 #[unsafe(link_section = ".dtcm_bss.pfm")]
-static PFM: Shared<ProgramFlowMonitor> = Shared::new(ProgramFlowMonitor::new());
+static PFM: Shared<ProgramFlowMonitor> = unsafe { Shared::new(ProgramFlowMonitor::new()) };
 
 // CortexOs requires a way to re-pend SysTick if a requested absolute timer
 // deadline is already due. The latest STM32 driver exposes the typed ICSR bit
@@ -74,40 +74,46 @@ impl Scb {
 pub struct McuManager {}
 
 impl McuManager {
-    pub fn McuClockTree_Init() {
-        PWR.with(|pwr| {
+    pub fn McuClockTree_Init(access: &mut AccessToken) {
+        PWR.with(access, |pwr| {
             peripherals::pwr::ConfigureLdoSupply(pwr);
         });
 
-        RCC.with(|rcc| {
+        RCC.with(access, |rcc| {
             rcc.EnableSyscfgClock();
         });
 
-        PWR.with(|pwr| {
-            SYSCFG.with(|syscfg| {
-                peripherals::pwr::ConfigureVoltageScale0For480Mhz(pwr, syscfg);
-            });
+        PWR.with(access, |pwr| {
+            peripherals::pwr::PrepareVoltageScale0For480Mhz(pwr);
         });
 
-        FLASH.with(|flash| {
+        SYSCFG.with(access, |syscfg| {
+            peripherals::pwr::EnableOverdriveFor480Mhz(syscfg);
+        });
+
+        PWR.with(access, |pwr| {
+            peripherals::pwr::WaitForVoltageScale0Ready(pwr);
+        });
+
+        FLASH.with(access, |flash| {
             peripherals::flash::ConfigureFor480Mhz(flash);
         });
 
-        RCC.with(|rcc| {
+        RCC.with(access, |rcc| {
             peripherals::rcc::ConfigurePll1Hse25MhzTo480Mhz(rcc);
         });
     }
 
-    pub fn UartCommunication_Init() {
-        RCC.with(|rcc| {
+    pub fn UartCommunication_Init(access: &mut AccessToken) {
+        RCC.with(access, |rcc| {
             peripherals::usart::ConfigureUsart1DebugHeaderClocks(rcc);
         });
 
-        GPIOA.with(|gpioa| {
+        GPIOA.with(access, |gpioa| {
             peripherals::usart::ConfigureUsart1DebugHeaderPins(gpioa);
         });
 
-        USART1.with(|usart1| {
+        USART1.with(access, |usart1| {
             peripherals::usart::ConfigureUsart1DebugHeader115200(usart1);
         });
     }
@@ -117,27 +123,30 @@ impl McuManager {
             while !Self::UartCommunication_TryWriteByte(*byte) {}
         }
 
-        while !USART1.with(|usart1| usart1.IsTransmissionComplete()) {}
+        while !with_access(|access| USART1.with(access, |usart1| usart1.IsTransmissionComplete())) {
+        }
     }
 
     pub fn UartCommunication_TryReadByte() -> Option<u8> {
-        USART1.with(|usart1| {
-            usart1.TryReadWord().and_then(|word| {
-                if word <= u8::MAX as u16 {
-                    Some(word as u8)
-                } else {
-                    None
-                }
+        with_access(|access| {
+            USART1.with(access, |usart1| {
+                usart1.TryReadWord().and_then(|word| {
+                    if word <= u8::MAX as u16 {
+                        Some(word as u8)
+                    } else {
+                        None
+                    }
+                })
             })
         })
     }
 
     pub fn UartCommunication_TryWriteByte(byte: u8) -> bool {
-        USART1.with(|usart1| usart1.TryWriteWord(byte as u16))
+        with_access(|access| USART1.with(access, |usart1| usart1.TryWriteWord(byte as u16)))
     }
 
-    pub fn ProgramFlowSupervision_Start(systickClockHz: u32) {
-        SCB.with(|scb| {
+    pub fn ProgramFlowSupervision_Start(access: &mut AccessToken, systickClockHz: u32) {
+        SCB.with(access, |scb| {
             // Cortex-M7 implements priority preemption numerically: keep SVC
             // and SysTick above PendSV so scheduling state is complete before
             // the context switch executes.
@@ -146,75 +155,79 @@ impl McuManager {
             scb.Set_SHPR3_PRI_15(SYSTICK_PRIORITY);
         });
 
-        SYSTICK.with(|syst| {
+        SYSTICK.with(access, |syst| {
             syst.Configure(systickClockHz);
         });
 
-        RCC.with(|rcc| {
+        RCC.with(access, |rcc| {
             rcc.EnableWwdg1Clock();
         });
 
-        WWDG.with(|wwdg| {
+        WWDG.with(access, |wwdg| {
             peripherals::wwdg::ConfigureWwdg1For10MsProgramFlow(wwdg);
         });
 
-        let taskConfigurations = SCHEDULER.with(|scheduler| {
+        let taskConfigurations = SCHEDULER.with(access, |scheduler| {
             scheduler.SetCyclicReleaseBase(PROGRAM_FLOW_START_US);
             scheduler.GetTaskConfigurations()
         });
-        PFM.with(|pfm| {
+        PFM.with(access, |pfm| {
             pfm.ConfigureFromTasks(&taskConfigurations, PROGRAM_FLOW_START_US);
         });
 
         // The outer critical section keeps the watchdog and SysTick start writes
         // adjacent. Both hardware and software supervision therefore use epoch 0.
-        WWDG.with(|wwdg| {
-            SYSTICK.with(|syst| {
-                peripherals::wwdg::StartWwdg1For10MsProgramFlow(wwdg);
-                match syst
-                    .SetTimerAt(PROGRAM_FLOW_START_US.saturating_add(INITIAL_SCHEDULER_WAKEUP_US))
-                {
-                    TimerArmResult::Armed => {}
-                    TimerArmResult::ImmediateRescanRequired => {
-                        panic!("initial scheduler deadline is not safely armable")
-                    }
+        WWDG.with(access, |wwdg| {
+            peripherals::wwdg::StartWwdg1For10MsProgramFlow(wwdg);
+        });
+        SYSTICK.with(access, |syst| {
+            match syst.SetTimerAt(PROGRAM_FLOW_START_US.saturating_add(INITIAL_SCHEDULER_WAKEUP_US))
+            {
+                TimerArmResult::Armed => {}
+                TimerArmResult::ImmediateRescanRequired => {
+                    panic!("initial scheduler deadline is not safely armable")
                 }
-            });
+            }
         });
     }
 
-    pub fn ProgramFlow_ReportTaskStart(taskId: u32) {
+    pub fn ProgramFlow_ReportTaskStart(access: &mut AccessToken, taskId: u32) {
         let mut now_us = 0;
-        SYSTICK.with(|syst| {
+        SYSTICK.with(access, |syst| {
             now_us = syst.GetElapsedMicroseconds();
         });
 
-        PFM.with(|pfm| {
+        PFM.with(access, |pfm| {
             pfm.ReportTaskStart(taskId, now_us);
         });
     }
 
-    pub fn ProgramFlow_ReportTaskEnd(taskId: u32) {
+    pub fn ProgramFlow_ReportTaskEnd(access: &mut AccessToken, taskId: u32) {
         let mut now_us = 0;
-        SYSTICK.with(|syst| {
+        SYSTICK.with(access, |syst| {
             now_us = syst.GetElapsedMicroseconds();
         });
 
-        PFM.with(|pfm| {
+        PFM.with(access, |pfm| {
             pfm.ReportTaskEnd(taskId, now_us);
         });
     }
 
-    pub fn PFM_ValidateAndServiceWatchdog() {
+    pub fn PFM_ValidateAndServiceWatchdog(access: &mut AccessToken) {
         let mut now_us = 0;
-        SYSTICK.with(|syst| {
+        SYSTICK.with(access, |syst| {
             now_us = syst.GetElapsedMicroseconds();
         });
 
-        PFM.with(|pfm| {
-            WWDG.with(|wwdg| {
-                pfm.ValidateAndServiceWatchdog(now_us, wwdg);
+        let serviceAuthorized = PFM.with(access, |pfm| pfm.AuthorizeWatchdogService(now_us));
+
+        if serviceAuthorized {
+            WWDG.with(access, |wwdg| {
+                wwdg.Refresh(peripherals::wwdg::WWDG_RELOAD_COUNTER);
             });
-        });
+            PFM.with(access, |pfm| {
+                pfm.CompleteWatchdogService();
+            });
+        }
     }
 }

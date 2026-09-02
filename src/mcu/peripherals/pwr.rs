@@ -21,16 +21,20 @@ pub fn ConfigureLdoSupply(pwr: &Pwr) {
     pwr.WaitForActiveVoltageReady();
 }
 
-pub fn ConfigureVoltageScale0For480Mhz(pwr: &Pwr, syscfg: &Syscfg) {
+pub fn PrepareVoltageScale0For480Mhz(pwr: &Pwr) {
     assert!(pwr.IsLdoEnabled());
 
     pwr.WaitForActiveVoltageReady();
     pwr.SelectVoltageScale(PWR_VOS::SCALE_1);
     pwr.WaitForActiveVoltageReady();
+}
 
+pub fn EnableOverdriveFor480Mhz(syscfg: &Syscfg) {
     syscfg.EnableOverdrive();
     while !syscfg.IsOverdriveEnabled() {}
+}
 
+pub fn WaitForVoltageScale0Ready(pwr: &Pwr) {
     pwr.WaitForVoltageReady();
     pwr.WaitForActiveVoltageReady();
 }

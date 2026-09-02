@@ -12,6 +12,7 @@ pub mod os;
 use core::{arch::asm, panic::PanicInfo};
 
 use crate::{
+    drv::cortex::with_access_unchecked,
     mcu::{
         deployment::{tsk_1_5ms, tsk_pfm_10ms},
         McuManager, SCHEDULER,
@@ -34,38 +35,45 @@ extern "C" fn background(_tstmp: u64) {
 fn main() -> ! {
     // Reset briefly enables interrupts before entering main. Keep the
     // scheduler quiescent until PSP and CONTROL are installed below.
-    unsafe { asm!("cpsid i", options(nomem, nostack, preserves_flags)) };
+    unsafe { asm!("cpsid i", options(nostack, preserves_flags)) };
 
     // Select the context-preservation policy before application or interrupt
     // code can establish a floating-point context. This is a no-op when the
     // compiler target has no floating-point registers.
     unsafe { os::InitializeContextSwitching() };
 
-    /* Pre-OS Init */
-    McuManager::McuClockTree_Init();
-    McuManager::BoardLed_Init();
-    McuManager::UartCommunication_Init();
+    // SAFETY: interrupts have been masked above and no access token exists.
+    // The scope ends before the final assembly block unmasks interrupts.
+    let stack = unsafe {
+        with_access_unchecked(|access| {
+            /* Pre-OS Init */
+            McuManager::McuClockTree_Init(access);
+            McuManager::BoardLed_Init(access);
+            McuManager::UartCommunication_Init(access);
 
-    /* OS Init */
-    let stack = SCHEDULER.with(|scheduler| {
-        scheduler.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
-        scheduler.SetTask(
-            1,
-            tsk_pfm_10ms,
-            TaskCycleTime::_10MS,
-            TaskRole::Unsupervised,
-        );
-        scheduler.SetTask(
-            2,
-            background,
-            TaskCycleTime::NonCyclic,
-            TaskRole::Background,
-        );
-        scheduler.ActivateBackgroundTask()
-    });
+            /* OS Init */
+            let stack = SCHEDULER.with(access, |scheduler| {
+                scheduler.SetTask(0, tsk_1_5ms, TaskCycleTime::_5MS, TaskRole::Supervised);
+                scheduler.SetTask(
+                    1,
+                    tsk_pfm_10ms,
+                    TaskCycleTime::_10MS,
+                    TaskRole::Unsupervised,
+                );
+                scheduler.SetTask(
+                    2,
+                    background,
+                    TaskCycleTime::NonCyclic,
+                    TaskRole::Background,
+                );
+                scheduler.ActivateBackgroundTask()
+            });
 
-    /* Program Flow Start */
-    McuManager::ProgramFlowSupervision_Start(SYSTICK_CLOCK_HZ);
+            /* Program Flow Start */
+            McuManager::ProgramFlowSupervision_Start(access, SYSTICK_CLOCK_HZ);
+            stack
+        })
+    };
 
     /* OS Start */
     // This is the final, non-returning operation in main. Once CONTROL selects

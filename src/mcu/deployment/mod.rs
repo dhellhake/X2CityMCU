@@ -1,4 +1,4 @@
-use crate::mcu::McuManager;
+use crate::{drv::cortex::with_access, mcu::McuManager};
 
 #[unsafe(link_section = ".itcm_text.deployment")]
 #[inline(never)]
@@ -9,5 +9,5 @@ pub extern "C" fn tsk_1_5ms(tstmp: u64) {
 #[unsafe(link_section = ".itcm_text.deployment")]
 #[inline(never)]
 pub extern "C" fn tsk_pfm_10ms(_tstmp: u64) {
-    McuManager::PFM_ValidateAndServiceWatchdog();
+    with_access(McuManager::PFM_ValidateAndServiceWatchdog);
 }

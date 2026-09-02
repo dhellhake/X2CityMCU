@@ -1,8 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::{
-    drv::wwdg::Wwdg, mcu::peripherals::wwdg::WWDG_RELOAD_COUNTER, os::task::TaskConfiguration,
-};
+use crate::os::task::TaskConfiguration;
 
 pub const SUPERVISION_CYCLE_US: u32 = 10_000;
 pub const WATCHDOG_SERVICE_MIN_US: u32 = 8_500;
@@ -468,9 +466,9 @@ impl ProgramFlowMonitor {
         self.SetExpectedIndex(self._expectedIndex + 1);
     }
 
-    pub fn ValidateAndServiceWatchdog(&mut self, now_us: u64, watchdog: &mut Wwdg) {
+    pub(super) fn AuthorizeWatchdogService(&mut self, now_us: u64) -> bool {
         if self.IsFaulted() {
-            return;
+            return false;
         }
 
         if !self.CheckInternalState() {
@@ -480,7 +478,7 @@ impl ProgramFlowMonitor {
                 ProgramFlowCheckpoint::none(),
                 now_us,
             );
-            return;
+            return false;
         }
 
         if !self.IsCycleComplete() {
@@ -491,7 +489,7 @@ impl ProgramFlowMonitor {
                 ProgramFlowCheckpoint::none(),
                 now_us,
             );
-            return;
+            return false;
         }
 
         let relative_us = self.RelativeTimestamp(now_us);
@@ -502,7 +500,7 @@ impl ProgramFlowMonitor {
                 ProgramFlowCheckpoint::none(),
                 now_us,
             );
-            return;
+            return false;
         }
 
         if relative_us > WATCHDOG_SERVICE_MAX_US {
@@ -512,11 +510,15 @@ impl ProgramFlowMonitor {
                 ProgramFlowCheckpoint::none(),
                 now_us,
             );
-            return;
+            return false;
         }
 
         self._state = ProgramFlowState::ServiceAuthorized;
-        watchdog.Refresh(WWDG_RELOAD_COUNTER);
+        true
+    }
+
+    pub(super) fn CompleteWatchdogService(&mut self) {
+        debug_assert!(matches!(self._state, ProgramFlowState::ServiceAuthorized));
         self.StartNextCycle();
     }
 

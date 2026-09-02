@@ -1,4 +1,5 @@
 use crate::drv::{
+    cortex::{with_access, AccessToken},
     gpio::{GPIO_MODE, GPIO_OUTPUT_SPEED, GPIO_OUTPUT_TYPE, GPIO_PIN_STATE, GPIO_PULL},
     rcc::RCC_AHB4_GPIO_PORT,
 };
@@ -36,12 +37,12 @@ const _: () = {
 };
 
 impl McuManager {
-    pub fn BoardLed_Init() {
-        RCC.with(|rcc| {
+    pub fn BoardLed_Init(access: &mut AccessToken) {
+        RCC.with(access, |rcc| {
             rcc.EnableGpioClock(RCC_AHB4_GPIO_PORT::GPIOH);
         });
 
-        GPIOH.with(|gpioh| {
+        GPIOH.with(access, |gpioh| {
             // Preload the active-low LED's off state before changing PH7 to
             // output mode so initialization cannot produce a visible flash.
             gpioh.WritePin(BOARD_LED_PIN, GPIO_PIN_STATE::HIGH);
@@ -54,16 +55,17 @@ impl McuManager {
 
     #[inline]
     pub fn BoardLed_Step(scheduledTimestampUs: u64) {
-        Self::BoardLed_Set(HeartbeatLedIsOn(scheduledTimestampUs));
+        let isOn = HeartbeatLedIsOn(scheduledTimestampUs);
+        with_access(|access| Self::BoardLed_Set(access, isOn));
     }
 
     #[inline]
-    fn BoardLed_Set(isOn: bool) {
+    fn BoardLed_Set(access: &mut AccessToken, isOn: bool) {
         let pinState = if isOn {
             GPIO_PIN_STATE::LOW
         } else {
             GPIO_PIN_STATE::HIGH
         };
-        GPIOH.with(|gpioh| gpioh.WritePin(BOARD_LED_PIN, pinState));
+        GPIOH.with(access, |gpioh| gpioh.WritePin(BOARD_LED_PIN, pinState));
     }
 }
