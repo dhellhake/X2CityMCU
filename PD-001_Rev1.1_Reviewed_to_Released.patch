@@ -1,0 +1,81 @@
+--- PD-001_Project_Definition_Rev1.1_Reviewed.md
++++ PD-001_Project_Definition_Rev1.1.md
+@@ -10,16 +10,16 @@
+ |---|---|
+ | Document / owner | PD-001 / Dominik |
+ | Revision / date | **1.1 / 2026-09-09** |
+-| Status | **Working draft; owner-authorized changes incorporated, resulting document review and approval pending** |
+-| Approved input | [PD-001 Rev1.0](PD-001_Project_Definition_Rev1.0.md), released 2026-09-05 as PD-001-R1.0 |
++| Status | **Approved and released for downstream development with controlled open issues** |
++| Release / prior baseline | **PD-001-R1.1**, approved 2026-09-09; supersedes [PD-001-R1.0](PD-001_Project_Definition_Rev1.0.md) for current downstream use |
+ | Change basis | Owner decisions on regeneration, SOC, handling, the fixed brake interface, startup/fault behavior and HMI settings; §18.5 / DEC-001 |
+-| Repository role | Current project definition and landing page; no approved release superseded, no draft release ID assigned |
+-| Downstream use | Concept, hazard analysis, requirements and targeted feasibility characterization, with draft status visible |
+-| Configuration | Frozen Rev1.0 and release record preserved; §18.4 |
++| Repository role | Current approved project definition and landing-page copy of PD-001-R1.1 |
++| Downstream use | Concept, hazard analysis, requirements and targeted feasibility characterization, subject to the recorded open-issue gates |
++| Configuration | [Frozen Rev1.1](PD-001_Project_Definition_Rev1.1.md), [release record](PD-001_Release_Record_Rev1.1.md) and checksum manifest; prior release preserved; §18.4 |
+ 
+ ### Approval record
+ 
+-Dominik authorized the technical changes on 2026-09-06–09 and this consistency/size review. Approval of the complete Rev1.1 remains pending. His 2026-09-05 approval applies only to Rev1.0; no independent approval or new component/vehicle validation is recorded.
++On 2026-09-09 Dominik, project owner, confirmed review of the current PD and instructed its release: “I have reviewed the current PD. Release it.” The complete Revision 1.1 is approved and released as **PD-001-R1.1** with its stated assumptions and controlled open issues. Release preparation changes only administrative metadata and release records; no independent review or new component/vehicle validation is claimed. Item-definition and requirement working documents retain their own approval status.
+ 
+ ### Normative language
+ 
+@@ -30,7 +30,7 @@
+ | Status | Meaning |
+ |---|---|
+ | CONFIRMED | Physical inspection, direct project knowledge, measurement or prior successful implementation |
+-| DESIGN DECISION | Owner choice from the approved baseline or authorized draft scope; does not approve this draft |
++| DESIGN DECISION | Owner choice accepted in this project-definition release; does not establish implementation or verification |
+ | REPORTED SPECIFICATION | Supplied/reported component value, not independently verified here |
+ | ASSUMPTION | Provisional input requiring confirmation, restriction or rejection |
+ | DERIVED VALUE | Calculation/consequence; inherits input uncertainty |
+@@ -1122,13 +1122,15 @@
+ 
+ ### 18.4 Configuration and subsequent changes
+ 
+-The byte-for-byte [Rev1.0 archive](PD-001_Project_Definition_Rev1.0.md) has SHA-256 `e3c2d0177df6e479e818d389e428a45d429d915b62ad830f1ae7179e0124769f`, matching the unchanged [release record](PD-001_Release_Record_Rev1.0.md). It was restored from the matching README before Rev1.1 edits. The release record’s README hash identifies its historical content; this current README is an unapproved Rev1.1 draft.
++The byte-for-byte [Rev1.0 archive](PD-001_Project_Definition_Rev1.0.md) has SHA-256 `e3c2d0177df6e479e818d389e428a45d429d915b62ad830f1ae7179e0124769f`, matching the unchanged [release record](PD-001_Release_Record_Rev1.0.md). It was restored from the matching README before Rev1.1 edits. The Rev1.0 release record’s README hash identifies its historical content.
++
++On 2026-09-09 the owner reviewed and released the current PD as **PD-001-R1.1**. The [Rev1.1 archive](PD-001_Project_Definition_Rev1.1.md) and root README are identical released copies. The [Rev1.1 release record](PD-001_Release_Record_Rev1.1.md) identifies the exact reviewed input, administrative release patch and file hashes; [the checksum manifest](PD-001_Rev1.1_SHA256SUMS.txt) identifies the package and referenced working-document versions. Rev1.1 supersedes Rev1.0 for current downstream use; all retained assumptions and issue gates remain effective.
+ 
+ The referenced Rev0.7 file, promotion patch and checksum manifest are unavailable in this workspace, limiting independent promotion-history checks; the archive does not reconstruct them. Hashes identify content, not signatures or test results. Preserve released bytes. Record/assess changes to scope, objectives, selections, limits, interfaces and modelling assumptions, with controlled revision, applicable owner approval and downstream re-verification. Closing an issue does not silently relax an objective.
+ 
+ ### 18.5 Revision 1.1 change assessment
+ 
+-Owner-authorized changes on 2026-09-06–09 are incorporated; **complete-document review/release remains pending**. DEC-001 preserves detailed decisions/supersession and REQ-001 their candidate acceptance. No tests or architecture choices are implied.
++Owner-authorized changes on 2026-09-06–09 were incorporated in the complete Rev1.1 reviewed and approved for release on 2026-09-09. DEC-001 preserves detailed decisions/supersession and REQ-001 their candidate acceptance. Their working status is unchanged; no tests or architecture choices are implied.
+ 
+ | Change | Affected scope / remaining evidence |
+ |---|---|
+@@ -1157,7 +1159,7 @@
+ | 0.6 | 2026-09-05 | Superseded: 130 kg and −15 °C minimum, separate level/+20 °C range, updated feasibility checks |
+ | 0.7 | 2026-09-05 | Content accepted: ≥100 kg payload/≤30 kg vehicle, new-battery 20–80% range, synthetic 30 km/h trace, precise performance/storage/removed-pack charging/resource basis |
+ | 1.0 | 2026-09-05 | Approved release: administrative promotion of 0.7, no technical change |
+-| 1.1 | 2026-09-09 | Working draft: owner amendments and consistency/size consolidation in §18.5; approval pending |
++| 1.1 | 2026-09-09 | Approved and released as PD-001-R1.1 following owner review; owner amendments and consistency/size consolidation, with controlled open issues |
+ 
+ ## 20. Sources and evidence
+ 
+@@ -1165,7 +1167,7 @@
+ 
+ Owner inputs establish selections, retained/installed condition, HMI pinout/prior successful protocol use and mission/scope choices; they do not demonstrate new performance. Preserve available source, photos, measurements and test records under configuration control.
+ 
+-[DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) records current owner decisions, provenance and supersession; [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) contains candidate requirements/planned acceptance. They are not execution evidence or draft approval. HMI protocol source/reference is identified in §10.4; project code assignments and selected-display presentation remain distinct from independent datasheet labels.
++[DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) records current owner decisions, provenance and supersession; [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) contains candidate requirements/planned acceptance. These linked records retain their own working-document status; PD release does not approve their candidate requirements or establish execution evidence. HMI protocol source/reference is identified in §10.4; project code assignments and selected-display presentation remain distinct from independent datasheet labels.
+ 
+ The owner requested brake-interface restoration on 2026-09-08 from `.devenv/specification/application/brake-input.md` at commit `9dd60546a82fee2378cfa95ee90f783e7083c84a` (2026-08-28, “Implemented Brake Input detection”). The [Brake Input Reference](.devenv/Requirements/evidence/Brake_Input_Reference.md) preserves the adopted terminal interface, four assembled-Y resistance records and intrinsic limitations. Only that fixed interface is inherited; historical sensing circuitry/acquisition/thresholds/firmware bring-up and claimed diagnostic capability are excluded. Derive and verify sensing/diagnostics downstream.
+ 
+@@ -1203,7 +1205,7 @@
+ 
+ **Document:** PD-001\
+ **Revision:** 1.1\
+-**Release ID:** Not assigned; prior approved release PD-001-R1.0\
+-**Status:** Working draft — review and release pending\
+-**Change authorization:** Dominik, project owner; resulting document not yet approved\
++**Release ID:** PD-001-R1.1\
++**Status:** Approved and released for downstream development with controlled open issues\
++**Reviewer and approver:** Dominik, project owner; reviewed and released 2026-09-09\
+ **Revision date:** 2026-09-09

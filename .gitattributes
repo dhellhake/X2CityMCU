@@ -1,0 +1,6 @@
+# Stable text for current workstream documents; preserve archival release bytes.
+/.gitattributes text eol=lf
+/README.md text eol=lf
+/.devenv/Requirements/** text eol=lf
+/.devenv/VD18MT/*.md text eol=lf
+/PD-001_* -text
