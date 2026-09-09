@@ -22,8 +22,19 @@ Update the controlling decision and affected requirements/context together. Pres
 
 ## Release and history
 
-On 2026-09-09 Dominik stated: “I have reviewed all generated files. Release them. Commit them using a comprehensive commit message. Then remove all files which are not absolutely necessary to keep. Prevent the repository from cluttering by files not needed anymore. Leave those off to the history git provides.”
+Dominik, project owner, confirmed review of all generated files on 2026-09-09 and authorized their release, a comprehensive commit and cleanup using Git history. The item-definition stage and requirement handoff are accepted with their recorded open issues, planned verification and downstream assignments. No independent review, completed implementation, safety assessment or vehicle qualification is claimed.
 
-This authorizes the releases above, their comprehensive Git commit and subsequent repository cleanup. The item-definition stage and requirement handoff are accepted with their recorded open issues, planned verification and downstream assignments. No independent review, completed implementation, safety assessment or vehicle qualification is claimed.
+**Release snapshot:** `c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6` — `Release item definition and requirements with reviewed project baseline`.
 
-The release commit preserves the PD archives, reviewed copy, release records, patch and checksum manifest before cleanup. Current requirements were approved after the earlier PD-only release; the earlier PD release package remains historical evidence of that separate approval. Missing Rev0.7 promotion artifacts remain a recorded limitation under WS-OI-014.
+This commit preserves the released workstream and all seven removed PD sidecars: the Rev1.0/1.1 definitions, Rev1.1 reviewed copy, both release records, Rev1.1 administrative patch and checksum manifest. README is the sole current PD; this index and the six supporting documents listed above remain the current workstream/reference set. Cleanup changed administrative records/links, not approved technical behavior.
+
+Retrieve historical content directly, for example:
+
+```text
+git show c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6:PD-001_Project_Definition_Rev1.0.md
+git show c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6:PD-001_Project_Definition_Rev1.1.md
+git show c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6:PD-001_Release_Record_Rev1.1.md
+git show c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6:.devenv/Requirements/REQ-001_Requirements.md
+```
+
+The original PD release packages retain the scope/status of their own release dates; the later workstream release records the separate approval of requirements. Earlier Rev0.7 source/promotion/checksum artifacts were already unavailable and are not recreated by this cleanup (WS-OI-014). Future substantive changes require controlled revision and applicable owner approval.

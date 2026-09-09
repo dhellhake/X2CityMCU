@@ -1,6 +1,5 @@
-# Stable text for current workstream documents; preserve archival release bytes.
+# Stable line endings for current workstream documentation.
 /.gitattributes text eol=lf
 /README.md text eol=lf
 /.devenv/Requirements/** text eol=lf
 /.devenv/VD18MT/*.md text eol=lf
-/PD-001_* -text

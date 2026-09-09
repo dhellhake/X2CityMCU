@@ -2,7 +2,7 @@
 
 ## Electrical Re-Engineering of a BMW X2City Scooter
 
-Defines project scope, boundaries, objectives, constraints and qualification basis. Detailed rider behavior, item interactions and candidate requirements are maintained in the [requirements workstream](.devenv/Requirements/README.md). This definition selects no final electrical/software architecture.
+Defines project scope, boundaries, objectives, constraints and qualification basis. Detailed rider behavior, item interactions and approved requirements are maintained in the [requirements workstream](.devenv/Requirements/README.md). This definition selects no final electrical/software architecture.
 
 ## Document metadata
 
@@ -11,15 +11,15 @@ Defines project scope, boundaries, objectives, constraints and qualification bas
 | Document / owner | PD-001 / Dominik |
 | Revision / date | **1.1 / 2026-09-09** |
 | Status | **Approved and released for downstream development with controlled open issues** |
-| Release / prior baseline | **PD-001-R1.1**, approved 2026-09-09; supersedes [PD-001-R1.0](PD-001_Project_Definition_Rev1.0.md) for current downstream use |
+| Release / prior baseline | **PD-001-R1.1**, approved 2026-09-09; supersedes PD-001-R1.0, retained in [Git history](.devenv/Requirements/README.md#release-and-history) |
 | Change basis | Owner decisions on regeneration, SOC, handling, the fixed brake interface, startup/fault behavior and HMI settings; §18.5 / DEC-001 |
-| Repository role | Current approved project definition and landing-page copy of PD-001-R1.1 |
+| Repository role | Sole current PD; original released bytes and prior versions retained in Git history |
 | Downstream use | Concept, hazard analysis, requirements and targeted feasibility characterization, subject to the recorded open-issue gates |
-| Configuration | [Frozen Rev1.1](PD-001_Project_Definition_Rev1.1.md), [release record](PD-001_Release_Record_Rev1.1.md) and checksum manifest; prior release preserved; §18.4 |
+| Configuration | [Release authority and Git history](.devenv/Requirements/README.md#release-and-history); §18.4 |
 
 ### Approval record
 
-On 2026-09-09 Dominik, project owner, confirmed review of the current PD and instructed its release: “I have reviewed the current PD. Release it.” The complete Revision 1.1 is approved and released as **PD-001-R1.1** with its stated assumptions and controlled open issues. Release preparation changes only administrative metadata and release records; no independent review or new component/vehicle validation is claimed. Item-definition and requirement working documents retain their own approval status.
+On 2026-09-09 Dominik, project owner, confirmed review of the current PD and instructed its release: “I have reviewed the current PD. Release it.” The complete Revision 1.1 is approved and released as **PD-001-R1.1** with its stated assumptions and controlled open issues. Release preparation changes only administrative metadata and release records; no independent review or new component/vehicle validation is claimed. The owner subsequently reviewed and released the item definition, requirements and supporting records as documented in the workstream index.
 
 ### Normative language
 
@@ -1028,7 +1028,7 @@ Remaining characterization and architecture issues need not all be closed to sta
 
 ## 16. Decisions deliberately deferred
 
-Project scope/qualification is fixed by PD-001; owner-selected rider behavior is in DEC-001 and candidate requirements in REQ-001. The following remaining derivation/realization work is mandatory, not a reopening of settled choices.
+Project scope/qualification is fixed by PD-001; owner-selected rider behavior is in DEC-001 and approved requirements in REQ-001. The following remaining derivation/realization work is mandatory, not a reopening of settled choices.
 
 ### Functional and safety concept
 
@@ -1100,66 +1100,32 @@ Excluded functions may enter scope only through explicit change and impact asses
 
 ### 18.1 Revision 1.0 review outcome and release decision
 
-**Historical approval:** On 2026-09-05 Dominik accepted reviewed Rev0.7 and authorized its administrative promotion, without technical changes, to **PD-001-R1.0**. This permitted concept development, vehicle hazard analysis, requirements and targeted feasibility characterization with controlled open issues. No independent review was recorded or required; no repository commit/tag was assigned by that release package.
-
-Reviewed input: `PD-001_Project_Definition_Rev0.7.md`, recorded SHA-256 `817c956b6d0b18556af06cb85dcf0a6ef4f4abfcc8283bb0393969b7572912d4`. The input file is currently unavailable; the identity is provenance, not current file/test evidence. The released definition and release record are linked in §18.4.
+Dominik approved the administrative promotion of reviewed Rev0.7 to PD-001-R1.0 on 2026-09-05. Available historical definitions and release records are retained in [Git history](.devenv/Requirements/README.md#release-and-history); WS-OI-014 records the unavailable earlier promotion artifacts.
 
 ### 18.2 Revision 1.0 recorded review dispositions
 
-Rev1.0 accepted the stated cycle/snow/resource/qualification **assumptions as provisional**, not measured capability. All reported/derived values and issue IDs/gates retained their status. In particular:
-
-- Baseline reproducible RJ-001/RQ-001 traces before dependent sizing; synthetic ramps do not extend the 0–20 km/h acceleration requirement.
-- Resolve battery energy/mass/fit/SOC/storage feasibility (OI-012/040/053/061–063); no suitable pack was demonstrated.
-- Inspect donor/attachment and verify expanded speed, hill and environment duties before dependent commitments/testing (OI-010–012/018/025/036/052/054–057).
-- Preserve available HMI reference evidence and correlate the selected unit (OI-026); no basic rediscovery required.
-- Retain resource/budget bounds (ASM-019/037, OI-009/060); check equipment before use and record expenditure decisions.
-
-Open issues did not block the definition release; they still gate dependent commitments/operation. Dominik is their default owner. Invalidated objectives/fixed selections require controlled decisions.
+The accepted assumptions remain provisional. Outstanding feasibility, characterization and verification work retains the requirements and gates in §§14–15. Open issues do not silently relax objectives; Dominik is their default owner.
 
 ### 18.3 Revision 1.0 handover authority and limitations
 
-The definition supports concept/safety-goal development, hazard analysis, requirements, characterization, feasibility and subsequent architecture/design/verification planning subject to evidence gates. It is not ISO conformity, ASIL, independent verification, completed safety analysis/vehicle validation, component suitability or commuter-use readiness; it does not itself authorize unvalidated energization, charging or riding. Public-road approval is excluded; component characterization and implementation remain downstream.
+The released definition supports concept/hazard analysis, requirements, characterization, architecture/design and verification planning with controlled open issues. It does not establish completed safety analysis, component/vehicle validation, standards compliance or authorization for unvalidated operation.
 
 ### 18.4 Configuration and subsequent changes
 
-The byte-for-byte [Rev1.0 archive](PD-001_Project_Definition_Rev1.0.md) has SHA-256 `e3c2d0177df6e479e818d389e428a45d429d915b62ad830f1ae7179e0124769f`, matching the unchanged [release record](PD-001_Release_Record_Rev1.0.md). It was restored from the matching README before Rev1.1 edits. The Rev1.0 release record’s README hash identifies its historical content.
+README is the sole current PD. Release commit `c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6` preserves the original released PD versions, reviewed input, release records, patch and checksums. Retrieval instructions and current approval are in the [workstream index](.devenv/Requirements/README.md#release-and-history).
 
-On 2026-09-09 the owner reviewed and released the current PD as **PD-001-R1.1**. The [Rev1.1 archive](PD-001_Project_Definition_Rev1.1.md) and root README are identical released copies. The [Rev1.1 release record](PD-001_Release_Record_Rev1.1.md) identifies the exact reviewed input, administrative release patch and file hashes; [the checksum manifest](PD-001_Rev1.1_SHA256SUMS.txt) identifies the package and referenced working-document versions. Rev1.1 supersedes Rev1.0 for current downstream use; all retained assumptions and issue gates remain effective.
-
-The referenced Rev0.7 file, promotion patch and checksum manifest are unavailable in this workspace, limiting independent promotion-history checks; the archive does not reconstruct them. Hashes identify content, not signatures or test results. Preserve released bytes. Record/assess changes to scope, objectives, selections, limits, interfaces and modelling assumptions, with controlled revision, applicable owner approval and downstream re-verification. Closing an issue does not silently relax an objective.
+The owner authorized removal of duplicate release artifacts after committing them. This repository cleanup updates administrative text and references; technical obligations in §§1–17 remain unchanged. Preserve history and assess changes to scope, obligations, selections, interfaces and modelling assumptions through controlled revision, applicable owner approval and downstream re-verification.
 
 ### 18.5 Revision 1.1 change assessment
 
-Owner-authorized changes on 2026-09-06–09 were incorporated in the complete Rev1.1 reviewed and approved for release on 2026-09-09. DEC-001 preserves detailed decisions/supersession and REQ-001 their candidate acceptance. Their working status is unchanged; no tests or architecture choices are implied.
-
-| Change | Affected scope / remaining evidence |
-|---|---|
-| Supplemental accelerator-requested regeneration; 90% ceiling; above-80% energy usable normally | EPCS, descent, SOC and OI-048; qualify motor/inverter/axle/charge-acceptance limits. Mechanical braking remains independent; levers do not request regeneration. |
-| 20% severe propulsion restriction, 10% positive cutoff retained until >20% | Replaces former protected 20% floor. OBJ-014 / DEC-SOC-001; derive caps, margins, finite transitions/ramps, continuity and all-load/auxiliary protection. |
-| Charge presentation and SOC validity | Usable 20–80% display; untrustworthy SOC uses empty fallback without becoming a control value. SOC qualification gates Ready; recognized loss invokes common fault response. Verify qualification and selected-display behavior. |
-| Common faults, fresh startup self-tests and restart recovery | DEC-FLT-001–009 / DEC-TMP-001–002: both-sign inhibition for applicable faults, retained until a clean normal/unexpected restart; no persistent failure history. Temperature violations permit no reduced operation; required temperature information gates Ready. Verify coverage, finite bounds, protection/charging response and auxiliary continuity. |
-| Fault indication independent of physical reaction | Codes/retention/first-detected group and generic/blocked-motor reporting per DEC-001; derive exact consistent tie rule and presentation evidence; 0x04/0x05 join the first-detected group above 0x01. No dedicated regeneration-availability indication. |
-| VD18MT speed requests | Above-40 requests clamp to 40, including startup; changed settings apply at standstill/physical rest. Fixed nominal 16-inch vehicle basis independent of display wheel setting; measure/calibrate actual speed. |
-| Hand parking after stopping | No commanded regeneration in either pushing direction until actual forward powered travel resumes; derive measurable transitions/passive-drag assessment (DEC-REG-006). |
-| Fixed shared coded brake interface | Restore terminal networks/Y/resistance evidence and intrinsic aliases from the owner-identified historical source. Derive sensing/protection/diagnostics independently; no historical sensing realization/bring-up evidence adopted. Mechanical independence and current fault/brake-light release rules preserved. |
-| Retained project qualification | RQ-001 ≥70 km, new battery, level/+20 °C/130 kg, actual SOC 20–80%, no intermediate charging/additional reserve; no preliminary regen credit. Dry removed-pack external charging ≤80% and hill/flat performance basis unchanged. |
-| Consistency and size review | Consolidate repeated policy/history and link canonical behavior/evidence; align formerly open behavior and rear-light/wheel-interface wording. Preserve IDs, quantitative bases, unresolved evidence gates and frozen release. |
+Dominik reviewed and released PD-001-R1.1 on 2026-09-09, then reviewed and released the item definition, requirements, decisions and supporting references. Current obligations and change consequences are retained in the technical sections, DEC-001 and REQ-001; detailed earlier change summaries remain in Git. Assumptions and technical open issues retain their status.
 
 ## 19. Change history
 
-Historical details are preserved in the frozen baseline; current technical policy is in the active sections and DEC-001.
-
 | Revision | Date | Status / change |
 |---|---|---|
-| 0.1 | — | Superseded: commuter-scooter objective and lightweight process |
-| 0.2 | — | Superseded: donor/electrical focus and retained hardware |
-| 0.3 | — | Superseded: installed motor, ratings and interfaces |
-| 0.4 | 2026-09-04 | Superseded: standalone definition, HMI/accelerator, status/issue registers |
-| 0.5 | 2026-09-05 | Superseded: private-property scope; initial 150 kg, −20 °C, mission/range/speed/hill/environment and custom-development/USB-C basis |
-| 0.6 | 2026-09-05 | Superseded: 130 kg and −15 °C minimum, separate level/+20 °C range, updated feasibility checks |
-| 0.7 | 2026-09-05 | Content accepted: ≥100 kg payload/≤30 kg vehicle, new-battery 20–80% range, synthetic 30 km/h trace, precise performance/storage/removed-pack charging/resource basis |
-| 1.0 | 2026-09-05 | Approved release: administrative promotion of 0.7, no technical change |
-| 1.1 | 2026-09-09 | Approved and released as PD-001-R1.1 following owner review; owner amendments and consistency/size consolidation, with controlled open issues |
+| 1.0 | 2026-09-05 | Approved project baseline; historical content and recorded earlier revision history retained in Git |
+| 1.1 | 2026-09-09 | Approved current PD, followed by workstream release and owner-authorized administrative cleanup; technical scope unchanged by cleanup |
 
 ## 20. Sources and evidence
 
@@ -1167,7 +1133,7 @@ Historical details are preserved in the frozen baseline; current technical polic
 
 Owner inputs establish selections, retained/installed condition, HMI pinout/prior successful protocol use and mission/scope choices; they do not demonstrate new performance. Preserve available source, photos, measurements and test records under configuration control.
 
-[DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) records current owner decisions, provenance and supersession; [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) contains candidate requirements/planned acceptance. These linked records retain their own working-document status; PD release does not approve their candidate requirements or establish execution evidence. HMI protocol source/reference is identified in §10.4; project code assignments and selected-display presentation remain distinct from independent datasheet labels.
+[DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) records current owner decisions, provenance and supersession; [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) contains approved requirements/planned acceptance. Their subsequent owner approval is recorded in the workstream index; planned verification remains distinct from executed evidence. HMI protocol source/reference is identified in §10.4; project code assignments and selected-display presentation remain distinct from independent datasheet labels.
 
 The owner requested brake-interface restoration on 2026-09-08 from `.devenv/specification/application/brake-input.md` at commit `9dd60546a82fee2378cfa95ee90f783e7083c84a` (2026-08-28, “Implemented Brake Input detection”). The [Brake Input Reference](.devenv/Requirements/evidence/Brake_Input_Reference.md) preserves the adopted terminal interface, four assembled-Y resistance records and intrinsic limitations. Only that fixed interface is inherited; historical sensing circuitry/acquisition/thresholds/firmware bring-up and claimed diagnostic capability are excluded. Derive and verify sensing/diagnostics downstream.
 

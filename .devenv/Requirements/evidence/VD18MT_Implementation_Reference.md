@@ -8,7 +8,7 @@
 
 ## Project reference and source authority
 
-The [frozen Project Definition PD-001 Rev1.0](../../../PD-001_Project_Definition_Rev1.0.md), released 2026-09-05, preserves the historical source authority. [PD-001 Rev1.1](../../../PD-001_Project_Definition_Rev1.1.md), reviewed and released 2026-09-09, is now the current upstream baseline, also reproduced in the [root README](../../../README.md); its release does not alter this historical VD18MT evidence. [PD-001 Rev1.0 §10.4](../../../PD-001_Project_Definition_Rev1.0.md#104-existing-vd18mt-test-implementation) establishes the prior successful VD18MT implementation as a confirmed project input. The owner identified **`30fcc91f2066eb2d2e554e1c2776fe32549a0752`**, dated 2026-08-31, subject “Implemented Brake and Accelerator Input,” and directed that its tested and proven behavior be adopted into the interface documentation. This source-authority decision is traced as **DEC-REF-001** in the working decision record.
+The [historical PD-001 Rev1.0](../README.md#release-and-history), released 2026-09-05, preserves the historical source authority. [PD-001 Rev1.1](../../../README.md), reviewed and released 2026-09-09, is now the current upstream baseline, maintained in the root README; its release does not alter this historical VD18MT evidence. PD-001 Rev1.0 §10.4 (preserved in Git) establishes the prior successful VD18MT implementation as a confirmed project input. The owner identified **`30fcc91f2066eb2d2e554e1c2776fe32549a0752`**, dated 2026-08-31, subject “Implemented Brake and Accelerator Input,” and directed that its tested and proven behavior be adopted into the interface documentation. This source-authority decision is traced as **DEC-REF-001** in the decision record.
 
 The source is in historical Git path **`src/vd18mt`**. All source paths and line anchors below refer to that commit, not to files necessarily present in the current working tree. The independently maintained interface reference describes the device interface; this note records how the project uses that reference and the qualifications on its evidence.
 
@@ -18,15 +18,15 @@ The implementation replaced earlier generic Tongsheng/TSDZ2 assumptions for assi
 
 ## Relationship to decisions and open issues
 
-Owner behavior decisions formerly held in `VD18MT_Project_Notes.md` are consolidated in the [working decision record](../DEC-001_Decisions_and_Open_Issues.md) and expressed as [requirements](../REQ-001_Requirements.md). Relevant decision traces are **DEC-LVL-001** (profiles 0–5), **DEC-LVL-002** (requested and active levels), **DEC-LVL-003** (VD18MT authority and retention), **DEC-BRK-002** (brake-release resumption) and **DEC-HMI-001** (no indication of reduced or unavailable regeneration). These are vehicle choices, not inherent display behavior or evidence that the historical UART module implements them.
+Owner behavior decisions formerly held in `VD18MT_Project_Notes.md` are consolidated in the [decision record](../DEC-001_Decisions_and_Open_Issues.md) and expressed as [requirements](../REQ-001_Requirements.md). Relevant decision traces are **DEC-LVL-001** (profiles 0–5), **DEC-LVL-002** (requested and active levels), **DEC-LVL-003** (VD18MT authority across restarts), **DEC-BRK-002** (brake-release resumption) and **DEC-HMI-001** (no indication of reduced or unavailable regeneration). These are vehicle choices, not inherent display behavior or evidence that the historical UART module implements them.
 
-The [working open-issue register](../DEC-001_Decisions_and_Open_Issues.md) holds the remaining integration scope, with links to **PD-001 OI-026–OI-032**. It covers selected-unit and manual correlation, electrical characterization, connector qualification, vehicle HMI functions and settings, battery presentation, level and power integration, timing, message freshness and communication-fault response. The error-presentation correlation below is retained as evidence for **OI-026 / WS-OI-008**.
+The [open-issue register](../DEC-001_Decisions_and_Open_Issues.md) holds the remaining integration scope, with links to **PD-001 OI-026–OI-032**. It covers selected-unit and manual correlation, electrical characterization, connector qualification, vehicle HMI functions and settings, battery presentation, level and power integration, timing, message freshness and communication-fault response. The error-presentation correlation below is retained as evidence for **OI-026 / WS-OI-008**.
 
 No error value has been assigned to normal regenerative-braking limitation. The interface reference defines no arbitrary-text command. A historical enum name alone does not establish an available or required vehicle indication. The decoder's initial `Level0` value, before any valid received request, is local initialization rather than a received display request or evidence of a permitted vehicle default.
 
 ### Selected connector and electrical provenance
 
-The selected **five-pin display connector** and its verified pinout come from [PD-001 Rev1.0 §11.4](../../../PD-001_Project_Definition_Rev1.0.md#114-vd18mt-hmi-interface), not from the historical parser. The independent interface reference carries the pinout table. The generic six-pin Tongsheng motor-side connector is a different interface location: its wire colors and brake-cutoff conductor must not be substituted for the selected five-pin display connection.
+The selected **five-pin display connector** and its verified pinout come from PD-001 Rev1.0 §11.4 (preserved in Git), not from the historical parser. The independent interface reference carries the pinout table. The generic six-pin Tongsheng motor-side connector is a different interface location: its wire colors and brake-cutoff conductor must not be substituted for the selected five-pin display connection.
 
 PD-001 §11.4 and the historical communication record establish the display-side 5 V UART logic class. The historical controller used a 3.3 V/5 V level interface, with MCU allocation and circuit details belonging to that implementation. Those details do not allocate the final vehicle hardware or establish final electrical qualification. The historical record leaves circuit ratings, margins, loading, power-off behavior and back-powering qualification open.
 
@@ -105,14 +105,9 @@ The confirmed five-pin interface still requires the selected-unit electrical and
 
 The independent interface reference retains device frame definitions and their technical comparison sources. Project provenance retained here is:
 
-- [PD-001 Rev1.0](../../../PD-001_Project_Definition_Rev1.0.md): §10.4, §11.4 and OI-026–OI-032.
+- [PD-001 Rev1.0 in Git](../README.md#release-and-history): §10.4, §11.4 and OI-026–OI-032.
 - Owner direction to adopt the implementation at `30fcc91f2066eb2d2e554e1c2776fe32549a0752` as tested and proven in use.
 - Historical source, test and verification artifacts at that commit, with exact paths and line anchors above.
 - [APT / Varstrom VD18MT TS-UART manual](https://device.report/m/8eadeca26f13eecf8b0f56e22f02b41615385c72a112dff4c1755f3e408e53fd.pdf), used for the displayed-error comparison; [generic TSDZ2 serial communication](https://github.com/hurzhurz/tsdz2/blob/master/serial-communication.md) and [motor-side connector pinout](https://github.com/hurzhurz/tsdz2/blob/master/pinout.md), retained as the origins of earlier generic assumptions.
 
-All entries below occurred on **2026-09-06** in the Item Definition & Requirements workstream, in the order shown:
-
-1. Adopted the owner-confirmed implementation as the project interface reference; corrected assist, battery, current, speed, timing and error definitions; adopted the PD-001 five-pin connector; retained parser coverage, evidence and the manual discrepancy.
-2. Revised HMI indication, profile numbering, level authority and brake-release decisions. Their current disposition and superseded choices are preserved in the working decision record under **DEC-HMI-001**, **DEC-LVL-001**, **DEC-LVL-003** and **DEC-BRK-002**.
-3. At the owner's direction, separated project-specific material into root `VD18MT_Project_Notes.md` so that the existing VD18MT interface document could serve as a project-independent datasheet-like reference.
-4. At the owner's direction, consolidated workstream material in `.devenv/Requirements/`. Relocated the historical evidence to this reference and replaced the transfer note's duplicated behavior and issue lists with links to the working item definition, requirements and decision register. The released Project Definition is unchanged by this transfer; no tests were executed as part of the relocation.
+Earlier editorial and relocation history is preserved in [Git](../README.md#release-and-history).

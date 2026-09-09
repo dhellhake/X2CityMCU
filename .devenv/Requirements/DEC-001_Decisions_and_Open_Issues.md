@@ -2,7 +2,7 @@
 
 **Revision 1.0 — DEC-001-R1.0, approved and released by Dominik on 2026-09-09.** Owner decisions and controlled open issues support the released item/requirements baseline; document approval does not establish vehicle verification.
 
-[PD-001 Rev1.1 release](../../PD-001_Project_Definition_Rev1.1.md) owns project scope, missions, performance and constraints; [ID-001](ID-001_Item_Definition.md) owns item context; [REQ-001](REQ-001_Requirements.md) owns approved obligations and planned verification. [Index](README.md) defines source/status conventions. PD-001-R1.1 is the current released upstream baseline, approved 2026-09-09; [Rev1.0](../../PD-001_Project_Definition_Rev1.0.md) remains historical. The owner subsequently reviewed all generated files and authorized the item/requirements release recorded in the [index](README.md#release-and-history).
+[PD-001 Rev1.1](../../README.md) owns project scope, missions, performance and constraints; [ID-001](ID-001_Item_Definition.md) owns item context; [REQ-001](REQ-001_Requirements.md) owns approved obligations and planned verification. [Index](README.md) defines source/status conventions. PD-001-R1.1 is the current released upstream baseline, approved 2026-09-09; Rev1.0 remains in Git history. The owner subsequently reviewed all generated files and authorized the item/requirements release recorded in the [index](README.md#release-and-history).
 
 ## Current owner decisions
 
@@ -365,7 +365,7 @@ These 19 workstream records (18 open, WS-OI-004 closed) supplement, without renu
 | `WS-OI-001` | Standstill, direction, motion latency; DEC-SPD-002 / OI-049 / OI-054 | Measure fixed-wheel loaded circumference and speed accuracy; define near-zero/direction tolerances and latency. Verify forward-to-rollback and requested-forward-torque reversal, readiness, setting changes and regeneration events. |
 | `WS-OI-002` | Accelerator travel/rest/neutral; OI-034–035 | Characterize selected accelerator, return behavior, calibrated endpoints and uncertainty; define physical rest and provisional-neutral/deadband acceptance. |
 | `WS-OI-003` | Torque profiles, ramps and permitted envelopes | System validation: positive/negative curves, unequal negative endpoints, gradients, maximum torque and response tolerances. Distinguish exponential shape preference from time ramps; preserve level/event-specific limits and withdrawal permissions. |
-| `WS-OI-004` | **CLOSED — PD Rev1.1 review/release** | Owner confirmed review and instructed release on 2026-09-09. [PD-001-R1.1 release record](../../PD-001_Release_Record_Rev1.1.md) establishes the new upstream baseline. The later item/requirements approval is recorded in the index; quantitative, hazard and qualification evidence remains outstanding and technical issues stay open. |
+| `WS-OI-004` | **CLOSED — PD Rev1.1 review/release** | Owner confirmed review and instructed release on 2026-09-09. [release authority and history](README.md#release-and-history) establishes the new upstream baseline. The later item/requirements approval is recorded in the index; quantitative, hazard and qualification evidence remains outstanding and technical issues stay open. |
 | `WS-OI-005` | Actual SOC, charge acceptance and regeneration permissives; OI-041 / OI-048 / OI-061 | Define SOC reference/uncertainty, conservative margins, actual cutoff and finite withdrawal bounds, charge acceptance and other limiting-condition evidence. Assess overlapping restrictions and remaining entry transitions; no hysteresis or protection mechanism selected. |
 | `WS-OI-006` | Low-speed taper, rollback and hand parking; OI-048 / OI-054 | Determine common taper-onset speed during system validation; define taper shape, direction/applied-torque criteria, response and repeated-stop transitions, including deliberate launch and powered return after hand pushing. |
 | `WS-OI-007` | Startup/shutdown, Ready and energy state; VS-003 / VS-009 | Define qualification/self-test scope, completion/duration, observable restart and shutdown, residual/generated energy and handling criteria. Verify simultaneous guards, moving restart and initial speed clamping; correlate reset/brownout coverage with WS-OI-010. |
@@ -384,7 +384,7 @@ These 19 workstream records (18 open, WS-OI-004 closed) supplement, without renu
 
 ### WS-OI-014 — Missing release artifacts
 
-The [release record](../../PD-001_Release_Record_Rev1.0.md) and unchanged [frozen Rev1.0](../../PD-001_Project_Definition_Rev1.0.md) establish the available baseline identity. The following cited files remain absent: PD-001_Project_Definition_Rev0.7.md, PD-001_Rev0.7_to_Rev1.0.patch and PD-001_Rev1.0_SHA256SUMS.txt. This limits independent reconstruction of the prior administrative promotion; it does not authorize changing the release record.
+The available Rev1.0/1.1 archives and release records are preserved in [Git history](README.md#release-and-history). The older PD-001_Project_Definition_Rev0.7.md, PD-001_Rev0.7_to_Rev1.0.patch and PD-001_Rev1.0_SHA256SUMS.txt were already unavailable; cleanup does not reconstruct them. Their absence still limits independent reconstruction of the original promotion.
 
 ## Maintenance
 

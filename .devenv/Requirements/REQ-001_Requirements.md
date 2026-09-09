@@ -2,7 +2,7 @@
 
 **Revision 1.0 — REQ-001-R1.0, approved and released 2026-09-09 by Dominik.** The baseline contains **110 active requirements, 3 Deferred and 2 Withdrawn records**, with controlled open issues. Approval covers the stated obligations, source qualifications, planned verification and downstream dispositions; complete technical derivation and vehicle verification remain outstanding.
 
-Sources: [released PD-001 Rev1.1](../../PD-001_Project_Definition_Rev1.1.md), [item definition](ID-001_Item_Definition.md), [owner decisions/open issues](DEC-001_Decisions_and_Open_Issues.md). The owner reviewed and released PD-001-R1.1 on 2026-09-09, closing `WS-OI-004`; [Rev1.0](../../PD-001_Project_Definition_Rev1.0.md) remains historical. The owner subsequently reviewed all generated files and authorized this requirement release; [the workstream release record](README.md#release-and-history) records that separate approval.
+Sources: [released PD-001 Rev1.1](../../README.md), [item definition](ID-001_Item_Definition.md), [owner decisions/open issues](DEC-001_Decisions_and_Open_Issues.md). The owner reviewed and released PD-001-R1.1 on 2026-09-09, closing `WS-OI-004`; Rev1.0 remains in Git history. The owner subsequently reviewed all generated files and authorized this requirement release; [the workstream release record](README.md#release-and-history) records that separate approval.
 
 ## Reading and verification rules
 

@@ -4,7 +4,7 @@
 |---|---|
 | Revision / release | 1.0 / ID-001-R1.0, 2026-09-09 |
 | Status | Approved and released by Dominik for downstream development with controlled open issues |
-| Upstream | [PD-001 Rev1.1 release](../../PD-001_Project_Definition_Rev1.1.md), approved 2026-09-09; [Rev1.0](../../PD-001_Project_Definition_Rev1.0.md) retained as history |
+| Upstream | [PD-001 Rev1.1](../../README.md), approved 2026-09-09; historical versions in [Git](README.md#release-and-history) |
 | Related records | [Requirements](REQ-001_Requirements.md); [decisions/issues](DEC-001_Decisions_and_Open_Issues.md); [index](README.md) |
 
 ## 1. Purpose, authority and coverage
@@ -245,14 +245,4 @@ Document review against released PD-001-R1.1, 2026-09-09: all eight OS situation
 
 ## 7. Revision record
 
-| Revision | Date | Change |
-|---|---|---|
-| Drafts 0.1–0.32 | 2026-09-06–09 | Consolidated and refined owner decisions; current intent and material supersession remain in DEC-001. |
-| Draft 0.33 | 2026-09-09 | Consistency/size review; retained context, transitions, dependencies and safety-analysis handoff. |
-| Draft 0.34 | 2026-09-09 | Incorporated owner fault-priority, zero-speed-setting, HMI, performance/range, service-life and brake-association decisions. |
-| Draft 0.35 | 2026-09-09 | Owner removed pending feedback and cross-boot level retention; added continuous battery-current reporting. |
-| Draft 0.36 | 2026-09-09 | Owner specified 0 A reporting for unavailable/invalid battery-current information. |
-| Draft 0.37 | 2026-09-09 | Updated upstream authority to released PD-001-R1.1; item definition remains unapproved and unverified. |
-| Draft 0.38 | 2026-09-09 | Recorded combined PD/item lifecycle coverage review; no new behavior, approval or vehicle verification. |
-| Draft 0.39 | 2026-09-09 | Linked the complete PD obligation-disposition review in REQ-001; no item behavior or approval changed. |
-| 1.0 | 2026-09-09 | Owner reviewed all generated files and approved release with controlled open issues; lifecycle/obligation coverage accepted for downstream handoff. |
+Revision 1.0 was reviewed and released by Dominik on 2026-09-09 with controlled open issues. Earlier drafting and release records are retained in [Git history](README.md#release-and-history).
