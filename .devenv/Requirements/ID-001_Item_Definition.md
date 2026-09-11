@@ -2,16 +2,16 @@
 
 | Attribute | Value |
 |---|---|
-| Revision / release | 1.0 / ID-001-R1.0, 2026-09-09 |
-| Status | Approved and released by Dominik for downstream development with controlled open issues |
-| Upstream | [PD-001 Rev1.1](../../README.md), approved 2026-09-09; historical versions in [Git](README.md#release-and-history) |
+| Revision / release | 1.1 Draft, 2026-09-11; prior release ID-001-R1.0 in Git |
+| Status | Draft: incorporates owner-confirmed battery/BMS/UART, riding-temperature, charging and storage changes |
+| Upstream | [PD-001 Draft1.2](../../README.md); released PD-001-R1.1 retained in [Git](README.md#release-and-history) |
 | Related records | [Requirements](REQ-001_Requirements.md); [decisions/issues](DEC-001_Decisions_and_Open_Issues.md); [index](README.md) |
 
 ## 1. Purpose, authority and coverage
 
 This document defines operational context, boundary interactions and safety-analysis inputs for the **Modified BMW X2City personal electric scooter**. PD-001 owns project scope, component selections, mission/performance/environment, constraints and broader scenarios. DEC-001 owns current owner decisions and their supersession. REQ-001 owns approved obligations and planned verification; the summaries here introduce no additional requirements. Its [PD obligation disposition](REQ-001_Requirements.md#pd-obligation-disposition) records upstream retention and remaining derivation across the full PD scope.
 
-This item-definition input baseline is released; unresolved engineering and verification work remains assigned downstream. Owner decisions, approved requirements, provisional assumptions and demonstrated evidence remain distinct. Historical interface/software observations do not verify the proposed vehicle behavior. Architecture, sensing realization, algorithms, safety classifications/goals and technical safety mechanisms are downstream work.
+The original ID-001-R1.0 input baseline is released; this changed working revision is Draft. Unresolved engineering and verification work remains assigned downstream. Owner decisions, approved requirements, provisional assumptions and demonstrated evidence remain distinct. Historical interface/software observations do not verify the proposed vehicle behavior. The built pack/BMS selection is fixed; remaining architecture, sensing realization, algorithms, safety classifications/goals and technical safety mechanisms are downstream work.
 
 ## 2. Item boundary, actors and interfaces
 
@@ -41,9 +41,23 @@ The **fixed brake interface** is a passive, polarity-independent, resistance-cod
 
 The [VD18MT reference](../VD18MT/VD18MT_Tongsheng_UART_Interface.md) owns project-independent device/protocol facts. Vehicle meanings and selected-unit qualification belong to this workstream. Historical implementation reuse under DEC-REF-001 is not evidence for new vehicle behavior (WS-OI-008–010).
 
+### 2.3 Fixed battery and BMS integration
+
+The same removable pack contains **70 Samsung INR18650-35E cells in 14S5P**; construction, initial bay fit and working operation are owner-confirmed. **JBD SP14S004P14S50A** and its **UART** are selected. The owner confirms the BMS is connected but not fully configured; deriving its configuration is current engineering work. [BAT-001](../Battery/BAT-001_Selected_Pack_and_BMS.md) owns ratings, derivations and source limitations; [ARCH-001](../Architecture/ARCH-001_System_Architecture.md) allocates the cell bank and UART interpretation while treating the supplied BMS, including its firmware, as a composite integration boundary.
+
+The nominal pack reference is 50.4 V; full-cell-test voltage 58.8 V is not an 80% SOC charger setpoint. The cell bank limits the ideal continuous battery discharge/charge ceilings to 40/10 A, subject to stricter integrated limits. BMS observations cover 14 parallel-group voltages and available probes, not every individual cell condition. Qualified SOC, current, temperatures, protection and path status feed the existing control/charging rules; vendor recovery or readback alone does not establish Ready or release a latched system fault.
+
+Resolve the non-isolated UART's manufacturer restriction, switched-negative/power references, B+ exposure and physical protection integration before interconnection. BMS charge-path interruption during motor generation, communication faults, automatic recovery and controller/BMS resets require coordinated energy/fault handling. Normal battery handling, detached independence and charging completion-hold behavior remain controlling. See [battery integration requirements](System_Requirements/Battery_Integration.md), DEC-BAT-002 and PD OI-040/041/045/046/048/061.
+
+The [battery event matrix](System_Requirements/Battery_Integration.md#battery-event-and-recovery-matrix) distinguishes initial qualification, ordinary restrictions, recognized telemetry/protection faults and expected versus failed energy paths. Required physical protection remains applicable when the vehicle controller/UART is unavailable. [ARCH-001](../Architecture/ARCH-001_System_Architecture.md#battery-protection-and-reset-responsibilities) separates BMS, riding-controller, charging-controller and charging-connection reset effects.
+
 ## 3. Intended use and operating envelope
 
-PD-001 §§6–8 control the one-adult-plus-luggage private-property mission, reference range/acceleration/grades, mass, environmental exposure and off-vehicle charging. RQ-001 qualifies at least 70 km using a new battery inside **20–80% actual SOC**; energy outside that window receives no qualification credit. Cold/weather performance allowances apply only within applicable temperature limits.
+PD-001 §§6–8 control the one-adult-plus-luggage private-property mission, reference range/acceleration/grades, mass, environmental exposure and off-vehicle charging. RQ-001 qualifies at least 70 km using a new battery inside **20–80% actual SOC**; energy outside that window receives no qualification credit. Riding ambient is now **−10…+40°C** under DEC-BAT-002; fitted/empty-bay outdoor storage remains −15…+40°C. Cell-surface discharge limits are −10…60°C and charging, including regeneration, 0…45°C, with conservative integrated limits to be derived. Cold/weather performance allowances apply only within applicable temperature limits.
+
+For mass planning, [DEC-MAS-001](DEC-001_Decisions_and_Open_Issues.md#dec-mas-001) permits the provisional [PD DV-012 budget](../../README.md#dv-012--payload-and-vehicle-mass-budget) without first weighing the gutted scooter. This does not change the 30 kg vehicle / 100 kg minimum payload limits or the 130 kg performance/range reference; complete mass verification remains a later acceptance gate.
+
+Storage duty is **168 h outdoors with the battery fitted or empty bay exposed**, and **672 h for the detached pack dry indoors at 15–30°C**. Both battery duties start at normal full charge, 80% actual SOC subject to qualified conservative tolerance; entry above 80% or below qualified normal full is outside duration qualification. Normal post-storage conditioning/charging and qualification may precede use, with stored condition inspected first. No guaranteed remaining range or forced discharge is implied ([DEC-STO-001–002](DEC-001_Decisions_and_Open_Issues.md#dec-sto-001); PD §8.2).
 
 Road grip, load, motor/battery capability and operating/safety limits constrain the rider-demand behavior below. A torque-demand accelerator does not replace vehicle performance obligations. Unspecified numerical limits, tolerances and response bounds remain open; §6 identifies the derivation work.
 
@@ -68,6 +82,8 @@ These externally meaningful conditions elaborate PD-001 §9; they do not prescri
 | VS-011 — Battery removal/refitting | §4.2 sequence; no commanded propulsion during handling. Fit/connection alone establishes neither isolation nor Ready. |
 | VS-012 — Removed-pack storage/awaiting charge | Detached-pack temperature, storage and residual-energy conditions remain applicable. |
 
+Removed charging supports a minimum 9 V / 2 A USB-C supply with actual net charging when permitted ([DEC-CHG-004](DEC-001_Decisions_and_Open_Issues.md#dec-chg-004)); source input power differs from battery charge power. Sessions follow [DEC-CHG-001–003](DEC-001_Decisions_and_Open_Issues.md#dec-chg-001): eligible incomplete sessions resume after ordinary cold/warm waiting, including automatic resumption after cooling a healthy too-warm battery within its qualified non-charging limits; completion/initial-full hold requires a new connection or qualified USB power restoration before a new charge-need assessment. Unexpected charging-controller restart discards old fault history/indication, shows Waiting during fresh checks and retains completion/initial eligibility. Newly recognized faults take priority; charging remains unavailable until checks and conditions permit. Four-state indication works without the VD18MT; the [charging policy](Abstract_Software_Requirements/Charging_Session_Policy.md) allocates logical behavior only.
+
 **Ready entry**, after every normal or unexpected restart, requires together: successful startup self-tests; valid accelerator/brake information; valid VD18MT level and speed settings received during that startup; trustworthy actual SOC; qualified required temperature information; standstill; physical accelerator rest; no current-session fault inhibition; and applicable operating permissives. Unknown speed is not standstill. Physical rest is fully released, not the 35% virtual neutral. Earlier pedal release while rolling or stored settings alone do not qualify. Initial interpretable speed requests of zero or above 40 km/h qualify as 40 km/h. Valid brake actuation or displaced accelerator position is not inherently a fault, although entry/torque guards still apply.
 
 Trace: DEC-STA-001, DEC-FLT-007, DEC-TMP-002; REQ-SYS-STA-001–007. Qualification, restart boundaries and measurable guards remain open.
@@ -90,13 +106,13 @@ Changed level or speed requests apply only at **simultaneous standstill and phys
 
 VD18MT communication loss alone preserves otherwise available operation using last valid settings, including normal lighting. Active/pending settings remain distinct and their application guards continue. Current valid accelerator/brake input controls torque; the last torque command is not frozen. Communication return alone requires neither restart nor a new Ready transition. Current-startup receipt of valid level/speed information remains mandatory before initial Ready; deliberate shutdown/supply loss is separate (DEC-FLT-001; REQ-SYS-FLT-001–002).
 
-**Common fault response:** recognized faults requiring fixing, invalid accelerator/brake/speed information, SOC-information loss, temperature-limit violations and required-temperature-information faults inhibit both commanded torque signs for the uninterrupted session. The same response applies during startup and riding; detection during startup prevents Ready. Abrupt withdrawal is permitted in every level. Fault clearance, late qualification, repeated successful checks, standstill, pedal/brake actions or communication restoration cannot release inhibition.
+**Common fault response:** recognized faults requiring fixing, invalid accelerator/brake/speed information, SOC-information loss, recognized invalidity/loss of previously qualified required actual motor-output information (DEC-FLT-011), temperature-limit violations and required-temperature-information faults inhibit both commanded torque signs for the uninterrupted session. The same response applies during startup and riding; detection during startup prevents Ready. Abrupt withdrawal is permitted in every level. Fault clearance, late qualification, repeated successful checks, standstill, pedal/brake actions or communication restoration cannot release inhibition.
 
 Recovery requires a normal or unexpected restart, successful fresh self-tests and all Ready/current operating prerequisites. No fault history or old report persists across a restart; current faults must be recognized anew and inhibit that new session even if they subsequently clear. Clearing history is not proof of validity or readiness. Ordinary initial qualification is not automatically a fault; failure to qualify SOC within its allowed initialization period is a battery fault. Detection coverage, qualification periods and finite responses remain downstream.
 
 While powered, VD18MT and front/rear lighting continue wherever electrical protection and the affected functions permit. Normal commands and brake-light rules remain effective. Torque inhibition/reporting alone neither switches lights off nor forces brake brightness; continued function through a failed device/supply or after shutdown is not promised.
 
-Trace: DEC-FLT-002–009, DEC-TMP-001–002; REQ-SYS-FLT-003–011, REQ-SYS-TMP-001–002, REQ-VEH-AUX-001. Report selection (§5.6), brake-light release (§5.5), charge recovery (§5.7) and torque recovery have different conditions.
+Trace: DEC-FLT-002–011, DEC-TMP-001–003; REQ-SYS-FLT-003–012, REQ-SYS-TMP-001–002, REQ-VEH-AUX-001. Report selection (§5.6), brake-light release (§5.5), charge recovery (§5.7) and torque recovery have different conditions.
 
 ## 5. Rider-demand and braking behavior
 
@@ -155,7 +171,7 @@ Trace: DEC-HMI-002, DEC-HMI-005; REQ-VEH-HMI-002–003, REQ-VEH-HMI-012; WS-OI-0
 
 Front and rear normal illumination follow the VD18MT light command together. Before the first valid powered-session command, normal lights are off; afterward, communication loss retains the last valid command.
 
-The two-wire VCC/GND rear light provides dim normal illumination and full-bright brake indication. While powered, **either operated lever**, **actual active electrical braking**, or **invalid brake information** independently requires full rear brightness, overriding normal off/dim. Lever actuation applies at standstill and without net deceleration; passive slowing or a wholly suppressed regenerative request is insufficient. The front retains its normal command. Return the rear to normal dim/off only when brake information is valid, both levers are released and active electrical braking has ended, even if torque inhibition or a fault report remains. Dimming suitability/brightness/response are unverified; supply PWM was only an owner example.
+The two-wire VCC/GND rear light provides dim normal illumination and full-bright brake indication. While powered, **either operated lever**, **actual active electrical braking**, or **unqualified brake-lever or actual motor-braking information** independently requires full rear brightness, including during startup (DEC-LGT-002), overriding normal off/dim. Lever actuation applies at standstill and without net deceleration; passive slowing or a wholly suppressed regenerative request is insufficient. The front retains its normal command. Return the rear to normal dim/off only when both levers are qualified released and active electrical braking is qualified absent, even if torque inhibition or a fault report remains. Dimming suitability/brightness/response are unverified; supply PWM was only an owner example.
 
 Valid VD18MT speed requests are clamped to **at most 40 km/h**, including the first startup request. A decoded **0 km/h** means no limit requested and normalizes to **40 km/h** under the same application guards. A change still waits for standstill/rest: 25 km/h active plus a 50 km/h request means 40 km/h pending, then 40 km/h active at the guard. Uninterpretable speed values preserve prior active/valid pending settings and cannot satisfy initial receipt; their treatment does not reject other valid fields automatically.
 
@@ -165,7 +181,7 @@ Control speed uses fixed nominal **16-inch wheels**, independent of VD18MT wheel
 
 Powered walk assistance is excluded; a walk command alone requests no torque. Normal valid accelerator propulsion and manual parking remain applicable.
 
-Trace: DEC-HMI-003–004, DEC-LGT-001, DEC-SPD-001–002; REQ-VEH-LGT-001–008, REQ-SYS-SPD-001–009, REQ-VEH-WLK-001; WS-OI-008–010, WS-OI-015–016.
+Trace: DEC-HMI-003–004, DEC-LGT-001–002, DEC-SPD-001–002; REQ-VEH-LGT-001–009, REQ-SYS-SPD-001–009, REQ-VEH-WLK-001; WS-OI-008–010, WS-OI-015–016.
 
 Battery current is provided continuously to the VD18MT through recurring messages while powered and communication is available (DEC-HMI-008; REQ-VEH-HMI-020). Report discharge or regenerative charging current as a positive magnitude clamped to 51 A; the unsigned field does not distinguish direction. Unavailable/invalid battery-current information is reported as 0 A; valid data restores the normal mapping. This reporting fallback does not establish zero physical current or valid control/protection information. Quantization, validity criteria, accuracy and update bounds remain WS-OI-009.
 
@@ -202,7 +218,9 @@ Recognized violation of an applicable upper **or lower** component temperature l
 
 Required temperature information must qualify before Ready. Recognized invalidity/unavailability invokes the same fault response; ordinary initial qualification alone is not a fault. Invalid information does not itself prove a hot/cold violation: use the applicable specific fault code, otherwise 0x05. Known limit violations use retained 0x06 under §5.6.
 
-Limits, reference/margins, information requirements, qualification/fault boundaries, coverage and finite responses remain open. No pre-limit derating curve, sensor, estimator or heating/cooling mechanism is selected. These riding decisions do not define off-vehicle charging recovery.
+DEC-TMP-003 clarifies that qualified discharge-permissible/charge-ineligible cell temperature allows otherwise eligible propulsion with regeneration ordinarily unavailable. It creates no new fault/availability indication; regeneration recovers under its normal restriction rules. Actual applicable operating-limit violations, required-temperature-information faults and recognized forbidden charge transfer retain the fault response above.
+
+Integrated limits, reference/margins, information requirements, qualification/fault boundaries, coverage and finite responses remain open. No pre-limit derating curve, sensor, estimator or heating/cooling mechanism is selected. These riding decisions do not define off-vehicle charging recovery.
 
 Trace: DEC-TMP-001–002; REQ-SYS-STA-007, REQ-SYS-TMP-001–002; WS-OI-019.
 
@@ -225,13 +243,15 @@ PD-001 §7 owns the broader normal-situation, fault and foreseeable-misuse regis
 | Fault indication is wrong, premature, replaced/cleared incorrectly or survives restart as stale history | Wire/display correspondence, priority/ties, fresh selection, reporting without torque demand, and separation from physical reaction. DEC-FLT-003–008, DEC-HMI-006; WS-OI-008–010, WS-OI-019. |
 | Normal/brake lighting is missing or misleading | Overlapping brake triggers, invalid-input brightness, valid-release return despite retained faults, passive-slowing exclusion, protection-limited auxiliary continuity and lamp suitability. DEC-HMI-003, DEC-LGT-001, DEC-FLT-009; WS-OI-012–013, WS-OI-016. |
 | Walk command creates torque; moving shutdown removes torque | Excluded walk assistance, permitted abrupt shutdown and residual/motor-generated energy. DEC-HMI-004, DEC-PWR-001; WS-OI-007–010, WS-OI-013. |
-| Connected battery is unseated/unlocked or contacts are contaminated | Intentional handling intermediates, energized misuse, retention, isolation, exposed contacts and off-vehicle transition. DEC-BAT-001; FM-018, FM-024; WS-OI-011. |
+| Connected battery is unseated/unlocked or contacts are contaminated | Intentional handling intermediates, energized misuse, retention, isolation, exposed contacts and off-vehicle transition. [REQ-SYS-BAT-003](System_Requirements/Battery_Handling_and_Charging.md#req-sys-bat-003) defines accessible-interface protection without selecting sensing/interlocks. DEC-BAT-001; FM-018, FM-024; WS-OI-011. |
+
+Battery selection adds explicit supplied-BMS/UART, temperature, generated-energy and limited-observability analysis inputs (§2.3); the earlier lifecycle review below does not qualify that integration.
 
 DEC-001 records this workstream's unresolved thresholds, tolerances, profiles, interfaces, diagnostic coverage, timing, reporting and protection/qualification dependencies; it supplements PD-001's upstream issue register. REQ-001 retains proposed acceptance cases. No safety assessment or vehicle execution evidence is asserted here.
 
 ### Lifecycle coverage review
 
-Document review against released PD-001-R1.1, 2026-09-09: all eight OS situations, 26 FM misuse entries, 12 VS states and eight IF-EXT interfaces are accounted for by PD coverage and the item elaboration/references. No omitted lifecycle area or conflicting required behavior was identified in the areas below. This supports item-definition/hazard-analysis input; it does not close downstream issues, assess all hazards or verify vehicle behavior.
+Historical document review against released PD-001-R1.1, 2026-09-09: all eight OS situations, 26 FM misuse entries, 12 VS states and eight IF-EXT interfaces are accounted for by PD coverage and the item elaboration/references. No omitted lifecycle area or conflicting required behavior was identified in the areas below. This supports item-definition/hazard-analysis input; it does not close downstream issues, assess all hazards or verify vehicle behavior.
 
 | Area | Controlling PD coverage | Item elaboration | Remaining derivation / evidence |
 |---|---|---|---|
@@ -239,9 +259,11 @@ Document review against released PD-001-R1.1, 2026-09-09: all eight OS situation
 | Shutdown | §9 VS-002/009; OBJ-005 | §§4.1–4.2/4.4; moving shutdown and fresh restart | Completion, residual/generated energy and supply behavior: WS-OI-007–008 |
 | Battery handling | §§5.1, 6.7, 9, 11.8; OS-005/007, FM-003/018/024 | §§2.1/4.2/6; connection before seating, normal sequence and energized misuse | Contact/lock suitability, exposed energy and abnormal handling: WS-OI-011; OI-062 |
 | Removed-pack charging | §§6.7, 8.4, 9, 11.8; OS-005, VS-007/012, FM-004/005/022 | §§2.1/3/4.1; external charging independent of vehicle electronics | Source-loss/recovery, cold limits, interfaces and charging protection: OI-041/042/057/058 |
-| Storage | §§6.6–6.7, 8.2–8.4, 9; OS-004/005, VS-002/012, FM-024/026 | §§2–4.1/5.7; vehicle/removed-pack conditions and residual consumption | Pack/storage conditions, starting SOC, exposure and energy allowances: OI-056/063 |
+| Storage | §§6.6–6.7, 8.2–8.4, 9; OS-004/005, VS-002/012, FM-024/026 | §§2–4.1/5.7; vehicle/removed-pack conditions and residual consumption | Normal-full entry tolerance, exposure, protection and energy allowances: OI-056/061/063 |
 | Maintenance | OBJ-009, IU-019/020, CON-027, §§9/11.8; VS-001/010, IF-EXT-006 | §§2.2/4.1/4.4; competent maintainer, isolation/test context and fresh startup | Service procedures/access, isolation, maintenance/replacements and durability acceptance: OI-045–047/050 |
 | Foreseeable misuse | §7 FM-001–026; additional situations in §9; exclusions in §17 | §§2/4/6 supplement the upstream register | Assess consequences and acceptable responses in hazard analysis, then derive safeguards/verification; inclusion does not promise normal functionality during misuse |
+
+Service return is configuration-specific: riding requires fresh startup and the full Ready guard; detached charging uses its own checks, recovery and completion/initial-eligibility rules. Service completion is not a new charge session or fault-clearing event. The [service contract](System_Requirements/Service_and_Durability.md#service-acceptance-contract) distinguishes diagnostic observations from retained inhibition, physical output and isolation; its information presentation is partially allocated in ARCH-001. Battery/wear-part replacement does not restart the modified-vehicle life clock.
 
 ## 7. Revision record
 

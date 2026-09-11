@@ -1,5 +1,9 @@
 # Development Documentation
 
+- [Requirements workstream](Requirements/README.md) indexes the historical releases, current PD/item drafts,
+  released REQ-001-R1.6 clusters, completion gates and [logical architecture](Architecture/ARCH-001_System_Architecture.md).
+- [Selected battery and BMS](Battery/BAT-001_Selected_Pack_and_BMS.md) records the built
+  14S5P Samsung 35E pack, JBD SP14S004P14S50A UART and derived integration limits.
 - [FK743M2-IIT6 V1.1 board documentation](STM32H743IIT6/README.md) contains the
   FK743M2-IIT6 board profile, physical connector reference, OpenOCD
   configuration and debugger SVD.
