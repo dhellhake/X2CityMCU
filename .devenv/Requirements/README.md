@@ -9,6 +9,7 @@
 | [PD-001](../../README.md) | Frozen source snapshot: Draft1.2; historical PD-001-R1.1 remains its released baseline |
 | [ID-001](ID-001_Item_Definition.md) | Frozen source snapshot: Draft1.1; historical ID-001-R1.0 remains its released baseline |
 | [REQ-001](REQ-001_Requirements.md) | **Released REQ-001-R1.6**: model, 20 canonical clusters, PD disposition, planned verification and controlled gates |
+| [HARA-001 / SG-001 release](../Safety/HARA-001_Hazard_Analysis.md#release-record) | **Released HARA-001-R1.0 / SG-001-R1.0, 2026-09-12**: qualitative hazard analysis and 11 additional approved top-level safety goals, in a separate controlled baseline; the R1.6 counts above remain unchanged |
 | [DEC-001](DEC-001_Decisions_and_Open_Issues.md) | Frozen source/release-record snapshot: Draft1.5; 19 workstream issues open, including WS-OI-020 for B; WS-OI-004 closed |
 | [ARCH-001](../Architecture/ARCH-001_System_Architecture.md) | Frozen reference snapshot: Draft0.2; current requirement bindings approved through REQ-001-R1.6, wider architecture/B remains open |
 | [Selected battery/BMS reference](../Battery/BAT-001_Selected_Pack_and_BMS.md) | Frozen source snapshot: Draft0.1; selected components, manufacturer evidence and qualified derivations; no integration acceptance claimed |

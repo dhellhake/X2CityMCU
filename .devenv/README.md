@@ -1,5 +1,9 @@
 # Development Documentation
 
+- [Hazard analysis](Safety/HARA-001_Hazard_Analysis.md) and [safety goals](Safety/SG-001_Safety_Goals.md)
+  are released as **HARA-001-R1.0 / SG-001-R1.0**, with trace to REQ-001-R1.6.
+  The [release record](Safety/HARA-001_Hazard_Analysis.md#release-record) retains the analysis assumptions
+  and open safety-concept/validation gates; no formal ASIL claim is made.
 - [Requirements workstream](Requirements/README.md) indexes the historical releases, current PD/item drafts,
   released REQ-001-R1.6 clusters, completion gates and [logical architecture](Architecture/ARCH-001_System_Architecture.md).
 - [Selected battery and BMS](Battery/BAT-001_Selected_Pack_and_BMS.md) records the built
