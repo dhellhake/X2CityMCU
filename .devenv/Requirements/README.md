@@ -4,14 +4,17 @@
 
 **Current requirements baseline: REQ-001-R1.6, released 2026-09-11 by Dominik after review of all System Requirements.** The **176 records** comprise **171 approved, 3 Deferred and 2 Withdrawn** in **20 clusters: 156 System, 17 Abstract Software and 3 Abstract Hardware**; the abstract types remain System-level. All active records have provenance, a responsible target and planned verification; all 317 PD records have dispositions. **Completion point A is released; B remains open.** Numerical, characterization, safety/design and executed-verification gates remain as recorded. [Release scope and source snapshot](#req-001-r16-system-requirements-release).
 
+**Current working revision: REQ-001 Draft1.7.** The separately released [FC-001/002-R1.0 package](../Architecture/FC-001_Functional_Concept.md#release-record), dated 2026-09-13, defines 19 functions and references 12 Draft safety-derived System Requirements; the working catalogue has 188 records in 23 clusters (171 approved, 12 Draft, 3 Deferred, 2 Withdrawn). Its [function trace](../Architecture/FC-002_Function_Trace.md) also covers the 11 separately approved safety goals. The concept release preserves those Draft requirement statuses and provisional logical ownership. R1.6 and HARA/SG release snapshots remain unchanged in Git.
+
 | Document | Release / content |
 |---|---|
 | [PD-001](../../README.md) | Frozen source snapshot: Draft1.2; historical PD-001-R1.1 remains its released baseline |
 | [ID-001](ID-001_Item_Definition.md) | Frozen source snapshot: Draft1.1; historical ID-001-R1.0 remains its released baseline |
-| [REQ-001](REQ-001_Requirements.md) | **Released REQ-001-R1.6**: model, 20 canonical clusters, PD disposition, planned verification and controlled gates |
+| [REQ-001](REQ-001_Requirements.md) | Working Draft1.7: 23 clusters including 12 Draft FSC rows; released REQ-001-R1.6 remains the 20-cluster baseline in Git |
 | [HARA-001 / SG-001 release](../Safety/HARA-001_Hazard_Analysis.md#release-record) | **Released HARA-001-R1.0 / SG-001-R1.0, 2026-09-12**: qualitative hazard analysis and 11 additional approved top-level safety goals, in a separate controlled baseline; the R1.6 counts above remain unchanged |
 | [DEC-001](DEC-001_Decisions_and_Open_Issues.md) | Frozen source/release-record snapshot: Draft1.5; 19 workstream issues open, including WS-OI-020 for B; WS-OI-004 closed |
-| [ARCH-001](../Architecture/ARCH-001_System_Architecture.md) | Frozen reference snapshot: Draft0.2; current requirement bindings approved through REQ-001-R1.6, wider architecture/B remains open |
+| [ARCH-001](../Architecture/ARCH-001_System_Architecture.md) | Working Draft0.3: functional bindings and 13 interface contracts; Draft0.2 remains the R1.6 source snapshot and approved prior requirement bindings remain unchanged |
+| [FC-001 / FC-002](../Architecture/FC-001_Functional_Concept.md#release-record) | **Released FC-001-R1.0 / FC-002-R1.0, 2026-09-13**: functional definition, contracts, diagrams, modes, response strategy, document walkthroughs and contribution trace; architecture and 12 FSC requirements retain their Draft status |
 | [Selected battery/BMS reference](../Battery/BAT-001_Selected_Pack_and_BMS.md) | Frozen source snapshot: Draft0.1; selected components, manufacturer evidence and qualified derivations; no integration acceptance claimed |
 | [Brake interface evidence](evidence/Brake_Input_Reference.md) | Revision 1.0: fixed shared coded interface, provenance, values and diagnostic limitations |
 | [VD18MT implementation evidence](evidence/VD18MT_Implementation_Reference.md) | Revision 1.0: historical tested source and evidence qualifications |

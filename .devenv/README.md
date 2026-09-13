@@ -1,5 +1,9 @@
 # Development Documentation
 
+- [Functional concept](Architecture/FC-001_Functional_Concept.md) and [function trace](Architecture/FC-002_Function_Trace.md)
+  are released as **FC-001-R1.0 / FC-002-R1.0**, with 19 functions and the complete contribution trace.
+  The [release record](Architecture/FC-001_Functional_Concept.md#release-record) preserves logical architecture
+  Draft0.3 and REQ-001 Draft1.7, including 12 proposed safety-derived requirements, as supporting Drafts.
 - [Hazard analysis](Safety/HARA-001_Hazard_Analysis.md) and [safety goals](Safety/SG-001_Safety_Goals.md)
   are released as **HARA-001-R1.0 / SG-001-R1.0**, with trace to REQ-001-R1.6.
   The [release record](Safety/HARA-001_Hazard_Analysis.md#release-record) retains the analysis assumptions
