@@ -1,0 +1,11 @@
+# Detailed-design interface allocations
+
+**Released in REQ-001-R1.9 — 2026-09-13.** These downstream Abstract Software Requirements refine released System/HSI parents and the explicit SW realization allocation in ARCH-003. They preserve all R1.8 records and their stated evidence gates.
+
+| ID | Type / target | Requirement | Derived from | Planned verification and remaining gate |
+|---|---|---|---|---|
+| `REQ-SYS-INP-001` | Abstract Software Requirement; LE-INPUT-QUAL / SC-INPUT-QUAL | Input-qualification software shall publish each supported acquisition observation only with current producer/configuration/reset context, semantic qualification and freshness, and shall represent initial, absent, invalid, stale, implausible or mismatched observations as unavailable rather than qualified semantic state. | REQ-SYS-HSI-001 | `A`, `T-SW`, `T-FI`, `T-SYS`: loss/stale/reset injections. Electrical range, sensor method, age/skew, fault envelope and response bound remain allocation/evidence gates. |
+| `REQ-SYS-TRQACC-001` | Abstract Software Requirement; LE-MOTOR-CTRL / SC-TRACTION-CTRL | Traction-control software shall accept authority and signed demand only when each has current matching context, qualification and expiry evidence; otherwise it shall request zero commanded torque of both signs and publish acceptance/output-observation state separately from physical output. | REQ-SYS-HSI-004 | `A`, `T-SW`, `T-FI`, `T-SYS`: producer/consumer reset, queue, expiry and invalidity. Command representation, bound, actuator contract, observation and coverage remain gates. |
+| `REQ-SYS-PLT-001` | Abstract Software Requirement; LE-PLATFORM / SC-PLATFORM | Platform software shall invalidate observations, commands and acknowledgements affected by power, reset, retention or local health context change until qualified in current context, while exposing retention restore result without deciding consumer session semantics. | REQ-SYS-HSI-007 | `A`, `T-SW`, `T-FI`, `T-SYS`: endpoint/rail reset and retention cases. Domains, integrity, scheduling and common-cause coverage remain gates. |
+
+The Unit Requirements in [Control_Unit_Requirements](../Unit_Requirements/Control_Unit_Requirements.md) derive only from these ASW records. `U-INPUT-CONTEXT`, `U-PLATFORM-RETENTION` and `U-PLATFORM-HEALTH` remain supporting units with no separate Unit Requirement.

@@ -8,6 +8,10 @@
   and [software](Architecture/ARCH-003_Software_Architecture.md) are released as **ARCH-001/002/003-R1.0**.
   Their [release record](Architecture/ARCH-001_System_Architecture.md#release-record) approves composition, interfaces and deployment,
   including the separate mobile charger; detailed engineering and completion B remain open.
+- [Detailed design](Detailed_Design/DD-001_Software_Unit_Design.md), [energy/charging design](Detailed_Design/DD-002_Energy_Charging_Unit_Design.md),
+  [static views](Detailed_Design/DD-003_Static_Software_Architecture_Views.md) and [dynamic views](Detailed_Design/DD-004_Dynamic_Software_Architecture_Views.md)
+  are released as **DD-001/002/003/004-R1.0** with REQ-001-R1.9. They cover unit composition, local host instances,
+  interfaces and documented interaction/state examples; they make no implementation or physical-acceptance claim.
 - [Hazard analysis](Safety/HARA-001_Hazard_Analysis.md) and [safety goals](Safety/SG-001_Safety_Goals.md)
   are released as **HARA-001-R1.0 / SG-001-R1.0**, with trace to REQ-001-R1.6.
   The [release record](Safety/HARA-001_Hazard_Analysis.md#release-record) retains the analysis assumptions

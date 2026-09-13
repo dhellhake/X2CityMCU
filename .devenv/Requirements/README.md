@@ -2,7 +2,7 @@
 
 **Historical baseline released 2026-09-09 by Dominik, project owner**, after review of all generated files. That baseline is approved for downstream hazard analysis, requirements refinement, architecture and verification planning with controlled open issues.
 
-**Current requirements baseline: REQ-001-R1.8, released 2026-09-13 by Dominik after review of the technical/HSI requirement results.** The **197 records** comprise **180 approved, 12 Draft, 3 Deferred and 2 Withdrawn** in **24 clusters: 176 System, 17 Abstract Software and 4 Abstract Hardware**; the abstract types remain System-level. The R1.8 release approves exactly eight HSI contracts and one retained-mechanics refinement; the 12 earlier FSC rows remain Draft. All active approved records have provenance, a responsible target and planned verification; all 317 PD records have dispositions. **Completion point A is released; B remains open.** Numerical, characterization, safety/design and executed-verification gates remain as recorded. [Release scope and source snapshot](#req-001-r18-technical-hsi-requirements-release).
+**Current requirements baseline: REQ-001-R1.9, released 2026-09-13.** The **223 records** comprise **206 Approved, 12 Draft, 3 Deferred and 2 Withdrawn** in 28 clusters: 176 System, 22 Abstract Software, 4 Abstract Hardware and 21 Unit Requirements. R1.9 approves five ASW refinements, 21 Unit Requirements and DD-001 through DD-004; the R1.8 197-record baseline remains unchanged. The 12 FSC rows remain Draft. **Completion point A is released; B remains open.** Numerical, characterization, safety/design and executed-verification gates remain as recorded.
 
 The separately released [FC-001/002-R1.0 package](../Architecture/FC-001_Functional_Concept.md#release-record), dated 2026-09-13, defines 19 functions and references 12 Draft safety-derived System Requirements. Its [function trace](../Architecture/FC-002_Function_Trace.md) also covers the 11 separately approved safety goals. The concept release preserved those Draft requirement statuses and then-provisional logical ownership. The subsequent [architecture release](../Architecture/ARCH-001_System_Architecture.md#release-record) approves the reviewed component structure, interfaces and host roles. REQ-001-R1.8 separately approves the nine technical refinements without promoting the FSC rows; B remains open. R1.6 and HARA/SG release snapshots remain unchanged in Git.
 
@@ -10,7 +10,7 @@ The separately released [FC-001/002-R1.0 package](../Architecture/FC-001_Functio
 |---|---|
 | [PD-001](../../README.md) | Working Draft1.3: separate mobile-charger placement; R1.6 used Draft1.2 and historical PD-001-R1.1 remains its released baseline |
 | [ID-001](ID-001_Item_Definition.md) | Working Draft1.2: charger placement and architecture context; R1.6 used Draft1.1 and historical ID-001-R1.0 remains its released baseline |
-| [REQ-001](REQ-001_Requirements.md) | **Released R1.8:** 24 clusters including 12 Draft FSC rows and nine approved technical refinements; R1.6 remains the earlier 20-cluster baseline in Git |
+| [REQ-001](REQ-001_Requirements.md) | **Released R1.9:** 223-record/28-cluster catalogue; approves five ASW and 21 Unit records while preserving R1.8 scope |
 | [HARA-001 / SG-001 release](../Safety/HARA-001_Hazard_Analysis.md#release-record) | **Released HARA-001-R1.0 / SG-001-R1.0, 2026-09-12**: qualitative hazard analysis and 11 additional approved top-level safety goals, in a separate controlled baseline; the R1.6 counts above remain unchanged |
 | [DEC-001](DEC-001_Decisions_and_Open_Issues.md) | Working Draft1.7: records R1.8 technical-refinement evidence gates; Draft1.5 remains the R1.6 source snapshot; 19 workstream issues open, including WS-OI-020(B); WS-OI-004 closed |
 | [ARCH-001](../Architecture/ARCH-001_System_Architecture.md) | **Released ARCH-001-R1.0, 2026-09-13**: 38 logical components, composition, 13 interface contracts and realization mappings; Draft0.3/0.2 remain FC/R1.6 snapshots; approved requirement bindings unchanged |
@@ -30,6 +30,18 @@ All explicit parameters, assumptions, exclusions and evidence gates retain their
 Update the controlling decision and affected requirements/context together. Preserve stable IDs, assess technical changes and obtain applicable owner approval. The requirement Type/Target and stated allocation bindings are approved in REQ-001-R1.6; ARCH-001/002/003-R1.0 separately approves the reviewed architecture allocation; complete B coverage, sensing realization, safety derivation and vehicle verification retain their gates. Later source changes do not silently alter this released baseline; assess impacts and revise affected requirements under change control.
 
 ## Release and history
+
+### REQ-001-R1.9 — Detailed-design release
+
+On 2026-09-13 Dominik reviewed the detailed-design package and authorized: “I have reviewed the results with the help of your diagrams. I think we can leave it as is for now. Release it all.” This approves DD-001-R1.0 through DD-004-R1.0, `REQ-SYS-INP-001`, `REQ-SYS-TRQACC-001`, `REQ-SYS-PLT-001`, `REQ-SYS-USBPD-001`, `REQ-SYS-CHGCTRL-001`, and `UR-SET-001` through `UR-PLATFORM-CONTEXT-001` plus `UR-BMS-LINK-001` through `UR-CHARGE-CTRL-001`.
+
+**Scope:** 26 reviewed detailed-design records become Approved: five Abstract Software and 21 Unit Requirements. The catalogue is 223 records in 28 clusters: 206 Approved, 12 Draft, 3 Deferred and 2 Withdrawn (176 System, 22 Abstract Software, 4 Abstract Hardware and 21 Unit Requirements). R1.8's 197 records retain their bodies, targets and statuses. The 12 FSC rows, PD/ID/DEC/BAT Draft sources, released ARCH/FC/HARA/SG artifacts, physical design and verification remain outside this approval.
+
+**Release checks:** detailed-design unit/SC/LE and ASW/UR trace reviewed; all 17 earlier approved ASW rows have a detailed-design disposition; all 14 project SC types and 24 units are represented; local Markdown links, requirement counts, status/type/cluster reconciliation and derivation graph checked. DD-003's four and DD-004's five Mermaid blocks rendered successfully with Mermaid CLI 11.4.2. No code, hardware, vehicle, physical or executed verification is represented.
+
+**Remaining gates:** electrical, physical, numerical, timing, resource, sensing, retention integrity, protection, diagnostic coverage, system/vehicle verification and Completion B remain open. Requirements/design approval is not implementation or product acceptance.
+
+**Git snapshot:** this release commit is the authoritative package; Git preserves R1.8 and earlier releases without duplicate archives.
 
 ### ARCH-001/002/003-R1.0 — Component architecture release
 

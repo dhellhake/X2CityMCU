@@ -1,6 +1,6 @@
 # REQ-001 — Requirements
 
-**Released revision REQ-001-R1.8 — 2026-09-13.** Owner review approves nine technical refinements from ARCH-001/002/003-R1.0: eight single-target hardware/software interface contracts and one retained-mechanics allocation refinement. The 12 earlier safety-derived FSC System Requirements remain Draft. The 171 requirements approved in **REQ-001-R1.6** retain their text, Type/Target assignments and approval; its 3 Deferred and 2 Withdrawn records remain inactive. The current catalogue has 197 records across 24 clusters. HARA-001-R1.0 / SG-001-R1.0 remain separately released inputs; their 11 approved goals are outside this catalogue count. Completion A remains recorded; full allocation B and physical verification are not released. [Release history](README.md#release-and-history).
+**Released revision REQ-001-R1.9 — 2026-09-13.** Owner review approves the detailed-design package: five Abstract Software refinements and 21 Unit Requirements, with DD-001 through DD-004. The catalogue contains 223 records across 28 clusters: 206 Approved, 12 Draft, 3 Deferred and 2 Withdrawn. The 12 earlier FSC System Requirements remain Draft. The 197 R1.8 records retain their text, Type, Target and status; HARA-001-R1.0 / SG-001-R1.0 remain separately released inputs and their 11 approved goals are outside this catalogue count. Completion A remains recorded; full allocation B, physical verification and technical acceptance remain open. [Release history](README.md#release-and-history).
 
 Sources: [PD-001 Draft1.3](../../README.md), [item definition](ID-001_Item_Definition.md), [owner decisions/open issues](DEC-001_Decisions_and_Open_Issues.md). The owner reviewed and released PD-001-R1.1 on 2026-09-09, closing `WS-OI-004`; Rev1.0 remains in Git history. The subsequent REQ-001-R1.0 approval is recorded in [the workstream release record](README.md#release-and-history). The R1.6 sources PD1.2, ID1.1, DEC1.5, ARCH0.2 and BAT0.1 retain their separate Draft statuses in that baseline. Their exact source snapshots are preserved in the REQ-001-R1.6 release commit; reviewed source-derived obligations remain approved without globally releasing those supporting documents. Current PD1.3, ID1.2 and DEC1.7 incorporate the owner-selected separate mobile charger and retain the Draft technical-refinement evidence gates. Separately released ARCH-001/002/003-R1.0 ([release record](../Architecture/ARCH-001_System_Architecture.md#release-record), [hardware](../Architecture/ARCH-002_Hardware_Architecture.md), [software](../Architecture/ARCH-003_Software_Architecture.md)) now define logical composition, HW/SW realization, interfaces and deployment; [HARA/SG release](../Safety/HARA-001_Hazard_Analysis.md#release-record) supplies the safety-goal parents for the new Draft rows. The historical releases remain in Git. [BAT-001](../Battery/BAT-001_Selected_Pack_and_BMS.md) owns the selected battery/BMS source facts and derivations.
 
@@ -136,14 +136,14 @@ The following shared coverage applies where relevant; row cases add distinguishi
 
 ## Requirement clusters
 
-The **197 records** comprise **180 approved, 12 Draft, 3 Deferred and 2 Withdrawn** in 24 clusters: 176 System, 17 Abstract Software and 4 Abstract Hardware records. The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. Ten reclassified records retain their obligations. Cell-bank, BMS-information, battery-capability, fault-report, lighting, charging-policy and service-information children add explicit partial allocations. R1.6 obligations and stated allocations retain approval; R1.8 approves the HSI and retained-mechanics refinements, while the 12 FSC rows remain Draft and wider architecture and implementation evidence retain their distinct statuses. Unit requirements await detailed design; only their empty folder retains `.gitkeep`.
+The **223 records** comprise **206 Approved, 12 Draft, 3 Deferred and 2 Withdrawn**, in 28 clusters: 176 System, 22 Abstract Software, 4 Abstract Hardware and 21 Unit Requirement records. The 26 detailed-design records are approved in R1.9; the historical R1.8 197-record release remains unchanged (180 Approved, 12 Draft, 3 Deferred and 2 Withdrawn in 24 clusters: 176 System, 17 Abstract Software and 4 Abstract Hardware). The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. The 12 FSC rows remain Draft. Detailed-design approval does not close electrical, physical, timing, resource, retention, protection, diagnostic or verification gates.
 
 | Type | Folder | Records |
 |---|---|---:|
 | System Requirement | [System_Requirements](System_Requirements) | 176 |
-| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 17 |
+| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 22 |
 | Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 4 |
-| Unit Requirement | [Unit_Requirements](Unit_Requirements) | 0 |
+| Unit Requirement | [Unit_Requirements](Unit_Requirements) | 21 |
 
 | System Requirement cluster | IDs / scope | Records |
 |---|---|---:|
@@ -174,6 +174,10 @@ The **197 records** comprise **180 approved, 12 Draft, 3 Deferred and 2 Withdraw
 | [Lighting policy](Abstract_Software_Requirements/Lighting_Policy.md) | Abstract Software; current-session normal request and front/rear logical mode arbitration | 1 |
 | [Charging session policy](Abstract_Software_Requirements/Charging_Session_Policy.md) | Abstract Software; initial eligibility, completion/fault recovery and logical charge intent/status | 1 |
 | [Service information](Abstract_Software_Requirements/Service_Information.md) | Abstract Software; current diagnostic, qualification and identity information with producer/reset context | 1 |
+| [Detailed-design interface allocations](Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md) | Approved Abstract Software; input qualification, traction acceptance and platform-context allocations | 3 |
+| [Charging-adapter interface allocations](Abstract_Software_Requirements/Charging_Adapter_Interfaces.md) | Approved Abstract Software; USB-source and charge-control adaptation allocations | 2 |
+| [Control Unit Requirements](Unit_Requirements/Control_Unit_Requirements.md) | Approved Unit Requirements; setting, session, demand, HMI, lighting, input, traction and platform units | 9 |
+| [Energy and charging Unit Requirements](Unit_Requirements/Energy_Charging_Unit_Requirements.md) | Approved Unit Requirements; BMS, battery policy, charging, service, USB-source and charge-control units | 12 |
 
 ## PD obligation disposition
 
