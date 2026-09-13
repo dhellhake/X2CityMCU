@@ -2,16 +2,16 @@
 
 | Attribute | Value |
 |---|---|
-| Revision / release | 1.1 Draft, 2026-09-11; prior release ID-001-R1.0 in Git |
-| Status | Draft: incorporates owner-confirmed battery/BMS/UART, riding-temperature, charging and storage changes |
-| Upstream | [PD-001 Draft1.2](../../README.md); released PD-001-R1.1 retained in [Git](README.md#release-and-history) |
+| Revision / release | 1.2 Draft, 2026-09-13; prior release ID-001-R1.0 in Git |
+| Status | Draft: incorporates owner-confirmed battery/BMS/UART, riding-temperature, charging/storage and separate mobile-charger placement changes |
+| Upstream | [PD-001 Draft1.3](../../README.md); released PD-001-R1.1 retained in [Git](README.md#release-and-history) |
 | Related records | [Requirements](REQ-001_Requirements.md); [decisions/issues](DEC-001_Decisions_and_Open_Issues.md); [index](README.md) |
 
 ## 1. Purpose, authority and coverage
 
 This document defines operational context, boundary interactions and safety-analysis inputs for the **Modified BMW X2City personal electric scooter**. PD-001 owns project scope, component selections, mission/performance/environment, constraints and broader scenarios. DEC-001 owns current owner decisions and their supersession. REQ-001 owns approved obligations and planned verification; the summaries here introduce no additional requirements. Its [PD obligation disposition](REQ-001_Requirements.md#pd-obligation-disposition) records upstream retention and remaining derivation across the full PD scope.
 
-The original ID-001-R1.0 input baseline is released; this changed working revision is Draft. Unresolved engineering and verification work remains assigned downstream. Owner decisions, approved requirements, provisional assumptions and demonstrated evidence remain distinct. Historical interface/software observations do not verify the proposed vehicle behavior. The built pack/BMS selection is fixed; remaining architecture, sensing realization, algorithms, safety classifications/goals and technical safety mechanisms are downstream work.
+The original ID-001-R1.0 input baseline is released; this changed working revision is Draft. Unresolved engineering and verification work remains assigned downstream. Owner decisions, approved requirements, provisional assumptions and demonstrated evidence remain distinct. Historical interface/software observations do not verify the proposed vehicle behavior. The built pack/BMS selection is fixed; the released [safety goals](../Safety/SG-001_Safety_Goals.md) and [functional concept](../Architecture/FC-001_Functional_Concept.md) guide the separately released [component architecture](../Architecture/ARCH-001_System_Architecture.md). Sensing, algorithms, formal safety classification, technical mechanisms and physical acceptance remain downstream.
 
 ## 2. Item boundary, actors and interfaces
 
@@ -21,7 +21,7 @@ The item is the complete modified scooter in its riding configuration: retained 
 
 The **Electrical Propulsion and Control System (EPCS)** is the functional development system in PD-001 §4.4, covering energy storage/supervision, charging, distribution, motor/rider/brake control, vehicle supervision, HMI, lighting and diagnostics. It is not a particular controller board; development-responsibility interfaces do not remove provided components from the functional system.
 
-The same battery when removed, its mobile charger and removal/refitting interfaces remain inside the broader project/safety scope, outside the installed riding configuration. Electrically connected but unseated/unlocked is an intermediate handling configuration, not readiness. External charging is dry and off-vehicle only and must work without powered vehicle electronics; installed regeneration is separate. The upstream USB-C source/electrical installation is outside project development scope. Pack/charger allocation and final connections remain open. See PD-001 §§4–5, 11.8.
+The same battery when removed, its mobile charger and removal/refitting interfaces remain inside the broader project/safety scope, outside the installed riding configuration. Electrically connected but unseated/unlocked is an intermediate handling configuration, not readiness. External charging is dry and off-vehicle only and must work without powered vehicle electronics; installed regeneration is separate. The upstream USB-C source/electrical installation is outside project development scope. The owner places the USB-C socket, charging electronics and four-state indicator in a separate mobile adapter ([DEC-ARCH-001](DEC-001_Decisions_and_Open_Issues.md#dec-arch-001)); final connections and realization acceptance remain open. See PD-001 §§4–5, 11.8.
 
 ### 2.2 Actors and boundary interactions
 

@@ -1,71 +1,130 @@
-# ARCH-001 — Logical architecture and allocation
+# ARCH-001 — System architecture and logical component decomposition
 
-**Draft 0.3 — 2026-09-12.** Proposed architecture now incorporates the released [functional concept](FC-001_Functional_Concept.md) and [complete function trace](FC-002_Function_Trace.md) (FC-001/002-R1.0); the reviewed Draft0.2 input remains in the R1.6 source snapshot. [PD](../../README.md), [item definition](../Requirements/ID-001_Item_Definition.md) and [requirement model](../Requirements/REQ-001_Requirements.md#requirement-types-and-architecture-model) remain controlling. REQ-001-R1.6 approves the current requirement Type/Target assignments and allocation bindings referenced by those records. The wider architecture remains Draft and partial: unresolved decomposition, realization/hosts and interface/resource contracts are not released by the requirements approval. Completion point B remains open. The functional-concept release captures this Draft as its responsibility/interface snapshot; final logical boundaries, composition, structural/behavioural modelling and new allocation decisions remain provisional.
+**Released 1.0 — 2026-09-13; ARCH-001-R1.0.** Component architecture developed from released [FC-001-R1.0](FC-001_Functional_Concept.md), [FC-002-R1.0](FC-002_Function_Trace.md), REQ-001-R1.6 and HARA/SG-R1.0. [REQ-001](../Requirements/REQ-001_Requirements.md#requirement-types-and-architecture-model) controls the three-layer model. The 12 FSC refinements remain Draft. The owner-approved scope and retained gates are in the [release record](#release-record); ARCH0.3 remains frozen in the FC release commit `8a97f93427bfceb80151b2ba2b72af1ea087c88a`.
 
-## Configuration and logical responsibilities
+This document defines logical component types, composition and system interfaces. [ARCH-002](ARCH-002_Hardware_Architecture.md) defines physical HW assemblies, ports and configurations; [ARCH-003](ARCH-003_Software_Architecture.md) defines SW components, hosting, state ownership and interactions. The owner selected a separate mobile charger adapter in [DEC-ARCH-001](../Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-arch-001).
 
-LE-VEH and LE-EPCS remain overlapping scope views, not a containment pair. Installed riding uses the fitted EPCS functions; the same physical battery also participates in removed-pack charging and storage. The upstream USB-C source is external. A logical element is a responsibility, not a separate controller, PCB or enclosure.
+## Modelling and configuration rules
 
-| Logical element | Responsibility / configuration | Allocation and realization |
-|---|---|---|
-| <a id="le-mech"></a>LE-MECH | Retained independent steering and front/rear mechanical braking; installed vehicle, including off/fault/battery-removed conditions | **Hardware:** retained steering and mechanical brake assemblies, HC-MECH. Independence requirements allocated below; expanded-duty suitability remains unverified. |
-| <a id="le-set"></a>LE-SET | Requested, pending and active riding-setting policy | **Software:** SC-SET. Allocation covers four level and four speed-selection requirements. Source qualification, actual speed/cutoff and physical profile application remain system integration responsibilities. |
-| <a id="le-session"></a>LE-SESSION | Riding Ready eligibility, current-session inhibition and fresh restart assessment | **Software:** SC-SESSION. Consumes qualified information and self-test results; does not itself establish diagnostic coverage or physical inhibition. |
-| <a id="le-demand"></a>LE-DEMAND | Signed wheel-torque command policy and arbitration | **Software:** SC-DEMAND. Physical wheel torque, conversion/protection and measurement remain separate system responsibilities. |
-| <a id="le-hmi"></a>LE-HMI | VD18MT protocol interpretation and outgoing information | **Software:** SC-HMI. Electrical transport and selected-unit visible presentation require integration evidence. |
-| <a id="le-input"></a>LE-INPUT | Rider, motion, battery and temperature information qualification; electrical communication endpoints | **Partially allocated composite:** includes software LE-BMS-LINK; physical acquisition/transport protection, other interpretation and diagnostics still require decomposition and evidence. |
-| <a id="le-traction"></a>LE-TRACTION | Realize permitted signed torque with the installed motor; provide qualified applied-torque/motion information | **Unallocated composite:** inverter, motor-control software, motor and feedback interfaces. Motor/axle envelopes and fault-energy behavior remain open. |
-| <a id="le-energy"></a>LE-ENERGY | Same removable battery, distribution, permitted power/charge envelopes, residual loads and energy protection in applicable configurations | **Partially allocated composite:** contains LE-CELLS, supplied LE-BMS and software LE-BAT-POLICY; fixed 14S5P 35E bank, nominal 50.4 V, selected SP14S004P14S50A/UART. Distribution, thermal/protection coordination and remaining information responsibilities are open. |
-| <a id="le-aux"></a>LE-AUX | Physical front/rear lighting, including dim/full rear operation and protected auxiliary supply | **Partially allocated composite:** software LE-LIGHT-POLICY selects logical modes; lamp driving, startup/reset output, retained lamps and protected supply still require allocation and electrical/visibility qualification. |
-| <a id="le-charge"></a>LE-CHARGE | Dry off-vehicle charging from the owner-selected 9 V / 2 A minimum up to permitted 140 W USB input; source qualification, protection and visible status | **Partially allocated composite:** LE-CHARGE-POLICY owns session/indication policy; source qualification, physical conversion/protection/indication, pack-versus-charger deployment and power/reset domains remain open. |
-| <a id="le-integration"></a>LE-INTEGRATION | Vehicle mounting, retention, routing, access, weather exposure and mechanical compatibility; human-access/interface integration also covers the detached pack and charger, including passive and energized surface/contact exposure | **Unallocated composite:** [BAT-003](../Requirements/System_Requirements/Battery_Handling_and_Charging.md#req-sys-bat-003) assigns accessible-interface integration acceptance here; physical contact/protection realization and other integration responsibilities remain to be decomposed. |
-| <a id="le-service"></a>LE-SERVICE | Current diagnostic/configuration access, controlled servicing and return to operation | **Partially allocated composite:** LE-SERVICE-INFO owns current diagnostic information presentation. Physical access/isolation, configuration-change controls, tools and service procedures remain open. |
-| <a id="le-cells"></a>LE-CELLS | Fixed electrochemical storage bank, part of LE-ENERGY in fitted/removed configurations | **Hardware:** HC-CELLS, owner-built 14S5P / 70 Samsung INR18650-35E cells. Initial bay fit confirmed; integrated acceptance remains open. |
-| <a id="le-bms"></a>LE-BMS | Supplied battery monitoring, balancing and protective switching within LE-ENERGY | **Supplied composite:** JBD SP14S004P14S50A; HC-BMS electronics hosting SC-BMS vendor firmware. Selection is fixed; actual revision/settings and interface acceptance remain open. Internal implementation is vendor-supplied; do not invent an entirely hardware leaf or internal software units. |
-| <a id="le-bms-link"></a>LE-BMS-LINK | UART information interpretation/qualification within LE-INPUT; applicable riding/charging consumer configurations | **Software:** SC-BMS-LINK. Physical UART/ground/power integration and valid source measurements remain outside this leaf. Final host and removed-pack deployment remain open. |
-| <a id="le-bat-policy"></a>LE-BAT-POLICY | Battery capability, operation-specific restriction and fault-information policy within LE-ENERGY | **Software:** SC-BAT-POLICY. Consumes qualified observations/configuration and provides information to riding/charging consumers; physical regulation, protection and their diagnostic coverage remain system responsibilities. |
-| <a id="le-light-policy"></a>LE-LIGHT-POLICY | Retain current-session normal-light requests and arbitrate front/rear logical modes within LE-AUX | **Software:** SC-LIGHT-POLICY. Consumes accepted VD18MT commands and qualified lever/actual-braking states; physical lamp output, power/reset continuity and supply protection remain outside this leaf. |
-| <a id="le-charge-policy"></a>LE-CHARGE-POLICY | Initial eligibility, completion/fault recovery, charge-enable intent and four logical charging modes within LE-CHARGE | **Software:** SC-CHARGE-POLICY. Consumes qualified source/battery/session/activity evidence; physical current, protection, indication and state continuity remain integration responsibilities. Host must support removed-pack use; none is selected. |
-| <a id="le-service-info"></a>LE-SERVICE-INFO | Current diagnostic/self-test and configuration information within LE-SERVICE | **Software:** SC-SERVICE-INFO. Preserves producer/reset context, validity and policy-state distinctions; does not grant operation or perform every diagnostic. Transport, physical access and riding/detached-charge hosts remain open. |
+A logical component has a bounded responsibility, owned subparts or state, and interfaces to other components. Functions from FC-001 are allocated behaviour; they are not interchangeable with component identities. Containment, connection, function allocation and software hosting are distinct relations. This follows the structural/behavioural and allocation distinctions in the [OMG SysML overview](https://www.omg.org/sysml/sysmlv1/); these Markdown/Mermaid views use the relations declared here without claiming a tool-native SysML model.
 
-The nine project software leaves belong to the EPCS control responsibility; their names do not prescribe separate tasks, processes or executables. HC-MECH is the supplied mechanical realization, not a new brake design. The given passive coded brake harness is a supplied physical interface to LE-INPUT; its topology and coding remain fixed by the [released reference](../Requirements/evidence/Brake_Input_Reference.md). Its sensing realization remains open.
+The logical type catalogue decomposes the project equipment model. LE-EPCS is the functional electrical-system partition; LE-MECH and LE-INTEGRATION are the retained mechanical and structural/interface partitions. **LE-VEH remains the installed-vehicle scope view**, using applicable parts and the fitted pack; it does not contain the complete LE-EPCS scope, which also includes the separate charger. Neither root requirement scope is retargeted or made a new parent of the other.
+
+Types are not physical instances. A component type may have vehicle and charger software instances, with independent state and local hosting. The hardware model has exactly one removable pack instance: installation connects it to the vehicle, removal disconnects it, and detached charging connects that same pack to the mobile adapter. This is configuration/attachment, not duplicate battery containment.
+
+The 19 existing LE identities and all approved requirement Type/Target bindings are preserved. The component boundaries and leaf allocations are approved within this architecture baseline, subject to their recorded engineering acceptance gates. A logical HW leaf can be realized by cooperating HW parts; a SW leaf may have several deployed instances of its component type. Supplied assemblies retain opaque vendor software and boundary acceptance rather than invented project units. Device schematics, code units and numerical parameters remain downstream.
+
+## Logical composition
+
+Edges below mean **composed of**, not communication or power flow. The table gives every immediate parent, including children omitted from the overview.
+
+```mermaid
+flowchart TB
+    Context["Project equipment model"] -->|contains| EPCS["LE-EPCS"]
+    Context -->|contains| Mech["LE-MECH: steering and brakes"]
+    Context -->|contains| Integration["LE-INTEGRATION: carrier, enclosures, harness"]
+    EPCS -->|contains| Riding["LE-RIDING"]
+    EPCS -->|contains| Input["LE-INPUT"]
+    EPCS -->|contains| Traction["LE-TRACTION"]
+    EPCS -->|contains| Energy["LE-ENERGY"]
+    EPCS -->|contains| Aux["LE-AUX"]
+    EPCS -->|contains| Charge["LE-CHARGE"]
+    EPCS -->|contains| Compute["LE-COMPUTE"]
+    EPCS -->|contains| Service["LE-SERVICE"]
+    Riding -->|contains| Set["LE-SET"]
+    Riding -->|contains| Session["LE-SESSION"]
+    Riding -->|contains| Demand["LE-DEMAND"]
+    Riding -->|contains| HMI["LE-HMI"]
+```
+
+**Kinds:** Composite = decomposed project component; HW/SW = explicitly allocated logical leaf; Supplied = provided assembly with qualified external behaviour. Realization links identify component types, not satisfaction evidence. Physical parts such as enclosures/interfaces may realize several logical roles; their single physical containment owner is defined in ARCH-002.
+
+| Logical component | Immediate parent | Kind | Boundary / owned responsibility | Realization |
+|---|---|---|---|---|
+| <a id="le-riding"></a>LE-RIDING | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Riding supervisor; owns settings, driving session, demand and HMI adapter parts. | Owned children below |
+| <a id="le-set"></a>LE-SET | [LE-RIDING](#le-riding) | SW | Requested, pending and active riding-setting policy | [SC-SET](ARCH-003_Software_Architecture.md#sc-set) |
+| <a id="le-session"></a>LE-SESSION | [LE-RIDING](#le-riding) | SW | Riding Ready eligibility, current-session inhibition and fresh restart assessment | [SC-SESSION](ARCH-003_Software_Architecture.md#sc-session) |
+| <a id="le-demand"></a>LE-DEMAND | [LE-RIDING](#le-riding) | SW | Signed wheel-torque command policy and arbitration | [SC-DEMAND](ARCH-003_Software_Architecture.md#sc-demand) |
+| <a id="le-hmi"></a>LE-HMI | [LE-RIDING](#le-riding) | SW | VD18MT protocol interpretation and outgoing information | [SC-HMI](ARCH-003_Software_Architecture.md#sc-hmi) |
+| <a id="le-input"></a>LE-INPUT | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Rider, motion, battery and temperature information qualification; electrical communication endpoints | Owned children below |
+| <a id="le-rider-devices"></a>LE-RIDER-DEVICES | [LE-INPUT](#le-input) | Supplied | Fixed VD18MT, accelerator and passive coded brake electrical network; opaque display firmware. Mechanical lever force remains LE-MECH. | [HC-RIDER](ARCH-002_Hardware_Architecture.md#hc-rider), [SC-VD18MT](ARCH-003_Software_Architecture.md#sc-vd18mt) |
+| <a id="le-input-hw"></a>LE-INPUT-HW | [LE-INPUT](#le-input) | HW | Protected physical acquisition and host communication endpoints; battery/charger references cross the qualified interface boundary. | [HC-INPUT-FE](ARCH-002_Hardware_Architecture.md#hc-input-fe), [HC-PACK-IF](ARCH-002_Hardware_Architecture.md#hc-pack-if), [HC-CHARGE-IF](ARCH-002_Hardware_Architecture.md#hc-charge-if) |
+| <a id="le-input-qual"></a>LE-INPUT-QUAL | [LE-INPUT](#le-input) | SW | Local observation qualification, coherence, source status and self-tests; preserves BMS/traction producer provenance. | [SC-INPUT-QUAL](ARCH-003_Software_Architecture.md#sc-input-qual) |
+| <a id="le-bms-link"></a>LE-BMS-LINK | [LE-INPUT](#le-input) | SW | UART information interpretation/qualification within LE-INPUT; applicable riding/charging consumer configurations | [SC-BMS-LINK](ARCH-003_Software_Architecture.md#sc-bms-link) |
+| <a id="le-traction"></a>LE-TRACTION | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Realize permitted signed torque with the installed motor; provide qualified applied-torque/motion information | Owned children below |
+| <a id="le-motor-ctrl"></a>LE-MOTOR-CTRL | [LE-TRACTION](#le-traction) | SW | Command acceptance, motor control and actual-output observation with domain self-tests. | [SC-TRACTION-CTRL](ARCH-003_Software_Architecture.md#sc-traction-ctrl) |
+| <a id="le-traction-hw"></a>LE-TRACTION-HW | [LE-TRACTION](#le-traction) | HW | Physical traction conversion, motor, feedback and assigned protective output behavior. | [HC-TRACTION-POWER](ARCH-002_Hardware_Architecture.md#hc-traction-power), [HC-MOTOR](ARCH-002_Hardware_Architecture.md#hc-motor) |
+| <a id="le-energy"></a>LE-ENERGY | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Same removable battery, distribution, permitted power/charge envelopes, residual loads and energy protection in applicable configurations | Owned children below |
+| <a id="le-cells"></a>LE-CELLS | [LE-ENERGY](#le-energy) | HW | Fixed electrochemical storage bank, part of LE-ENERGY in fitted/removed configurations | [HC-CELLS](ARCH-002_Hardware_Architecture.md#hc-cells) |
+| <a id="le-bms"></a>LE-BMS | [LE-ENERGY](#le-energy) | Supplied | Supplied battery monitoring, balancing and protective switching within LE-ENERGY | [HC-BMS](ARCH-002_Hardware_Architecture.md#hc-bms), [SC-BMS](ARCH-003_Software_Architecture.md#sc-bms) |
+| <a id="le-bat-policy"></a>LE-BAT-POLICY | [LE-ENERGY](#le-energy) | SW | Battery-capability policy; charge/discharge envelopes and restrictions. Vehicle instance owns reached-10% operating restriction separately from failure history. | [SC-BAT-POLICY](ARCH-003_Software_Architecture.md#sc-bat-policy) |
+| <a id="le-energy-path"></a>LE-ENERGY-PATH | [LE-ENERGY](#le-energy) | HW | Protected power distribution/coupling; physical path, residual-load and generated-energy treatment with drive/charger. | [HC-PACK-IF](ARCH-002_Hardware_Architecture.md#hc-pack-if), [HC-ENERGY-DIST](ARCH-002_Hardware_Architecture.md#hc-energy-dist) |
+| <a id="le-aux"></a>LE-AUX | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Physical front/rear lighting, including dim/full rear operation and protected auxiliary supply | Owned children below |
+| <a id="le-light-policy"></a>LE-LIGHT-POLICY | [LE-AUX](#le-aux) | SW | Retain current-session normal-light requests and arbitrate front/rear logical modes within LE-AUX | [SC-LIGHT-POLICY](ARCH-003_Software_Architecture.md#sc-light-policy) |
+| <a id="le-aux-power"></a>LE-AUX-POWER | [LE-AUX](#le-aux) | HW | Protected vehicle auxiliary supply; controller/HMI/lamp power and startup/shutdown interactions. | [HC-AUX-POWER](ARCH-002_Hardware_Architecture.md#hc-aux-power) |
+| <a id="le-lamp-hw"></a>LE-LAMP-HW | [LE-AUX](#le-aux) | HW | Physical lighting: driver/default output and retained front/rear lamps. | [HC-LAMP-DRIVE](ARCH-002_Hardware_Architecture.md#hc-lamp-drive), [HC-LAMPS](ARCH-002_Hardware_Architecture.md#hc-lamps) |
+| <a id="le-charge"></a>LE-CHARGE | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Detached charger: USB negotiation, session/control and physical charging/indication parts, in the separate mobile adapter. | Owned children below |
+| <a id="le-charge-policy"></a>LE-CHARGE-POLICY | [LE-CHARGE](#le-charge) | SW | Initial eligibility, completion/fault recovery, charge-enable intent and four logical charging modes within LE-CHARGE | [SC-CHARGE-POLICY](ARCH-003_Software_Architecture.md#sc-charge-policy) |
+| <a id="le-usb-pd"></a>LE-USB-PD | [LE-CHARGE](#le-charge) | SW | USB source-negotiation adapter; qualified contract/source/cable information and source events. | [SC-USB-PD](ARCH-003_Software_Architecture.md#sc-usb-pd) |
+| <a id="le-charge-ctrl"></a>LE-CHARGE-CTRL | [LE-CHARGE](#le-charge) | SW | Charge regulator; permitted intent within the charge envelope and qualified actual-transfer observations. | [SC-CHARGE-CTRL](ARCH-003_Software_Architecture.md#sc-charge-ctrl) |
+| <a id="le-charge-hw"></a>LE-CHARGE-HW | [LE-CHARGE](#le-charge) | HW | Charger electrical assembly; USB input, physical conversion/output coupling and four-state indication. | [HC-USB-INPUT](ARCH-002_Hardware_Architecture.md#hc-usb-input), [HC-CHARGE-POWER](ARCH-002_Hardware_Architecture.md#hc-charge-power), [HC-CHARGE-IF](ARCH-002_Hardware_Architecture.md#hc-charge-if), [HC-CHARGE-INDICATOR](ARCH-002_Hardware_Architecture.md#hc-charge-indicator) |
+| <a id="le-compute"></a>LE-COMPUTE | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Execution platform; host resources and platform services for vehicle and charger instances. | Owned children below |
+| <a id="le-compute-hw"></a>LE-COMPUTE-HW | [LE-COMPUTE](#le-compute) | HW | Controller hosts: power/reset, I/O and qualified retained-state resources; separate vehicle and charger instances. | [HC-CONTROLLER](ARCH-002_Hardware_Architecture.md#hc-controller), [HC-CHARGE-HOST](ARCH-002_Hardware_Architecture.md#hc-charge-host) |
+| <a id="le-platform"></a>LE-PLATFORM | [LE-COMPUTE](#le-compute) | SW | Peripheral transport, execution/timebase, reset-context and retained-state access for domain components. | [SC-PLATFORM](ARCH-003_Software_Architecture.md#sc-platform) |
+| <a id="le-service"></a>LE-SERVICE | [LE-EPCS](../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Service endpoints: current information presentation and physical access provisions. Maintainer procedures are external collaborators. | Owned children below |
+| <a id="le-service-info"></a>LE-SERVICE-INFO | [LE-SERVICE](#le-service) | SW | Current diagnostic/self-test and configuration information within LE-SERVICE | [SC-SERVICE-INFO](ARCH-003_Software_Architecture.md#sc-service-info) |
+| <a id="le-service-access"></a>LE-SERVICE-ACCESS | [LE-SERVICE](#le-service) | HW | Service access in host interfaces/enclosures; access and actual-isolation verification boundaries remain configuration-specific. | [HC-INPUT-FE](ARCH-002_Hardware_Architecture.md#hc-input-fe), [HC-CHARGE-IF](ARCH-002_Hardware_Architecture.md#hc-charge-if), [HC-VEH-ENCLOSURE](ARCH-002_Hardware_Architecture.md#hc-veh-enclosure), [HC-PACK-ENCLOSURE](ARCH-002_Hardware_Architecture.md#hc-pack-enclosure), [HC-CHARGE-ENCLOSURE](ARCH-002_Hardware_Architecture.md#hc-charge-enclosure) |
+| <a id="le-mech"></a>LE-MECH | Model context | HW | Retained independent steering and front/rear mechanical braking; installed vehicle, including off/fault/battery-removed conditions | [HC-MECH](ARCH-002_Hardware_Architecture.md#hc-mech) |
+| <a id="le-integration"></a>LE-INTEGRATION | Model context | Composite | Carrier, enclosure and harness assemblies; physical support, retention, access, routing and environmental compatibility. | Owned children below |
+| <a id="le-carrier-hw"></a>LE-CARRIER-HW | [LE-INTEGRATION](#le-integration) | HW | Carrier and attachment interfaces: frame/running gear, original tray/lock and motor/pack support, without duplicating the motor. | [HC-CARRIER](ARCH-002_Hardware_Architecture.md#hc-carrier) |
+| <a id="le-enclosure-hw"></a>LE-ENCLOSURE-HW | [LE-INTEGRATION](#le-integration) | HW | Vehicle, pack and charger enclosures/mounting/thermal interfaces; physical access/contact/environment provisions. | [HC-VEH-ENCLOSURE](ARCH-002_Hardware_Architecture.md#hc-veh-enclosure), [HC-PACK-ENCLOSURE](ARCH-002_Hardware_Architecture.md#hc-pack-enclosure), [HC-CHARGE-ENCLOSURE](ARCH-002_Hardware_Architecture.md#hc-charge-enclosure) |
+| <a id="le-harness-hw"></a>LE-HARNESS-HW | [LE-INTEGRATION](#le-integration) | HW | Vehicle harness: routing, flex/strain/abrasion protection and connection interfaces. Pack/charger internal connections remain with those assemblies. | [HC-VEH-HARNESS](ARCH-002_Hardware_Architecture.md#hc-veh-harness) |
+
+### Structural connections and port contracts
+
+This view shows component exchange through canonical IF-A contracts; containment is defined above. Physical energy and qualified information are different exchanges. Detached charging and installed propulsion are different configurations.
 
 ```mermaid
 flowchart LR
-    Rider["Rider / VD18MT / fixed coded brake harness"] --> Input["LE-INPUT: qualification"]
-    Input --> Set["LE-SET: settings"]
-    Input --> Session["LE-SESSION: eligibility"]
-    Input --> Demand["LE-DEMAND: torque request"]
-    Set --> Demand
-    Session --> Demand
-    Demand --> Traction["LE-TRACTION: physical torque"]
-    Traction --> Input
-    Energy["LE-ENERGY: same removable battery / power"] <--> Traction
-    Cells["LE-CELLS / HC-CELLS: fixed 14S5P"] --> BMS["LE-BMS: supplied hardware + firmware"]
-    BMS <--> Link["LE-BMS-LINK / SC-BMS-LINK: UART information"]
-    Link --> Input
-    Input --> BatPolicy["LE-BAT-POLICY / SC-BAT-POLICY: battery capability"]
-    BatPolicy --> Session
-    BatPolicy --> Demand
-    BMS --> Energy
-    Energy --> Input
-    Input --> HMI["LE-HMI: VD18MT information"]
-    Session --> HMI
-    HMI --> LightPolicy["LE-LIGHT-POLICY / SC-LIGHT-POLICY: light modes"]
-    Input --> LightPolicy
-    LightPolicy --> Aux["LE-AUX: physical lighting"]
-    Source["External USB-C source"] --> Charge["LE-CHARGE: removed-pack charging"]
-    Charge <--> Energy
-    BatPolicy --> ChargePolicy["LE-CHARGE-POLICY / SC-CHARGE-POLICY: session and status"]
-    ChargePolicy <-->|qualified conditions / enable and status intent| Charge
-    Input --> ServiceInfo["LE-SERVICE-INFO / SC-SERVICE-INFO: current diagnostics"]
-    Session --> ServiceInfo
-    ChargePolicy --> ServiceInfo
-    ServiceInfo --> Maintainer["Maintainer / qualified service access"]
-    Rider --> Mech["LE-MECH: independent mechanical steering / brakes"]
+    Input["LE-INPUT"] -->|"IF-A-001/002: observations and requests"| Riding["LE-RIDING"]
+    Riding -->|"IF-A-004: authority and signed demand"| Drive["LE-TRACTION"]
+    Drive -->|"IF-A-005: actual-output observation"| Input
+    Energy["LE-ENERGY"] -->|"IF-A-003: charge/discharge envelope"| Riding
+    Energy <-->|"IF-A-010: physical energy"| Drive
+    Riding -->|"IF-A-006: normal-light request"| Aux["LE-AUX"]
+    Input -->|"IF-A-005/006: braking facts"| Aux
+    Energy <-->|"IF-A-010: detached charge energy"| Charge["LE-CHARGE"]
+    Input -->|"IF-A-009/003: qualified BMS information"| Charge
+    Energy -->|"IF-A-003: charge envelope"| Charge
+    Charge -->|"IF-A-007/008: current charge diagnostics"| Service["LE-SERVICE"]
+    Riding -->|"IF-A-008: current diagnostic state"| Service
 ```
 
-Arrows show principal interactions only. Mechanical braking remains effective without EPCS operation; a software output is not proof of physical output. Rear Full is required for qualified lever actuation or active electrical braking, and for unqualified lever or actual-braking information under LGT-009. A torque request alone does not establish actual braking.
+Information-port types carry their value plus validity, source age, qualification uncertainty and reset/operation context where applicable. These are semantic fields, not a new wire protocol. Physical ports declare energy/force/reference direction, accessible states and applicable limits. Physical and software component contracts refine these boundaries in ARCH-002/003; one mating connector may carry several logical channels.
+
+| IF-A family | Port type and endpoint boundary |
+|---|---|
+| IF-A-001/002 | Observation and setting-request records: LE-INPUT/LE-HMI to setting/session/demand/light consumers; physical rest and current-startup receipt explicit |
+| IF-A-003/009 | Battery observation, capability and vendor-UART ports: actual BMS/source to interpretation to capability policy to consumers; electrical endpoint and data validity separate |
+| IF-A-004/005 | Authority and signed wheel-demand input; actual-traction/braking output: LE-RIDING / LE-TRACTION / LE-INPUT, with expiry and producer context |
+| IF-A-006 | HMI information and lighting intent: selected reports/protocol fields and front/rear commands; physical lamp output is a separate result |
+| IF-A-007/008 | Charge-event/enable/activity and service records: local source/charger/session components and current diagnostic presentation |
+| IF-A-010/011 | Physical power and protection ports: voltage/current/reference/thermal boundary plus assigned request/status/action; data status is not physical energy control |
+| IF-A-012/013 | Mechanical force/motion/attachment and accessible-interface ports: steering/brakes/wheels, carrier/pack/enclosures/harness and handler/maintainer |
+
+## Architecture decisions and limits
+
+| Decision / status | Selected decomposition and remaining acceptance |
+|---|---|
+| Shared vehicle host — approved allocation, OI-044 acceptance open | HC-CONTROLLER hosts supervision, observation qualification and motor control. Components retain explicit exchange and state ownership. This avoids extra vehicle host/interconnect boundaries; prove scheduling/resources and common-cause/fault response before accepting sharing. A separate supervisory processor remains a change option if evidence rejects it. |
+| Separate mobile charger — owner selected, DEC-ARCH-001 | HC-CHARGER contains USB-C input, conversion, four-state indicator and HC-CHARGE-HOST. Detached charging uses that host and the pack/BMS, with no vehicle-host or VD18MT dependency. |
+| Shared code, separate state — approved allocation | SC-BMS-LINK, SC-BAT-POLICY, SC-INPUT-QUAL, SC-PLATFORM and SC-SERVICE-INFO have local V/C instances where used. Type reuse implies neither a live cross-host service nor shared session memory. |
+| Single active pack data endpoint — approved boundary, OI-041/046 | The one BMS interface is coupled to the vehicle or charger in its applicable configuration. No unqualified parallel UART masters or exposed vendor connector. Mating, reference/protection and electrical realization remain unselected. |
+| Physical domain protection — approved responsibility, HA-OI-002–005 | Pack/BMS, vehicle distribution/drive and charger conversion receive protective responsibilities with the controller absent/faulted. A software partition or second host proves no independence; coverage and mechanisms need evidence. |
+| Retention separated from fault history — approved ownership, WS-OI-017 / OI-057 | Vehicle battery policy owns reached-10% inhibition; charger session policy owns completion/initial eligibility. Host retention provisions preserve those states through relevant resets. Fault history/old indication follows released reset rules. Integrity, connection-event evidence and battery-handling/recovery continuity require acceptance. |
+| Structural/service scope — approved decomposition | LE-INTEGRATION decomposes into carrier, enclosures and harness. Identified interface/enclosure parts provide service access. Inspection, isolation verification and reassembly are maintainer activities using those parts, not software components. |
+
+The fixed brake interface remains one passive two-wire network with four valid codes and ambiguous/unknown cases. HC-MECH retains mechanical braking independently of its interpretation. Naming components selects no new sensor/channel, lock detector, connector pinout, motor algorithm, charge voltage, isolation topology or numerical safety bound.
 
 ## Allocation records and component contracts
 
@@ -83,13 +142,13 @@ Unchanged requirements may be reclassified without invented parents. New childre
 | [REQ-SYS-BMSPOL-001](../Requirements/Abstract_Software_Requirements/Battery_Capability_Policy.md#req-sys-bmspol-001) → LE-BAT-POLICY | SC-BAT-POLICY produces qualified battery envelopes, permission/restriction reasons and battery-fault information | Partial contribution to BMS-001/006–008; physical limit enforcement, independent protection, source qualification and session behavior remain system/other-component obligations. |
 | [REQ-SYS-CTL-004](../Requirements/Abstract_Software_Requirements/Settings_and_Control_Policy.md#req-sys-ctl-004) → LE-SESSION | SC-SESSION selects/retains the fault-group report, using the lowest assigned code only for indistinguishable earliest ties | Physical reaction applies to every recognized fault; recognition timing/coverage and visible HMI acceptance remain open. |
 | [REQ-SYS-LGTPOL-001](../Requirements/Abstract_Software_Requirements/Lighting_Policy.md#req-sys-lgtpol-001) → LE-LIGHT-POLICY | SC-LIGHT-POLICY retains normal request and selects independent front/rear modes | Partial contribution to LGT-001–009. Actual brightness, unqualified-state power-on/reset behavior before software execution and protected continuity remain physical integration obligations. |
-| [REQ-SYS-CHGPOL-001](../Requirements/Abstract_Software_Requirements/Charging_Session_Policy.md#req-sys-chgpol-001) → LE-CHARGE-POLICY | SC-CHARGE-POLICY maintains charge eligibility/completion, recovery and logical enable/status | Partial contribution to CHG-001/003–010. Source/initial-SOC qualification, physical current/protection/indication, reset-state continuity and off-vehicle hosting remain open. |
+| [REQ-SYS-CHGPOL-001](../Requirements/Abstract_Software_Requirements/Charging_Session_Policy.md#req-sys-chgpol-001) → LE-CHARGE-POLICY | SC-CHARGE-POLICY maintains charge eligibility/completion, recovery and logical enable/status | Partial contribution to CHG-001/003–010. Source/initial-SOC qualification, physical current/protection/indication and reset-state continuity remain open; ARCH-003 now assigns the off-vehicle host. |
 | [REQ-SYS-SVCIF-001](../Requirements/Abstract_Software_Requirements/Service_Information.md#req-sys-svcif-001) → LE-SERVICE-INFO | SC-SERVICE-INFO exposes current observations, identity, qualification and state with producer/reset context | Partial contribution to SYS-SVC-001. Source accuracy/diagnostics, service transport/tools, physical access/isolation and return-to-operation acceptance remain system responsibilities. |
-| [REQ-SYS-INT-004](../Requirements/System_Requirements/Interface_Qualification.md#req-sys-int-004) → LE-TRACTION | System command-authority contract; realization remains mixed/unallocated | Authorization withdrawal and command validity must propagate through realization; software zero command alone does not establish physical inhibition, especially with failed output stages. |
+| [REQ-SYS-INT-004](../Requirements/System_Requirements/Interface_Qualification.md#req-sys-int-004) → LE-TRACTION | System command-authority contract; Architecture allocation divides command acceptance into SC-TRACTION-CTRL and physical output into HC-TRACTION-POWER/HC-MOTOR | Authorization withdrawal and command validity must propagate through realization; software zero command alone does not establish physical inhibition, especially with failed output stages. |
 
 [BAT-001](../Battery/BAT-001_Selected_Pack_and_BMS.md) fixes component evidence and derived envelopes. HC-BMS and its hosted SC-BMS are a purchased assembly, not project-developed BMS firmware; system interface/integration acceptance substitutes for invented vendor-internal derivation. [Battery integration requirements](../Requirements/System_Requirements/Battery_Integration.md) target the integrating LE-ENERGY composite. Protect the cell bank against its own limits even where the BMS family defaults permit more. BMS recovery does not release system-session inhibition.
 
-Each software component has the corresponding logical leaf's input/output contract below. Component execution order, scheduling, resource budgets and deployment must satisfy derived end-to-end bounds. Software hosting is **unresolved for the final vehicle**. The [WeAct STM32H723VGT6 documentation](../STM32H723VGT6/README.md) identifies the supported development board; it is not evidence of final vehicle power, environmental, timing or fault qualification. Existing HSI assumptions are not silently adopted. No detailed software units are defined.
+[ARCH-003](ARCH-003_Software_Architecture.md) defines software components and their selected host roles; [ARCH-002](ARCH-002_Hardware_Architecture.md) owns physical assemblies and ports. The vehicle host combines supervisory and motor-control execution; the mobile adapter has its own host. Processor/device selection and acceptance remain open for the final product. Execution order, scheduling and resource budgets must satisfy the end-to-end contracts below. The [WeAct STM32H723VGT6 documentation](../STM32H723VGT6/README.md) identifies the supported development board; it is not evidence of final vehicle power, environmental, timing or fault qualification. Existing HSI assumptions are not silently adopted. No detailed software units are defined.
 
 | Interface | Producer → consumer | Contract / source | Open acceptance and gate |
 |---|---|---|---|
@@ -117,7 +176,7 @@ The [battery qualification/event matrix](../Requirements/System_Requirements/Bat
 | Riding-controller normal/unexpected restart | Clear past-failure history and repeat all current-startup checks/Ready guards. Battery-dependent qualification follows BMS-006; a still-present/new fault creates fresh inhibition. |
 | Charging-controller unexpected restart | Discard old fault history/indication and show Waiting during fresh checks; newly recognized faults take priority. Completion/initial eligibility persist and require qualification; no charge until fresh checks and conditions permit. No new charge session merely from internal reset (DEC-CHG-003). |
 | Physical charging reconnection or qualified USB power cycle | Opens a new initial charge-need assessment subject to checks and valid conditions. If initially full, remain complete despite a later SOC decline. |
-| Shared power/reset event | Identify every affected domain and satisfy all applicable rows; a shared MCU or rail must not conflate their different state lifetimes. Physical domains/retention mechanism remain unselected. |
+| Shared power/reset event | Identify every affected domain and satisfy all applicable rows; a shared MCU or rail must not conflate their different state lifetimes. Vehicle, charger and supplied-BMS host domains are distinct; shared supply disturbances still require assessment. Retention mechanisms and electrical reset behavior require qualification. |
 
 The [speed-cutoff budget](../Requirements/System_Requirements/Interface_Qualification.md#speed-cutoff-uncertainty-and-response-budget) connects source error/age and zero-command delay to the active cutoff without selecting a threshold. The [input/coherence and transport contracts](../Requirements/System_Requirements/Interface_Qualification.md#information-coherence-and-command-authority) define current-context authority and nominal wire-time contributions. The [startup/runtime catalogue](../Requirements/System_Requirements/Power_Startup_and_Faults.md#startup-and-runtime-fault-scope) assigns diagnostic contributors and coverage gaps. Neither selects a sensing circuit, execution monitor or completed protective architecture.
 
@@ -125,7 +184,7 @@ For every numerical or temporal contract, define its reference, valid range, unc
 
 ## Functional-concept binding
 
-[FC-001](FC-001_Functional_Concept.md#function-contracts) defines 19 functions; [FC-002](FC-002_Function_Trace.md) traces every requirement and safety goal to their contributions. These are functional views of existing logical responsibilities, not new realization components. Current R1.6 Type/Target bindings remain unchanged. Draft FSC rows each state their responsible logical target; contributors do not become additional targets. FSC-nnn abbreviates the unique catalogue ID ending in FSC-nnn; the trace provides its full ID, canonical requirement and safety-goal parents.
+[FC-001](FC-001_Functional_Concept.md#function-contracts) defines 19 functions; [FC-002](FC-002_Function_Trace.md) traces every requirement and safety goal to their contributions. Those released functional views retain their contribution trace; the component types and realizations above now refine their structure. Current R1.6 Type/Target bindings remain unchanged. Draft FSC rows each state their responsible logical target; contributors do not become additional targets. FSC-nnn abbreviates the unique catalogue ID ending in FSC-nnn; the trace provides its full ID, canonical requirement and safety-goal parents.
 
 | Logical owner | Coordinated functions / allocated contribution |
 |---|---|
@@ -133,14 +192,16 @@ For every numerical or temporal contract, define its reference, valid range, unc
 | LE-SET / LE-SESSION / LE-DEMAND | F-002 settings / F-003 riding authority / F-004 signed demand and regen episodes, respectively; existing software leaves retained. |
 | LE-TRACTION | F-005 actual torque/observation and FSC-001 physical fault-output responsibility; command and physical protection contributors remain mixed. |
 | LE-ENERGY | F-007 capability, F-008 storage/distribution and F-009 energy protection. LE-BAT-POLICY provides capability policy; LE-CELLS and supplied LE-BMS retain their fixed roles. FSC-007/008 target this owner. |
-| LE-CHARGE-POLICY / LE-CHARGE | F-010 session policy / F-011 physical external charging and indication, respectively; detached hosts remain open. |
+| LE-CHARGE-POLICY / LE-CHARGE | F-010 session policy / F-011 physical external charging and indication, respectively; HC-CHARGE-HOST supplies their separate mobile-adapter host, with implementation acceptance open. |
 | LE-MECH | F-012 steering and F-013 mechanical braking through retained hardware. Whole-vehicle stopping/interaction acceptance remains at LE-VEH. |
 | LE-INTEGRATION | F-014 support, retention and cross-configuration accessible interfaces; FSC-009/010/011 are Draft contributions to this responsibility. |
 | LE-HMI / LE-LIGHT-POLICY / LE-AUX | F-015 rider information / F-016 light modes / F-017 physical lighting; FSC-012 targets physical LE-AUX. |
 | LE-SERVICE / LE-SERVICE-INFO | F-018 controlled service/access and F-019 current diagnostic presentation, respectively. |
 | LE-VEH / LE-EPCS | Whole-item coordination and cross-cutting constraints in applicable overlapping configurations. FSC-002/003/004 remain LE-VEH responsibilities; FSC-005/006 target LE-EPCS. |
 
-A function owner must account for missing as well as present information and for the physical effects of its dependencies. New physical interfaces IF-A-010–013 supplement the nine R1.6 contracts. No leaf, host or safety-mechanism independence is inferred from a function boundary; realization and timing acceptance remain B work.
+A function owner accounts for missing/present information and dependency effects. IF-A-010–013 supplement the nine R1.6 contracts. The HW/SW leaf and host choices above are approved architecture decisions with recorded acceptance gates; fault independence, coverage and numerical acceptance require evidence.
+
+LE-SERVICE coordinates the equipment contribution to F-018. Project engineering owns the service/inspection/isolation/return procedures required by REQ-VEH-SVC-001; the maintainer executes them through IF-A-008/013 using the identified access and information components. Procedure acceptance remains vehicle-level and is not transferred to software presentation.
 
 ## Remaining allocation coverage
 
@@ -155,4 +216,23 @@ Canonical record metadata gives the responsible target. The following contributo
 | HMI, lights and auxiliary continuity | LE-HMI, LE-INPUT, LE-LIGHT-POLICY, physical LE-AUX and LE-ENERGY; mode policy is allocated, while startup/reset physical output, lamps and protection remain open |
 | Energy/protection, connectivity independence and service | All affected contributors, including allocated LE-SERVICE-INFO; presentation does not establish diagnostic coverage, physical isolation or service acceptance. Derive fault-energy outcomes, responsibilities and coverage before corresponding commitments |
 
-**Completion point B remains open:** decompose remaining project-developed composites, assign each project leaf entirely to HW or SW, qualify supplied-component acceptance boundaries, identify realization components and software hosts, complete interface/timing/resource contracts, and demonstrate parent coverage with planned system-level acceptance. No allocation percentage or completed safety assessment is asserted.
+**Completion point B remains open:** initial component decomposition, HW/SW leaf allocation and host-role selection are now documented. Complete requirement refinements/parent-coverage arguments, numerical information/energy/timing/resource contracts, actual protection/measurement mechanisms and supplied-component/host acceptance before the corresponding baseline. Characterization may require controlled repartitioning. This architecture release does not establish physical qualification or a completed safety assessment.
+
+## Document consistency checks
+
+Document review on 2026-09-13 checked logical/physical containment, realization kinds, software hosts, configuration/reset boundaries and all 19 functional bindings. Structural checks reconciled 38 logical components, 27 HW components, 14 project SW types plus two supplied firmware types, 11 vehicle and eight charger instances; all 1,339 local links in the reviewed architecture/context set resolved. The 188 requirement records in 23 clusters and released FC/HARA/SG files remain unchanged. PD CON-051 alone gains the owner-selected placement. Markdown table/fence and Mermaid structure checks passed; no diagram rendering, runtime or physical acceptance is claimed. B retains the gates above.
+
+<a id="release-record"></a>
+## Release record
+
+**ARCH-001-R1.0 / ARCH-002-R1.0 / ARCH-003-R1.0 — released 2026-09-13 by Dominik, project owner.** The owner confirmed review of the architecture and explicitly instructed its release. This approves the reviewed component architecture for downstream requirement refinement, detailed realization and verification planning within the recorded evidence gates.
+
+**Scope:** ARCH-001's 38 logical components, containment/configuration rules, realization mappings, 13 system interface contracts and all 19 functional bindings; ARCH-002's 27 HW components, physical ownership/configurations and 13 HW interfaces; ARCH-003's 14 project SW types, two supplied firmware types, 11 vehicle and eight charger instances, nine SW interfaces, deployment, state ownership and interactions. Shared vehicle hosting, separate mobile-adapter hosting and the stated retention/protection responsibilities are approved architecture allocations. Their mechanisms, numerical contracts and physical acceptance remain open. No software units or vendor-internal decomposition are introduced.
+
+**Supporting snapshots:** PD1.3, ID1.2, DEC1.6, REQ-001 Draft1.7 and BAT0.1 retain their separate Draft document statuses. The owner-selected adapter placement is recorded in DEC-ARCH-001 and PD CON-051; OI-044 now records the shared-host choice with its acceptance work. This release preserves all 188 canonical requirement records (171 approved, 12 Draft FSC, three Deferred, two Withdrawn), their existing Type/Target and derivation bindings, and the released FC-001/002, HARA-001 and SG-001 files. It neither releases REQ-001-R1.7 nor globally releases its supporting documents.
+
+**Remaining gates:** WS-OI-020(B) stays open for complete requirement refinements/parent coverage, numerical information/energy/timing/resource contracts, sensing/protection mechanisms and component/host acceptance. Existing characterization, diagnostic/protection coverage, controlled energization, physical verification and residual-risk/vehicle-acceptance gates are retained. This is architecture approval, not evidence of physical performance, independence, formal safety classification or completed safety assessment.
+
+**Release checks — passed, 2026-09-13:** component/host/interface inventories, all 19 functional bindings, containment and realization kinds reconcile. The reviewed architecture tables and four Mermaid bodies retain their technical content; changes promote status and record this release. All 188 requirement records in 23 clusters and the released FC/HARA/SG files are unchanged. All 1,348 local links in the architecture/context check resolve; Markdown structure and whitespace checks passed. A bounded release-scope review confirmed the separate statuses and open gates above. No runtime or physical test was executed.
+
+**Git snapshot:** the commit titled `Release component architecture baseline ARCH-001/002/003-R1.0` contains this controlled architecture and its supporting snapshots. Resolve it with `git log --all --format=%H --fixed-strings --grep="Release component architecture baseline ARCH-001/002/003-R1.0"`. Retrieve released content from that commit; later working revisions have their own status. Prior releases remain in Git, without duplicate archives or generated manifests in the repository.

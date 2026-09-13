@@ -2,17 +2,17 @@
 
 ## Electrical Re-Engineering of a BMW X2City Scooter
 
-Defines project scope, boundaries, objectives, constraints and qualification basis. Detailed rider behavior, item interactions and approved requirements are maintained in the [requirements workstream](.devenv/Requirements/README.md). The built battery and selected BMS are fixed inputs; remaining electrical/software architecture is still being derived.
+Defines project scope, boundaries, objectives, constraints and qualification basis. Detailed rider behavior, item interactions and approved requirements are maintained in the [requirements workstream](.devenv/Requirements/README.md). The built battery and selected BMS are fixed inputs; the reviewed [component architecture](.devenv/Architecture/ARCH-001_System_Architecture.md#release-record) is released, with detailed engineering and qualification still open.
 
 ## Document metadata
 
 | Field | Value |
 |---|---|
 | Document / owner | PD-001 / Dominik |
-| Revision / date | **1.2 Draft / 2026-09-11** |
-| Status | **Draft change to released PD-001-R1.1; owner-authorized battery selections and riding-temperature revision** |
+| Revision / date | **1.3 Draft / 2026-09-13** |
+| Status | **Draft change to released PD-001-R1.1; owner-authorized battery, temperature and mobile-charger placement decisions** |
 | Release / prior baseline | PD-001-R1.1, approved 2026-09-09, remains the historical release in [Git](.devenv/Requirements/README.md#release-and-history); this working revision is not released |
-| Change basis | Built 14S5P Samsung 35E pack, JBD SP14S004P14S50A/UART selection, −10°C riding minimum, assumption-based mass planning and derived integration obligations; §18.6 / DEC-BAT-002 / DEC-MAS-001 |
+| Change basis | Built 14S5P Samsung 35E pack, JBD SP14S004P14S50A/UART selection, −10°C riding minimum, assumption-based mass planning and derived integration obligations; separate mobile-adapter placement; §§18.6–18.7 / DEC-BAT-002 / DEC-MAS-001 / DEC-ARCH-001 |
 | Repository role | Sole current PD; original released bytes and prior versions retained in Git history |
 | Downstream use | Concept, hazard analysis, requirements and targeted feasibility characterization, subject to the recorded open-issue gates |
 | Configuration | [Release authority and Git history](.devenv/Requirements/README.md#release-and-history); §18.4 |
@@ -204,7 +204,7 @@ flowchart LR
     People["Other people, vehicles and obstacles"] <--> Vehicle
 ```
 
-This is a **functional context**, not a circuit architecture. The two battery configurations represent the **same physical pack**, not two batteries. External charging while installed is excluded from intended functionality; regenerative charging during riding takes place within the vehicle item with its battery installed. The external-charging functions must work with the removed battery without dependence on powered vehicle electronics. Their allocation between the removable pack and mobile charger, and their connector implementation, remain downstream design matters.
+This is a **functional context**, not a circuit architecture. The two battery configurations represent the **same physical pack**, not two batteries. External charging while installed is excluded from intended functionality; regenerative charging during riding takes place within the vehicle item with its battery installed. The external-charging functions must work with the removed battery without dependence on powered vehicle electronics. The owner selected a separate mobile adapter for the USB-C socket, charging electronics and four-state indicator ([DEC-ARCH-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-arch-001)). Detailed physical/electrical connections and acceptance remain downstream.
 
 The vehicle-side docking interface, pack retention, safe handling, exposed contacts, off-vehicle charging and refitting are inside the safety scope. Neither a mains-to-USB-C adapter nor another upstream USB-C source is developed by this project.
 
@@ -709,7 +709,7 @@ Detected-invalid input is unknown, not a physical press. DEC-FLT-002–003 / REQ
 | Battery-side charging | **Removed pack**, dry environment, 80% actual SOC upper bound, cell-compatible charging | DESIGN DECISION |
 | Vehicle-to-pack interface | Normal removal/refitting, secure retention and electrical connection, no need to recreate removed BMW electronic protocols | DESIGN DECISION |
 | Exposed bay/pack contacts | Handling, contamination, moisture and unintended connection considered in both configurations | DESIGN DECISION; safeguards downstream |
-| Functional allocation | Charging shall work without powered vehicle electronics; detailed pack/mobile-charger split remains open | DESIGN DECISION / OPEN ISSUE |
+| Functional allocation | Charging shall work without powered vehicle electronics; USB-C input, charging electronics and four-state indicator reside in a separate mobile adapter (DEC-ARCH-001); detailed interfaces remain open | DESIGN DECISION / OPEN ISSUE |
 | Service | Controlled maintenance, firmware identification, measurements and diagnostic access | DESIGN DECISION; implementation OPEN ISSUE |
 
 The power limit applies at the **USB-C input**, not as guaranteed net battery power. Delivered charge depends on negotiated power, conversion efficiency, auxiliary loads, temperature and battery limits. The 28 V input point is distinct from the selected 50.4 V nominal traction battery; the charger must provide compatible battery-side conversion. [S6][S6]
@@ -898,7 +898,7 @@ All constraints below are **DESIGN DECISIONS** except where an assumption or dow
 | CON-048 | Implement OBJ-014 / DEC-SOC-001: 20% severe positive-torque/speed reduction, retained 10% positive cutoff until >20%, ≤80% external charging, ≤90% regeneration; ordinary use of recovered energy and detailed transitions remain as defined there. |
 | CON-049 | Display usable charge linearly over actual 20–80%, clamped outside; displayed zero marks restriction, not zero actual SOC/immediate stop. RQ-001 uses only that window. |
 | CON-050 | Conservatively address SOC uncertainty, post-ride/storage/auxiliary loads without reducing 70 km or violating OBJ-014; derive all-load protection independently of the 10% propulsion cutoff. |
-| CON-051 | Removed-pack charging shall work without powered vehicle electronics; pack/charger allocation remains open. |
+| CON-051 | Removed-pack charging shall work without powered vehicle electronics; USB-C input, charging electronics and four-state indicator reside in a separate mobile adapter (DEC-ARCH-001). |
 | CON-052 | Eight hours at work is an opportunity; no maximum charge time, required full workday recharge, prescribed home dwell or arbitrary-adapter daily replenishment guarantee. |
 | CON-053 | Full hill duty is dry/+20 °C only; adverse-weather reductions retain controllability and verified limits. Temperature-limit faults follow DEC-TMP-001. |
 | CON-054 | No fixed deadline; extra tools/components may be purchased. Verify task-specific equipment adequacy (§5.6). |
@@ -1028,7 +1028,7 @@ The VD18MT protocol message set and relevant behaviour are **not** open issues.
 | OI-041 | Selected BMS integration and SOC compatibility | SP14S004P14S50A/UART selected. BMS connection confirmed, configuration incomplete: derive then qualify effective settings, revision, UART electrical restriction/readback, protection, current/thermal limits, SOC accuracy and balancing within 80%; coordinate recovery, auxiliaries and all-load protection. BAT-001 owns source facts | Before battery/UART/charging/control integration acceptance |
 | OI-042 | Custom off-vehicle USB-C charger | Qualify 9 V / 2 A minimum-supply net charging and 140 W EPR operation, compatible profiles, dry/cold limits and input-loss response; no time-to-charge target | Requirements and system design |
 | OI-043 | Custom inverter | Develop an inverter compatible with the verified motor, battery, speed, hill-start, and environment requirements | System design |
-| OI-044 | Vehicle supervisory control | Define required functions and determine whether a separate custom supervisory controller is needed | Functional concept and architecture |
+| OI-044 | Vehicle supervisory control | ARCH-001-R1.0 selects a shared vehicle host for supervision and motor control. Qualify resources, timing, reset and common-cause/fault response; a separate host requires controlled revision if sharing fails acceptance | Functional concept and architecture |
 | OI-045 | Low-voltage supply and power distribution | Define voltage rails, protection, switching, and service isolation | System architecture |
 | OI-046 | Wiring and connector strategy | Define conductor sizes, routing, connectors, sealing, strain relief, and identification | System architecture |
 | OI-047 | Diagnostic/service interface | [Service acceptance](.devenv/Requirements/System_Requirements/Service_and_Durability.md#service-acceptance-contract) and SVCIF-001 define current observations/identity and configuration-specific return guards. Derive task procedures, access/transport, self-test coverage, effective-configuration checks and programming/calibration controls; no persistent failure history after restart (DEC-FLT-007). | System architecture |
@@ -1144,7 +1144,7 @@ The released definition supports concept/hazard analysis, requirements, characte
 
 README is the sole current PD. Release commit `c01f432eef58571e4e5ce64ddc3ac7d39c9ff5b6` preserves the original released PD versions, reviewed input, release records, patch and checksums. Retrieval instructions and current approval are in the [workstream index](.devenv/Requirements/README.md#release-and-history).
 
-The owner authorized removal of duplicate release artifacts after committing them. That cleanup updated administrative text and references without changing technical obligations; later Draft1.2 changes are assessed in §18.6. Preserve history and assess changes to scope, obligations, selections, interfaces and modelling assumptions through controlled revision, applicable owner approval and downstream re-verification.
+The owner authorized removal of duplicate release artifacts after committing them. That cleanup updated administrative text and references without changing technical obligations; later Draft changes are assessed in §§18.6–18.7. Preserve history and assess changes to scope, obligations, selections, interfaces and modelling assumptions through controlled revision, applicable owner approval and downstream re-verification.
 
 ### 18.5 Revision 1.1 change assessment
 
@@ -1154,6 +1154,10 @@ Dominik reviewed and released PD-001-R1.1 on 2026-09-09, then reviewed and relea
 
 Owner-authorized pack/BMS/UART selection and −10°C riding minimum replace the earlier open selection/boundary. BAT-001 owns source ratings and unresolved integration evidence; DV-012 retains authorized mass assumptions until its physical-acceptance gate. Owner charging, storage, temperature, lighting and fault decisions are traced through ID/REQ/DEC/ARCH. Draft elaboration covers configuration/protection, qualification calculations, interface and policy allocations, service acceptance and durability accounting. Range, mass/payload, speed, SOC and independent braking obligations remain controlling. Selection/initial fit are resolved; numerical qualification, physical compatibility and completed vehicle evidence remain open. This Draft has not been released.
 
+### 18.7 Revision 1.3 working change assessment
+
+The owner selected separate mobile-adapter placement for USB-C input, charging electronics and four-state indication (DEC-ARCH-001). CON-051 now records that placement; the installed item boundary, charging/session behavior and other obligations are unchanged. ARCH-001/002/003-R1.0 separately releases the reviewed HW/SW/component allocation; connector/protection, host and physical acceptance remain open. PD1.2 remains the R1.6 source snapshot in Git.
+
 ## 19. Change history
 
 | Revision | Date | Status / change |
@@ -1161,6 +1165,7 @@ Owner-authorized pack/BMS/UART selection and −10°C riding minimum replace the
 | 1.0 | 2026-09-05 | Approved project baseline; historical content and recorded earlier revision history retained in Git |
 | 1.1 | 2026-09-09 | Approved historical PD, followed by workstream release and owner-authorized administrative cleanup; technical scope unchanged by cleanup |
 | 1.2 | 2026-09-10 | Draft: built 14S5P 35E pack, selected JBD BMS/UART, riding minimum −10°C; derived integration and qualification dispositions; assumption-based mass planning |
+| 1.3 | 2026-09-13 | Draft: owner-selected separate mobile charger placement; architecture trace, existing obligations otherwise preserved |
 
 ## 20. Sources and evidence
 
@@ -1205,8 +1210,8 @@ S1–S9 retain the 2026-09-05 baseline review provenance; S4/S6 were rechecked a
 ### End of document
 
 **Document:** PD-001\
-**Revision:** 1.2 Draft\
+**Revision:** 1.3 Draft\
 **Prior released baseline:** PD-001-R1.1\
 **Status:** Draft; owner-authorized changes, not released\
-**Change authority:** Dominik, project owner; fixed battery/BMS and temperature decisions 2026-09-10\
-**Revision date:** 2026-09-10
+**Change authority:** Dominik, project owner; prior battery/temperature decisions and mobile-charger placement 2026-09-13\
+**Revision date:** 2026-09-13
