@@ -1,0 +1,31 @@
+`C:\Users\domin\Desktop\_repo\X2CityMCU\target\thumbv7em-none-eabihf\release\X2CityMCU' has changed; re-reading symbols.
+warning: could not convert 'main' from the host encoding (CP1252) to UTF-32.
+This normally should not happen, please file a bug report.
+core::core_arch::arm_shared::hints::__yield () at C:\Users\domin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library/core/src/../../stdarch/crates/core_arch/src/arm_shared/hints.rs:98
+98	    hint(HINT_YIELD);
+Section .vectors, range 0x8000000 -- 0x80002cc: matched.
+Section .text, range 0x80002d0 -- 0x80037a0: matched.
+Section .ARM.exidx, range 0x80037a0 -- 0x80037b8: matched.
+Section .itcm_text, range 0x80037b8 -- 0x80038b0: matched.
+Section .dtcm_data, range 0x80038b8 -- 0x80038e8: matched.
+Section .data, range 0x80038e8 -- 0x80038ec: matched.
+$1 = 11005
+$2 = X2CityMCU::mcu::program_flow::ProgramFlowFault::None
+0x58024430: 0101006d 
+0x52002070: 00000004 
+0x58000748: 00000001 
+0xe000ed24: 00000000 00000000 00000000 
+PASS: final release matches rebuilt image and is running without faults
+[stm32h723vgt6.cpu0] clearing lockup after double fault
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Handler HardFault
+xPSR: 0x01000003 pc: 0x5d11e00c msp: 0x2001ffc8
+[stm32h723vgt6.cpu0] Polling failed, trying to reexamine
+[stm32h723vgt6.cpu0] Cortex-M7 r1p2 processor detected
+[stm32h723vgt6.cpu0] Erratum 3092511: Cortex-M7 can halt in an incorrect address when breakpoint and exception occurs simultaneously
+[stm32h723vgt6.cpu0] The erratum 3092511 workaround will resume after an incorrect halt
+[stm32h723vgt6.cpu0] target has 8 breakpoints, 4 watchpoints
+[stm32h723vgt6.cpu0] Examination succeed
+shutdown command invoked
+target/migration-reference/550-final-check.gdb:20: Error in sourced command file:
+Protocol error with Rcmd: A8.
+Remote communication error.  Target disconnected: error while reading: Not a directory.

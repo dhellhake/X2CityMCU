@@ -1,3 +1,4 @@
+ENTRY(Reset);
 EXTERN(DefaultHandler);
 
 PROVIDE(NonMaskableInt = DefaultHandler);
@@ -13,13 +14,14 @@ PROVIDE(DefaultHandler = DefaultHandler_);
 
 MEMORY
 {
-    /* STM32H743IIT6 internal memory grouped by domain/features. */
+    /* STM32H723VGT6, default 64 KiB ITCM / 320 KiB AXI SRAM split.
+       The shared AXI/ITCM RAM allocation is left at its reset setting. */
     itcm        (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00010000
-    rom         (rx)  : ORIGIN = 0x08000000, LENGTH = 0x00200000
+    rom         (rx)  : ORIGIN = 0x08000000, LENGTH = 0x00100000
     dtcm        (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00020000
-    axi_sram    (rwx) : ORIGIN = 0x24000000, LENGTH = 0x00080000
-    d2_sram     (rwx) : ORIGIN = 0x30000000, LENGTH = 0x00048000
-    d3_sram     (rwx) : ORIGIN = 0x38000000, LENGTH = 0x00010000
+    axi_sram    (rwx) : ORIGIN = 0x24000000, LENGTH = 0x00050000
+    d2_sram     (rwx) : ORIGIN = 0x30000000, LENGTH = 0x00008000
+    d3_sram     (rwx) : ORIGIN = 0x38000000, LENGTH = 0x00004000
     backup_sram (rwx) : ORIGIN = 0x38800000, LENGTH = 0x00001000
 }
 

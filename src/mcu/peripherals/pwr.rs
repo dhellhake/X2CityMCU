@@ -8,7 +8,6 @@ use crate::{
             Pwr,
             PWR_VOS,
         },
-        syscfg::Syscfg,
     },
 };
 
@@ -21,17 +20,13 @@ pub fn ConfigureLdoSupply(pwr: &Pwr) {
     pwr.WaitForActiveVoltageReady();
 }
 
-pub fn PrepareVoltageScale0For480Mhz(pwr: &Pwr) {
+pub fn PrepareVoltageScale0For550Mhz(pwr: &Pwr) {
     assert!(pwr.IsLdoEnabled());
 
     pwr.WaitForActiveVoltageReady();
-    pwr.SelectVoltageScale(PWR_VOS::SCALE_1);
+    // RM0468: H723 selects VOS0 directly; there is no SYSCFG ODEN bit.
+    pwr.SelectVoltageScale(PWR_VOS::SCALE_0);
     pwr.WaitForActiveVoltageReady();
-}
-
-pub fn EnableOverdriveFor480Mhz(syscfg: &Syscfg) {
-    syscfg.EnableOverdrive();
-    while !syscfg.IsOverdriveEnabled() {}
 }
 
 pub fn WaitForVoltageScale0Ready(pwr: &Pwr) {

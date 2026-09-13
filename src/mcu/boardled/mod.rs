@@ -4,10 +4,10 @@ use crate::drv::{
     rcc::RCC_AHB4_GPIO_PORT,
 };
 
-use super::{McuManager, GPIOH, RCC};
+use super::{McuManager, GPIOE, RCC};
 
-// FK743M2-IIT6 V1.1 onboard user LED: PH7, active-low.
-const BOARD_LED_PIN: u8 = 7;
+// WeAct Studio STM32H723VGT6 onboard user LED: PE3, active-high.
+const BOARD_LED_PIN: u8 = 3;
 
 const TASK_5MS_FIRST_RELEASE_US: u64 = 5_000;
 const HEARTBEAT_PERIOD_US: u64 = 1_000_000;
@@ -39,17 +39,17 @@ const _: () = {
 impl McuManager {
     pub fn BoardLed_Init(access: &mut AccessToken) {
         RCC.with(access, |rcc| {
-            rcc.EnableGpioClock(RCC_AHB4_GPIO_PORT::GPIOH);
+            rcc.EnableGpioClock(RCC_AHB4_GPIO_PORT::GPIOE);
         });
 
-        GPIOH.with(access, |gpioh| {
-            // Preload the active-low LED's off state before changing PH7 to
+        GPIOE.with(access, |gpioe| {
+            // Preload the active-high LED's off state before changing PE3 to
             // output mode so initialization cannot produce a visible flash.
-            gpioh.WritePin(BOARD_LED_PIN, GPIO_PIN_STATE::HIGH);
-            gpioh.SetPinOutputType(BOARD_LED_PIN, GPIO_OUTPUT_TYPE::PUSH_PULL);
-            gpioh.SetPinOutputSpeed(BOARD_LED_PIN, GPIO_OUTPUT_SPEED::LOW);
-            gpioh.SetPinPull(BOARD_LED_PIN, GPIO_PULL::NONE);
-            gpioh.SetPinMode(BOARD_LED_PIN, GPIO_MODE::OUTPUT);
+            gpioe.WritePin(BOARD_LED_PIN, GPIO_PIN_STATE::LOW);
+            gpioe.SetPinOutputType(BOARD_LED_PIN, GPIO_OUTPUT_TYPE::PUSH_PULL);
+            gpioe.SetPinOutputSpeed(BOARD_LED_PIN, GPIO_OUTPUT_SPEED::LOW);
+            gpioe.SetPinPull(BOARD_LED_PIN, GPIO_PULL::NONE);
+            gpioe.SetPinMode(BOARD_LED_PIN, GPIO_MODE::OUTPUT);
         });
     }
 
@@ -62,10 +62,10 @@ impl McuManager {
     #[inline]
     fn BoardLed_Set(access: &mut AccessToken, isOn: bool) {
         let pinState = if isOn {
-            GPIO_PIN_STATE::LOW
-        } else {
             GPIO_PIN_STATE::HIGH
+        } else {
+            GPIO_PIN_STATE::LOW
         };
-        GPIOH.with(access, |gpioh| gpioh.WritePin(BOARD_LED_PIN, pinState));
+        GPIOE.with(access, |gpioe| gpioe.WritePin(BOARD_LED_PIN, pinState));
     }
 }

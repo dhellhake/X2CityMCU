@@ -1,0 +1,19 @@
+`C:\Users\domin\Desktop\_repo\X2CityMCU\target\thumbv7em-none-eabihf\release\X2CityMCU' has changed; re-reading symbols.
+0x08001d2c in core::core_arch::arm_shared::hints::__yield () at C:\Users\domin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library/core/src/../../stdarch/crates/core_arch/src/arm_shared/hints.rs:98
+98	    hint(HINT_YIELD);
+warning: could not convert 'main' from the host encoding (CP1252) to UTF-32.
+This normally should not happen, please file a bug report.
+DTCM vectors before CRC:
+0x20000000: 20020000 080002d1 08000351 08001459 08000351 08000351 08000351 00000000 
+Section .vectors, range 0x8000000 -- 0x80002cc: matched.
+Section .text, range 0x80002d0 -- 0x80037a0: matched.
+Section .ARM.exidx, range 0x80037a0 -- 0x80037b8: matched.
+Section .itcm_text, range 0x80037b8 -- 0x80038b0: matched.
+Section .dtcm_data, range 0x80038b8 -- 0x80038e8: matched.
+Section .data, range 0x80038e8 -- 0x80038ec: matched.
+DTCM vectors after CRC with old work-area-backup=0:
+0x20000000: 20004602 4e0a43c0 2400460b 5d11e00d 40480609 28002500 0040da02 e0004070 
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x61000000 pc: 0x08001d2c psp: 0x200006f8
+DTCM vectors restored by startup:
+0x20000000: 20020000 080002d1 08000351 08001459 08000351 08000351 08000351 00000000 

@@ -2,19 +2,19 @@
 
 use crate::drv::{
     gpio::{Gpio, GPIO_OUTPUT_SPEED, GPIO_OUTPUT_TYPE, GPIO_PULL},
-    rcc::{Rcc, RCC_AHB4_GPIO_PORT, RCC_USART16_CLOCK_SOURCE},
+    rcc::{Rcc, RCC_AHB4_GPIO_PORT, RCC_USART16910_CLOCK_SOURCE},
     usart::{
         Usart, USART_ASYNC_CONFIG, USART_DIRECTION, USART_PARITY, USART_PRESCALER, USART_STOP_BITS,
         USART_WORD_LENGTH,
     },
 };
 
-pub const USART1_KERNEL_CLOCK_HZ: u32 = 120_000_000;
+pub const USART1_KERNEL_CLOCK_HZ: u32 = super::rcc::APB_CLOCK_HZ;
 pub const USART1_BAUD_RATE: u32 = 115_200;
 
-/// Selects the 120 MHz PCLK2 kernel clock and enables GPIOA and USART1.
+/// Selects the 137.5 MHz PCLK2 kernel clock and enables GPIOA and USART1.
 pub fn ConfigureUsart1DebugHeaderClocks(rcc: &Rcc) {
-    rcc.SetUsart16ClockSource(RCC_USART16_CLOCK_SOURCE::PCLK2);
+    rcc.SetUsart16910ClockSource(RCC_USART16910_CLOCK_SOURCE::PCLK2);
     rcc.EnableGpioClock(RCC_AHB4_GPIO_PORT::GPIOA);
     rcc.EnableUsart1Clock();
 }
@@ -38,7 +38,7 @@ pub fn ConfigureUsart1DebugHeaderPins(gpioa: &Gpio) {
     );
 }
 
-/// Configures USART1 on the board's P1 debug header: 115200 baud, 8 data bits,
+/// Configures USART1 on the PA9/PA10 edge-header pins: 115200 baud, 8 data bits,
 /// no parity, one stop bit, transmit and receive enabled.
 pub fn ConfigureUsart1DebugHeader115200(usart1: &Usart) {
     usart1.ConfigureAsync(

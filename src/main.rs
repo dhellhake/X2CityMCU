@@ -24,7 +24,7 @@ use crate::{
 };
 
 // SysTick runs from the processor clock when CLKSOURCE is set.
-const SYSTICK_CLOCK_HZ: u32 = 480_000_000;
+const SYSTICK_CLOCK_HZ: u32 = mcu::peripherals::rcc::CPU_CLOCK_HZ;
 
 extern "C" fn background(_tstmp: u64) {
     loop {

@@ -4,7 +4,7 @@ use crate::os::task::TaskConfiguration;
 
 pub const SUPERVISION_CYCLE_US: u32 = 10_000;
 pub const WATCHDOG_SERVICE_MIN_US: u32 = 8_500;
-pub const WATCHDOG_SERVICE_MAX_US: u32 = 15_500;
+pub const WATCHDOG_SERVICE_MAX_US: u32 = 14_000;
 
 const MAX_EXPECTED_CHECKPOINTS: usize = 16;
 const CHECKPOINT_EARLY_TOLERANCE_US: u32 = 1_000;

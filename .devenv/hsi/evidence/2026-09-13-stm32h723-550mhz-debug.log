@@ -1,0 +1,100 @@
+warning: could not convert 'main' from the host encoding (CP1252) to UTF-32.
+This normally should not happen, please file a bug report.
+`C:\Users\domin\Desktop\_repo\X2CityMCU\target\thumbv7em-none-eabihf\debug\X2CityMCU' has changed; re-reading symbols.
+X2CityMCU::drv::flash::Flash::SetLatency (self=0x0 <core::intrinsics::cold_path>, latency=X2CityMCU::drv::flash::FLASH_LATENCY::WAIT_STATES_0) at src\drv\flash/mod.rs:29
+29	    pub fn SetLatency(&self, latency: FLASH_LATENCY) {
+warning: Source file is more recent than executable.
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x080002d0 msp: 0x20020000
+Loading section .vectors, size 0x2cc lma 0x8000000
+Loading section .text, size 0xa0b8 lma 0x80002d0
+Loading section .ARM.exidx, size 0x18 lma 0x800a388
+Loading section .itcm_text, size 0x90 lma 0x800a3a0
+Loading section .dtcm_data, size 0x30 lma 0x800a438
+Loading section .data, size 0xc lma 0x800a468
+Start address 0x08001f74, load size 42088
+Transfer rate: 25 KB/sec, 5261 bytes/write.
+Section .vectors, range 0x8000000 -- 0x80002cc: matched.
+Section .text, range 0x80002d0 -- 0x800a388: matched.
+Section .ARM.exidx, range 0x800a388 -- 0x800a3a0: matched.
+Section .itcm_text, range 0x800a3a0 -- 0x800a430: matched.
+Section .dtcm_data, range 0x800a438 -- 0x800a468: matched.
+Section .data, range 0x800a468 -- 0x800a474: matched.
+
+--- H723 register snapshot after 30 seconds ---
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+0x5c001000: 10016483 
+0x1ff1e880: 0400 
+0x58024800: f000c000 00002000 00000000 00000042 00000000 00000007 00002000 
+0x58024400: 0303c025 40000b0b 00000150 20000086 0000001b 00000000 00000048 00000440 
+0x58024420: 00000040 00000000 02020052 01f90008 0101006d 00000000 
+0x52002000: 00000033 
+0x52002070: 00000004 00000004 
+0x58000748: 00000001 
+0x58021000: ffffff7f 00000000 00000000 00000000 00000000 00000000 
+0x40011000: 2000000d 00000000 00000000 000004aa 00000000 00000000 00000000 08e000d0 
+0x40011020: 00000000 00000000 00000000 00000000 
+0x50003000: 000000e2 00001861 00000001 
+0x580244a0: 00000001 
+0xe000ed24: 00000000 00000000 00000000 
+0xe000ed08: 20000000 
+0xe000ef34: 80000000 
+pc             0x800600c           0x800600c <X2CityMCU::background+12>
+msp            0x2001fef0          0x2001fef0
+psp            0x200006f0          0x200006f0 <X2CityMCU::mcu::TASK_BACKGROUND+1008>
+control        0x2                 2
+primask        0x0                 0
+xpsr           0x41000000          1090519040
+$1 = X2CityMCU::mcu::program_flow::ProgramFlowState::Running
+$2 = X2CityMCU::mcu::program_flow::ProgramFlowFault::None
+$3 = 2997
+$4 = 16486288614
+$5 = X2CityMCU::os::task::TaskControl {sp: 536874776, status: X2CityMCU::os::task::TaskStatus::Ready, cycletime: X2CityMCU::os::task::TaskCycleTime::_5MS, id: 0, cyclic: core::option::Option<extern "C" fn(u64)>::Some(0x49 <X2CityMCU::mcu::deployment::tsk_1_5ms>), role: X2CityMCU::os::task::TaskRole::Supervised, timestamp_us: 29975000, next_release_us: 29980000, missed_releases: 0}
+$6 = X2CityMCU::os::task::TaskControl {sp: 536873704, status: X2CityMCU::os::task::TaskStatus::Ready, cycletime: X2CityMCU::os::task::TaskCycleTime::_10MS, id: 1, cyclic: core::option::Option<extern "C" fn(u64)>::Some(0x1 <core::intrinsics::cold_path>), role: X2CityMCU::os::task::TaskRole::Unsupervised, timestamp_us: 29970000, next_release_us: 29980000, missed_releases: 0}
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+$7 = 3197
+PASS: H723 clock, memory, GPIO, UART configuration and scheduler/watchdog soak
+[stm32h723vgt6.cpu0] external reset detected
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+0x580244d0: 10420000 
+$8 = 19
+PASS: watchdog reset and firmware restart after omitted servicing
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+$9 = 219
+PASS: scheduling recovered after watchdog reset
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x08001da8 psp: 0x20000ab8
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x41000000 pc: 0x0800600c psp: 0x200006f0
+PASS: PE3 heartbeat high and low states observed
+[Inferior 1 (Remote target) detached]

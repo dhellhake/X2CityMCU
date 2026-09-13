@@ -1,7 +1,7 @@
 # DRV8300DRGE-EVM Integration Reference
 
 This directory contains only the vendor artifacts needed to develop and bring
-up motor-control firmware for an FK743M2-IIT6 V1.1 connected to a fixed
+up motor-control firmware for a WeAct Studio STM32H723VGT6 connected to a fixed
 DRV8300DRGE-EVM. It is not a PCB redesign or manufacturing package.
 
 ## Retained Vendor Artifacts

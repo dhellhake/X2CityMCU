@@ -1,0 +1,28 @@
+`C:\Users\domin\Desktop\_repo\X2CityMCU\target\thumbv7em-none-eabihf\release\X2CityMCU' has changed; re-reading symbols.
+0x5d11e00c in ?? ()
+warning: could not convert 'main' from the host encoding (CP1252) to UTF-32.
+This normally should not happen, please file a bug report.
+pc             0x5d11e00c          0x5d11e00c
+msp            0x2001ffc8          0x2001ffc8
+psp            0x20000f30          0x20000f30 <X2CityMCU::mcu::TASK_5MS+976>
+xpsr           0x1000003           16777219
+control        0x0                 0
+primask        0x0                 0
+0xe000ed24: 00000080 00000001 40000000 
+0x580244d0: 10420000 
+0x50003000: 000000c4 00001861 00000001 
+$1 = 11005
+$2 = X2CityMCU::mcu::program_flow::ProgramFlowFault::None
+[stm32h723vgt6.cpu0] halted due to debug-request, current mode: Thread 
+xPSR: 0x61000000 pc: 0x08001d2c psp: 0x200006f8
+pc             0x8001d2c           0x8001d2c <X2CityMCU::background+12>
+msp            0x2001ffe8          0x2001ffe8
+psp            0x200006f8          0x200006f8 <X2CityMCU::mcu::TASK_BACKGROUND+1016>
+xpsr           0x61000000          1627389952
+control        0x2                 2
+primask        0x0                 0
+0xe000ed24: 00000000 00000000 00000000 
+0x58024430: 0101006d 
+$3 = 3024
+$4 = X2CityMCU::mcu::program_flow::ProgramFlowFault::None
+PASS: recovery soak

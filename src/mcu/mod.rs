@@ -4,7 +4,7 @@ use crate::{
     drv::{
         cortex::{with_access, AccessToken, Shared},
         flash::Flash,
-        gpio::{Gpio, GPIOA_ADDR, GPIOH_ADDR},
+        gpio::{Gpio, GPIOA_ADDR, GPIOE_ADDR},
         pwr::Pwr,
         rcc::Rcc,
         scb::Scb,
@@ -53,42 +53,32 @@ pub static PWR: Shared<Pwr> = unsafe { Shared::new(Pwr::new()) };
 pub static SYSCFG: Shared<Syscfg> = unsafe { Shared::new(Syscfg::new()) };
 pub static FLASH: Shared<Flash> = unsafe { Shared::new(Flash::new()) };
 pub static GPIOA: Shared<Gpio> = unsafe { Shared::new(Gpio::new(GPIOA_ADDR)) };
-pub static GPIOH: Shared<Gpio> = unsafe { Shared::new(Gpio::new(GPIOH_ADDR)) };
+pub static GPIOE: Shared<Gpio> = unsafe { Shared::new(Gpio::new(GPIOE_ADDR)) };
 pub static USART1: Shared<Usart> = unsafe { Shared::new(Usart::new(USART1_ADDR)) };
 #[unsafe(link_section = ".dtcm_bss.wwdg")]
 static WWDG: Shared<Wwdg> = unsafe { Shared::new(Wwdg::new()) };
 #[unsafe(link_section = ".dtcm_bss.pfm")]
 static PFM: Shared<ProgramFlowMonitor> = unsafe { Shared::new(ProgramFlowMonitor::new()) };
 
-// CortexOs requires a way to re-pend SysTick if a requested absolute timer
-// deadline is already due. The latest STM32 driver exposes the typed ICSR bit
-// operation, so keep this target-specific compatibility method in the
-// superproject while leaving the driver submodule at its upstream tip.
-impl Scb {
-    #[inline]
-    pub fn SetSysTickPending(&mut self) {
-        self.Set_ICSR_PENDSTSET(crate::drv::BIT::VALUE_1);
-    }
-}
-
 pub struct McuManager {}
 
 impl McuManager {
     pub fn McuClockTree_Init(access: &mut AccessToken) {
+        RCC.with(access, |rcc| {
+            peripherals::rcc::SelectHsiForClockConfiguration(rcc);
+            rcc.EnableSyscfgClock();
+        });
+
+        SYSCFG.with(access, |syscfg| {
+            assert!(syscfg.IsCpuFrequencyBoostEnabled(), "550 MHz requires CPU_FREQ_BOOST");
+        });
+
         PWR.with(access, |pwr| {
             peripherals::pwr::ConfigureLdoSupply(pwr);
         });
 
-        RCC.with(access, |rcc| {
-            rcc.EnableSyscfgClock();
-        });
-
         PWR.with(access, |pwr| {
-            peripherals::pwr::PrepareVoltageScale0For480Mhz(pwr);
-        });
-
-        SYSCFG.with(access, |syscfg| {
-            peripherals::pwr::EnableOverdriveFor480Mhz(syscfg);
+            peripherals::pwr::PrepareVoltageScale0For550Mhz(pwr);
         });
 
         PWR.with(access, |pwr| {
@@ -96,11 +86,11 @@ impl McuManager {
         });
 
         FLASH.with(access, |flash| {
-            peripherals::flash::ConfigureFor480Mhz(flash);
+            peripherals::flash::ConfigureFor550Mhz(flash);
         });
 
         RCC.with(access, |rcc| {
-            peripherals::rcc::ConfigurePll1Hse25MhzTo480Mhz(rcc);
+            peripherals::rcc::ConfigurePll1Hse25MhzTo550Mhz(rcc);
         });
     }
 
@@ -160,6 +150,7 @@ impl McuManager {
         });
 
         RCC.with(access, |rcc| {
+            rcc.EnableWwdg1SystemReset();
             rcc.EnableWwdg1Clock();
         });
 
