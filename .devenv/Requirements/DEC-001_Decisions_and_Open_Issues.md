@@ -490,6 +490,17 @@ Only changes that affect interpretation of older material are retained here; app
 | Unexpected restart retains past faults until deliberate power cycle; report clearing requires Ready | Every restart assesses afresh; current-session inhibition lasts until a clean restart, while old reporting ends at any restart — DEC-FLT-003/007 |
 | 0x06 priority remains unresolved | In first-detected group above 0x01; 0x04/0x05 also join that group — DEC-FLT-008 |
 
+<a id="dec-motor-001"></a>
+### DEC-MOTOR-001 — Hall-sensored FOC traction realization
+
+**Engineering decision, 2026-09-13:** select Hall-sensored sinusoidal FOC for the installed direct-drive hub motor. The fixed baseline is three phase-leg low-side current shunts, centre-aligned complementary SVPWM, `Id* = 0`, calibrated signed `Iq*`, d/q current PI control with shared vector saturation/anti-windup, and bounded Hall-sector angle estimation. It receives the existing signed wheel-torque request; it adds no rider speed servo, holding torque, forced alignment/rotation in normal startup or sensorless fallback. The canonical technical design is [MCD-001](../Motor/MCD-001_Hall_Sensored_FOC_Technical_Design.md).
+
+**Release disposition:** MCD-001-R1.0 and the five named REQ-001-R2.0 allocation records approve this selection; DEC-001 remains a Draft supporting decision register and does not establish implementation or verification.
+
+The Hall state may support a calibrated sector at rest without an edge, but phase/Hall map, polarity, 60/120-degree convention, electrical offset, pole pairs, launch angle-error bound and all numeric calibration remain evidence gates. `Iq` sign does not determine energy direction: forward torque during backward rolling can be mechanically generating, while qualified DC-link/pack current or power and routing determine charge acceptance; it remains subject to current/DC-link and applicable charge restrictions. Active electrical braking means observed decelerating wheel torque, not a negative current command. At any accepted lower or 40-km/h boundary the method requests zero torque of both signs; this is not selected as active overspeed braking, and a zero/PWM-off request is not physical-zero evidence.
+
+No field weakening or MTPA is selected. The reported but unverified 9.5 rpm/V implies approximately 55 V no-load at 40 km/h for the nominal 16-inch wheel, compared with the pack's 50.4-V nominal value. The 58.8-V outer-cell reference is not a normal 80%-charge operating voltage and demonstrates no loaded/low-SOC margin. Motor/inverter/battery headroom must therefore pass the MCD-001 feasibility gate before the retained 40-km/h performance objective can be claimed. A later controlled design change is required if it fails; the target is not silently reduced.
+
 ## Open issues and dependencies
 
 These 20 workstream records (19 open, WS-OI-004 closed) supplement, without renumbering or closing, PD-001's issue register. The project owner is responsible. “Define/verify” identifies needed downstream work, not an executed test. Settled behavior is referenced rather than repeated.

@@ -1,6 +1,6 @@
 # DD-003 — Static software architecture views
 
-**Released 1.0 — 2026-09-13; DD-003-R1.0.** These views make the released [ARCH-003 component and host allocation](../Architecture/ARCH-003_Software_Architecture.md) and the unit catalogues in [DD-001](DD-001_Software_Unit_Design.md) and [DD-002](DD-002_Energy_Charging_Unit_Design.md) easier to inspect. They are supplementary: they add no component, unit, host, interface, requirement, execution order, physical claim or acceptance evidence.
+**Released 1.1 — 2026-09-14; DD-003-R1.1.** These controlled views include Hall-position/FOC composition and make the released [ARCH-003 component and host allocation](../Architecture/ARCH-003_Software_Architecture.md) and the unit catalogues in [DD-001](DD-001_Software_Unit_Design.md) and [DD-002](DD-002_Energy_Charging_Unit_Design.md) easier to inspect.
 
 ## Scope and notation
 
@@ -24,13 +24,29 @@ flowchart TB
         INPUT[SC-INPUT-QUAL] -->|contains| UIC[U-INPUT-CONTEXT]
         INPUT -->|contains| UIQ[U-INPUT-QUALIFIER]
         TRACTION[SC-TRACTION-CTRL] -->|contains| UTA[U-TRACTION-ACCEPT]
+        TRACTION -->|contains| UTP[U-TRACTION-POSITION]
+        TRACTION -->|contains| UTC[U-TRACTION-CONTROL]
         PLATFORM[SC-PLATFORM] -->|contains| UPC[U-PLATFORM-CONTEXT]
         PLATFORM -->|contains| UPR[U-PLATFORM-RETENTION]
         PLATFORM -->|contains| UPH[U-PLATFORM-HEALTH]
     end
 ```
 
-`U-INPUT-*`, `U-TRACTION-ACCEPT` and `U-PLATFORM-*` refine approved ASW allocations. They do not select acquisition circuitry, motor-control law, host resources, retention integrity, diagnostics or physical output behaviour.
+### Hall evidence and traction interpretation
+
+```mermaid
+flowchart LR
+    H[HC-MOTOR Hall1..3] -->|physical Hall conductors| FE[HC-INPUT-FE]
+    FE -->|conditioned acquired state/edges, open HW realization| I[SC-INPUT-QUAL.V]
+    I -->|sampled state + edge evidence, validity/freshness/context| P[U-TRACTION-POSITION]
+    P -->|qualified electrical sector/direction/edge time| T[SC-TRACTION-CTRL.V]
+    P -.->|unavailable without map/alignment| T
+    T -.->|separate qualified conversion required| S[mechanical/vehicle speed]
+```
+
+The solid path is an allocated information path, not a pinout or control law. Static state may support sector at rest after map/alignment qualification; it does not prove speed/standstill. The dashed speed path requires pole-pair and loaded-wheel calibration evidence and is not selected here.
+
+`U-INPUT-*`, `U-TRACTION-ACCEPT` and `U-PLATFORM-*` refine approved ASW allocations. `U-TRACTION-POSITION` and `U-TRACTION-CONTROL` are approved Hall interpretation and selected-FOC-control refinements; MCD-001 owns the concrete current/PWM law. They do not select final acquisition circuitry, host resources, retention integrity, diagnostics or physical output behaviour.
 
 ### Energy, charging and service domain
 

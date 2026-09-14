@@ -1,6 +1,6 @@
 # ARCH-003 — Software architecture and deployment
 
-**Released 1.0 — 2026-09-13; ARCH-003-R1.0.** This is the layer 2 software realization architecture for [ARCH-001](ARCH-001_System_Architecture.md), consistent with released [FC-001](FC-001_Functional_Concept.md), [FC-002](FC-002_Function_Trace.md) and REQ-001-R1.6.  It selects project software components, their instances and hosts; it does not change an approved requirement target or allocation.  All 12 FSC rows remain Draft.  The [architecture release record](ARCH-001_System_Architecture.md#release-record) approves this component/host allocation. Timing, circuit, algorithm, diagnostic-coverage and physical-output acceptance remain derived work.
+**Released 1.1 — 2026-09-14; ARCH-003-R1.1.** This controlled refinement records Hall interpretation and Hall-sensored FOC responsibility while preserving existing released requirement targets. It remains consistent with [FC-001](FC-001_Functional_Concept.md), [FC-002](FC-002_Function_Trace.md) and REQ-001-R2.0. Timing, circuit, algorithm, diagnostic-coverage and physical-output acceptance remain derived work.
 
 ## Scope, component identities and hosts
 
@@ -17,8 +17,8 @@
 | LE-LIGHT-POLICY | <a id="sc-light-policy"></a>SC-LIGHT-POLICY | Normal-light retention and front/rear mode arbitration. |
 | LE-CHARGE-POLICY | <a id="sc-charge-policy"></a>SC-CHARGE-POLICY | Detached charging eligibility, completion, recovery and indication policy. |
 | LE-SERVICE-INFO | <a id="sc-service-info"></a>SC-SERVICE-INFO | Current producer/reset-context diagnostic presentation. |
-| LE-INPUT-QUAL, within LE-INPUT | <a id="sc-input-qual"></a>SC-INPUT-QUAL | Semantic qualification of acquisition and transport observations. |
-| LE-MOTOR-CTRL, within LE-TRACTION | <a id="sc-traction-ctrl"></a>SC-TRACTION-CTRL | Authority-context command acceptance, motor-control execution and qualified output observation. |
+| LE-INPUT-QUAL, within LE-INPUT | <a id="sc-input-qual"></a>SC-INPUT-QUAL | Semantic qualification of acquisition and transport observations, including Hall sampled-state/edge evidence. |
+| LE-MOTOR-CTRL, within LE-TRACTION | <a id="sc-traction-ctrl"></a>SC-TRACTION-CTRL | Authority-context command acceptance, configuration-qualified electrical rotor-sector/direction/edge-time interpretation, selected Hall-sensored FOC execution and qualified output/energy observation. |
 | LE-PLATFORM | <a id="sc-platform"></a>SC-PLATFORM | Local execution, reset-context, persistence and platform-health services. |
 | LE-CHARGE-CTRL, within LE-CHARGE | <a id="sc-charge-ctrl"></a>SC-CHARGE-CTRL | Physical charger control/status adaptation; it reports actual activity/path observations to policy. |
 | LE-USB-PD, within LE-CHARGE | <a id="sc-usb-pd"></a>SC-USB-PD | USB source communication/qualification adaptation. |
@@ -59,11 +59,11 @@ flowchart LR
 
 | Component | Inputs / outputs | Owned state and exclusions |
 |---|---|---|
-| SC-INPUT-QUAL | Raw/transport observations → typed values with qualification, freshness, uncertainty and producer/reset context | Owns qualification lifecycle, not a measurement circuit, physical truth or command authority. |
+| SC-INPUT-QUAL | Raw/transport observations → typed values with qualification, freshness, uncertainty and producer/reset context; Hall sampled state/edge evidence remains distinct | Owns qualification lifecycle, not a measurement circuit, physical truth, rotor map or command authority. |
 | SC-SET | Qualified settings receipt → requested/pending/active settings | Owns setting state; retained valid settings are distinct from current-startup receipt. |
 | SC-SESSION | Qualified startup facts/self-test results/fault notices → authority, session inhibition and report state | Owns Ready conjunction and current-session fault latch. It neither performs all tests nor proves physical inhibition. |
 | SC-DEMAND | Authority, settings, qualified rider/motion and capability → signed wheel command | Owns demand arbitration and regeneration episodes; it does not own actual torque. |
-| SC-TRACTION-CTRL | Authority-context command plus physical observations → physical-stage command and qualified actual-output information | Rejects absent, invalid, expired or context-mismatched authority/commands and commands both torque signs to zero within the derived bound (REQ-SYS-INT-004). A commanded zero is not physical protection or proof of zero torque. |
+| SC-TRACTION-CTRL | Authority-context command plus physical observations → physical-stage command and qualified actual-output information | Interprets Hall evidence as electrical sector/direction/edge time only with qualified map/alignment; executes the MCD-001 Hall-sensored FOC contract only with valid current/voltage/configuration evidence; then rejects absent, invalid, expired or context-mismatched authority/commands and commands both torque signs to zero within the derived bound (REQ-SYS-INT-004). A commanded zero is not physical protection or proof of zero torque. |
 | SC-BMS-LINK | Qualified UART transport → selected-unit battery observations | Owns protocol interpretation only, not UART electrical safety, measurement accuracy or BMS protection. |
 | SC-BAT-POLICY | Qualified battery/output/path observations plus configuration/context → distinct charge/discharge envelopes, restrictions and battery-fault information | `.V` owns the reached-10%-cutoff restriction state described below. It does not own hardware protection or the SC-SESSION fault latch. |
 | SC-HMI / SC-LIGHT-POLICY | HMI messages/reports and rider-light request; qualified lever/output states → HMI fields and front/rear logical light intent | Light policy owns normal request retention and mode arbitration, not lamp electrical output or visibility. |
@@ -110,7 +110,7 @@ Calls request a bounded local service and return completion/availability only; t
 
 The architecture uses symbolic bounds only. Let `T_acq`, `T_qual`, `T_pub`, `T_consume`, `T_cmd`, `T_accept`, `T_stage`, and `T_phys` be the allocated contributions from acquisition, qualification, publication, consumer recognition, command production, traction acceptance, physical-stage response and physical output. For an applicable condition, the derived end-to-end bound is the relevant sum of those contributions; interfaces must preserve enough age/context information to assess it. `T_reset` includes context invalidation and any explicit retained-state restoration qualification.
 
-SC-PLATFORM must schedule acquisition/qualification, authority withdrawal, command acceptance, self-test reporting and health supervision so the derived bounds for `IF-A-001`–`IF-A-011`, especially the speed-cutoff and command-authority budgets, are met. No rate, priority, watchdog period, timeout, circuit, motor-control algorithm, estimator or numeric deadline is selected here. Producers must expose incomplete and stale status before a consumer can rely on their value; a platform reset or shared rail event invalidates every affected producer context without conflating riding, BMS and charging session lifetimes.
+SC-PLATFORM must schedule acquisition/qualification, authority withdrawal, command acceptance, self-test reporting and health supervision so the derived bounds for `IF-A-001`–`IF-A-011`, especially the speed-cutoff and command-authority budgets, are met. [MCD-001](../Motor/MCD-001_Hall_Sensored_FOC_Technical_Design.md) selects Hall-sensored FOC; platform rate, priority, watchdog period, timeout, circuit, estimator implementation and numeric deadline remain unqualified. Producers must expose incomplete and stale status before a consumer can rely on their value; a platform reset or shared rail event invalidates every affected producer context without conflating riding, BMS and charging session lifetimes.
 
 ## Acceptance boundaries
 

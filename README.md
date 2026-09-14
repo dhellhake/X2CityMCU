@@ -571,8 +571,8 @@ Retained hardware is listed once in §4.5; mass definitions and historical donor
 | Installation | Built into the rear wheel | CONFIRMED |
 | Motor type | Brushless, gearless direct-drive hub motor | CONFIRMED |
 | Phase system | Three-phase motor connection | CONFIRMED |
-| Rotor-position sensing | Three Honeywell Hall sensors | REPORTED SPECIFICATION |
-| Temperature sensing | NTC temperature sensor | REPORTED SPECIFICATION |
+| Rotor-position sensing | Three Hall outputs switch cleanly at 3.3 V during wheel rotation with +5 V to Vcc, common Gnd and external 3.3 V pull-ups | CONFIRMED OBSERVATION; topology/order unqualified |
+| Temperature sensing | Temp-to-Gnd resistance 9.257 kilohm; housing IR measurement 23.8 °C after standing | CONFIRMED OBSERVATION; internal temperature/sensor type/curve unqualified |
 | Main motor connection | Three motor phase conductors | CONFIRMED |
 | Sensor connection | Six-pin Hall-sensor and temperature connector | CONFIRMED |
 | Voltage | 70 V | REPORTED SPECIFICATION |
@@ -581,10 +581,10 @@ Retained hardware is listed once in §4.5; mass definitions and historical donor
 | Speed constant | 9.5 rpm/V, apparently at or near no load | REPORTED SPECIFICATION |
 | Quoted torque | 25–38 N·m | REPORTED SPECIFICATION |
 | Pole information | Documentation states “42 poles” in a manner that may mean 42 poles or 42 pole-pairs | OPEN ISSUE |
-| Manufacturer and exact model | Not yet recorded | OPEN ISSUE |
+| Manufacturer and exact model | Unknown | OPEN ISSUE |
 | Continuous and peak rating definitions | Not yet established | OPEN ISSUE |
 
-The reported ratings shall be treated as preliminary sizing inputs until their definitions and applicability are verified.
+The reported ratings shall be treated as preliminary sizing inputs until their definitions and applicability are verified. [MOT-001](.devenv/Motor/MOT-001_Motor_Interface_Evidence.md) is canonical for the measured phase, Hall and temperature-interface evidence and its limitations. [MCD-001 Hall-sensored FOC design](.devenv/Motor/MCD-001_Hall_Sensored_FOC_Technical_Design.md) selects the traction-control method and its 40-km/h voltage-headroom gate; it neither changes the target nor proves that the reported 9.5 rpm/V or 58.8-V outer-cell reference provides sufficient loaded operating margin.
 
 ### 10.3 Selected HMI
 
@@ -661,11 +661,11 @@ The following interfaces connect new electrical development to retained or provi
 
 #### Phase interface
 
-Three phase conductors are **CONFIRMED**. Phase identity/order/rotation, connector, conductor current/insulation capability, resistance/inductance and phase-to-housing insulation require characterization (OI-020/024).
+Three phase conductors are **CONFIRMED**. Each pair measured 0.56 ohm under unrecorded test conditions; this is line-to-line resistance, not a per-winding value. Phase identity/order/rotation, connector, conductor current/insulation capability, compensated winding resistance, inductance and phase-to-housing insulation require characterization (OI-020/024); see [MOT-001](.devenv/Motor/MOT-001_Motor_Interface_Evidence.md).
 
 #### Hall and temperature interface
 
-Six-pin connector **CONFIRMED**; three Honeywell Hall sensors and NTC within it **REPORTED**. Supply/return are expected but complete pinout, output type/voltage/sequence and NTC topology/resistance curve/location/limits remain open (OI-021–023). Shared NTC/sensor return is possible, unverified.
+Six-pin connector functions are owner-identified as Vcc, Gnd, Temp, Hall1, Hall2 and Hall3; physical pin order remains open. Three Hall outputs switched cleanly at 3.3 V during wheel rotation with +5 V to Vcc, common Gnd and external 3.3 V pull-ups. Temp-to-Gnd measured 9.257 kilohm; the housing measured 23.8 °C by IR after standing, while internal sensor temperature remains unmeasured. These separate observations establish neither Hall make, topology/order/electrical angle nor an NTC identity/curve/location/limit. The eventual signal path is conditioning/acquisition → qualified Hall state → configuration-qualified electrical rotor sector/direction/edge time for traction; at rest a valid static state can support sector only after map/alignment qualification, without proving speed/standstill. See [MOT-001](.devenv/Motor/MOT-001_Motor_Interface_Evidence.md); OI-021–025 remain open.
 
 #### Mechanical and environmental motor interface
 
@@ -917,8 +917,8 @@ Assumptions are provisional, not confirmed component capability or approved redu
 | ASM-005 | Mechanical brakes/steering function with EPCS unpowered. |
 | ASM-006 | Motor/axle attachment retainable after torque-reaction/grade assessment. |
 | ASM-007 | Reported motor ratings (§10.2) are preliminary characterization inputs only. |
-| ASM-008 | Motor Hall sensors provide usable position signals. |
-| ASM-009 | NTC accessible through six-pin connector. |
+| ASM-008 | Three Hall outputs show clean 3.3 V switching with +5 V Vcc/common Gnd/external pull-ups; usable aligned rotor-sector interpretation, timing and fault coverage remain to qualify. |
+| ASM-009 | A Temp-to-Gnd resistive path is 9.257 kilohm with a 23.8 °C housing IR observation; internal sensor temperature, identity and useful limits remain to qualify. |
 | ASM-010 | Custom inverter can control the characterized motor; hill performance unproven. |
 | ASM-011 | Selected high-voltage HMI supply compatibility must be verified over the actual 14S pack envelope; reported HMI temperature ratings encompass the revised −10°C riding minimum. |
 | ASM-012 | Selected display matches prior verified protocol implementation. |
@@ -988,10 +988,10 @@ Protocol discovery is not reopened. Physical display identification and electric
 | OI-018 | Torque/hill feasibility | Verify PERF-003/004; illustrative loads in DV-009 do not establish ratings/margins | Before inverter/pack sizing commitment |
 | OI-019 | Pole count | Resolve 42 total poles versus 42 pole-pairs | Characterization |
 | OI-020 | Phase mapping | Identify phase order and rotation direction | Characterization |
-| OI-021 | Hall and NTC pinout | Determine all six sensor-connector pins | Characterization |
-| OI-022 | Hall electrical characteristics | Determine supply, output type, levels, and sequence | Characterization |
-| OI-023 | NTC characteristics | Determine topology, resistance curve, location, and useful temperature limits | Characterization |
-| OI-024 | Electrical motor parameters | Measure phase resistance, inductance, insulation, and verify speed constant | Characterization |
+| OI-021 | Hall/Temp connector mapping | Functions Vcc/Gnd/Temp/Hall1–3 are owner-identified; record physical pin order/orientation, connector family and return arrangement | Characterization |
+| OI-022 | Hall electrical characteristics | Clean 3.3 V switching was observed with +5 V Vcc/common Gnd/external pull-ups; characterize output type, pull-up range, state order, timing, electrical angle, alignment and fault coverage | Characterization |
+| OI-023 | Temp-path characteristics | Temp-to-Gnd is 9.257 kilohm with a 23.8 °C housing IR observation; determine sensor identity/topology, curve, location, internal-temperature relation, thermal response and useful limits | Characterization |
+| OI-024 | Electrical motor parameters | Line-to-line phase resistance is 0.56 ohm under unrecorded conditions; repeat with lead compensation, measure inductance/insulation, verify speed constant/back-EMF, and establish loaded inverter/battery modulation headroom for the MCD-001 40-km/h feasibility gate | Characterization |
 | OI-025 | Motor thermal envelope | Verify reference hill/repeated-stop capability and permitted cold performance within component limits. Temperature faults/required-information loss follow DEC-TMP-001–002; derive thermal references, margins, coverage and finite response (WS-OI-019). | Requirements and validation |
 
 ### 15.4 HMI issues

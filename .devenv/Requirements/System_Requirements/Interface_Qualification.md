@@ -1,9 +1,8 @@
 # Input and output information qualification
 
-**Type:** System Requirement. **Targets:** INT-001–003 → [LE-INPUT](../../Architecture/ARCH-001_System_Architecture.md#le-input); INT-004 → [LE-TRACTION](../../Architecture/ARCH-001_System_Architecture.md#le-traction).
-Part of **REQ-001-R1.6 — 2026-09-11**. [Shared model and verification](../REQ-001_Requirements.md). These approved children define information contracts; sensing/protection realization and numerical coverage remain open.
+**Released clarification in REQ-001-R2.0.** **Type:** System Requirement. **Targets:** INT-001–003 → [LE-INPUT](../../Architecture/ARCH-001_System_Architecture.md#le-input); INT-004 → [LE-TRACTION](../../Architecture/ARCH-001_System_Architecture.md#le-traction). The retained children were approved in R1.6; this clarification does not alter their requirement bodies or targets. Sensing/protection realization and numerical coverage remain open.
 
-The [selected battery UART](../../Battery/BAT-001_Selected_Pack_and_BMS.md) now fixes the BMS information source. [Battery integration](Battery_Integration.md) and [BMS software](../Abstract_Software_Requirements/BMS_Information.md) add endpoint/interpretation contracts; electrical levels, ground isolation/protection, source accuracy and timing still require qualification.
+The [selected battery UART](../../Battery/BAT-001_Selected_Pack_and_BMS.md) now fixes the BMS information source. [Battery integration](Battery_Integration.md) and [BMS software](../Abstract_Software_Requirements/BMS_Information.md) add endpoint/interpretation contracts; [MOT-001](../../Motor/MOT-001_Motor_Interface_Evidence.md) records the separate observed motor Hall/Temp evidence. Electrical levels, ground isolation/protection, source accuracy and timing still require qualification. Initial Hall qualification is ordinary startup progress; only a separately defined recognized required-information or speed/output fault uses its existing common response and selected error code. No vendor Hall-fault code is introduced.
 
 | ID | Requirement | Derived from | Planned verification / acceptance | Sources and open dependencies |
 |---|---|---|---|---|

@@ -1,12 +1,24 @@
 # FC-002 — Requirement and function trace
 
-**1.0 Released — 2026-09-13; FC-002-R1.0.** Contribution trace for [FC-001](FC-001_Functional_Concept.md) and [ARCH-001](ARCH-001_System_Architecture.md). Inputs: REQ-001-R1.6 at `ac43704a3b814143734ee614a1d8c7a50d398c6d`, HARA/SG-R1.0 at `2d4a39e4c761c148eb777751dae5a78076a2cba8`, and 12 explicitly Draft FSC additions in REQ-001 Draft1.7.
+**Released 1.1 — 2026-09-14; FC-002-R1.1 function-trace refinement.** Contribution trace for [FC-001](FC-001_Functional_Concept.md) and [ARCH-001](ARCH-001_System_Architecture.md). The retained 188-record functional snapshot remains intact; the five approved R2.0 allocation records are traced as controlled additions. The 12 FSC rows remain Draft.
 
 The [package release record](FC-001_Functional_Concept.md#release-record) approves this contribution trace; logical ownership remains provisional and requirement approval statuses are unchanged.
 
 The table accounts individually for all **188 catalogue records: 171 Approved, 12 Draft, 3 Deferred and 2 Withdrawn**. The **11 separately Approved safety goals** are mapped below and in FC-001; they are not included in that catalogue count. All 19 functions have upstream justification. **F** means a functional contribution; **C** means a cross-cutting configuration/performance/environment or interface constraint applied to the listed functions. Neither is a change to requirement Type/Target, approval or a claim of satisfaction. Inactive records impose no functional obligation.
 
 Each requirement link leads to its canonical text, target, source and verification. Function links lead to contracts and coordinating logical owners. Whole-item constraints retain their upstream responsible target even where several functions contribute; this table does not allocate a requirement to several owners. Explicit parent relations for the new FSC rows are in their Derived from columns. Existing supporting requirements are not retroactively made safety-derived children.
+
+## Released traction-control supplement
+
+The released 188-record trace remains intact. The following five approved allocation records are additions in the 228-record requirement catalogue; they refine F-005/F-007/F-009 realization and do not claim a new functional requirement or safety-goal satisfaction.
+
+| Requirement / canonical source | Status / role | Contributing function(s) |
+|---|---|---|
+| [REQ-SYS-TRQPOS-001](../Requirements/Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md#req-sys-trqpos-001) | Approved / F | [F-005](FC-001_Functional_Concept.md#f-005) |
+| [REQ-SYS-TRQCTL-001](../Requirements/Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md#req-sys-trqctl-001) | Approved / F | [F-005](FC-001_Functional_Concept.md#f-005) |
+| [UR-TRACTION-POSITION-001](../Requirements/Unit_Requirements/Control_Unit_Requirements.md#ur-traction-position-001) | Approved / F | [F-005](FC-001_Functional_Concept.md#f-005) |
+| [UR-TRACTION-CONTROL-001](../Requirements/Unit_Requirements/Control_Unit_Requirements.md#ur-traction-control-001) | Approved / F | [F-005](FC-001_Functional_Concept.md#f-005) |
+| [REQ-SYS-TRQHW-001](../Requirements/Abstract_Hardware_Requirements/Traction_Control_Hardware.md#req-sys-trqhw-001) | Approved / F | [F-005](FC-001_Functional_Concept.md#f-005), [F-007](FC-001_Functional_Concept.md#f-007), [F-009](FC-001_Functional_Concept.md#f-009) |
 
 ## Catalogue record mapping
 
@@ -221,4 +233,4 @@ Every released hazardous event retains its goal mapping in HARA-001; FC-001's sc
 
 ## Use and maintenance
 
-Use this mapping to review coverage, then read the canonical obligation and contract. A function/goal link is neither an implementation allocation nor executed evidence. Add/revise trace with any requirement, function, architecture or scenario change. Derivation must remain acyclic; retaining a source or a related reference does not create a parent edge. Released inputs stay available at their cited Git commits. This contribution trace is released as FC-002-R1.0; the FSC additions remain Draft in the separately controlled REQ-001 revision. Changes to function mappings require impact review and controlled revision; recording a provisional responsibility does not approve the final architecture.
+Use this mapping to review coverage, then read the canonical obligation and contract. A function/goal link is neither an implementation allocation nor executed evidence. Add/revise trace with any requirement, function, architecture or scenario change. Derivation must remain acyclic; retaining a source or a related reference does not create a parent edge. Released inputs stay available at their cited Git commits. This contribution trace is released as FC-002-R1.1; the FSC additions remain Draft in the separately controlled REQ-001 revision. Changes to function mappings require impact review and controlled revision; recording a provisional responsibility does not approve the final architecture.

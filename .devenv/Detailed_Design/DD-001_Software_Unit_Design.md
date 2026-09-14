@@ -1,6 +1,6 @@
 # DD-001 — Software unit design
 
-**Released 1.0 — 2026-09-13; DD-001-R1.0.** This downstream artifact implements no code, makes no physical-control claim, and does not revise the released system/component architecture.
+**Released 1.1 — 2026-09-14; DD-001-R1.1.** This controlled refinement defines the Hall-position/FOC-control units. It implements no code, makes no physical-control claim, and does not revise the approved system/component architecture.
 
 ## Scope and modelling rules
 
@@ -8,7 +8,7 @@ Each `U-*` unit has one owning `SC-*` component. Unit Requirements derive only f
 
 Every local record carries a semantic value, qualification, freshness, producer identity, configuration, and reset/operation context. A consumer accepts it only if all are current, coherent and qualified; absent, stale, invalid and context-mismatched values remain unavailable. A command, acknowledgement, status bit or zero request never proves a physical state. Inputs are immutable snapshots and state/output updates are atomic.
 
-No final host, board, pin, task rate, timeout, calibration, control algorithm, diagnostic coverage or physical output is selected. The repository's firmware and WeAct STM32H723VGT6 V1.2/DRV8300 EVM material are development references only, not final-product design or acceptance evidence.
+No final host, board, pin, task rate, timeout, calibration, diagnostic coverage or physical output is selected. The selected Hall-sensored FOC realization is defined in [MCD-001](../Motor/MCD-001_Hall_Sensored_FOC_Technical_Design.md); its board/timing/calibration/protection gates remain open. The repository's firmware and WeAct STM32H723VGT6 V1.2/DRV8300 EVM material are development references only, not final-product design or acceptance evidence.
 
 ## Unit catalogue
 
@@ -20,8 +20,10 @@ No final host, board, pin, task rate, timeout, calibration, control algorithm, d
 | `U-DEMAND-ARBITER` | SC-DEMAND | signed wheel-demand arbitration, SW-I-001–005 | UR-DEMAND-001 |
 | `U-HMI-ADAPTER` | SC-HMI | VD18MT receipt and outgoing report formation, SW-I-002/006 | UR-HMI-001 |
 | `U-LIGHT-MODE` | SC-LIGHT-POLICY | retained normal request and front/rear mode, SW-I-005/006 | UR-LIGHT-001 |
-| `U-INPUT-CONTEXT`, `U-INPUT-QUALIFIER` | SC-INPUT-QUAL | acquisition context and semantic qualification, SW-I-001 | REQ-SYS-INP-001 |
+| `U-INPUT-CONTEXT`, `U-INPUT-QUALIFIER` | SC-INPUT-QUAL | acquisition context, semantic qualification and Hall sampled-state/edge evidence, SW-I-001 | REQ-SYS-INP-001 |
 | `U-TRACTION-ACCEPT` | SC-TRACTION-CTRL | authority/command acceptance and observation publication, SW-I-004/005 | REQ-SYS-TRQACC-001 |
+| `U-TRACTION-POSITION` | SC-TRACTION-CTRL | qualified Hall evidence → electrical rotor sector/direction/edge time, internal traction input | UR-TRACTION-POSITION-001 |
+| `U-TRACTION-CONTROL` | SC-TRACTION-CTRL | Hall-sensored FOC current regulation and output/energy observation, internal traction realization | UR-TRACTION-CONTROL-001 |
 | `U-PLATFORM-CONTEXT`, `U-PLATFORM-RETENTION`, `U-PLATFORM-HEALTH` | SC-PLATFORM | context, retention result and health events, SW-I-009 | REQ-SYS-PLT-001 |
 | DD-002 units | BMS-LINK, BAT-POLICY, CHARGE-POLICY, SERVICE-INFO | energy/charging/service owner scope | DD-002 owner |
 
@@ -49,7 +51,7 @@ Light mode starts normal request `N` Off in each powered session and retains it 
 
 ## Input, traction and platform derivation gates
 
-`U-INPUT-CONTEXT` invalidates affected observations on producer/reset/power context change. `U-INPUT-QUALIFIER` maps acquisition only through a later qualified contract to semantic values with qualification/freshness; it never substitutes a previous value for unknown. `U-TRACTION-ACCEPT` accepts authority and signed command only when current, qualified, unexpired and context-matched; otherwise it requests zero of both signs and separately reports acceptance/output observation. `U-PLATFORM-CONTEXT` creates/invalidate contexts; `U-PLATFORM-RETENTION` restores only host-provided items after integrity/context qualification; `U-PLATFORM-HEALTH` publishes scheduling/local-health events without asserting a safe physical reaction.
+`U-INPUT-CONTEXT` invalidates affected observations on producer/reset/power context change. `U-INPUT-QUALIFIER` maps acquisition only through a later qualified contract to semantic values with qualification/freshness; it never substitutes a previous value for unknown. For motor Hall inputs it publishes sampled logic state independently from edge evidence; a static qualifying state can support later rotor-sector interpretation at genuine rest, but neither it nor an absent edge proves vehicle speed/standstill or a complete fault diagnosis. `U-TRACTION-ACCEPT` accepts authority and signed command only when current, qualified, unexpired and context-matched; otherwise it requests zero of both signs and separately reports acceptance/output observation. `U-TRACTION-POSITION` consumes electrical rotor-sector/direction/edge-time only after map/alignment qualification. `U-TRACTION-CONTROL` performs the selected Hall-sensored FOC algorithm defined in MCD-001: same-epoch valid phase-current samples, bounded electrical angle, `Id*=0`, calibrated `Iq*`, common vector saturation/anti-windup and separately qualified actual torque/energy observation. A reference or PWM state does not prove torque, braking or energy direction. `U-PLATFORM-CONTEXT` creates/invalidate contexts; `U-PLATFORM-RETENTION` restores only host-provided items after integrity/context qualification; `U-PLATFORM-HEALTH` publishes scheduling/local-health events without asserting a safe physical reaction.
 
 These are explicit SW realizations in ARCH-003 and support HSI-001/004/007. Their distinct ASW requirements and Unit children are recorded in the Control Unit Requirements catalogue. Electrical/sensing, command representation, response bounds, host resources, reset domains, retention integrity, physical outputs and diagnostic coverage remain parent acceptance gates.
 

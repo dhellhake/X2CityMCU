@@ -1,6 +1,6 @@
 # DD-004 — Dynamic software architecture views
 
-**Released 1.0 — 2026-09-13; DD-004-R1.0.** These views supplement the canonical unit designs in [DD-001](DD-001_Software_Unit_Design.md) and [DD-002](DD-002_Energy_Charging_Unit_Design.md), and the static component, deployment and interface views in [DD-003](DD-003_Static_Software_Architecture_Views.md).  They do not introduce components, state, timing, algorithms, APIs, physical behavior, or verification evidence.  A sequence is one documented interaction example, not an exhaustive state model.
+**Released 1.1 — 2026-09-14; DD-004-R1.1.** These controlled views include the Hall/FOC interaction example and supplement the canonical unit designs in [DD-001](DD-001_Software_Unit_Design.md) and [DD-002](DD-002_Energy_Charging_Unit_Design.md), and the static component, deployment and interface views in [DD-003](DD-003_Static_Software_Architecture_Views.md).
 
 ## Scope and reading rules
 
@@ -41,12 +41,13 @@ sequenceDiagram
         S-->>T: current authority token
         D->>D: form signed command from qualified current inputs and capability
         D-->>T: signed demand with context/expiry
-        T->>T: accept only current, qualified, unexpired, context-matched authority and command
-        T-->>S: qualified acceptance/output observation
+        T->>T: accept current authority/command, require valid Hall/current/Vdc/configuration
+        T->>T: FOC with zero d-axis demand and qualified torque-current target
+        T-->>S: qualified acceptance/output/energy observation
         T-->>L: qualified or unqualified active-braking/output observation
     else a guard fact is absent, invalid, expired, mismatched, or inhibited
         S-->>T: no usable authority
-        T->>T: request zero of both signs
+        T->>T: request zero of both signs, physical outcome remains separately observed
     end
     S-->>H: selected report
     BP-->>H: usable charge/current information or presentation fallback input
@@ -56,6 +57,30 @@ sequenceDiagram
 ```
 
 `SC-TRACTION-CTRL.V` requesting zero does not prove zero physical torque or protection.  `SC-SERVICE-INFO.V` only assembles producer-tagged current observations and cannot grant authority or clear inhibition.
+
+## Hall acquisition and rotor-sector interpretation
+
+```mermaid
+sequenceDiagram
+    participant FE as HC-INPUT-FE
+    participant I as SC-INPUT-QUAL.V
+    participant P as U-TRACTION-POSITION
+    participant T as SC-TRACTION-CTRL.V
+    FE-->>I: acquired Hall sample or edge evidence with source context
+    I->>I: qualify sampled state and edge evidence separately
+    alt map/alignment and required evidence qualified
+        I-->>P: current qualified state/edge evidence
+        P->>P: publish electrical sector/direction/edge time
+        P-->>T: qualified rotor observation
+    else static state at genuine rest
+        I-->>P: current qualified static state
+        P-->>T: sector only when map/alignment qualified
+    else stale, invalid, or map unavailable
+        P-->>T: unavailable, no inferred sector/speed
+    end
+```
+
+This does not require an edge at rest, treat an absent edge as a default fault, or convert electrical edge timing into vehicle speed. Any such conversion separately requires qualified pole-pair, direction and loaded-wheel calibration evidence.
 
 ## Settings application, HMI loss and lighting feedback
 

@@ -2,7 +2,7 @@
 
 **Historical baseline released 2026-09-09 by Dominik, project owner**, after review of all generated files. That baseline is approved for downstream hazard analysis, requirements refinement, architecture and verification planning with controlled open issues.
 
-**Current requirements baseline: REQ-001-R1.9, released 2026-09-13.** The **223 records** comprise **206 Approved, 12 Draft, 3 Deferred and 2 Withdrawn** in 28 clusters: 176 System, 22 Abstract Software, 4 Abstract Hardware and 21 Unit Requirements. R1.9 approves five ASW refinements, 21 Unit Requirements and DD-001 through DD-004; the R1.8 197-record baseline remains unchanged. The 12 FSC rows remain Draft. **Completion point A is released; B remains open.** Numerical, characterization, safety/design and executed-verification gates remain as recorded.
+**Current requirements baseline: REQ-001-R2.0, released 2026-09-14.** The **228 records** comprise **211 Approved, 12 Draft, 3 Deferred and 2 Withdrawn** in 29 clusters: 176 System, 24 Abstract Software, 5 Abstract Hardware and 23 Unit Requirements. R2.0 approves exactly five Hall-position/FOC-control records. **Historical baseline REQ-001-R1.9 remains released at 223 records** (206 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); its R1.8 scope and release record remain unchanged. Completion B, characterization, safety/design and executed-verification gates remain open.
 
 The separately released [FC-001/002-R1.0 package](../Architecture/FC-001_Functional_Concept.md#release-record), dated 2026-09-13, defines 19 functions and references 12 Draft safety-derived System Requirements. Its [function trace](../Architecture/FC-002_Function_Trace.md) also covers the 11 separately approved safety goals. The concept release preserved those Draft requirement statuses and then-provisional logical ownership. The subsequent [architecture release](../Architecture/ARCH-001_System_Architecture.md#release-record) approves the reviewed component structure, interfaces and host roles. REQ-001-R1.8 separately approves the nine technical refinements without promoting the FSC rows; B remains open. R1.6 and HARA/SG release snapshots remain unchanged in Git.
 
@@ -10,12 +10,12 @@ The separately released [FC-001/002-R1.0 package](../Architecture/FC-001_Functio
 |---|---|
 | [PD-001](../../README.md) | Working Draft1.3: separate mobile-charger placement; R1.6 used Draft1.2 and historical PD-001-R1.1 remains its released baseline |
 | [ID-001](ID-001_Item_Definition.md) | Working Draft1.2: charger placement and architecture context; R1.6 used Draft1.1 and historical ID-001-R1.0 remains its released baseline |
-| [REQ-001](REQ-001_Requirements.md) | **Released R1.9:** 223-record/28-cluster catalogue; approves five ASW and 21 Unit records while preserving R1.8 scope |
+| [REQ-001](REQ-001_Requirements.md) | **Released R2.0:** 228-record/29-cluster catalogue; approves five Hall-position/FOC-control records while preserving R1.9 scope and the 12 Draft FSC rows |
 | [HARA-001 / SG-001 release](../Safety/HARA-001_Hazard_Analysis.md#release-record) | **Released HARA-001-R1.0 / SG-001-R1.0, 2026-09-12**: qualitative hazard analysis and 11 additional approved top-level safety goals, in a separate controlled baseline; the R1.6 counts above remain unchanged |
 | [DEC-001](DEC-001_Decisions_and_Open_Issues.md) | Working Draft1.7: records R1.8 technical-refinement evidence gates; Draft1.5 remains the R1.6 source snapshot; 19 workstream issues open, including WS-OI-020(B); WS-OI-004 closed |
 | [ARCH-001](../Architecture/ARCH-001_System_Architecture.md) | **Released ARCH-001-R1.0, 2026-09-13**: 38 logical components, composition, 13 interface contracts and realization mappings; Draft0.3/0.2 remain FC/R1.6 snapshots; approved requirement bindings unchanged |
-| [ARCH-002 / ARCH-003](../Architecture/ARCH-002_Hardware_Architecture.md) | **Released ARCH-002-R1.0 / ARCH-003-R1.0, 2026-09-13**: 27 physical HW components and [software architecture](../Architecture/ARCH-003_Software_Architecture.md) with 14 project component types, two supplied firmware types and local vehicle/charger deployment |
-| [FC-001 / FC-002](../Architecture/FC-001_Functional_Concept.md#release-record) | **Released FC-001-R1.0 / FC-002-R1.0, 2026-09-13**: functional definition, contracts, diagrams, modes, response strategy, document walkthroughs and contribution trace; the concept-release snapshot retained Draft architecture and 12 Draft FSC requirements; the subsequent architecture release is separate |
+| [ARCH-002 / ARCH-003](../Architecture/ARCH-002_Hardware_Architecture.md) | **Released ARCH-002-R1.1 / ARCH-003-R1.1, 2026-09-14**: Hall evidence and Hall-sensored FOC allocation refinement; final components, timing, protection and physical acceptance remain open |
+| [FC-001 / FC-002](../Architecture/FC-001_Functional_Concept.md#release-record) | **Released FC-001-R1.1 / FC-002-R1.1, 2026-09-14**: Hall/FOC functional contribution refinement; the 12 Draft FSC requirements remain Draft |
 | [Selected battery/BMS reference](../Battery/BAT-001_Selected_Pack_and_BMS.md) | Frozen source snapshot: Draft0.1; selected components, manufacturer evidence and qualified derivations; no integration acceptance claimed |
 | [Brake interface evidence](evidence/Brake_Input_Reference.md) | Revision 1.0: fixed shared coded interface, provenance, values and diagnostic limitations |
 | [VD18MT implementation evidence](evidence/VD18MT_Implementation_Reference.md) | Revision 1.0: historical tested source and evidence qualifications |
@@ -30,6 +30,18 @@ All explicit parameters, assumptions, exclusions and evidence gates retain their
 Update the controlling decision and affected requirements/context together. Preserve stable IDs, assess technical changes and obtain applicable owner approval. The requirement Type/Target and stated allocation bindings are approved in REQ-001-R1.6; ARCH-001/002/003-R1.0 separately approves the reviewed architecture allocation; complete B coverage, sensing realization, safety derivation and vehicle verification retain their gates. Later source changes do not silently alter this released baseline; assess impacts and revise affected requirements under change control.
 
 ## Release and history
+
+### REQ-001-R2.0 — Motor-interface and Hall-sensored FOC release
+
+On 2026-09-14 Dominik reviewed the current motor-interface/Hall-sensored FOC changes and instructed: “I read the changes you did. Release them.” This approves MOT-001-R1.0, MCD-001-R1.0, ARCH-002-R1.1, ARCH-003-R1.1, FC-001-R1.1, FC-002-R1.1, DD-001-R1.1, DD-003-R1.1 and DD-004-R1.1, together with exactly `REQ-SYS-TRQPOS-001`, `UR-TRACTION-POSITION-001`, `REQ-SYS-TRQCTL-001`, `UR-TRACTION-CONTROL-001` and `REQ-SYS-TRQHW-001`.
+
+**Scope:** The catalogue is 228 records in 29 clusters: 211 Approved, 12 Draft, 3 Deferred and 2 Withdrawn (176 System, 24 Abstract Software, 5 Abstract Hardware and 23 Unit Requirements). The five named records become Approved. The 223 R1.9 records retain their bodies, targets and statuses; all 12 FSC rows remain Draft. PD-001, ID-001 and DEC-001 remain Draft supporting sources, including DEC-MOTOR-001; ARCH-001-R1.0 and DD-002-R1.0 remain their prior releases.
+
+**Release checks:** Motor evidence, decision, architecture, functional contribution, detailed-design views and the five ASW/AHW/UR derivations were reconciled; requirement status/type/cluster totals, local Markdown links and release/index metadata were checked. No code, board, bench, hardware, vehicle or executed verification is represented.
+
+**Remaining gates:** Implementation readiness is not established. Final algorithms and record schemas; scheduling, timing and PWM frequency; controller/inverter and hardware protection; current limits; phase/Hall motor map, `Kt`, inductance and temperature curve; current/voltage/energy-path observation; 40-km/h voltage headroom; diagnostic coverage; safe test fixtures and all verification remain open. Release approval does not close Completion B, claim ISO certification, or qualify a vehicle.
+
+**Git snapshot:** this release commit is the authoritative package; Git preserves R1.9 and earlier releases without duplicate archives or manifests.
 
 ### REQ-001-R1.9 — Detailed-design release
 
