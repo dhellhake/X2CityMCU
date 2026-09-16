@@ -1,6 +1,6 @@
 # Battery capability policy
 
-**Type:** Abstract Software Requirement. **Target:** [LE-BAT-POLICY](../../Architecture/ARCH-001_System_Architecture.md#le-bat-policy), realized by SC-BAT-POLICY; final host and configuration-specific deployment remain open.
+**Type:** Abstract Software Requirement. **Target:** [LE-BAT-POLICY](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-bat-policy), realized by SC-BAT-POLICY; final host and configuration-specific deployment remain open.
 
 Part of **REQ-001-R1.6**. [Model and verification rules](../REQ-001_Requirements.md) apply. This allocation derives battery permission/limit information; physical current regulation, protective switching and truthful source information remain system responsibilities.
 
@@ -13,9 +13,8 @@ Part of **REQ-001-R1.6**. [Model and verification rules](../REQ-001_Requirements
 | Contract | Allocation and remaining contribution |
 |---|---|
 | Physical battery capability | Keep charge and discharge capabilities distinct, including qualified current limits and charge-path acceptance. Limits account for the most restrictive applicable cell/group, temperature, configured protection and connected-component envelope. An unknown required limit cannot enlarge permission. |
-| Operation-specific restrictions | Distinguish propulsion limits, regenerative charge acceptance and removed-pack external charging. The 10% propulsion cutoff does not automatically remove auxiliary discharge capability. A discharge-permissible/charge-forbidden temperature is an ordinary regeneration restriction under DEC-TMP-003. |
+| Operation-specific restrictions | Distinguish propulsion limits, regenerative charge acceptance and auxiliary discharge capability. The 10% propulsion cutoff does not automatically remove auxiliary discharge capability. A discharge-permissible/charge-forbidden temperature is an ordinary regeneration restriction under DEC-TMP-003. |
 | Riding integration | LE-SESSION owns the common fault latch and Ready guard; LE-DEMAND owns rider/brake/speed/profile arbitration and regeneration re-entry behavior; LE-TRACTION must enforce physical torque/current capability. A newly available battery envelope alone does not re-enable torque, clear a session fault or increase regeneration while its recovery guard remains unmet. |
-| Detached charging integration | LE-CHARGE owns source/connection qualification, 80% ceiling, initial charge need, completion hold, actual charging-fault latch and four visible states. It must operate without vehicle electronics; this software allocation does not select a host or make vehicle-host execution an off-vehicle dependency. |
 | Physical protection | LE-ENERGY and the supplied BMS/other derived protection contributors retain the system obligation for energized paths, residual/generated energy, faults and host/UART loss. Vendor protection release is an observation, not automatic permission to resume a system session. |
 
 Only the information-policy contribution is allocated here. Calibration, source accuracy, diagnostics, actual protection and parent system acceptance remain open; no software unit, inverter algorithm or circuit is selected.

@@ -14,6 +14,8 @@ controlled configuration set:
 Those documents are the single source of truth for fitted parts, fixed PCB
 nets and physical board connectors.
 
+The owner-selected WeAct board is the vehicle `HC-CONTROLLER`; its joint EVM resource contract is the [allocated traction HSI](../Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md), read with the [EVM integration contract](../Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_Integration_and_Requirements_Fit.md). There, `SC-ANALOG-ACQ` owns raw regular DMA and injected JEOS/JDR separately; `SC-MOTOR-PHASE-IF` owns calibrated/reconstructed fast current and regular phase-voltage diagnostics; `SC-SUPPLY-IF` owns fast Vdc and separate regular supplies; and `SC-HALL-IF` owns capture through complete electrical position. Its 1-kHz regular producer and 10-ms cyclic consumer are planned nominal targets; the traction HSI requires preimplementation trigger/rank derivation/readback, completed-half DMA write-window/copy ownership and calibration-context activation. Current firmware configuration below is evidence only: the traction HSI defines the selected pin and resource allocation, and this configuration assigns no traction PWM/ADC pins, adapter continuity, sampling timing, ADC/DMA/cache policy, physical wiring or independent safety shutdown. Draft vehicle integration items require qualification before a firmware change.
+
 | Document attribute | Value |
 | --- | --- |
 | Document ID | `X2C-HSI-001` |
@@ -99,10 +101,11 @@ Verification method codes are:
 | `HSI-STA-009` | The complete 179-entry interrupt vector table (16 core entries plus 163 external IRQ entries, 716 bytes total) shall be copied from Flash to a 1024-byte-aligned DTCM allocation, and `SCB.VTOR` shall reference that copy before interrupts are unmasked. | Reset handler, SCB, linker | `I`, `T-HW` | Implemented in [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) and [`memory.x`](../../memory.x). |
 | `HSI-STA-010` | Startup shall unmask interrupts only after all runtime memory relocation, zeroing and vector-table redirection are complete. | Reset handler | `I`, `T-HW` | Implemented by `cpsie i` immediately before `main`. |
 | `HSI-STA-011` | The linker shall reserve a non-overlapping 4 KiB, 8-byte-aligned main stack at the top of DTCM and shall place its end in the initial vector-table stack entry. | Linker, reset vector | `I`, `T-SW` | Implemented in [`memory.x`](../../memory.x). |
-| `HSI-STA-012` | Each configured OS task shall have a 1024-byte stack in DTCM, and the configured task count shall not exceed the statically allocated task array. | OS, linker | `I`, `T-SW` | Implemented for three tasks by `STACK_SIZE = 256` words and the DTCM OS object. Stack-depth evidence remains open. |
+<a id="hsi-sta-012"></a>
+| `HSI-STA-012` | Each configured OS task shall have a 1024-byte stack in DTCM, and the configured task count shall not exceed the statically allocated task array. | OS, linker | `I`, `T-SW` | Implemented for three tasks by `STACK_SIZE = 256` words and the DTCM OS object. On an exception from Thread mode using PSP, the hardware frame is stacked on that task PSP before Handler mode executes on MSP; it is not stacked initially on MSP. The current port reserves a minimum suspended PSP frame of 19 words without FP or 53 words with eager FP, including its saved context/alignment, but task call depth/local data and FP use still require measurement. Handler call depth and every permitted nesting chain consume the separate MSP, whose 4 KiB reservation must be assessed independently. This correction follows Arm's [Cortex-M7 exception model](https://documentation-service.arm.com/static/61efd6602dd99944d051417b); stack-depth evidence remains open. |
 | `HSI-STA-013` | Thread mode shall use the process stack pointer in privileged mode before the background task is entered. | `main`, Cortex-M7 core | `I`, `T-HW` | Implemented by the `PSP` and `CONTROL=0x2` writes in [`src/main.rs`](../../src/main.rs). |
 | `HSI-STA-014` | A processor exception or panic shall invoke the allocated safe reaction and shall not leave outputs in an unidentified state beyond the item FTTI. | Exception handlers, system safety mechanism | `T-FI`, `T-HW` | Partial; handlers stop in a loop and WWDG1 can reset only after it has started. Pre-watchdog reaction, output state and FTTI are `TBD`. |
-| `HSI-STA-015` | When the Rust target exposes floating-point registers, the OS shall select eager automatic FP stacking, preserve each task's complete `EXC_RETURN`, and conditionally preserve `s16-s31`. A target without `fpregs` shall select a context switch containing no FP instructions. | OS, Cortex-M port | `I`, `T-SW`, `T-HW` | Implemented by the compile-selected PendSV ports in [`src/os/isr`](../../src/os/isr) and `InitializeContextSwitching`. Target-specific FP context verification is open; the previous target result is historical and is not evidence for this target. |
+| `HSI-STA-015` | When the Rust target exposes floating-point registers, the OS shall select eager automatic FP stacking, preserve each task's complete `EXC_RETURN`, and conditionally preserve `s16-s31`. A target without `fpregs` shall select a context switch containing no FP instructions. | OS, Cortex-M port | `I`, `T-SW`, `T-HW` | Implemented by the compile-selected PendSV ports in [`src/os/isr`](../../src/os/isr) and `InitializeContextSwitching`. Eager FP hardware stacking extends the interrupted task's PSP frame; PendSV software saves the optional high FP registers on that same PSP, while the PendSV Rust selector and nested exception handlers execute on MSP. Qualification must therefore cover both PSP and MSP high-water marks. Target-specific FP context verification is open; the previous target result is historical and is not evidence for this target. |
 | `HSI-MEM-001` | Ordinary initialized and zero-initialized objects not explicitly selected for DTCM shall be allocated in the 320 KiB AXI SRAM range `0x2400_0000..0x2405_0000`. | Linker | `I`, `T-SW` | Implemented by `.data` and `.bss` placement and an AXI SRAM bounds assertion. |
 | `HSI-MEM-002` | D2 SRAM, D3 SRAM and backup SRAM shall remain unallocated until startup initialization, ownership and diagnostic requirements are defined for them. | Linker, MCU software | `I` | Implemented; only region symbols are currently exposed by [`memory.x`](../../memory.x). |
 | `HSI-MEM-003` | External SDRAM shall not be linked, dereferenced or exposed to application software until FMC pin setup, SDRAM timing, JEDEC initialization and a startup memory test have completed successfully. | FMC configuration, linker, system integration | `I`, `T-HW`, `T-FI` | Implemented as a prohibition; SDRAM is absent from [`memory.x`](../../memory.x). FMC initialization and test are not implemented. |
@@ -191,109 +194,9 @@ routes recorded in the
 | `HSI-VER-007` | Before safety release, every normative requirement in this HSI and its controlled board-profile companions shall have an allocated ASIL, parent safety-requirement trace, responsible owner, verification result and controlled evidence reference, or an approved rationale for non-applicability. | Safety/configuration management | `I` | Open; these drafts intentionally expose the missing allocations and evidence. |
 | `HSI-VER-008` | Tool confidence, compiler/linker assumptions and verification-tool suitability shall be assessed according to the project safety plan before their outputs are used as sole safety evidence. | Safety management | `I`, `A` | Open; no tool-confidence assessment is present in this repository. |
 
-## Configuration Summary
+## Implementation notes
 
-| Subsystem | Current software state | Principal source |
-| --- | --- | --- |
-| CPU supply/performance | Naked reset selects internal MCU LDO and waits for `ACTVOSRDY`; PWR voltage scale 0 is then selected directly | [`src/mcu/peripherals/pwr.rs`](../../src/mcu/peripherals/pwr.rs) |
-| System clock | 25 MHz HSE input through PLL1 to 550 MHz CPU clock | [`src/mcu/peripherals/rcc.rs`](../../src/mcu/peripherals/rcc.rs) |
-| Flash interface | 3 wait states; `WRHIGHFREQ=3` | [`src/mcu/peripherals/flash.rs`](../../src/mcu/peripherals/flash.rs) |
-| FPU | CP10 and CP11 enabled for `fpregs`; eager automatic low-FP stacking and task-local high-FP context | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`src/os/isr`](../../src/os/isr) |
-| ITCM/DTCM | Enabled during reset; selected code/data relocated before `main` | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs), [`memory.x`](../../memory.x) |
-| Vector table | 179 entries (716 bytes), copied from Flash to DTCM and `VTOR` redirected to the RAM copy | [`src/drv/startup/mod.rs`](../../src/drv/startup/mod.rs) |
-| SWD | MCU SWD interface on PA13/SWDIO and PA14/SWCLK through P3; reset via probe system reset request or board button | [`.devenv/STM32H723VGT6/STM32H723VGT6.cfg`](../STM32H723VGT6/STM32H723VGT6.cfg) |
-| USART1 | 115200 8N1, PA9/PA10, polled I/O | [`src/mcu/peripherals/usart.rs`](../../src/mcu/peripherals/usart.rs) |
-| SysTick | Processor clock source at 550 MHz; interrupt-driven scheduler deadlines | [`src/drv/systick/mod.rs`](../../src/drv/systick/mod.rs) |
-| WWDG1 | Window watchdog enabled for program-flow supervision | [`src/mcu/peripherals/wwdg.rs`](../../src/mcu/peripherals/wwdg.rs) |
-| Heartbeat output | PE3 active-high output, updated by the supervised 5 ms task | [`src/mcu/boardled/mod.rs`](../../src/mcu/boardled/mod.rs) |
-| Physical target | WeAct STM32H723VGT6 resources and connectors | [Board documentation](../STM32H723VGT6/README.md) |
-
-## Startup Configuration
-
-The reset and startup sequence is:
-
-1. Mask interrupts in the naked `Reset` entry.
-2. Request the internal LDO and wait for `PWR_CSR1.ACTVOSRDY` before any Rust
-   stack or RAM access.
-3. Branch to `ResetAfterSupply`.
-4. Enable ITCM and DTCM through the Cortex-M7 TCM control registers.
-5. Enable the double-precision FPU by granting full access to CP10 and CP11.
-6. Copy ordinary initialized data from Flash to AXI SRAM.
-7. Copy selected DTCM data from Flash to DTCM and zero selected DTCM BSS.
-8. Copy `.itcm_text` from Flash to ITCM.
-9. Zero ordinary BSS in AXI SRAM.
-10. Copy the complete 179-entry, 716-byte vector table to a 1024-byte-aligned
-    DTCM allocation and write its address to `SCB.VTOR`.
-11. Unmask interrupts and enter `main()`.
-12. Mask interrupts again and select eager FP context stacking when `fpregs` is
-    available.
-13. Enable HSI, wait for readiness and select it as SYSCLK. Enable SYSCFG,
-    assert `UR18 bit 0` while HSI is selected (setting the persistent
-    `FLASH_OPTSR2 CPUFREQ_BOOST` bit 2), configure power and Flash timing,
-    then disable/reconfigure PLL1 and switch to the 550 MHz tree. CPU frequency
-    boost disables ITCM and DTCM ECC.
-14. Configure the PE3 heartbeat output and USART1.
-15. Create the OS tasks.
-16. Set `RCC_GCR.WW1RSC=1` before enabling the WWDG1 clock. Configure the
-    program-flow monitor, start WWDG1 and arm the first SysTick deadline from
-    the same time origin.
-17. Select PSP for privileged thread mode and start the background task.
-
-No MCU I-cache, D-cache, MPU, DMA or MDMA configuration is currently made.
-SVCall, SysTick and PendSV are explicitly programmed to `0xD0`, `0xE0` and
-`0xF0` respectively. The numerically lower SVCall and SysTick priorities allow
-scheduler bookkeeping to complete before PendSV context switching.
-
-## Clock And Power Tree
-
-### Power And Flash
-
-| Item | Register-level configuration |
-| --- | --- |
-| MCU core supply | `PWR_CR3`: `LDOEN=1`, `BYPASS=0`, `SCUEN=0` |
-| Voltage scaling | `PWR_D3CR.VOS = Scale 0` selected directly through PWR |
-| 550 MHz performance mode | `FLASH_OPTSR2 CPUFREQ_BOOST` bit 2 asserted through SYSCFG `UR18 bit 0` while HSI is selected; ITCM/DTCM ECC disabled |
-| Flash | `FLASH_ACR.LATENCY = 3` wait states; `FLASH_ACR.WRHIGHFREQ = 3` |
-
-Flash latency and `WRHIGHFREQ=3` are configured before the PLL switch. CPU cache enablement is not explicitly configured by the current software.
-
-### PLL1
-
-| Parameter | Value |
-| --- | --- |
-| Clock source | External HSE, 25 MHz, crystal mode (`HSEBYP=0`) |
-| HSE pins | PH0/OSC_IN and PH1/OSC_OUT |
-| `DIVM1` | 5 |
-| PLL1 input | 25 MHz / 5 = 5 MHz |
-| Input range | 4 to 8 MHz |
-| VCO mode | Wide VCO |
-| `DIVN1` | 110 |
-| PLL1 VCO | 5 MHz x 110 = 550 MHz |
-| `DIVP1` | 1, output enabled |
-| PLL1P / SYSCLK | 550 MHz / 1 = 550 MHz |
-| `DIVQ1`, `DIVR1` | Both set to 2, but both outputs disabled |
-| Fractional mode | Disabled, `FRACN1=0` |
-
-The HSI does not claim a usable 48 MHz USB clock. PLL1Q is disabled and no
-other 48 MHz source is configured.
-
-### Resulting Clock Domains
-
-| Clock | Divider/source | Frequency |
-| --- | --- | ---: |
-| CPU clock / `D1CPRE` | SYSCLK / 1 | 550 MHz |
-| HCLK / AXI / AHB | SYSCLK / 2 | 275 MHz |
-| PCLK3 / APB3 | HCLK / 2 | 137.5 MHz |
-| PCLK1 / APB1 | HCLK / 2 | 137.5 MHz |
-| PCLK2 / APB2 | HCLK / 2 | 137.5 MHz |
-| PCLK4 / APB4 | HCLK / 2 | 137.5 MHz |
-| USART1 kernel | PCLK2 | 137.5 MHz; `BRR=1194` |
-| SysTick | Processor clock | 550 MHz |
-| WWDG1 | PCLK3 before watchdog divider | 137.5 MHz |
-
-With the APB prescalers set to `/2` and the timer clock selection left at its
-reset behavior, applicable APB timer kernels run at 275 MHz. No timer is
-otherwise initialized by this firmware.
+The normative HSI rows above are canonical. The future traction DMA region is D2 SRAM at `0x3000_0000`, 32 KiB, non-cacheable when allocated; current SVCall/SysTick/PendSV priority bytes are `D0/E0/F0`. See `memory.x` and the source evidence for remaining implementation detail.
 
 ## Memory And Core Placement
 
@@ -321,61 +224,7 @@ No external-memory region is present in `memory.x`; external memory cannot be
 used as normal linked memory until its controller, GPIO, timing, initialization
 and startup diagnostics are defined.
 
-## Scheduler And Watchdog Hardware
 
-### SysTick
-
-- Clock source: processor clock, 550 MHz.
-- Counter width: 24 bits.
-- Interrupt: enabled whenever a scheduler deadline is armed.
-- Initial deadline: 1000 us after the common program-flow epoch.
-- Later deadlines: dynamically armed to the next cyclic task release.
-- Maximum single hardware interval: 16777216 ticks, approximately 30.504029 ms.
-- Deadlines less than 4096 processor ticks, approximately 7.447273 us, away use
-  the maximum-length fallback and a software-pended immediate scheduler rescan.
-- Target timing evidence for the release-build path is pending the [550 MHz
-  evidence record](evidence/2026-09-13-stm32h723-550mhz.md).
-- SysTick pauses briefly while it is reprogrammed; cumulative wall-clock drift
-  remains part of the open independent timing-plausibility verification.
-- The vector table entry is the shared OS symbol `SysTick_Isr`.
-
-### WWDG1
-
-| Parameter | Value |
-| --- | ---: |
-| Peripheral clock | PCLK3 = 137.5 MHz |
-| Watchdog divider | 32768 |
-| Reload counter | `0x7F` |
-| Window counter | `0x61` |
-| Early wakeup interrupt | Disabled |
-| Strict earliest service boundary | 31 ticks = 7.387695 ms after reload (prescaler phase applies) |
-| Reset timeout | 64 ticks = 15.252015 ms after reload (prescaler phase applies) |
-| Software-authorized service interval | 8.5 to 14.0 ms; compile-time maximum guard is below 63 ticks = 15.013702 ms |
-
-Before enabling WWDG1, firmware sets and reads back `RCC_GCR.WW1RSC=1`,
-which RM0468 requires to select a system reset; the bit clears on system reset
-and must be set at every startup. Expiration with this bit clear has undefined
-behavior. Target fault-injection and reset-recovery evidence is pending the
-[550 MHz evidence record](evidence/2026-09-13-stm32h723-550mhz.md).
-
-WWDG1 and the first SysTick deadline are started in one outer critical section
-with time origin 0. The unsupervised 10 ms PFM task is the only software path
-that calls `Wwdg::Refresh`. It services WWDG1 only after all expected supervised
-task checkpoints have been validated. A PFM fault inhibits all later refreshes
-and leaves the hardware watchdog to reset the MCU.
-
-## Configured UART Interface
-
-USART1 uses asynchronous transmit and receive, 8 data bits, no parity,
-one stop bit, oversampling by 16, prescaler `/1`, non-inverted signaling, LSB
-first and enabled FIFOs. Hardware flow control, DMA and USART interrupts are
-not enabled; communication is polled.
-
-| Interface | MCU TX | MCU RX | AF | Baud | GPIO electrical setup |
-| --- | --- | --- | ---: | ---: | --- |
-| USART1 | PA9 | PA10 | 7 | 115200 | TX very-high speed/no pull; RX very-high speed/pull-up; push-pull |
-
-The GPIOA AHB4 clock is enabled as a consequence of this UART configuration. PA9 and PA10 are available on the board I/O headers; the physical mapping is controlled by the board connector reference.
 
 ## Intentionally Unconfigured Hardware
 

@@ -1,6 +1,6 @@
 # Retained mechanical control
 
-**Type:** Abstract Hardware Requirement. **Target:** [LE-MECH](../../Architecture/ARCH-001_System_Architecture.md#le-mech), realized by the retained steering and front/rear mechanical brake assemblies (HC-MECH).
+**Type:** Abstract Hardware Requirement. **Target:** [LE-MECH](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-mech), realized by the retained steering and front/rear mechanical brake assemblies (HC-MECH).
 
 Part of **REQ-001-R1.6 — 2026-09-11**. [Model and shared verification](../REQ-001_Requirements.md). The release preserves each requirement's ID, wording, sources and acceptance. The hardware allocation is approved. Integration remains responsible for interference, mounting, expanded-duty suitability and vehicle-level acceptance; no new brake mechanism or electrical brake-input sensing is selected.
 

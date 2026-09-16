@@ -1,6 +1,6 @@
 # Lighting policy
 
-**Type:** Abstract Software Requirement. **Target:** [LE-LIGHT-POLICY](../../Architecture/ARCH-001_System_Architecture.md#le-light-policy), realized by **SC-LIGHT-POLICY** within LE-AUX. Part of **REQ-001-R1.6**; [model and shared verification](../REQ-001_Requirements.md).
+**Type:** Abstract Software Requirement. **Target:** [LE-LIGHT-POLICY](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-light-policy), realized by **SC-LIGHT-POLICY** within LE-AUX. Part of **REQ-001-R1.6**; [model and shared verification](../REQ-001_Requirements.md).
 
 This leaf owns current-session normal-light command retention and logical mode selection. Physical lamp output, power-on/reset behavior, supply protection and brightness remain system obligations. No PWM, sensing circuit, software host or detailed unit is selected.
 

@@ -5,6 +5,9 @@ board fitted with an STM32H723VGT6 in the LQFP100 package and its onboard
 0.96 inch 80x160 ST7735 LCD. The board and fitted LCD combination was confirmed
 on 2026-09-13.
 
+The board is selected as the vehicle `HC-CONTROLLER`; its controlled vehicle
+integration boundary is recorded in the [allocated traction HSI](../Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md).
+
 ## Documents
 
 - [WeAct STM32H723VGT6 board profile](WeAct-STM32H723VGT6-board.md) records
@@ -12,6 +15,8 @@ on 2026-09-13.
 - [WeAct STM32H723VGT6 connector reference](WeAct-STM32H723VGT6-connectors.md)
   records the P1/P2 2x22 I/O headers, P3 SWD header and onboard connector
   pinouts.
+- [Vehicle-controller integration](../Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md)
+  records this selection, EVM resource boundary and charger-host open decision.
 
 ## Tooling resources
 

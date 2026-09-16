@@ -1,6 +1,6 @@
 # Fixed cell bank
 
-**Type:** Abstract Hardware Requirement. **Target:** [LE-CELLS](../../Architecture/ARCH-001_System_Architecture.md#le-cells), realized by HC-CELLS, the built cell bank.
+**Type:** Abstract Hardware Requirement. **Target:** [LE-CELLS](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-cells), realized by HC-CELLS, the built cell bank.
 
 Part of **REQ-001-R1.6**. [Model and verification rules](../REQ-001_Requirements.md) apply. This physical allocation does not allocate the supplied BMS firmware to hardware.
 

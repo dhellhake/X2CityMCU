@@ -1,6 +1,6 @@
 # BMS information qualification
 
-**Type:** Abstract Software Requirement. **Target:** [LE-BMS-LINK](../../Architecture/ARCH-001_System_Architecture.md#le-bms-link), realized by SC-BMS-LINK; final host remains open.
+**Type:** Abstract Software Requirement. **Target:** [LE-BMS-LINK](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-bms-link), realized by SC-BMS-LINK; final host remains open.
 
 Part of **REQ-001-R1.6**. [Model and verification rules](../REQ-001_Requirements.md) apply. Software interprets qualified UART transport; electrical compatibility and physical information accuracy remain system responsibilities.
 

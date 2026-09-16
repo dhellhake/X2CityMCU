@@ -1,8 +1,0 @@
-# Charging-adapter interface allocations
-
-**Released in REQ-001-R1.9 — 2026-09-13.** These two downstream Abstract Software Requirements refine the released `REQ-SYS-HSI-006` and the existing ARCH-003 SW realization. They preserve all R1.8 records and their stated technical acceptance gates.
-
-| ID | Requirement | Derived from | Planned verification / acceptance | Sources / open dependencies |
-|---|---|---|---|---|
-| <a id="req-sys-usbpd-001"></a>`REQ-SYS-USBPD-001` | **Type:** Abstract Software Requirement. **Target:** LE-USB-PD / SC-USB-PD.C. USB-source adaptation software shall publish qualified source, cable and contract capability with source-event context, and shall not select a negotiation profile, timeout or electrical behavior. | REQ-SYS-HSI-006 | `T-SW`, `T-SYS`: source/context invalidation and qualified/unavailable publication. | IF-A-007, SW-I-007; selected source/cable behavior, electrical interface, profile and timing acceptance remain open. |
-| <a id="req-sys-chgctrl-001"></a>`REQ-SYS-CHGCTRL-001` | **Type:** Abstract Software Requirement. **Target:** LE-CHARGE-CTRL / SC-CHARGE-CTRL.C. Charge-control adaptation software shall translate charge-policy intent only with current qualified source, path and battery conditions, and publish qualified actual-activity/path observations. It shall never treat intent as transfer and shall not select regulator/control algorithm or electrical behavior. | REQ-SYS-HSI-006 | `T-SW`, `T-SYS`: condition withdrawal, producer-context changes and activity/path publication. | IF-A-007, SW-I-007; charge-path/activity, physical protection, regulator behavior and timing acceptance remain open. |

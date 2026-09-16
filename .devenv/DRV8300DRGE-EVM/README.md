@@ -1,8 +1,11 @@
 # DRV8300DRGE-EVM Integration Reference
 
-This directory contains only the vendor artifacts needed to develop and bring
-up motor-control firmware for a WeAct Studio STM32H723VGT6 connected to a fixed
-DRV8300DRGE-EVM. It is not a PCB redesign or manufacturing package.
+This directory contains only vendor artifacts for the owner-selected,
+unmodified DRV8300DRGE-EVM. The project-specific selection, host/adapter,
+protection and acceptance boundary is maintained in the separate
+[integration and requirements-fit record](../Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_Integration_and_Requirements_Fit.md).
+It is not a PCB redesign or manufacturing package, and it does not select a
+WeAct board as the vehicle host.
 
 ## Retained Vendor Artifacts
 
