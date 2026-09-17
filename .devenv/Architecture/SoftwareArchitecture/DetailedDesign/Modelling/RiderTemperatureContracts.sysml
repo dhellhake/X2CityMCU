@@ -17,7 +17,7 @@ package X2CityDetailedUnit_RiderTemperatureInterfaces {
 
     port def RegularScanInputPort {
         doc /* The accelerator, brake and temperature qualifiers receive only the completed regular-DMA scan from U-ANALOG-ACQ-REGULAR. */
-        in item payload:RegularScanV1;
+        in item payload:RegularScan;
     }
     port def CalibrationInputPort {
         doc /* Receives the active channel conversion, plausibility and calibration data used to qualify rider and temperature observations. */
@@ -25,6 +25,6 @@ package X2CityDetailedUnit_RiderTemperatureInterfaces {
     }
     port def SensorHealthOutputPort {
         doc /* Each qualifier publishes its conversion, plausibility and source health so dependent policy can withhold affected observations. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
 }

@@ -20,7 +20,7 @@ package X2CityDetailedUnit_SessionEligibility {
     }
     port def QualifiedMotionInputPort {
         doc /* Receives U-TRACTION-MOTION's qualified speed, direction and standstill result for existing Session guards; no demand or Hall absence is inferred as standstill. */
-        in item payload:QualifiedMotionV1;
+        in item payload:QualifiedMotion;
     }
     part def SessionEligibilityEvaluator {
         /* Evaluates current Ready prerequisites and riding-session inhibition to publish authority only when all required facts are current and qualified. Direct sensor-health conditions retain producer source/reason for the existing first-recognized-fault policy, while the independent PlatformHealthRecord retains platform fault/readiness input; this unit owns neither physical proof nor sensor aggregation. */

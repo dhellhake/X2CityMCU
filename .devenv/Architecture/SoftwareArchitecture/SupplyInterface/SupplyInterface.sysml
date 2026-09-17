@@ -4,13 +4,13 @@ package X2CitySoftwareContract_SupplyInterface {
     private import X2CitySoftwareContract_Platform::*;
     port def FastInjectedEpochInputPort {
         doc /* Receives paired raw injected ADC values from AnalogAcquisition for fast DC-link voltage conversion. SupplyInterface applies its accepted fast-link calibration and aperture qualification before publishing Vdc. */
-        in item payload:FastInjectedEpochV1;
+        in item payload:FastInjectedEpoch;
     }
     port def RegularAdcScanInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for regular supply-rail conversion. The regular path keeps its own source binding, state and calibration context separate from fast DC-link acquisition. */
-        in item payload:RegularAdcScanV1;
+        in item payload:RegularAdcScan;
     }
-    item def FastDcLinkVoltageV1:>ContextualSoftwareInformation {
+    item def FastDcLinkVoltage:>ContextualSoftwareInformation {
         attribute dcLinkVoltageVolts:Real;
         attribute sourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
@@ -20,9 +20,9 @@ package X2CitySoftwareContract_SupplyInterface {
     }
     port def FastDcLinkVoltageOutputPort {
         doc /* Publishes qualified fast DC-link voltage with paired source ranks, aperture, timestamp and calibration context to TractionControl and service aggregation. This output is the fast Vdc control input and is not derived by MotorPhaseInterface. */
-        out item payload:FastDcLinkVoltageV1;
+        out item payload:FastDcLinkVoltage;
     }
-    item def SupplyVoltageV1:>ContextualSoftwareInformation {
+    item def SupplyVoltage:>ContextualSoftwareInformation {
         attribute supplyRail:String; // enum: board, logic, auxiliary, or fitted rail identity.
         attribute railVoltageVolts:Real;
         attribute sourceAdcRank:Integer;
@@ -33,11 +33,11 @@ package X2CitySoftwareContract_SupplyInterface {
     }
     port def SupplyVoltageOutputPort {
         doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy, BatteryProtection and service aggregation. The record retains the selected rail identity and source provenance. */
-        out item payload:SupplyVoltageV1;
+        out item payload:SupplyVoltage;
     }
     port def SupplyHealthOutputPort {
         doc /* Publishes supply conversion health evidence to Platform, SessionPolicy, TractionControl and service aggregation. It qualifies the fast and regular source paths rather than carrying a voltage command. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
 }
 

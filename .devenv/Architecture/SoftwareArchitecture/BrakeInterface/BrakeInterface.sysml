@@ -4,9 +4,9 @@ package X2CitySoftwareContract_BrakeInterface {
     private import X2CitySoftwareContract_Platform::*;
     port def RegularAdcScanInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition. BrakeInterface consumes only the configured source rank with accepted calibration and converts it to a coded brake state; the input remains raw acquisition evidence. */
-        in item payload:RegularAdcScanV1;
+        in item payload:RegularAdcScan;
     }
-    item def BrakeStateV1:>ContextualSoftwareInformation {
+    item def BrakeState:>ContextualSoftwareInformation {
         attribute brakeState:String; // enum: released, applied, implausible, unavailable.
         attribute sourceResistanceOhms:Real;
         attribute sourceAdcRank:Integer;
@@ -16,11 +16,11 @@ package X2CitySoftwareContract_BrakeInterface {
     }
     port def BrakeStateOutputPort {
         doc /* Publishes qualified released, applied, implausible or unavailable brake state with source resistance and acquisition provenance to SettingsPolicy, SessionPolicy, DemandPolicy, LightPolicy and service aggregation. Demand uses this state to block positive demand only. */
-        out item payload:BrakeStateV1;
+        out item payload:BrakeState;
     }
     port def BrakeHealthOutputPort {
         doc /* Publishes brake-sensor health evidence to Platform, SessionPolicy and service aggregation. It qualifies the source conversion and freshness rather than commanding physical brake actuation. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
 }
 

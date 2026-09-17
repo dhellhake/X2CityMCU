@@ -6,7 +6,7 @@ package X2CitySoftwareContract_SessionPolicy {
     }
     port def QualifiedMotionInputPort {
         doc /* Receives explicitly qualified physical motion and standstill evidence from TractionControl for the Ready guard. Electrical Hall edge absence, command absence or retained settings cannot substitute for this record. */
-        in item payload:QualifiedMotionV1;
+        in item payload:QualifiedMotion;
     }
     attribute def AuthorityGeneration;
     item def RidingAuthority:>ContextualSoftwareInformation, X2CityContract_SessionPolicy::RidingAuthority {

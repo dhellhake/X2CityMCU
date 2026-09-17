@@ -8,7 +8,7 @@ package X2CitySoftwareContract_SettingsPolicy {
     // standstill from command absence, electrical Hall edge absence, or a retained setting.
     port def QualifiedMotionInputPort {
         doc /* Receives qualified physical motion and standstill evidence from TractionControl for the setting-application guard. The guard must use this record and cannot infer standstill from command absence, Hall edge absence or a retained setting. */
-        in item payload:QualifiedMotionV1;
+        in item payload:QualifiedMotion;
     }
     item def RidingSettingsState:>ContextualSoftwareInformation {
         attribute requestedLevel:String;
@@ -22,14 +22,14 @@ package X2CitySoftwareContract_SettingsPolicy {
         doc /* Publishes the complete requested, pending and active settings view to SessionPolicy and service aggregation. DemandPolicy does not consume this broad view for torque profiles, preventing a pending request from becoming active demand. */
         out item payload:RidingSettingsState;
     }
-    item def ActiveRidingSettingsV1:>ContextualSoftwareInformation {
+    item def ActiveRidingSettings:>ContextualSoftwareInformation {
         attribute activeLevel:String;
         attribute activeSpeedLimitKilometresPerHour:Real;
         attribute activeSettingsGeneration:ContextGeneration;
     }
     port def ActiveRidingSettingsOutputPort {
         doc /* Publishes only the already-applied riding level, speed limit and active-settings generation to DemandPolicy. This projection is the demand input and excludes pending or merely requested settings. */
-        out item payload:ActiveRidingSettingsV1;
+        out item payload:ActiveRidingSettings;
     }
 }
 

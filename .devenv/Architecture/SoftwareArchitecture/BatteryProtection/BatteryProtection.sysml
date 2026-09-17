@@ -8,22 +8,22 @@ package X2CitySoftwareContract_BatteryProtection {
     }
     // Each sign branch carries its own value, qualification and restriction evidence. Consumers
     // must use the relevant branch, never the aggregate envelope validity, when deciding one sign.
-    item def PositivePropulsionCapabilityV1:>ContextualSoftwareInformation {
+    item def PositivePropulsionCapability:>ContextualSoftwareInformation {
         attribute positivePropulsionPermitted:Boolean;
         attribute maximumPositiveWheelTorqueNewtonMetres:Real;
         attribute maximumForwardSpeedKilometresPerHour:Real;
         attribute restrictionReason:String;
         attribute restrictionEpisodeGeneration:ContextGeneration;
     }
-    item def NegativeRegenerationCapabilityV1:>ContextualSoftwareInformation {
+    item def NegativeRegenerationCapability:>ContextualSoftwareInformation {
         attribute negativeRegenerationPermitted:Boolean;
         attribute maximumRegenerativeWheelTorqueMagnitudeNewtonMetres:Real;
         attribute restrictionReason:String;
         attribute restrictionEpisodeGeneration:ContextGeneration;
     }
     item def BatteryCapabilityEnvelope:>ContextualSoftwareInformation {
-        item positivePropulsion:PositivePropulsionCapabilityV1;
-        item negativeRegeneration:NegativeRegenerationCapabilityV1;
+        item positivePropulsion:PositivePropulsionCapability;
+        item negativeRegeneration:NegativeRegenerationCapability;
         attribute lowSocPropulsionCutoffLatched:Boolean;
         attribute activeRestrictionSummary:String;
         attribute batteryFaultSummary:String;

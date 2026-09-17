@@ -9,7 +9,7 @@ package X2CityDetailedUnit_PlatformHealth {
     }
     port def SensorHealthInputPort {
         doc /* Receives normalized producer health as an input to platform readiness aggregation; it preserves the producer's source and reason. */
-        in item payload:SensorHealthConditionV1;
+        in item payload:SensorHealthCondition;
     }
     part def PlatformHealthManager {
         /* Receives normalized sensor health without returning it as a sensor cause, then publishes

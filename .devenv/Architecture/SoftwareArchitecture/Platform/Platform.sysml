@@ -20,7 +20,7 @@ package X2CitySoftwareContract_Platform {
     // Normalized qualified evidence from one producer. Platform consumes this evidence without
     // publishing it back as a new sensor cause; a platform fast-safety state is separate from a
     // Session-recognized fault and its fault-code policy.
-    item def SensorHealthConditionV1:>ContextualSoftwareInformation {
+    item def SensorHealthCondition:>ContextualSoftwareInformation {
         attribute source:String;
         attribute reason:String;
         attribute severity:String;
@@ -31,7 +31,7 @@ package X2CitySoftwareContract_Platform {
     }
     port def SensorHealthInputPort {
         doc /* Receives normalized health evidence from AnalogAcquisition and semantic sensor interfaces. Platform consumes producer source, severity, timestamp and calibration context to update its separate fast-safety state. */
-        in item payload:SensorHealthConditionV1;
+        in item payload:SensorHealthCondition;
     }
     // Typed calibration entries carry logical coefficients/identities, never selected numeric
     // values. U-PLATFORM-CALIBRATION validates and freezes the bundle before publication.
@@ -190,7 +190,7 @@ package X2CitySoftwareContract_Platform {
         attribute timingBounds:DemandTimingBoundsCalibration;
         attribute postStopRegenerationGuardId:String;
     }
-    item def CalibrationBundleV1:>ContextualSoftwareInformation {
+    item def CalibrationBundle:>ContextualSoftwareInformation {
         attribute immutable:Boolean;
         attribute bundleId:String;
         attribute bundleRevision:String;
@@ -205,7 +205,7 @@ package X2CitySoftwareContract_Platform {
         attribute demandPolicyCalibration:DemandPolicyCalibration;
         attribute actualOutputEstimationCalibration:ActualOutputEstimationCalibration;
     }
-    item def ActiveCalibrationBundle:>CalibrationBundleV1;
+    item def ActiveCalibrationBundle:>CalibrationBundle;
     port def CalibrationBundleOutputPort {
         doc /* Publishes the immutable, validated typed calibration bundle to acquisition, conversion, demand and traction consumers. Components accept their applicable entries only in the matching activation context; missing or unvalidated bundle data cannot be treated as selected defaults. */
         out item payload:ActiveCalibrationBundle;

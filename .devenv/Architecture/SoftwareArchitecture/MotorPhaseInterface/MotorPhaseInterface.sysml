@@ -4,13 +4,13 @@ package X2CitySoftwareContract_MotorPhaseInterface {
     private import X2CitySoftwareContract_Platform::*;
     port def FastInjectedEpochInputPort {
         doc /* Receives paired raw injected ADC values from AnalogAcquisition for same-aperture phase-current reconstruction. MotorPhaseInterface applies accepted current calibration and plausibility checks before publishing feedback. */
-        in item payload:FastInjectedEpochV1;
+        in item payload:FastInjectedEpoch;
     }
     port def RegularAdcScanInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for slow phase-voltage diagnostics. These scans are not fast FOC current feedback and retain their own acquisition context. */
-        in item payload:RegularAdcScanV1;
+        in item payload:RegularAdcScan;
     }
-    item def PhaseCurrentEpochV1:>ContextualSoftwareInformation {
+    item def PhaseCurrentEpoch:>ContextualSoftwareInformation {
         attribute phaseACurrentAmperes:Real;
         attribute phaseBCurrentAmperes:Real;
         attribute phaseCCurrentAmperes:Real;
@@ -26,9 +26,9 @@ package X2CitySoftwareContract_MotorPhaseInterface {
     }
     port def PhaseCurrentEpochOutputPort {
         doc /* Publishes the qualified same-aperture three-phase current epoch to TractionControl and service aggregation. The record includes reconstruction, rank, timing and calibration context required by the fast control consumer. */
-        out item payload:PhaseCurrentEpochV1;
+        out item payload:PhaseCurrentEpoch;
     }
-    item def PhaseVoltageDiagnosticV1:>ContextualSoftwareInformation {
+    item def PhaseVoltageDiagnostic:>ContextualSoftwareInformation {
         attribute phaseIdentifier:String; // enum: A, B, C or a fitted diagnostic phase.
         attribute phaseVoltageVolts:Real;
         attribute sourceAdcRank:Integer;
@@ -38,11 +38,11 @@ package X2CitySoftwareContract_MotorPhaseInterface {
     }
     port def PhaseVoltageDiagnosticOutputPort {
         doc /* Publishes separately qualified phase-voltage diagnostic observations to BatteryProtection and service aggregation. This slow diagnostic output is not used as fast FOC feedback. */
-        out item payload:PhaseVoltageDiagnosticV1;
+        out item payload:PhaseVoltageDiagnostic;
     }
     port def MotorPhaseHealthOutputPort {
         doc /* Publishes phase-current and phase-voltage conversion health evidence to Platform, SessionPolicy, TractionControl and service aggregation. It carries qualification state rather than a phase command. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
 }
 

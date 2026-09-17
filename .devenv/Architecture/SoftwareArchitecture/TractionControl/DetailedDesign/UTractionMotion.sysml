@@ -9,7 +9,7 @@ package X2CityDetailedUnit_TractionMotion {
     // Owner: SC-TRACTION-CTRL.V. This is the actual producer route for vehicle-motion facts.
     port def ElectricalPositionInputPort {
         doc /* Receives current Hall capture/position interpretation as the evidence input for speed, direction and standstill qualification. */
-        in item payload:HallElectricalPositionV1;
+        in item payload:HallElectricalPosition;
     }
     port def MotionCalibrationInputPort {
         doc /* Receives released map, pole-pair, final-drive, loaded-wheel and observability/standstill criteria for vehicle-motion interpretation. */
@@ -17,7 +17,7 @@ package X2CityDetailedUnit_TractionMotion {
     }
     port def MotionHealthInputPort {
         doc /* Receives Hall capture and position health; a capture fault, static state or absent edge alone cannot qualify standstill. */
-        in item payload:SensorHealthConditionV1;
+        in item payload:SensorHealthCondition;
     }
     port def PlatformContextInputPort {
         doc /* Receives the platform context used to keep motion result and Hall evidence within one current vehicle/reset generation. */
@@ -29,7 +29,7 @@ package X2CityDetailedUnit_TractionMotion {
     }
     port def QualifiedMotionOutputPort {
         doc /* Publishes qualified vehicle speed, travel direction and standstill to Settings, Session, Demand and actual-output estimation independently of Ready or command acceptance. */
-        out item payload:QualifiedMotionV1;
+        out item payload:QualifiedMotion;
     }
     part def VehicleMotionEstimator {
         /* Publishes vehicle speed, direction and standstill independently of Ready and command

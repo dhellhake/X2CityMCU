@@ -13,15 +13,15 @@ package X2CityDetailedUnit_DemandArbiter {
     // Owner: SC-DEMAND; DD-001; UR-DEMAND-001; SW-I-001..005.
     port def DemandAcceleratorInputPort {
         doc /* Receives the qualified accelerator position from U-ACCELERATOR-QUALIFY as the active-profile request source. */
-        in item payload:AcceleratorPositionV1;
+        in item payload:AcceleratorPosition;
     }
     port def DemandBrakeInputPort {
         doc /* Receives the qualified brake/lever state from U-BRAKE-QUALIFY; lever action blocks only the positive branch. */
-        in item payload:BrakeStateV1;
+        in item payload:BrakeState;
     }
     port def DemandActiveSettingsInputPort {
         doc /* Receives U-SET-STATE's active level 0–5 and active normalized speed limit; pending settings cannot enter this port. */
-        in item payload:ActiveRidingSettingsV1;
+        in item payload:ActiveRidingSettings;
     }
     port def DemandAuthorityInputPort {
         doc /* Receives Session authority with independent generation, decision and expiry timestamps; matching generation never prolongs authority expiry. */
@@ -33,11 +33,11 @@ package X2CityDetailedUnit_DemandArbiter {
     }
     port def DemandMotionInputPort {
         doc /* Receives qualified vehicle speed, direction and standstill from U-TRACTION-MOTION for cutoffs, recovery and rearm guards. */
-        in item payload:QualifiedMotionV1;
+        in item payload:QualifiedMotion;
     }
     port def DemandActualOutputInputPort {
         doc /* Receives U-TRACTION-ACTUAL-OUTPUT's qualified applied-wheel-torque estimate and powered-forward evidence for post-stop regen rearm. */
-        in item payload:ActualTractionOutputV1;
+        in item payload:ActualTractionOutput;
     }
     port def DemandPlatformContextInputPort {
         doc /* Receives the current platform context that invalidates Demand state and prevents an old decision from crossing a reset boundary. */

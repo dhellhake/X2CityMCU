@@ -4,8 +4,8 @@ package X2CityDetailedUnit_MotorPhaseInterface {
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CityDetailedUnit_AnalogAcquisition::*;
     private import X2CityDetailedUnit_PlatformCalibration::*;
-    item def PhaseCurrentFeedbackRecord :> PhaseCurrentEpochV1;
-    item def PhaseVoltageDiagnosticRecord :> PhaseVoltageDiagnosticV1;
+    item def PhaseCurrentFeedbackRecord :> PhaseCurrentEpoch;
+    item def PhaseVoltageDiagnosticRecord :> PhaseVoltageDiagnostic;
     port def PhaseFeedbackOutputPort {
         doc /* U-MOTOR-PHASE-FAST sends same-aperture qualified phase-current feedback to traction control and actual-output estimation. */
         out item payload:PhaseCurrentFeedbackRecord;
@@ -16,11 +16,11 @@ package X2CityDetailedUnit_MotorPhaseInterface {
     }
     port def InjectedEpochInputPort {
         doc /* U-MOTOR-PHASE-FAST receives the identified JEOS/JDR epoch from fast acquisition and rejects a different operation epoch. */
-        in item payload:InjectedEpochV1;
+        in item payload:InjectedEpoch;
     }
     port def RegularScanInputPort {
         doc /* U-MOTOR-PHASE-DIAG receives the separate regular-DMA scan for non-fast voltage diagnostics. */
-        in item payload:RegularScanV1;
+        in item payload:RegularScan;
     }
     port def CalibrationInputPort {
         doc /* Receives active phase channel, sign, offset, gain and reconstruction calibration for the appropriate fast or diagnostic conversion. */
@@ -28,7 +28,7 @@ package X2CityDetailedUnit_MotorPhaseInterface {
     }
     port def SensorHealthOutputPort {
         doc /* Publishes current-feedback or phase-diagnostic conversion health while leaving Session fault policy to its owner. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
     part def FastPhaseCurrentProcessor { port injectedEpochIn:InjectedEpochInputPort; port calibrationIn:CalibrationInputPort; port phaseFeedbackOut:PhaseFeedbackOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     part def PhaseVoltageDiagnosticProcessor { port regularScanIn:RegularScanInputPort; port calibrationIn:CalibrationInputPort; port phaseVoltageDiagnosticOut:PhaseVoltageDiagnosticOutputPort; port sensorHealthOut:SensorHealthOutputPort; }

@@ -40,13 +40,13 @@ package X2CitySharedSoftwareTypes {
     // These records are shared type definitions, while SC-TRACTION-CTRL.V exclusively owns
     // their vehicle publications. Electrical rotor direction alone is insufficient for either
     // record; validated Hall/capture interpretation criteria are required before qualification.
-    item def QualifiedMotionV1:>ContextualSoftwareInformation, QualifiedVehicleMotion {
+    item def QualifiedMotion:>ContextualSoftwareInformation, QualifiedVehicleMotion {
         attribute vehicleSpeedKilometresPerHour:Real;
         attribute travelDirection:String; // enum: forward, reverse, stationary, unavailable.
         attribute standstill:Boolean;
         attribute motionQualificationBasis:String;
     }
-    item def ActualTractionOutputV1:>ContextualSoftwareInformation, ActualTractionOutput {
+    item def ActualTractionOutput:>ContextualSoftwareInformation, X2CityContract_MotorControl::ActualTractionOutput {
         attribute actualAppliedWheelTorqueNewtonMetres:Real;
         attribute activeElectricalBraking:Boolean;
         attribute actualOutputAvailable:Boolean;

@@ -11,7 +11,7 @@ package X2CitySoftwareContract_HallInterface {
         doc /* Receives captured Hall channel state, channel identity, timer timestamp and sequence from the vehicle capture boundary. HallInterface validates transitions and capture integrity before deriving electrical position. */
         in item payload:HallCapture;
     }
-    item def HallElectricalPositionV1:>ContextualSoftwareInformation {
+    item def HallElectricalPosition:>ContextualSoftwareInformation {
         attribute electricalAngleDegrees:Real;
         attribute electricalSector:Integer;
         attribute rotationDirection:String; // enum: forward, reverse, stationary, unavailable.
@@ -21,11 +21,11 @@ package X2CitySoftwareContract_HallInterface {
     }
     port def HallElectricalPositionOutputPort {
         doc /* Publishes complete qualified electrical angle, sector and direction with capture and calibration provenance to TractionControl and service aggregation. This is electrical position evidence, not qualified physical vehicle motion. */
-        out item payload:HallElectricalPositionV1;
+        out item payload:HallElectricalPosition;
     }
     port def HallHealthOutputPort {
         doc /* Publishes Hall capture and position-estimation health evidence to Platform, SessionPolicy, TractionControl and service aggregation. Overrun, incoherence, age, context or calibration failure is represented through the health qualification. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
 }
 

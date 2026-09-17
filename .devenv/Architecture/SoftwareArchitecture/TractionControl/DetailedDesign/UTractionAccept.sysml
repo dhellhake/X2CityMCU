@@ -15,11 +15,11 @@ package X2CityDetailedUnit_TractionAccept {
     }
     port def TractionActualOutputInputPort {
         doc /* Receives the independently produced qualified actual-output estimate for forwarding and observation; it is never derived from acceptance. */
-        in item payload:ActualTractionOutputV1;
+        in item payload:ActualTractionOutput;
     }
     port def AppliedTractionStateForwardOutputPort {
         doc /* Forwards the actual-output estimate to Demand across startup, disarmed and withdrawal states without gating or refreshing it. */
-        out item payload:ActualTractionOutputV1;
+        out item payload:ActualTractionOutput;
     }
     item def AcceptedTractionCommandRecord :> WheelTorqueRequest {
         // Calculated only when authority and command clock/context match, or their approved

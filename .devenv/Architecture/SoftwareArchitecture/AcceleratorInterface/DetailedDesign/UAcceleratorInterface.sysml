@@ -5,7 +5,7 @@ package X2CityDetailedUnit_AcceleratorInterface {
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::CalibrationInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::SensorHealthOutputPort;
 
-    item def AcceleratorPositionRecord :> AcceleratorPositionV1;
+    item def AcceleratorPositionRecord :> AcceleratorPosition;
     port def AcceleratorPositionOutputPort {
         doc /* U-ACCELERATOR-QUALIFY sends the qualified accelerator position to Settings, Session, Demand and Service; invalid analog evidence is not pedal demand. */
         out item payload:AcceleratorPositionRecord;

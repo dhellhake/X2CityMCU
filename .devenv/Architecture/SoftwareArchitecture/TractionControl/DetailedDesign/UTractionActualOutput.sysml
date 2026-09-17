@@ -12,15 +12,15 @@ package X2CityDetailedUnit_TractionActualOutput {
     // Owner: SC-TRACTION-CTRL.V. It estimates/publishes, and never commands, actual output.
     port def PhaseFeedbackInputPort {
         doc /* Receives same-operation qualified phase-current feedback used by the wheel-torque estimator. */
-        in item payload:PhaseCurrentEpochV1;
+        in item payload:PhaseCurrentEpoch;
     }
     port def ElectricalPositionInputPort {
         doc /* Receives map-qualified electrical position associated with the current phase evidence for estimation. */
-        in item payload:HallElectricalPositionV1;
+        in item payload:HallElectricalPosition;
     }
     port def QualifiedMotionInputPort {
         doc /* Receives qualified vehicle speed and direction used to establish powered-forward travel; it is not inferred from a torque command. */
-        in item payload:QualifiedMotionV1;
+        in item payload:QualifiedMotion;
     }
     port def OutputStageEvidenceInputPort {
         doc /* Receives U-TRACTION-OUTPUT's physical-stage availability, state, generation and provenance; it contains no wheel-torque claim by itself. */
@@ -40,7 +40,7 @@ package X2CityDetailedUnit_TractionActualOutput {
     }
     port def AppliedTractionStateOutputPort {
         doc /* Publishes the qualified applied-wheel-torque estimate, active electrical-braking state and powered-forward evidence to Traction Accept and Demand. */
-        out item payload:ActualTractionOutputV1;
+        out item payload:ActualTractionOutput;
     }
     part def ActualTractionOutputEstimator {
         /* Publishes an explicitly qualified applied-wheel-torque estimate only from a current

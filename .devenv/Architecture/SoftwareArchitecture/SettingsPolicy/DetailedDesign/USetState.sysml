@@ -5,7 +5,7 @@ package X2CityDetailedUnit_SetState {
     private import X2CitySoftwareContract_TractionControl::*;
     // Owner: SC-SET; DD-001; UR-SET-001; SW-I-001/002.
     item def SettingsStateRecord :> UnitInformationEnvelope;
-    item def ActiveSettingsRecord :> ActiveRidingSettingsV1;
+    item def ActiveSettingsRecord :> ActiveRidingSettings;
     // HMI requests and typed accelerator guard evidence retain their owner records.
     port def SettingsStateInputPort {
         doc /* Receives HMI setting receipts and required rider context while preserving their source receipt time; an HMI-loss absence does not refresh an active selection. */
@@ -21,7 +21,7 @@ package X2CityDetailedUnit_SetState {
     }
     port def QualifiedMotionInputPort {
         doc /* Receives U-TRACTION-MOTION's qualified standstill result for setting-application guards; it is not inferred from absent Hall edges or demand. */
-        in item payload:QualifiedMotionV1;
+        in item payload:QualifiedMotion;
     }
     part def RidingSettingsStateManager {
         /* Validates and manages requested, pending, and active settings using current application guards and context. It publishes settings state without treating a retained value as a current startup receipt. */

@@ -4,7 +4,7 @@ package X2CityDetailedUnit_HallInterface {
     private import X2CitySoftwareContract_HallInterface::*;
     private import X2CityDetailedUnit_PlatformCalibration::*;
     item def HallCaptureRecord :> HallCapture;
-    item def HallElectricalPositionRecord :> HallElectricalPositionV1;
+    item def HallElectricalPositionRecord :> HallElectricalPosition;
     port def HallCaptureOutputPort {
         doc /* U-HALL-CAPTURE sends current sampled Hall state, edges and capture integrity to U-HALL-POSITION; it does not claim mechanical vehicle motion. */
         out item payload:HallCaptureRecord;
@@ -23,7 +23,7 @@ package X2CityDetailedUnit_HallInterface {
     }
     port def SensorHealthOutputPort {
         doc /* Hall capture and position publish capture, transition or map health so downstream units withhold their dependent result. */
-        out item payload:SensorHealthConditionV1;
+        out item payload:SensorHealthCondition;
     }
     part def HallCaptureProcessor { port hallCaptureOut:HallCaptureOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     part def ElectricalPositionEstimator { port hallCaptureIn:HallCaptureInputPort; port calibrationIn:CalibrationInputPort; port electricalPositionOut:ElectricalPositionOutputPort; port sensorHealthOut:SensorHealthOutputPort; }

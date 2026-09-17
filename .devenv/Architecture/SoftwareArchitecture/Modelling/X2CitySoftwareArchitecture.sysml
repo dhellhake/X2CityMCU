@@ -132,7 +132,7 @@ package X2CitySoftwareArchitecture {
     flow rV28Phase from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to tractionControlVehicle.phaseCurrentEpochIn.payload;
     flow rV28Supply from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to tractionControlVehicle.fastDcLinkVoltageIn.payload;
 
-    // R-V41..R-V44 carry one-way qualified sensor evidence. SensorHealthConditionV1 derives
+    // R-V41..R-V44 carry one-way qualified sensor evidence. SensorHealthCondition derives
     // ContextualSoftwareInformation, so the Session and Service record-collection inputs accept
     // it as a typed base-record handoff; Platform and Traction use the exact derived payload.
     // Platform may latch FastSafetyState from an explicit request. Its platformHealthOut is never a
@@ -246,7 +246,7 @@ package X2CitySoftwareArchitecture {
     flow rX04Vehicle from serviceInformationVehicle.serviceSnapshotOut.payload to vehicleMaintainerBoundary.snapshot.payload;
 
     // The JEOS-to-output fast chain is Detailed Design-only: U-TRACTION-ACQUISITION directly
-    // hands its FastEpochV1 to U-TRACTION-CONTROL, then U-TRACTION-OUTPUT receives PWMAndADCSamplingPlanV1.
+    // hands its FastEpoch to U-TRACTION-CONTROL, then U-TRACTION-OUTPUT receives PWMAndADCSamplingPlan.
     // R-V33..R-V38 below are direct owner-record handoffs: Analog regular scans are consumed by
     // semantic interfaces; Analog fast epochs go only to MotorPhase and Supply. No raw ADC route
     // reaches FOC. No public SC fast ports are created by this architecture.

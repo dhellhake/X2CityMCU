@@ -76,7 +76,7 @@ sequenceDiagram
     participant O as U-TRACTION-OUTPUT
     T8->>A: one configured half-carrier trigger
     A-->>Q: direct JEOS IRQ with both JEOS, four JDR values and identified raw ADC epoch
-    Q->>Q: snapshot/publish immutable InjectedEpochV1 and reject partial, stale, first, wrong-context or invalid-window record
+    Q->>Q: snapshot/publish immutable InjectedEpoch and reject partial, stale, first, wrong-context or invalid-window record
     alt raw epoch, authority, phase/Vdc/electrical-position and configuration are current
         Q->>P: direct same-IRQ raw epoch
         Q->>V: direct same-IRQ raw epoch

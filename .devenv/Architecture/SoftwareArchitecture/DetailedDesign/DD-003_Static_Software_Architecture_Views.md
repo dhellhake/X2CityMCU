@@ -173,7 +173,7 @@ The EVM owns its bridge, shunts, dividers, Hall pull-ups and board-temperature s
 
 `U-ANALOG-ACQ-*`, the named sensor-interface units, `U-TRACTION-ACCEPT`, `U-TRACTION-MOTION`, `U-TRACTION-ACTUAL-OUTPUT` and `U-PLATFORM-*` refine approved ASW allocations. `U-HALL-CAPTURE` and `U-HALL-POSITION` own Hall buffer/capture integrity and qualified electrical position; `U-TRACTION-CONTROL` consumes that position with qualified phase feedback and fast Vdc for selected FOC. `U-TRACTION-OUTPUT` owns compare-latch/inhibit sequencing under Draft HSI-009; the [traction HSI](../../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md) owns the concrete platform contract. None proves physical output behaviour.
 
-The implementation contract makes the ownership exact: `U-PLATFORM-CONTEXT` orchestrates startup/context invalidation and `U-PLATFORM-BINDING` starts selected resources and dispatches ADC1/ADC2 JEOS to `U-ANALOG-ACQ-FAST`, which snapshots raw JDR data into `InjectedEpochV1`. `U-MOTOR-PHASE-FAST` and `U-SUPPLY-FAST` convert the raw epoch into qualified phase feedback and fast Vdc; `U-HALL-CAPTURE`/`U-HALL-POSITION` provide electrical position. `U-TRACTION-CONTROL` consumes those qualified records and emits compare/context data, including the next sampling-plan `CCR4`; `U-TRACTION-OUTPUT` alone stages/commits literal TIM8 `CCR1..4` and JSQR. `U-ANALOG-ACQ-REGULAR` owns regular-DMA completed-record publication, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` its interpretation. The direct fast chain is neither a CortexOs scheduled task nor current intercom usage; the qualified [runtime contract](../Runtime_Integration_Contract.md) owns remaining project/generic-driver and future-intercom detail.
+The implementation contract makes the ownership exact: `U-PLATFORM-CONTEXT` orchestrates startup/context invalidation and `U-PLATFORM-BINDING` starts selected resources and dispatches ADC1/ADC2 JEOS to `U-ANALOG-ACQ-FAST`, which snapshots raw JDR data into `InjectedEpoch`. `U-MOTOR-PHASE-FAST` and `U-SUPPLY-FAST` convert the raw epoch into qualified phase feedback and fast Vdc; `U-HALL-CAPTURE`/`U-HALL-POSITION` provide electrical position. `U-TRACTION-CONTROL` consumes those qualified records and emits compare/context data, including the next sampling-plan `CCR4`; `U-TRACTION-OUTPUT` alone stages/commits literal TIM8 `CCR1..4` and JSQR. `U-ANALOG-ACQ-REGULAR` owns regular-DMA completed-record publication, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` its interpretation. The direct fast chain is neither a CortexOs scheduled task nor current intercom usage; the qualified [runtime contract](../Runtime_Integration_Contract.md) owns remaining project/generic-driver and future-intercom detail.
 
 ### Vehicle runtime realization boundary
 
@@ -189,9 +189,9 @@ flowchart LR
         DMA[U-ANALOG-ACQ-REGULAR\nB-REGULAR-ADC-DMA]
     end
     subgraph F[Direct fast traction chain]
-        JEOS[U-ANALOG-ACQ-FAST\nB-FAST-ANALOG-JEOS / InjectedEpochV1]
+        JEOS[U-ANALOG-ACQ-FAST\nB-FAST-ANALOG-JEOS / InjectedEpoch]
         QUAL[U-MOTOR-PHASE-FAST + U-SUPPLY-FAST + U-HALL-POSITION\nqualified phase/Vdc/electrical position]
-        FOC["U-TRACTION-CONTROL<br/>PWMAndADCSamplingPlanV1: CCR1..3, CCR4, ADC context"]
+        FOC["U-TRACTION-CONTROL<br/>PWMAndADCSamplingPlan: CCR1..3, CCR4, ADC context"]
         OUT[U-TRACTION-OUTPUT\nsole CCR1..4 + JSQR / UDIS commit lease]
     end
     OS[CortexOs cyclic scheduler\ncurrent tasks] -->|scheduled regular qualification/policy| DMA
@@ -257,13 +257,13 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPositionV1] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
-    BRK[U-BRAKE-QUALIFY\nBrakeStateV1] -->|P-DEM-BRAKE-I| D
-    SET[U-SET-STATE\nActiveRidingSettingsV1] -->|P-DEM-ACTIVE-SETTINGS-I| D
+    ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPosition] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
+    BRK[U-BRAKE-QUALIFY\nBrakeState] -->|P-DEM-BRAKE-I| D
+    SET[U-SET-STATE\nActiveRidingSettings] -->|P-DEM-ACTIVE-SETTINGS-I| D
     SES["U-SESSION-ELIGIBILITY<br/>RidingAuthority"] -->|P-DEM-AUTHORITY-I| D
     BAT["U-BAT-POLICY-RESTRICTION<br/>BatteryCapabilityEnvelope"] -->|P-DEM-BATTERY-CAPABILITY-I| D
-    MOT[U-TRACTION-MOTION\nQualifiedMotionV1] -->|P-DEM-MOTION-I| D
-    OUT[U-TRACTION-ACTUAL-OUTPUT\nActualTractionOutputV1 estimate] -->|P-DEM-ACTUAL-OUTPUT-I| D
+    MOT[U-TRACTION-MOTION\nQualifiedMotion] -->|P-DEM-MOTION-I| D
+    OUT[U-TRACTION-ACTUAL-OUTPUT\nActualTractionOutput estimate] -->|P-DEM-ACTUAL-OUTPUT-I| D
     PLT[U-PLATFORM-CONTEXT / HEALTH\ncurrent generation] --> D
     CAL[U-PLATFORM-CALIBRATION\nresolved validated DemandPolicyCalibration data] --> D
     D -->|"P-DEM-COMMAND-O<br/>requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimestampTicks, commandClockId/context"| TA[U-TRACTION-ACCEPT]
@@ -271,7 +271,7 @@ flowchart LR
     D -->|P-DEM-DIAGNOSTIC-O\nservice only| SI[U-SERVICE-INFO-COLLECT]
 ```
 
-`U-TRACTION-MOTION` is a real producer route, not a reinterpretation of a Demand command: it interprets current qualified Hall capture/position evidence only with current capture health, map/pole-pair/final-drive/loaded-wheel calibration and a released bounded-observability/standstill criterion before publishing speed, direction and standstill. A static Hall state or no edge alone is unavailable for this purpose. `U-TRACTION-ACTUAL-OUTPUT` publishes `ActualTractionOutputV1` only as a current qualified estimate from post-stage physical evidence with provenance plus same-operation phase-current/position and qualified vehicle-motion evidence with activated estimator calibration. It operates independently of acceptance; `U-TRACTION-ACCEPT` passes that observation without refreshing or gating it while separately issuing accepted demand to control. Its applied-torque and powered-forward-travel fields must be unavailable if that chain has only a requested torque, FOC reference, register/PWM state, output-stage event or acceptance result. The command is a request; neither observation proves physical torque or vehicle travel.
+`U-TRACTION-MOTION` is a real producer route, not a reinterpretation of a Demand command: it interprets current qualified Hall capture/position evidence only with current capture health, map/pole-pair/final-drive/loaded-wheel calibration and a released bounded-observability/standstill criterion before publishing speed, direction and standstill. A static Hall state or no edge alone is unavailable for this purpose. `U-TRACTION-ACTUAL-OUTPUT` publishes `ActualTractionOutput` only as a current qualified estimate from post-stage physical evidence with provenance plus same-operation phase-current/position and qualified vehicle-motion evidence with activated estimator calibration. It operates independently of acceptance; `U-TRACTION-ACCEPT` passes that observation without refreshing or gating it while separately issuing accepted demand to control. Its applied-torque and powered-forward-travel fields must be unavailable if that chain has only a requested torque, FOC reference, register/PWM state, output-stage event or acceptance result. The command is a request; neither observation proves physical torque or vehicle travel.
 
 | Decision input/output | Consumer acceptance and ownership |
 |---|---|

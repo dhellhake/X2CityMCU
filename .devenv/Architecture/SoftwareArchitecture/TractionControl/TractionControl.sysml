@@ -18,23 +18,23 @@ package X2CitySoftwareContract_TractionControl {
     }
     port def HallElectricalPositionInputPort {
         doc /* Receives complete qualified electrical Hall position from HallInterface for FOC phase alignment and direction. It is electrical position evidence, not a substitute for qualified physical vehicle motion. */
-        in item payload:HallElectricalPositionV1;
+        in item payload:HallElectricalPosition;
     }
     port def PhaseCurrentEpochInputPort {
         doc /* Receives the qualified same-aperture phase-current epoch from MotorPhaseInterface for fast FOC feedback. The current record already carries calibration, rank plausibility and timing qualification. */
-        in item payload:PhaseCurrentEpochV1;
+        in item payload:PhaseCurrentEpoch;
     }
     port def FastDcLinkVoltageInputPort {
         doc /* Receives qualified fast DC-link voltage from SupplyInterface for fast control scaling and protection. The value is produced from the dedicated injected acquisition path and its active calibration context. */
-        in item payload:FastDcLinkVoltageV1;
+        in item payload:FastDcLinkVoltage;
     }
     port def TractionSensorHealthInputPort {
         doc /* Receives qualified source-health evidence from sensor interfaces to gate traction control. Platform's independent FastSafetyState is published separately and is not recreated from this input. */
-        in item payload:SensorHealthConditionV1;
+        in item payload:SensorHealthCondition;
     }
     port def MotionHealthInputPort {
         doc /* Receives Hall capture/position health only for vehicle-motion qualification. It is separate from the broader traction-control health gate and does not add a runtime check or alter the released Hall qualification criteria. */
-        in item payload:SensorHealthConditionV1;
+        in item payload:SensorHealthCondition;
     }
     attribute def CurrentObservationGeneration;
     item def TractionOutputStageExchange:>ContextualSoftwareInformation {
@@ -51,11 +51,11 @@ package X2CitySoftwareContract_TractionControl {
     }
     port def QualifiedMotionOutputPort :> QualifiedVehicleMotionOutputPort {
         doc /* Publishes qualified physical vehicle motion and standstill evidence to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. The publication remains live during startup/disarm and reports unavailable until its qualification criteria are met. */
-        out item payload:QualifiedMotionV1 :>> QualifiedVehicleMotionOutputPort::payload;
+        out item payload:QualifiedMotion :>> QualifiedVehicleMotionOutputPort::payload;
     }
     port def AppliedTractionStateOutputPort :> ActualTractionOutputPort {
         doc /* Publishes qualified observed applied-output evidence, including independently qualified positive torque and powered-forward travel, to DemandPolicy and service aggregation. It is derived from actual output observations and remains separate from the requested command. */
-        out item payload:ActualTractionOutputV1 :>> ActualTractionOutputPort::payload;
+        out item payload:X2CitySharedSoftwareTypes::ActualTractionOutput :>> ActualTractionOutputPort::payload;
     }
     item def TractionObservation:>ContextualSoftwareInformation, ServiceReportInformation;
     port def TractionObservationOutputPort :> ServiceReportOutputPort {
