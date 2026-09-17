@@ -112,7 +112,7 @@ The four endpoint-level views below show every selected `P-*` contract inside it
 
 | Owner | Named state or snapshot | Readers / route family | Boundary |
 |---|---|---|---|
-| `SC-ANALOG-ACQ.V` and SC-HALL-IF.V | `RegularAdcScan`, injected epochs and Hall capture rings with sampled state | the named sensor interfaces and `U-HALL-POSITION` | Analog acquisition owns scan storage/loss admissibility; Hall owns its capture and electrical-position interpretation. |
+| `SC-ANALOG-ACQ.V` and SC-HALL-IF.V | `AnalogSample`, injected epochs and Hall capture rings with sampled state | the named sensor interfaces and `U-HALL-POSITION` | Analog acquisition owns scan storage/loss admissibility; Hall owns its capture and electrical-position interpretation. |
 | `U-TRACTION-ACQUISITION` / `U-TRACTION-CONTROL` / `U-TRACTION-OUTPUT` | Direct fast records internal to Detailed Design, including `FastEpoch` and `PWMAndADCSamplingPlan` | the immediately following detailed unit only | These are not SC public ports or ARCH-003 `R-V*` routes. The runtime contract and DD own the direct JEOS-to-output allocation. |
 | `SC-SET.V` | requested, pending and active setting state plus active-only demand projection | session, service and demand routes | A retained active setting is not a current-startup receipt; a pending setting is never a demand input. |
 | `SC-SESSION.V` | authority context, current riding-session inhibition and selected report state | demand, traction and HMI routes | Session owns Ready conjunction and its volatile fault latch. |
@@ -130,7 +130,7 @@ The port registry names each vehicle instance explicitly; the `.V` suffix keeps 
 | `P-PLT-RETENTION-O` | `SC-PLATFORM.V` | provided | Validity-tagged retention restore candidate/result | Vehicle use is limited to validity-tagged `reached10%`; it is never fault history. |
 | `P-PLT-HEALTH-O` | `SC-PLATFORM.V` | provided | Watchdog/platform-health, scheduling and local resource events | Components interpret their own lost/reset context. This port grants neither operating permission nor physical safety reaction. |
 | `P-PLT-CALIBRATION-O` | `SC-PLATFORM.V` | provided | Immutable activated calibration bundle, including populated paired/order-validated demand maps, neutral, positive-resumption and Level 1–4 regeneration gradients, taper/reference limits, named-clock timing/coherency bounds, and actual-output-estimator constants/bounds | Any missing, malformed or unvalidated required value keeps the corresponding profile/estimator unavailable. Timing accepts only positive finite bounds with a derived accepted end-to-end bound; this architecture selects no numerical value. |
-| `P-AA-REGULAR-O` / `P-AA-FAST-O` | `SC-ANALOG-ACQ.V` | provided internal record | Completed regular scan / injected epoch snapshot | Acquisition owns storage and loss detection. DMA error, overwrite, cache/coherency loss, context change or incomplete scan is unavailable. |
+| `P-AA-ANALOG-SAMPLE-O` (`analogSampleOut`) / `P-AA-FAST-O` | `SC-ANALOG-ACQ.V` | provided internal record | `AnalogSample` / injected epoch snapshot | Acquisition owns storage and loss detection. DMA error, overwrite, cache/coherency loss, context change or incomplete scan is unavailable. |
 | `P-ACCEL-POSITION-O` / `P-BRAKE-STATE-O` | `SC-ACCELERATOR-IF.V` / `SC-BRAKE-IF.V` | provided | Composite `AcceleratorPosition` (`Position` plus `Qualification`) / coded brake state | `Position` contains percent/rest and provenance. `Qualification` contains position qualification and current health/diagnostic reason/severity/protection request. A common envelope qualifies publication/context/health evidence only and never proves the contained `Position` valid. |
 | `P-HALL-POSITION-O` | `SC-HALL-IF.V` | provided | Qualified electrical position only | Electrical direction/edge evidence is not physical vehicle speed, direction or standstill. |
 | `P-HALL-HEALTH-O` | `SC-HALL-IF.V` | provided | Hall capture/position health evidence | HallInterface owns capture and position interpretation; this health is also the motion-specific qualification input. |
@@ -213,7 +213,7 @@ Route IDs are used in every figure. Delivery labels describe the selected archit
 | `R-V26` | physical traction/energy boundary -> `SC-TRACTION-CTRL.V.P-TR-OUTPUT-I/O` | HSI-004/009 | Direct hardware acquisition/output binding | Hardware break/external inhibit withdraw physical permit independently. |
 | `R-V27` | `SC-HALL-IF.V.P-HALL-POSITION-O` -> `SC-TRACTION-CTRL.V.P-TR-HALL-I`; `SC-HALL-IF.V.P-HALL-HEALTH-O` -> `SC-TRACTION-CTRL.V.P-TR-MOTION-HEALTH-I` | HSI-009, traction HSI | Direct read-only position/health publication; Hall interface owns records | The three traction consumers reject overrun, incoherent, stale or foreign-context position; motion consumes Hall-only health separately from the broader FOC health fan-in. |
 | `R-V41-ACCELERATOR` | `SC-ACCELERATOR-IF.V.P-ACCEL-POSITION-O.Qualification` -> `SC-PLATFORM.V.P-PLT-ACCELERATOR-QUALIFICATION-I` (`acceleratorQualificationIn`) | SW-I-009, IF-A-001 | Scheduled direct/owned typed qualification projection | Platform receives the `Qualification` health/diagnostic reason/severity/protection request projection. This update may be published without a new ADC sample; it does not make `Position` valid. |
-| `R-V30` | `SC-ANALOG-ACQ.V.P-AA-REGULAR-O` -> each named regular sensor-interface raw input | runtime contract | Owned completed-record handoff; analog acquisition owns record and sensor interfaces consume it | A failed, overwritten, incomplete or old-context scan remains unavailable to semantic qualification. |
+| `R-V30` | `SC-ANALOG-ACQ.V.P-AA-ANALOG-SAMPLE-O` -> each named regular sensor-interface raw input | runtime contract | Owned completed-record handoff; analog acquisition owns record and sensor interfaces consume it | A failed, overwritten, incomplete or old-context scan remains unavailable to semantic qualification. |
 | `R-V31` | `SC-PLATFORM.V.P-PLT-CONTEXT-O`, `P-PLT-HEALTH-O` and required calibration outputs -> vehicle components' context-dependent ports | SW-I-009 | Service/event fanout; platform owns context/health/calibration events | Applies to every applicable vehicle component; figures show selected edges only. |
 | `R-V32` | `SC-ACCELERATOR-IF.V.P-ACCEL-POSITION-O` -> `SC-SERVICE-INFO.V.P-SVC-ACCELERATOR-POSITION-I` (`acceleratorPositionIn`); other vehicle producer output ports -> `SC-SERVICE-INFO.V.P-SVC-RECORD-I` | SW-I-008, IF-A-008 | Current producer snapshots; each producer owns its record | Accelerator is delivered once as the full typed record. Applies to all local vehicle producers; service drops old-context cache entries and has no control return. |
 | `R-X01` | supplied VD18MT -> `SC-HMI.V.P-HMI-TRANSPORT-I/O` | IF-A-002/006 | Electrical/transport boundary, HMI adapter owns interpretation | No decoded setting exists on loss, restart or invalid frame. |
@@ -293,7 +293,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph SNS[seven sensor-specific components]
-        AAO[P-AA-REGULAR-O]
+        AAO[P-AA-ANALOG-SAMPLE-O]
         APO[P-ACCEL-POSITION-O]
         BSO[P-BRAKE-STATE-O]
         HPO[P-HALL-POSITION-O]

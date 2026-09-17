@@ -2,9 +2,9 @@ package X2CitySoftwareContract_TemperatureInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def RegularAdcScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for configured temperature channels. TemperatureInterface applies accepted board or motor calibration and retains source rank, sequence and timestamp provenance. */
-        in item payload:RegularAdcScan;
+        in item payload:AnalogSample;
     }
     item def QualifiedTemperature:>ContextualSoftwareInformation {
         attribute temperatureSource:String; // enum: board, motor, battery-interface, other fitted channel.
@@ -33,7 +33,7 @@ package X2CitySoftwareComponent_TemperatureInterface {
         /* Converts regular-scan temperature channels under accepted calibration and publishes
            qualified temperature/current health. It owns no thermal operating decision or
            battery restriction. */
-        port regularAdcScanIn:RegularAdcScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port qualifiedTemperatureOut:QualifiedTemperatureOutputPort;
         port temperatureHealthOut:TemperatureHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;

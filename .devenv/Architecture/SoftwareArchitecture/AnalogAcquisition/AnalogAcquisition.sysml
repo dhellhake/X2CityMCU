@@ -6,7 +6,7 @@ package X2CitySoftwareContract_AnalogAcquisition {
         doc /* Receives the vehicle ADC acquisition handoff. This boundary carries acquisition records only; AnalogAcquisition owns the raw regular and injected capture paths and assigns no accelerator, brake, temperature, current, voltage or rotor meaning here. */
         in item payload:RawAdcAcquisition;
     }
-    item def RegularAdcScan:>ContextualSoftwareInformation {
+    item def AnalogSample:>ContextualSoftwareInformation {
         // Raw DMA scan: channel identity and ADC code, never a semantic sensor value.
         attribute adcSequence:Integer;
         attribute completionTimestampTicks:Integer;
@@ -14,9 +14,9 @@ package X2CitySoftwareContract_AnalogAcquisition {
         attribute rawAdcCode:Integer;
         attribute calibrationContextId:String;
     }
-    port def RegularAdcScanOutputPort {
+    port def AnalogSampleOutputPort {
         doc /* Publishes completed regular DMA scans to the accelerator, brake, temperature, supply and phase interfaces, and to service aggregation. Each consumer applies its own channel binding and accepted calibration; the record is never a semantic sensor value. */
-        out item payload:RegularAdcScan;
+        out item payload:AnalogSample;
     }
     item def FastInjectedEpoch:>ContextualSoftwareInformation {
         // JEOS/JDR epoch: the paired raw rank values share the stated aperture.
@@ -47,7 +47,7 @@ package X2CitySoftwareComponent_AnalogAcquisition {
            and fast paths have distinct records, state, buffers and producer contexts. It assigns
            no accelerator, brake, temperature, current, voltage or rotor meaning to either record. */
         port rawAdcAcquisitionIn:RawAdcAcquisitionInputPort;
-        port regularAdcScanOut:RegularAdcScanOutputPort;
+        port analogSampleOut:AnalogSampleOutputPort;
         port fastInjectedEpochOut:FastInjectedEpochOutputPort;
         port adcAcquisitionHealthOut:AdcAcquisitionHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;

@@ -6,9 +6,9 @@ package X2CitySoftwareContract_SupplyInterface {
         doc /* Receives paired raw injected ADC values from AnalogAcquisition for fast DC-link voltage conversion. SupplyInterface applies its accepted fast-link calibration and aperture qualification before publishing Vdc. */
         in item payload:FastInjectedEpoch;
     }
-    port def RegularAdcScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for regular supply-rail conversion. The regular path keeps its own source binding, state and calibration context separate from fast DC-link acquisition. */
-        in item payload:RegularAdcScan;
+        in item payload:AnalogSample;
     }
     item def FastDcLinkVoltage:>ContextualSoftwareInformation {
         attribute dcLinkVoltageVolts:Real;
@@ -51,7 +51,7 @@ package X2CitySoftwareComponent_SupplyInterface {
            voltage conversion from completed DMA scans. These paths keep distinct state/context;
            no Vdc conversion is delegated to MotorPhaseInterface. */
         port fastInjectedEpochIn:FastInjectedEpochInputPort;
-        port regularAdcScanIn:RegularAdcScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort;
         port supplyVoltageOut:SupplyVoltageOutputPort;
         port supplyHealthOut:SupplyHealthOutputPort;

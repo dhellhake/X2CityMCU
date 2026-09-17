@@ -2,9 +2,9 @@ package X2CitySoftwareContract_BrakeInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def RegularAdcScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition. BrakeInterface consumes only the configured source rank with accepted calibration and converts it to a coded brake state; the input remains raw acquisition evidence. */
-        in item payload:RegularAdcScan;
+        in item payload:AnalogSample;
     }
     item def BrakeState:>ContextualSoftwareInformation {
         attribute brakeState:String; // enum: released, applied, implausible, unavailable.
@@ -33,7 +33,7 @@ package X2CitySoftwareComponent_BrakeInterface {
         /* Interprets only the current completed regular scan with accepted calibration as coded
            brake state/unknown. It owns no DMA storage, light arbitration, demand decision or
            physical brake proof. */
-        port regularAdcScanIn:RegularAdcScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port brakeStateOut:BrakeStateOutputPort;
         port brakeHealthOut:BrakeHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;

@@ -2,9 +2,9 @@ package X2CitySoftwareContract_AcceleratorInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def RegularAdcScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* Receives completed regular ADC scan records from AnalogAcquisition. The accelerator interface uses the source rank, sequence, timestamp and active calibration context to produce a semantic position; the inbound record remains raw ADC evidence. */
-        in item payload:RegularAdcScan;
+        in item payload:AnalogSample;
     }
     item def AcceleratorPositionValue {
         attribute acceleratorPositionPercent:Real; // percent, 0..100 after qualified scaling.
@@ -56,7 +56,7 @@ package X2CitySoftwareComponent_AcceleratorInterface {
            It also publishes unavailability and health when no new ADC sample is available, without
            refreshing the prior Position sample's freshness. It owns no DMA storage or rider demand
            decision. */
-        port regularAdcScanIn:RegularAdcScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;

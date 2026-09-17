@@ -18,9 +18,9 @@ package X2CityDetailedUnit_SupplyInterface {
         doc /* U-SUPPLY-FAST receives the selected current JEOS/JDR raw epoch from fast acquisition for Vdc conversion. */
         in item payload:InjectedEpoch;
     }
-    port def RegularScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* U-SUPPLY-REGULAR receives the distinct completed regular-DMA scan for non-fast supply conversion. */
-        in item payload:RegularScan;
+        in item payload:AnalogSampleRecord;
     }
     port def CalibrationInputPort {
         doc /* Receives active supply channel scaling, plausibility and configuration data for the corresponding fast or regular conversion. */
@@ -31,6 +31,6 @@ package X2CityDetailedUnit_SupplyInterface {
         out item payload:SensorHealthCondition;
     }
     part def FastSupplyVoltageProcessor { port injectedEpochIn:InjectedEpochInputPort; port calibrationIn:CalibrationInputPort; port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
-    part def RegularSupplyVoltageProcessor { port regularScanIn:RegularScanInputPort; port calibrationIn:CalibrationInputPort; port regularSupplyOut:RegularSupplyOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
+    part def RegularSupplyVoltageProcessor { port analogSampleIn:AnalogSampleInputPort; port calibrationIn:CalibrationInputPort; port regularSupplyOut:RegularSupplyOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     // SC-SUPPLY-IF.V owns rank-2 fast Vdc conversion and non-fast regular supplies separately.
 }

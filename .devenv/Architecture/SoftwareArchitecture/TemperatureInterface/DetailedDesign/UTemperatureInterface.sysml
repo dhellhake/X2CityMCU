@@ -1,7 +1,7 @@
 package X2CityDetailedUnit_TemperatureInterface {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_TemperatureInterface::*;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::RegularScanInputPort;
+    private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::CalibrationInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::SensorHealthOutputPort;
 
@@ -11,7 +11,7 @@ package X2CityDetailedUnit_TemperatureInterface {
         out item payload:TemperatureRecord;
     }
     part def TemperatureQualifier {
-        port scanIn:RegularScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port calibrationIn:CalibrationInputPort;
         port temperatureOut:TemperatureOutputPort;
         port sensorHealthOut:SensorHealthOutputPort;

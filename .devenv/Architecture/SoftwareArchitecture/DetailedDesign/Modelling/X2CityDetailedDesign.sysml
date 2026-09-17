@@ -110,11 +110,11 @@ package X2CityDetailedDesign {
     flow vCalibrationToSupplyRegular from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.supplyRegular.calibrationIn.payload;
 
     // Five regular consumers and two fast consumers preserve the acquisition split.
-    flow vRegularScanToAccelerator from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.sensors.acceleratorQualify.scanIn.payload;
-    flow vRegularScanToBrake from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.sensors.brakeQualify.scanIn.payload;
-    flow vRegularScanToTemperature from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.sensors.temperatureQualify.scanIn.payload;
-    flow vRegularScanToMotorPhaseDiag from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.sensors.motorPhaseDiag.regularScanIn.payload;
-    flow vRegularScanToSupplyRegular from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.sensors.supplyRegular.regularScanIn.payload;
+    flow vRegularScanToAccelerator from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.sensors.acceleratorQualify.analogSampleIn.payload;
+    flow vRegularScanToBrake from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.sensors.brakeQualify.analogSampleIn.payload;
+    flow vRegularScanToTemperature from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.sensors.temperatureQualify.analogSampleIn.payload;
+    flow vRegularScanToMotorPhaseDiag from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.sensors.motorPhaseDiag.analogSampleIn.payload;
+    flow vRegularScanToSupplyRegular from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.sensors.supplyRegular.analogSampleIn.payload;
     flow vFastEpochToMotorPhase from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.sensors.motorPhaseFast.injectedEpochIn.payload;
     flow vFastEpochToSupply from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.sensors.supplyFast.injectedEpochIn.payload;
     flow vHallCaptureToPosition from vehicle.sensors.hallCapture.hallCaptureOut.payload to vehicle.sensors.hallPosition.hallCaptureIn.payload;
@@ -233,7 +233,7 @@ package X2CityDetailedDesign {
     flow vPlatformRetentionToService from vehicle.platform.retention.candidateOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vPlatformHealthToService from vehicle.platform.health.healthOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vPlatformCalibrationToService from vehicle.platform.calibration.calibrationOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAnalogRegularToService from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.service.collect.producerRecordIn.payload;
+    flow vAnalogRegularToService from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAnalogFastToService from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAcceleratorToService from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.service.collect.acceleratorPositionIn.payload;
     flow vBrakeToService from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.service.collect.producerRecordIn.payload;

@@ -1,7 +1,7 @@
 package X2CityDetailedUnit_AcceleratorInterface {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::RegularScanInputPort;
+    private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::CalibrationInputPort;
 
     item def AcceleratorPositionRecord :> AcceleratorPosition;
@@ -10,7 +10,7 @@ package X2CityDetailedUnit_AcceleratorInterface {
         out item payload:AcceleratorPositionRecord;
     }
     part def AcceleratorQualifier {
-        port scanIn:RegularScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port calibrationIn:CalibrationInputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
     }

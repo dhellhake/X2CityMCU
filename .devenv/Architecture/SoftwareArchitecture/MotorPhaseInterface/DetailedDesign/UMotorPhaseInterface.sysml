@@ -18,9 +18,9 @@ package X2CityDetailedUnit_MotorPhaseInterface {
         doc /* U-MOTOR-PHASE-FAST receives the identified JEOS/JDR epoch from fast acquisition and rejects a different operation epoch. */
         in item payload:InjectedEpoch;
     }
-    port def RegularScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* U-MOTOR-PHASE-DIAG receives the separate regular-DMA scan for non-fast voltage diagnostics. */
-        in item payload:RegularScan;
+        in item payload:AnalogSampleRecord;
     }
     port def CalibrationInputPort {
         doc /* Receives active phase channel, sign, offset, gain and reconstruction calibration for the appropriate fast or diagnostic conversion. */
@@ -31,6 +31,6 @@ package X2CityDetailedUnit_MotorPhaseInterface {
         out item payload:SensorHealthCondition;
     }
     part def FastPhaseCurrentProcessor { port injectedEpochIn:InjectedEpochInputPort; port calibrationIn:CalibrationInputPort; port phaseFeedbackOut:PhaseFeedbackOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
-    part def PhaseVoltageDiagnosticProcessor { port regularScanIn:RegularScanInputPort; port calibrationIn:CalibrationInputPort; port phaseVoltageDiagnosticOut:PhaseVoltageDiagnosticOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
+    part def PhaseVoltageDiagnosticProcessor { port analogSampleIn:AnalogSampleInputPort; port calibrationIn:CalibrationInputPort; port phaseVoltageDiagnosticOut:PhaseVoltageDiagnosticOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     // SC-MOTOR-PHASE-IF.V owns calibrated fast current and separate regular diagnostics.
 }

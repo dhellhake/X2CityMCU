@@ -1,7 +1,7 @@
 package X2CityDetailedUnit_BrakeInterface {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_BrakeInterface::*;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::RegularScanInputPort;
+    private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::CalibrationInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::SensorHealthOutputPort;
 
@@ -11,7 +11,7 @@ package X2CityDetailedUnit_BrakeInterface {
         out item payload:BrakeStateRecord;
     }
     part def BrakeQualifier {
-        port scanIn:RegularScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port calibrationIn:CalibrationInputPort;
         port stateOut:BrakeStateOutputPort;
         port sensorHealthOut:SensorHealthOutputPort;

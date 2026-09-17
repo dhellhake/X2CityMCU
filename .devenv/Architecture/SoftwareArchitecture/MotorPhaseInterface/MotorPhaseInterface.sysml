@@ -6,9 +6,9 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         doc /* Receives paired raw injected ADC values from AnalogAcquisition for same-aperture phase-current reconstruction. MotorPhaseInterface applies accepted current calibration and plausibility checks before publishing feedback. */
         in item payload:FastInjectedEpoch;
     }
-    port def RegularAdcScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for slow phase-voltage diagnostics. These scans are not fast FOC current feedback and retain their own acquisition context. */
-        in item payload:RegularAdcScan;
+        in item payload:AnalogSample;
     }
     item def PhaseCurrentEpoch:>ContextualSoftwareInformation {
         attribute phaseACurrentAmperes:Real;
@@ -56,7 +56,7 @@ package X2CitySoftwareComponent_MotorPhaseInterface {
            same-aperture reconstruction and rank plausibility for the fast current epoch. It also
            owns separate slow regular phase-voltage diagnostics, which are never fast FOC feedback. */
         port fastInjectedEpochIn:FastInjectedEpochInputPort;
-        port regularAdcScanIn:RegularAdcScanInputPort;
+        port analogSampleIn:AnalogSampleInputPort;
         port phaseCurrentEpochOut:PhaseCurrentEpochOutputPort;
         port phaseVoltageDiagnosticOut:PhaseVoltageDiagnosticOutputPort;
         port motorPhaseHealthOut:MotorPhaseHealthOutputPort;

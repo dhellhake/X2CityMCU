@@ -15,9 +15,9 @@ package X2CityDetailedUnit_RiderTemperatureInterfaces {
     alias TemperatureOutputPort for X2CityDetailedUnit_TemperatureInterface::TemperatureOutputPort;
     alias TemperatureQualifier for X2CityDetailedUnit_TemperatureInterface::TemperatureQualifier;
 
-    port def RegularScanInputPort {
+    port def AnalogSampleInputPort {
         doc /* The accelerator, brake and temperature qualifiers receive only the completed regular-DMA scan from U-ANALOG-ACQ-REGULAR. */
-        in item payload:RegularScan;
+        in item payload:AnalogSampleRecord;
     }
     port def CalibrationInputPort {
         doc /* Receives the active channel conversion, plausibility and calibration data used to qualify rider and temperature observations. */

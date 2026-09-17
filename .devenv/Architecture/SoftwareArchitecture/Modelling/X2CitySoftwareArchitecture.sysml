@@ -196,7 +196,7 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthPlatform from platformVehicle.platformHealthOut.payload to platformVehicle.platformHealthIn.payload;
 
     // SW-I-008 / R-V32: all explicit vehicle producer ports retain their owner types.
-    flow rV32AnalogRegular from analogAcquisitionVehicle.regularAdcScanOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
+    flow rV32AnalogRegular from analogAcquisitionVehicle.analogSampleOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32AnalogFast from analogAcquisitionVehicle.fastInjectedEpochOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to serviceInformationVehicle.acceleratorPositionIn.payload;
     flow rV32Brake from brakeInterfaceVehicle.brakeStateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
@@ -250,11 +250,11 @@ package X2CitySoftwareArchitecture {
     // R-V33..R-V38 below are direct owner-record handoffs: Analog regular scans are consumed by
     // semantic interfaces; Analog fast epochs go only to MotorPhase and Supply. No raw ADC route
     // reaches FOC. No public SC fast ports are created by this architecture.
-    flow rV33AcceleratorRaw from analogAcquisitionVehicle.regularAdcScanOut.payload to acceleratorInterfaceVehicle.regularAdcScanIn.payload;
-    flow rV34BrakeRaw from analogAcquisitionVehicle.regularAdcScanOut.payload to brakeInterfaceVehicle.regularAdcScanIn.payload;
-    flow rV35TemperatureRaw from analogAcquisitionVehicle.regularAdcScanOut.payload to temperatureInterfaceVehicle.regularAdcScanIn.payload;
-    flow rV36SupplyRegularRaw from analogAcquisitionVehicle.regularAdcScanOut.payload to supplyInterfaceVehicle.regularAdcScanIn.payload;
-    flow rV37PhaseRegularRaw from analogAcquisitionVehicle.regularAdcScanOut.payload to motorPhaseInterfaceVehicle.regularAdcScanIn.payload;
+    flow rV33AcceleratorRaw from analogAcquisitionVehicle.analogSampleOut.payload to acceleratorInterfaceVehicle.analogSampleIn.payload;
+    flow rV34BrakeRaw from analogAcquisitionVehicle.analogSampleOut.payload to brakeInterfaceVehicle.analogSampleIn.payload;
+    flow rV35TemperatureRaw from analogAcquisitionVehicle.analogSampleOut.payload to temperatureInterfaceVehicle.analogSampleIn.payload;
+    flow rV36SupplyRegularRaw from analogAcquisitionVehicle.analogSampleOut.payload to supplyInterfaceVehicle.analogSampleIn.payload;
+    flow rV37PhaseRegularRaw from analogAcquisitionVehicle.analogSampleOut.payload to motorPhaseInterfaceVehicle.analogSampleIn.payload;
     flow rV38PhaseFastRaw from analogAcquisitionVehicle.fastInjectedEpochOut.payload to motorPhaseInterfaceVehicle.fastInjectedEpochIn.payload;
     flow rV39SupplyFastRaw from analogAcquisitionVehicle.fastInjectedEpochOut.payload to supplyInterfaceVehicle.fastInjectedEpochIn.payload;
     flow rV40CalibrationAnalog from platformVehicle.calibrationBundleOut.payload to analogAcquisitionVehicle.calibrationIn.payload;
