@@ -1,25 +1,25 @@
 package X2CityContract_BatteryProtection {
     private import X2CitySharedContracts::*;
-    item def BatteryObservationInformation:>ContextualInformation;
-    item def BatteryEnvelopeInformation:>ContextualInformation;
-    port def BatteryObservationOut {
+    item def BatteryConditionObservation:>QualifiedInformationRecord;
+    item def BatteryCapabilityEnvelope:>QualifiedInformationRecord;
+    port def BatteryConditionObservationOutputPort {
         doc /* Carries battery and traction condition observations assembled by Input from the BMS/energy and traction paths to BatteryProtection. These records remain qualified observations; they do not contain the resulting charge or discharge envelope. */
-        out item payload:BatteryObservationInformation;
+        out item payload:BatteryConditionObservation;
     }
-    port def BatteryObservationIn {
+    port def BatteryConditionObservationInputPort {
         doc /* Carries battery and traction condition observations assembled by Input from the BMS/energy and traction paths to BatteryProtection. These records remain qualified observations; they do not contain the resulting charge or discharge envelope. */
-        in item payload:BatteryObservationInformation;
+        in item payload:BatteryConditionObservation;
     }
-    port def BatteryEnvelopeOut {
+    port def BatteryCapabilityEnvelopeOutputPort {
         doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
-        out item payload:BatteryEnvelopeInformation;
+        out item payload:BatteryCapabilityEnvelope;
     }
-    port def BatteryEnvelopeIn {
+    port def BatteryCapabilityEnvelopeInputPort {
         doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
-        in item payload:BatteryEnvelopeInformation;
+        in item payload:BatteryCapabilityEnvelope;
     }
-    interface def IfA003BatteryObservation { end producer:BatteryObservationOut; end consumer:BatteryObservationIn; flow producer.payload to consumer.payload; }
-    interface def IfA003BatteryEnvelope { end producer:BatteryEnvelopeOut; end consumer:BatteryEnvelopeIn; flow producer.payload to consumer.payload; }
+    interface def IfA003BatteryConditionObservation { end producer:BatteryConditionObservationOutputPort; end consumer:BatteryConditionObservationInputPort; flow producer.payload to consumer.payload; }
+    interface def IfA003BatteryCapabilityEnvelope { end producer:BatteryCapabilityEnvelopeOutputPort; end consumer:BatteryCapabilityEnvelopeInputPort; flow producer.payload to consumer.payload; }
 }
 
 package X2CityComponent_BatteryProtection {
@@ -29,8 +29,8 @@ package X2CityComponent_BatteryProtection {
     part def BatteryProtection { // LE-BAT-POLICY
         /* Assesses battery observations for the distinct positive-discharge and negative-charge
            envelope, restrictions, and protection/fault status used by riding policies. */
-        port batteryObservationIn:BatteryObservationIn;
-        port batteryEnvelopeOut:BatteryEnvelopeOut;
-        port serviceConfigurationOut:ServiceConfigurationOut;
+        port batteryConditionObservationIn:BatteryConditionObservationInputPort;
+        port batteryCapabilityEnvelopeOut:BatteryCapabilityEnvelopeOutputPort;
+        port serviceReportOut:ServiceReportOutputPort;
     }
 }

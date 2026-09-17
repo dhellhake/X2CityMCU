@@ -10,10 +10,10 @@ package X2CityComponent_Traction {
         /* Composes motor control and traction hardware to apply riding authority and torque commands. It publishes actual output and battery observations for policy evaluation while physical actuation remains in the traction boundary. */
         part motorControl:MotorControl;
         part tractionHardware:TractionHardware;
-        port authorityIn:RidingAuthorityIn;
-        port torqueCommandIn:TorqueCommandIn;
-        port batteryObservationOut:BatteryObservationOut;
-        port qualifiedMotionOut:QualifiedMotionOut;
-        port actualOutputOut:ActualOutputOut;
+        port ridingAuthorityIn:RidingAuthorityInputPort;
+        port wheelTorqueCommandIn:WheelTorqueCommandInputPort;
+        port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
+        port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
+        port actualTractionOutputOut:ActualTractionOutputPort;
     }
 }

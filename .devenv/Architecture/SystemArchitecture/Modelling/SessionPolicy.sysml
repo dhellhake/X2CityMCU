@@ -1,15 +1,15 @@
 package X2CityContract_SessionPolicy {
     private import X2CitySharedContracts::*;
-    item def RidingAuthorityInformation:>ContextualInformation { attribute expiry:Expiry; }
-    port def RidingAuthorityOut {
+    item def RidingAuthority:>QualifiedInformationRecord { attribute expiry:Expiry; }
+    port def RidingAuthorityOutputPort {
         doc /* Carries SessionPolicy's current riding authority and expiry to DemandPolicy and Traction. Consumers use it as an authorization boundary for motion output; the torque command is a separate contract. */
-        out item payload:RidingAuthorityInformation;
+        out item payload:RidingAuthority;
     }
-    port def RidingAuthorityIn {
+    port def RidingAuthorityInputPort {
         doc /* Carries SessionPolicy's current riding authority and expiry to DemandPolicy and Traction. Consumers use it as an authorization boundary for motion output; the torque command is a separate contract. */
-        in item payload:RidingAuthorityInformation;
+        in item payload:RidingAuthority;
     }
-    interface def IfA004RidingAuthority { end producer:RidingAuthorityOut; end consumer:RidingAuthorityIn; flow producer.payload to consumer.payload; }
+    interface def IfA004RidingAuthority { end producer:RidingAuthorityOutputPort; end consumer:RidingAuthorityInputPort; flow producer.payload to consumer.payload; }
 }
 
 package X2CityComponent_SessionPolicy {
@@ -22,15 +22,15 @@ package X2CityComponent_SessionPolicy {
     private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_ServiceInformation::*;
     part def SessionPolicy { // LE-SESSION
-        /* Evaluates rider motion, settings, battery capability, and observed outputs into riding authority and rider information. It publishes authority, presentation, and service configuration while leaving traction actuation to Traction. */
-        port riderMotionIn:QualifiedRiderMotionIn;
-        port qualifiedMotionIn:QualifiedMotionIn;
-        port hmiSettingsIn:SettingsIn;
-        port inputSettingsIn:SettingsIn;
-        port batteryEnvelopeIn:BatteryEnvelopeIn;
-        port tractionOutputIn:ActualOutputIn;
-        port authorityOut:RidingAuthorityOut;
-        port riderInformationOut:RiderInformationOut;
-        port serviceConfigurationOut:ServiceConfigurationOut;
+        /* Evaluates qualified rider inputs, vehicle motion, settings, battery capability, and observed outputs into riding authority and rider information. It publishes authority, presentation, and service reporting while leaving traction actuation to Traction. */
+        port qualifiedRiderInputIn:RiderControlInputPort;
+        port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
+        port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
+        port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
+        port batteryCapabilityEnvelopeIn:BatteryCapabilityEnvelopeInputPort;
+        port actualTractionOutputIn:ActualTractionInputPort;
+        port ridingAuthorityOut:RidingAuthorityOutputPort;
+        port riderStatusInformationOut:RiderStatusInformationOutputPort;
+        port serviceReportOut:ServiceReportOutputPort;
     }
 }

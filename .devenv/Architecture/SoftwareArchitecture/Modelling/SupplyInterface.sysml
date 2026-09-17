@@ -2,11 +2,11 @@ package X2CitySoftwareContract_SupplyInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def PSupplyFastRawI {
+    port def FastInjectedEpochInputPort {
         doc /* Receives paired raw injected ADC values from AnalogAcquisition for fast DC-link voltage conversion. SupplyInterface applies its accepted fast-link calibration and aperture qualification before publishing Vdc. */
         in item payload:FastInjectedEpochV1;
     }
-    port def PSupplyRegularRawI {
+    port def RegularAdcScanInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for regular supply-rail conversion. The regular path keeps its own source binding, state and calibration context separate from fast DC-link acquisition. */
         in item payload:RegularAdcScanV1;
     }
@@ -18,7 +18,7 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
-    port def PSupplyFastVdcO {
+    port def FastDcLinkVoltageOutputPort {
         doc /* Publishes qualified fast DC-link voltage with paired source ranks, aperture, timestamp and calibration context to TractionControl and service aggregation. This output is the fast Vdc control input and is not derived by MotorPhaseInterface. */
         out item payload:FastDcLinkVoltageV1;
     }
@@ -31,11 +31,11 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
-    port def PSupplyRegularO {
+    port def SupplyVoltageOutputPort {
         doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy, BatteryProtection and service aggregation. The record retains the selected rail identity and source provenance. */
         out item payload:SupplyVoltageV1;
     }
-    port def PSupplyHealthO {
+    port def SupplyHealthOutputPort {
         doc /* Publishes supply conversion health evidence to Platform, SessionPolicy, TractionControl and service aggregation. It qualifies the fast and regular source paths rather than carrying a voltage command. */
         out item payload:SensorHealthConditionV1;
     }
@@ -50,14 +50,14 @@ package X2CitySoftwareComponent_SupplyInterface {
         /* Owns DC-link voltage conversion from the fast injected aperture and regular supply
            voltage conversion from completed DMA scans. These paths keep distinct state/context;
            no Vdc conversion is delegated to MotorPhaseInterface. */
-        port pSupplyFastRawI:PSupplyFastRawI;
-        port pSupplyRegularRawI:PSupplyRegularRawI;
-        port pSupplyFastVdcO:PSupplyFastVdcO;
-        port pSupplyRegularO:PSupplyRegularO;
-        port pSupplyHealthO:PSupplyHealthO;
-        port platformContextRequired:~PPltContextO;
-        port platformHealthRequired:~PPltHealthO;
-        port calibrationRequired:~PPltCalibrationO;
+        port fastInjectedEpochIn:FastInjectedEpochInputPort;
+        port regularAdcScanIn:RegularAdcScanInputPort;
+        port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort;
+        port supplyVoltageOut:SupplyVoltageOutputPort;
+        port supplyHealthOut:SupplyHealthOutputPort;
+        port platformContextIn:~PlatformContextOutputPort;
+        port platformHealthIn:~PlatformHealthOutputPort;
+        port calibrationIn:~CalibrationBundleOutputPort;
         // U-SUPPLY-FAST and U-SUPPLY-REGULAR have separate semantic state.
     }
 }

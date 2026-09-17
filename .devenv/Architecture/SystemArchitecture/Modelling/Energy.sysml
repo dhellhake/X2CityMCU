@@ -11,6 +11,6 @@ package X2CityComponent_Energy {
         part bms:Bms;
         part batteryProtection:BatteryProtection;
         part energyPath:EnergyPath;
-        port batteryObservationOut:BatteryObservationOut;
+        port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
     }
 }

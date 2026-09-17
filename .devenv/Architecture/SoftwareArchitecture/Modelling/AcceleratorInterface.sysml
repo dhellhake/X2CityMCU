@@ -2,7 +2,7 @@ package X2CitySoftwareContract_AcceleratorInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def PAccelRawI {
+    port def RegularAdcScanInputPort {
         doc /* Receives completed regular ADC scan records from AnalogAcquisition. The accelerator interface uses the source rank, sequence, timestamp and active calibration context to produce a semantic position; the inbound record remains raw ADC evidence. */
         in item payload:RegularAdcScanV1;
     }
@@ -14,11 +14,11 @@ package X2CitySoftwareContract_AcceleratorInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
-    port def PAccelPositionO {
+    port def AcceleratorPositionOutputPort {
         doc /* Publishes the qualified accelerator percentage, rest indication and source provenance to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. Consumers must treat the position as unavailable when the source or calibration qualification carried by the record is not valid. */
         out item payload:AcceleratorPositionV1;
     }
-    port def PAccelHealthO {
+    port def AcceleratorHealthOutputPort {
         doc /* Publishes accelerator-source health evidence to Platform, SessionPolicy and service aggregation. The record identifies the producer condition and evidence context; it is a health observation, not a rider-position command. */
         out item payload:SensorHealthConditionV1;
     }
@@ -33,11 +33,11 @@ package X2CitySoftwareComponent_AcceleratorInterface {
         /* Accepts a completed regular scan and active calibration only in the current context,
            then publishes accelerator position/rest/availability. It owns no DMA storage or rider
            demand decision. */
-        port pAccelRawI:PAccelRawI;
-        port pAccelPositionO:PAccelPositionO;
-        port pAccelHealthO:PAccelHealthO;
-        port platformContextRequired:~PPltContextO;
-        port platformHealthRequired:~PPltHealthO;
-        port calibrationRequired:~PPltCalibrationO;
+        port regularAdcScanIn:RegularAdcScanInputPort;
+        port acceleratorPositionOut:AcceleratorPositionOutputPort;
+        port acceleratorHealthOut:AcceleratorHealthOutputPort;
+        port platformContextIn:~PlatformContextOutputPort;
+        port platformHealthIn:~PlatformHealthOutputPort;
+        port calibrationIn:~CalibrationBundleOutputPort;
     }
 }

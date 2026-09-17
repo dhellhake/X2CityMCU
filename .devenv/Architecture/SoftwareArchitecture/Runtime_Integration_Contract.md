@@ -14,8 +14,8 @@ A binding is project-owned code that selects a resource, static rank/trigger set
 | `U-PLATFORM-CALIBRATION` / SC-PLATFORM | direct platform lifecycle call while disarmed | Solely validates an immutable calibration bundle, rolls context, invalidates dependent records and activates the bundle. It does not configure peripheral registers or convert signals. |
 | `U-ANALOG-ACQ-FAST` / SC-ANALOG-ACQ | `B-FAST-ANALOG-JEOS` | Bounded ADC1/ADC2 JEOS/JDR1/JDR2 snapshot into raw `InjectedEpochV1`. No DMA, task wakeup, queue, allocation, logging or unbounded lock. |
 | `U-MOTOR-PHASE-FAST` / SC-MOTOR-PHASE-IF | direct fast call | Calibrates/scales current codes, checks aperture/window/range, reconstructs only from the admissible same-epoch pair and publishes immutable phase feedback. |
-| `U-SUPPLY-FAST` / SC-SUPPLY-IF | direct fast call | Calibrates rank-2 `SEN_PVDD` into `FastVdcV1`; it carries its actual rank-2 timestamp/skew and is not asserted simultaneous with the current pair. |
-| `U-HALL-POSITION` / SC-HALL-IF | direct nonqueued accessor | Returns current complete `ElectricalPositionV1` (map/alignment, transition, direction, timestamp) or unavailable. |
+| `U-SUPPLY-FAST` / SC-SUPPLY-IF | direct fast call | Calibrates rank-2 `SEN_PVDD` into `FastDcLinkVoltageRecord`; it carries its actual rank-2 timestamp/skew and is not asserted simultaneous with the current pair. |
+| `U-HALL-POSITION` / SC-HALL-IF | direct nonqueued accessor | Returns current complete `HallElectricalPositionRecord` (map/alignment, transition, direction, timestamp) or unavailable. |
 | `U-TRACTION-CONTROL` / SC-TRACTION-CTRL | direct fast call | Accepts authority/command and the qualified phase, fast-Vdc and electrical-position inputs; executes FOC and produces next `CCR1..3`, `CCR4` and ADC context. |
 | `U-TRACTION-OUTPUT` / SC-TRACTION-CTRL | direct fast call | Sole literal writer of `CCR1..4` and JSQR; performs the HSI guarded stage/commit transaction. |
 

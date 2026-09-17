@@ -94,7 +94,7 @@ flowchart LR
     subgraph F[Direct fast traction chain]
         JEOS[U-ANALOG-ACQ-FAST\nB-FAST-ANALOG-JEOS / InjectedEpochV1]
         QUAL[U-MOTOR-PHASE-FAST + U-SUPPLY-FAST + U-HALL-POSITION\nqualified phase/Vdc/electrical position]
-        FOC[U-TRACTION-CONTROL\nFastCommandV1: CCR1..3, CCR4, ADC context]
+        FOC["U-TRACTION-CONTROL<br/>PWMAndADCSamplingPlanV1: CCR1..3, CCR4, ADC context"]
         OUT[U-TRACTION-OUTPUT\nsole CCR1..4 + JSQR / UDIS commit lease]
     end
     OS[CortexOs cyclic scheduler\ncurrent tasks] -->|scheduled regular qualification/policy| DMA
@@ -156,20 +156,20 @@ flowchart LR
 
 ## Demand-arbitration typed boundary
 
-`U-DEMAND-ARBITER` has no generic `inputsIn` collection. Each ingress below carries its own value, qualification, freshness, producer/context, configuration identity and generation. Demand evaluates one coherent snapshot; a route being drawn does not make a prior record current.
+`U-DEMAND-ARBITER` has no generic `lightingContextIn` collection. Each ingress below carries its own value, qualification, freshness, producer/context, configuration identity and generation. Demand evaluates one coherent snapshot; a route being drawn does not make a prior record current.
 
 ```mermaid
 flowchart LR
     ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPositionV1] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
     BRK[U-BRAKE-QUALIFY\nBrakeStateV1] -->|P-DEM-BRAKE-I| D
     SET[U-SET-STATE\nActiveRidingSettingsV1] -->|P-DEM-ACTIVE-SETTINGS-I| D
-    SES[U-SESSION-ELIGIBILITY\nPSesAuthOInformation] -->|P-DEM-AUTHORITY-I| D
-    BAT[U-BAT-POLICY-RESTRICTION\nPBatEnvelopeOInformation] -->|P-DEM-BATTERY-CAPABILITY-I| D
+    SES["U-SESSION-ELIGIBILITY<br/>RidingAuthority"] -->|P-DEM-AUTHORITY-I| D
+    BAT["U-BAT-POLICY-RESTRICTION<br/>BatteryCapabilityEnvelope"] -->|P-DEM-BATTERY-CAPABILITY-I| D
     MOT[U-TRACTION-MOTION\nQualifiedMotionV1] -->|P-DEM-MOTION-I| D
     OUT[U-TRACTION-ACTUAL-OUTPUT\nActualTractionOutputV1 estimate] -->|P-DEM-ACTUAL-OUTPUT-I| D
     PLT[U-PLATFORM-CONTEXT / HEALTH\ncurrent generation] --> D
     CAL[U-PLATFORM-CALIBRATION\nresolved validated DemandPolicyCalibration data] --> D
-    D -->|P-DEM-COMMAND-O\nrequestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimestampTicks, commandClockId/context| TA[U-TRACTION-ACCEPT]
+    D -->|"P-DEM-COMMAND-O<br/>requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimestampTicks, commandClockId/context"| TA[U-TRACTION-ACCEPT]
     TA -->|accepted signed request\neffectiveAcceptedExpiryTimestampTicks with acceptanceClockId/context| TC[U-TRACTION-CONTROL]
     D -->|P-DEM-DIAGNOSTIC-O\nservice only| SI[U-SERVICE-INFO-COLLECT]
 ```
@@ -181,7 +181,7 @@ flowchart LR
 | Active settings | Only the active level/speed setting is used. Pending values, receipt order and setting activation remain `SC-SET` ownership. |
 | Authority and command | `authorityExpiryTimestampTicks` and `commandExpiryTimestampTicks` carry independent decision sequences and named `authorityClockId`/`authorityClockContextId` and `commandClockId`/`commandClockContextId`. Acceptance emits `effectiveAcceptedExpiryTimestampTicks` only after clock/context equality or qualified conversion; Demand cannot refresh authority by issuing a command. |
 | Motion and actual output | Demand requires current qualified motion for speed/standstill decisions and current qualified actual positive applied torque plus forward travel to re-arm regeneration after stop. Hand-push travel cannot satisfy the latter proof. |
-| Capability | `PBatEnvelopeOInformation` supplies independently qualified positive/negative ceilings, reasons and restriction generations. Demand clamps signs independently, owns regeneration-recovery episode qualification, and does not own protection. |
+| Capability | `BatteryCapabilityEnvelope` supplies independently qualified positive/negative ceilings, reasons and restriction generations. Demand clamps signs independently, owns regeneration-recovery episode qualification, and does not own protection. |
 | Calibration and diagnostic | `DemandPolicyCalibration` carries resolved, validated release-controlled maps, ramps, taper, reference limits and timing-bound data. Diagnostic reason/generation goes one way to service; it has no rider or control route. |
 
 ## Static local-interface view

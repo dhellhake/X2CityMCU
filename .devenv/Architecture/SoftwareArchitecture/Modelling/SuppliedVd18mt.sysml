@@ -12,6 +12,6 @@ package X2CitySoftwareComponent_SuppliedVd18mt {
            transport role. The project-facing responsibility is limited to the UART byte/framing
            boundary consumed and produced by HmiAdapter. */
         // R-X01 opaque UART framing/byte endpoint; supplied firmware remains absent.
-        port hmiTransportIo:~PHmiTransportIo;
+        port hmiTransportIo:~HmiTransportExchangePort;
     }
 }

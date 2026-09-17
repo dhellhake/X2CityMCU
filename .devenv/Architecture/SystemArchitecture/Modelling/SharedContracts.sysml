@@ -1,12 +1,12 @@
 package X2CitySharedContracts {
-    attribute def Validity;
-    attribute def Freshness;
+    attribute def ValidityStatus;
+    attribute def FreshnessStatus;
     attribute def SourceContext;
     attribute def Expiry;
 
-    item def ContextualInformation {
-        attribute validity:Validity;
-        attribute freshness:Freshness;
+    item def QualifiedInformationRecord {
+        attribute validity:ValidityStatus;
+        attribute freshness:FreshnessStatus;
         attribute sourceContext:SourceContext;
     }
 

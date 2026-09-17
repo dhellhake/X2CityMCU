@@ -4,33 +4,33 @@ package X2CityDetailedUnit_SupplyInterface {
     private import X2CitySoftwareContract_SupplyInterface::*;
     private import X2CityDetailedUnit_AnalogAcquisition::*;
     private import X2CityDetailedUnit_PlatformCalibration::*;
-    item def FastVdcV1 :> FastDcLinkVoltageV1;
+    item def FastDcLinkVoltageRecord :> FastDcLinkVoltageV1;
     item def RegularSupplyV1 :> SupplyVoltageV1;
-    port def FastVdcOut {
+    port def FastDcLinkVoltageOutputPort {
         doc /* U-SUPPLY-FAST sends calibrated current local Vdc derived from the same fast epoch to traction control; regular supply data cannot substitute for it. */
-        out item payload:FastVdcV1;
+        out item payload:FastDcLinkVoltageRecord;
     }
-    port def RegularSupplyOut {
+    port def RegularSupplyOutputPort {
         doc /* U-SUPPLY-REGULAR sends slower supply and rail diagnostics to policy and service consumers. */
         out item payload:RegularSupplyV1;
     }
-    port def InjectedEpochIn {
+    port def InjectedEpochInputPort {
         doc /* U-SUPPLY-FAST receives the selected current JEOS/JDR raw epoch from fast acquisition for Vdc conversion. */
         in item payload:InjectedEpochV1;
     }
-    port def RegularScanIn {
+    port def RegularScanInputPort {
         doc /* U-SUPPLY-REGULAR receives the distinct completed regular-DMA scan for non-fast supply conversion. */
         in item payload:RegularScanV1;
     }
-    port def CalibrationIn {
+    port def CalibrationInputPort {
         doc /* Receives active supply channel scaling, plausibility and configuration data for the corresponding fast or regular conversion. */
         in item payload:CalibrationBundleRecord;
     }
-    port def SensorHealthOut {
+    port def SensorHealthOutputPort {
         doc /* Publishes fast Vdc and regular supply conversion health so consumers can reject the affected electrical observation. */
         out item payload:SensorHealthConditionV1;
     }
-    part def USupplyFast { port injectedEpochIn:InjectedEpochIn; port calibrationIn:CalibrationIn; port fastVdcOut:FastVdcOut; port sensorHealthOut:SensorHealthOut; }
-    part def USupplyRegular { port regularScanIn:RegularScanIn; port calibrationIn:CalibrationIn; port regularSupplyOut:RegularSupplyOut; port sensorHealthOut:SensorHealthOut; }
+    part def FastSupplyVoltageProcessor { port injectedEpochIn:InjectedEpochInputPort; port calibrationIn:CalibrationInputPort; port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
+    part def RegularSupplyVoltageProcessor { port regularScanIn:RegularScanInputPort; port calibrationIn:CalibrationInputPort; port regularSupplyOut:RegularSupplyOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     // SC-SUPPLY-IF.V owns rank-2 fast Vdc conversion and non-fast regular supplies separately.
 }

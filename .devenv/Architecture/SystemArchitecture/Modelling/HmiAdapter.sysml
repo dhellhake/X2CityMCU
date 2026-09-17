@@ -1,25 +1,25 @@
 package X2CityContract_HmiAdapter {
     private import X2CitySharedContracts::*;
-    item def RiderInformation:>ContextualInformation;
-    item def LightInputInformation:>ContextualInformation;
-    port def RiderInformationOut {
+    item def RiderStatusInformation:>QualifiedInformationRecord;
+    item def LightingContext:>QualifiedInformationRecord;
+    port def RiderStatusInformationOutputPort {
         doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
-        out item payload:RiderInformation;
+        out item payload:RiderStatusInformation;
     }
-    port def RiderInformationIn {
+    port def RiderStatusInformationInputPort {
         doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
-        in item payload:RiderInformation;
+        in item payload:RiderStatusInformation;
     }
-    port def LightInputOut {
+    port def LightingContextOutputPort {
         doc /* Carries the HMI normal-light request or Input-qualified rider and brake lighting facts to LightPolicy. LightPolicy combines these context inputs with traction observations before producing logical light intent. */
-        out item payload:LightInputInformation;
+        out item payload:LightingContext;
     }
-    port def LightInputIn {
+    port def LightingContextInputPort {
         doc /* Carries the HMI normal-light request or Input-qualified rider and brake lighting facts to LightPolicy. LightPolicy combines these context inputs with traction observations before producing logical light intent. */
-        in item payload:LightInputInformation;
+        in item payload:LightingContext;
     }
-    interface def IfA006RiderInformation { end producer:RiderInformationOut; end consumer:RiderInformationIn; flow producer.payload to consumer.payload; }
-    interface def IfA006LightInput { end producer:LightInputOut; end consumer:LightInputIn; flow producer.payload to consumer.payload; }
+    interface def IfA006RiderStatusInformation { end producer:RiderStatusInformationOutputPort; end consumer:RiderStatusInformationInputPort; flow producer.payload to consumer.payload; }
+    interface def IfA006LightingContext { end producer:LightingContextOutputPort; end consumer:LightingContextInputPort; flow producer.payload to consumer.payload; }
 }
 
 package X2CityComponent_HmiAdapter {
@@ -29,11 +29,11 @@ package X2CityComponent_HmiAdapter {
     private import X2CityContract_HmiAdapter::*;
     private import X2CityContract_ServiceInformation::*;
     part def HmiAdapter { // LE-HMI
-        /* Adapts rider-facing controls and presentation to settings, lighting input, and rider information contracts. It translates between rider devices and policy components and publishes service configuration information. */
-        port settingsOut:SettingsOut;
-        port lightInputOut:LightInputOut;
-        port riderInformationIn:RiderInformationIn;
-        port riderInformationOut:RiderInformationOut;
-        port serviceConfigurationOut:ServiceConfigurationOut;
+        /* Adapts rider-facing controls and presentation to settings, lighting input, and rider information contracts. It translates between rider devices and policy components and publishes service report information. */
+        port riderSettingsRequestOut:RiderSettingsRequestOutputPort;
+        port lightingContextOut:LightingContextOutputPort;
+        port riderStatusInformationIn:RiderStatusInformationInputPort;
+        port riderStatusInformationOut:RiderStatusInformationOutputPort;
+        port serviceReportOut:ServiceReportOutputPort;
     }
 }

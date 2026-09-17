@@ -9,6 +9,6 @@ package X2CityComponent_Auxiliary {
         part lightPolicy:LightPolicy;
         part auxiliaryPower:AuxiliaryPower;
         part lampHardware:LampHardware;
-        port lightIntentIn:LightIntentIn;
+        port lightActuationIntentIn:LightActuationIntentInputPort;
     }
 }

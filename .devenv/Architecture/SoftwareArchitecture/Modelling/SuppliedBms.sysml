@@ -12,6 +12,6 @@ package X2CitySoftwareComponent_SuppliedBms {
            as an opaque external role. Its vendor firmware and internal protection behavior are not
            decomposed here; the project connects to it through the protected read transaction. */
         // R-X02 opaque protected read-transaction endpoint; vendor internals remain absent.
-        port bmsTransportIo:~PBmsTransportIo;
+        port bmsTransportIo:~BmsTransportExchangePort;
     }
 }

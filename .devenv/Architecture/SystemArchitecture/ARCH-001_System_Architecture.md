@@ -26,7 +26,7 @@ Edges below mean **composed of**, not communication or power flow. The table giv
 flowchart TB
     Context["Project equipment model"] -->|contains| EPCS["LE-EPCS"]
     Context -->|contains| Mech["LE-MECH: steering and brakes"]
-    Context -->|contains| Integration["LE-INTEGRATION: carrier, enclosures, harness"]
+    Context -->|contains| VehicleIntegration["LE-INTEGRATION: carrier, enclosures, harness"]
     EPCS -->|contains| Riding["LE-RIDING"]
     EPCS -->|contains| Input["LE-INPUT"]
     EPCS -->|contains| Traction["LE-TRACTION"]
@@ -55,7 +55,7 @@ flowchart TB
 | <a id="le-input-qual"></a>LE-INPUT-QUAL | [LE-INPUT](#le-input) | SW | Local observation qualification, coherence, source status and self-tests; preserves BMS/traction producer provenance. | [SC-ANALOG-ACQ.V, SC-ACCELERATOR-IF.V, SC-BRAKE-IF.V, SC-TEMPERATURE-IF.V, SC-SUPPLY-IF.V, SC-MOTOR-PHASE-IF.V and SC-HALL-IF.V](../SoftwareArchitecture/ARCH-003_Software_Architecture.md) |
 | <a id="le-bms-link"></a>LE-BMS-LINK | [LE-INPUT](#le-input) | SW | UART information interpretation/qualification within LE-INPUT; applicable vehicle and service consumer configurations | [SC-BMS-LINK](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-bms-link) |
 | <a id="le-traction"></a>LE-TRACTION | [LE-EPCS](../../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Realize permitted signed torque with the installed motor; provide qualified applied-torque/motion information | Owned children below |
-| <a id="le-motor-ctrl"></a>LE-MOTOR-CTRL | [LE-TRACTION](#le-traction) | SW | Command acceptance, motor control and actual-output observation with domain self-tests. | [SC-TRACTION-CTRL](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-traction-ctrl) |
+| <a id="le-motor-ctrl"></a>LE-MOTOR-CTRL | [LE-TRACTION](#le-traction) | SW | Command acceptance, motor control and actual-traction-output observation with domain self-tests. | [SC-TRACTION-CTRL](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-traction-ctrl) |
 | <a id="le-traction-hw"></a>LE-TRACTION-HW | [LE-TRACTION](#le-traction) | HW | Physical traction conversion, motor, feedback and assigned protective output behavior. | [HC-TRACTION-POWER](../ARCH-002_Hardware_Architecture.md#hc-traction-power), [HC-MOTOR](../ARCH-002_Hardware_Architecture.md#hc-motor) |
 | <a id="le-energy"></a>LE-ENERGY | [LE-EPCS](../../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Same removable battery, distribution, permitted power/charge envelopes, residual loads and energy protection in applicable configurations | Owned children below |
 | <a id="le-cells"></a>LE-CELLS | [LE-ENERGY](#le-energy) | HW | Fixed electrochemical storage bank, part of LE-ENERGY in fitted/removed configurations | [HC-CELLS](../ARCH-002_Hardware_Architecture.md#hc-cells) |
@@ -101,9 +101,9 @@ Information-port types carry their value plus validity, source age, qualificatio
 
 | IF-A family | Port type and endpoint boundary |
 |---|---|
-| IF-A-001/002 | Qualified rider facts go to setting/session/demand/light consumers; traction-owned qualified motion goes to setting/session/demand. HMI/Input requests feed LE-SET and current-startup receipt reaches LE-SESSION; LE-SET alone projects active settings to LE-DEMAND. Physical rest remains explicit. |
-| IF-A-003/009 | Battery observation, envelope and vendor-UART ports: actual BMS/source to interpretation to battery policy to consumers; independent positive-discharge and negative-charge permissions, electrical endpoint and data validity remain distinct. |
-| IF-A-004/005 | Session authority to demand and traction; signed wheel-demand input; traction-owned qualified-motion and actual-output/braking feedback, with expiry and producer context. |
+| IF-A-001/002 | Qualified accelerator/rest and coded-brake inputs go to setting/session/demand/light consumers; traction-owned qualified vehicle motion goes to setting/session/demand. HMI/Input requests feed LE-SET and current-startup receipt reaches LE-SESSION; LE-SET alone projects active settings to LE-DEMAND. Physical rest remains explicit. |
+| IF-A-003/009 | Battery condition observation, capability envelope and vendor-UART ports: actual BMS/source to interpretation to battery protection to consumers; independent positive-discharge and negative-charge permissions, electrical endpoint and data validity remain distinct. |
+| IF-A-004/005 | Session authority to demand and traction; signed wheel-demand input; traction-owned qualified-vehicle-motion and actual-traction-output/braking feedback, with expiry and producer context. |
 | IF-A-006 | HMI information and lighting intent: selected reports/protocol fields and front/rear commands; physical lamp output is a separate result |
 | IF-A-008 | Current producer-tagged service and diagnostic records; DemandPolicy policy-status/diagnostic output is read-only and grants no authority. |
 | IF-A-010/011 | Physical power and protection ports: voltage/current/reference/thermal boundary plus assigned request/status/action; data status is not physical energy control |
@@ -147,7 +147,7 @@ Unchanged requirements may be reclassified without invented parents. New childre
 
 | Interface | Producer → consumer | Contract / source | Open acceptance and gate |
 |---|---|---|---|
-| IF-A-001: qualified rider/motion data | LE-INPUT → LE-SET / LE-SESSION / LE-DEMAND / LE-LIGHT-POLICY; LE-TRACTION → LE-SET / LE-SESSION / LE-DEMAND | LE-INPUT owns qualified accelerator/rest and four-state brake actuation or unknown. LE-TRACTION separately owns qualified motion direction/standstill used for setting application, Ready and demand. Value, validity and freshness remain distinct. [Input requirements](../../Requirements/System_Requirements/Interface_Qualification.md) | Endpoint ranges, tolerances, time coherence and diagnostic coverage: WS-OI-001/002/012; before dependent input/control requirements freeze. |
+| IF-A-001: qualified rider-input/vehicle-motion data | LE-INPUT → LE-SET / LE-SESSION / LE-DEMAND / LE-LIGHT-POLICY; LE-TRACTION → LE-SET / LE-SESSION / LE-DEMAND | LE-INPUT owns qualified accelerator/rest and four-state brake actuation or unknown. LE-TRACTION separately owns qualified vehicle-motion direction/standstill used for setting application, Ready and demand. Value, validity and freshness remain distinct. [Input requirements](../../Requirements/System_Requirements/Interface_Qualification.md) | Endpoint ranges, tolerances, time coherence and diagnostic coverage: WS-OI-001/002/012; before dependent input/control requirements freeze. |
 | IF-A-002: settings | LE-HMI / LE-INPUT → LE-SET / LE-SESSION; LE-SET → LE-DEMAND | Current-startup receipt and retained last-valid request remain LE-SET inputs. LE-DEMAND receives only the typed active setting, never pending/request state. LE-SET owns LVL-001–004 and SPD-002/004/005/008 | VD18MT encoding/transport, unrecognized frames and qualification timing: WS-OI-008/009/015. No fallback setting creates startup qualification. |
 | IF-A-003: power envelope/status | LE-ENERGY / LE-TRACTION ↔ LE-INPUT; LE-BAT-POLICY → LE-SESSION / LE-DEMAND | Qualified observations/configuration feed battery policy; its envelope keeps positive discharge and negative charge permissions, propulsion versus charge restriction, required-data qualification and recognized faults distinct. LE-SESSION owns fault/Ready retention, LE-DEMAND owns rider/re-entry arbitration | Limits, margins, source freshness and fault classification: WS-OI-005/018/019, OI-041/048/049/061. |
 | IF-A-004: eligibility and torque command | LE-SESSION → LE-DEMAND / LE-TRACTION; LE-DEMAND → LE-TRACTION | Current qualified authority informs both demand policy and command acceptance; LE-DEMAND produces the valid, unexpired signed rear-wheel command under INT-004. Positive means forward. Reject obsolete/restarted-context inputs and withdraw on lost authority. Physical response/protection remain separate | Command representation, complete arbitration, transfer/update/watchdog bounds and physical torque tolerance: WS-OI-003/007/010/015, OI-043/049. |
@@ -180,7 +180,7 @@ For every numerical or temporal contract, define its reference, valid range, unc
 
 | Logical owner | Coordinated functions / allocated contribution |
 |---|---|
-| LE-INPUT | F-001 rider/motion acquisition and F-006 complete battery-source qualification; LE-BMS-LINK supplies only allocated UART interpretation. Physical measurement/transport remains mixed. |
+| LE-INPUT | F-001 rider-input and vehicle-motion acquisition and F-006 complete battery-source qualification; LE-BMS-LINK supplies only allocated UART interpretation. Physical measurement/transport remains mixed. |
 | LE-SET / LE-SESSION / LE-DEMAND | F-002 settings / F-003 riding authority / F-004 signed demand and regen episodes, respectively; existing software leaves retained. |
 | LE-TRACTION | F-005 actual torque/observation and FSC-001 physical fault-output responsibility; command and physical protection contributors remain mixed. |
 | LE-ENERGY | F-007 capability, F-008 storage/distribution and F-009 energy protection. LE-BAT-POLICY provides capability policy; LE-CELLS and supplied LE-BMS retain their fixed roles. FSC-007/008 target this owner. |

@@ -1,25 +1,25 @@
 package X2CityContract_MotorControl {
     private import X2CitySharedContracts::*;
-    item def ActualOutputInformation:>ContextualInformation;
-    item def QualifiedMotionInformation:>ContextualInformation;
-    port def ActualOutputOut {
+    item def ActualTractionOutput:>QualifiedInformationRecord;
+    item def QualifiedVehicleMotion:>QualifiedInformationRecord;
+    port def ActualTractionOutputPort {
         doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy, DemandPolicy and LightPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command. */
-        out item payload:ActualOutputInformation;
+        out item payload:ActualTractionOutput;
     }
-    port def ActualOutputIn {
+    port def ActualTractionInputPort {
         doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy, DemandPolicy and LightPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command. */
-        in item payload:ActualOutputInformation;
+        in item payload:ActualTractionOutput;
     }
-    port def QualifiedMotionOut {
+    port def QualifiedVehicleMotionOutputPort {
         doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
-        out item payload:QualifiedMotionInformation;
+        out item payload:QualifiedVehicleMotion;
     }
-    port def QualifiedMotionIn {
+    port def QualifiedVehicleMotionInputPort {
         doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
-        in item payload:QualifiedMotionInformation;
+        in item payload:QualifiedVehicleMotion;
     }
-    interface def IfA005ActualOutput { end producer:ActualOutputOut; end consumer:ActualOutputIn; flow producer.payload to consumer.payload; }
-    interface def IfA005QualifiedMotion { end producer:QualifiedMotionOut; end consumer:QualifiedMotionIn; flow producer.payload to consumer.payload; }
+    interface def IfA005ActualTractionOutput { end producer:ActualTractionOutputPort; end consumer:ActualTractionInputPort; flow producer.payload to consumer.payload; }
+    interface def IfA005QualifiedVehicleMotion { end producer:QualifiedVehicleMotionOutputPort; end consumer:QualifiedVehicleMotionInputPort; flow producer.payload to consumer.payload; }
 }
 
 package X2CityComponent_MotorControl {
@@ -27,7 +27,7 @@ package X2CityComponent_MotorControl {
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_ServiceInformation::*;
     part def MotorControl { // LE-MOTOR-CTRL
-        /* Provides the motor-control boundary that applies traction commands to the drive hardware and makes actual output available to observers. It publishes service configuration information; demand evaluation remains in DemandPolicy. */
-        port serviceConfigurationOut:ServiceConfigurationOut;
+        /* Provides the motor-control boundary that applies traction commands to the drive hardware and makes actual output available to observers. It publishes service report information; demand evaluation remains in DemandPolicy. */
+        port serviceReportOut:ServiceReportOutputPort;
     }
 }

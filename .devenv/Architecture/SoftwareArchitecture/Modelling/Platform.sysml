@@ -1,21 +1,21 @@
 package X2CitySoftwareContract_Platform {
     private import X2CitySharedSoftwareTypes::*;
-    item def PPltContextOInformation:>ContextualSoftwareInformation;
-    port def PPltContextO {
+    item def PlatformContext:>ContextualSoftwareInformation;
+    port def PlatformContextOutputPort {
         doc /* Publishes the current execution, reset and context generation information to software components that require a coherent local operating context. Consumers use it to qualify observations and reject records from another context. */
-        out item payload:PPltContextOInformation;
+        out item payload:PlatformContext;
     }
-    item def PPltRetentionOInformation:>ContextualSoftwareInformation;
-    port def PPltRetentionO {
+    item def RetentionCandidate:>ContextualSoftwareInformation;
+    port def RetentionCandidateOutputPort {
         doc /* Publishes retained-state information to policy components and service aggregation. BatteryProtection uses the retained candidate with its validity context for reached-10% recovery handling. */
-        out item payload:PPltRetentionOInformation;
+        out item payload:RetentionCandidate;
     }
-    item def PPltHealthOInformation:>ContextualSoftwareInformation {
+    item def PlatformHealth:>ContextualSoftwareInformation {
         attribute fastSafetyState:String; // enum: inactive, armed, inhibited, latched.
     }
-    port def PPltHealthO {
+    port def PlatformHealthOutputPort {
         doc /* Publishes Platform health and its independent FastSafetyState to component service/event receptacles and service aggregation. This platform result is not routed back as a sensor root cause. */
-        out item payload:PPltHealthOInformation;
+        out item payload:PlatformHealth;
     }
     // Normalized qualified evidence from one producer. Platform consumes this evidence without
     // publishing it back as a new sensor cause; a platform fast-safety state is separate from a
@@ -29,7 +29,7 @@ package X2CitySoftwareContract_Platform {
         attribute relatedAdcSequence:Integer;
         attribute calibrationContextId:String;
     }
-    port def PPltSensorHealthI {
+    port def SensorHealthInputPort {
         doc /* Receives normalized health evidence from AnalogAcquisition and semantic sensor interfaces. Platform consumes producer source, severity, timestamp and calibration context to update its separate fast-safety state. */
         in item payload:SensorHealthConditionV1;
     }
@@ -98,14 +98,14 @@ package X2CitySoftwareContract_Platform {
         attribute boardAdcRank:Integer;
         attribute motorAdcRank:Integer;
     }
-    attribute def NormalizedDemandMapCalibration {
-        attribute inputKnot:Real[1..*];
-        attribute outputKnot:Real[1..*];
-        attribute pairedKnotCountValid:Boolean;
-        attribute strictlyOrderedInputKnots:Boolean;
-        attribute monotonicNondecreasingOutput:Boolean;
-        attribute fullNormalizedDomainCovered:Boolean;
-        attribute zeroAndUnitEndpointsPresent:Boolean;
+    attribute def NormalizedResponseCurve {
+        attribute inputBreakpoints:Real[1..*];
+        attribute outputValues:Real[1..*];
+        attribute breakpointAndValueCountsMatch:Boolean;
+        attribute inputBreakpointsStrictlyIncreasing:Boolean;
+        attribute outputValuesNondecreasing:Boolean;
+        attribute normalizedDomainFullyCovered:Boolean;
+        attribute zeroAndFullScaleEndpointsPresent:Boolean;
     }
     attribute def DemandRampCalibration {
         attribute wheelTorqueGradientNewtonMetresPerSecond:Real;
@@ -117,7 +117,7 @@ package X2CitySoftwareContract_Platform {
     }
     attribute def RegenerationTaperCalibration {
         attribute onsetSpeedKilometresPerHour:Real;
-        attribute taperMap:NormalizedDemandMapCalibration;
+        attribute taperMap:NormalizedResponseCurve;
         attribute responseBoundTicks:Integer;
     }
     attribute def DemandProfileReferenceLimits {
@@ -160,17 +160,17 @@ package X2CitySoftwareContract_Platform {
         attribute profileId:String;
         attribute profileRevision:String;
         attribute profileActivationPermitted:Boolean;
-        attribute level0PositiveMap:NormalizedDemandMapCalibration;
-        attribute level1PositiveMap:NormalizedDemandMapCalibration;
-        attribute level2PositiveMap:NormalizedDemandMapCalibration;
-        attribute level3PositiveMap:NormalizedDemandMapCalibration;
-        attribute level4PositiveMap:NormalizedDemandMapCalibration;
-        attribute level5PositiveMap:NormalizedDemandMapCalibration;
-        attribute level1RegenerationMap:NormalizedDemandMapCalibration;
-        attribute level2RegenerationMap:NormalizedDemandMapCalibration;
-        attribute level3RegenerationMap:NormalizedDemandMapCalibration;
-        attribute level4RegenerationMap:NormalizedDemandMapCalibration;
-        attribute level5RegenerationMap:NormalizedDemandMapCalibration;
+        attribute level0PositiveMap:NormalizedResponseCurve;
+        attribute level1PositiveMap:NormalizedResponseCurve;
+        attribute level2PositiveMap:NormalizedResponseCurve;
+        attribute level3PositiveMap:NormalizedResponseCurve;
+        attribute level4PositiveMap:NormalizedResponseCurve;
+        attribute level5PositiveMap:NormalizedResponseCurve;
+        attribute level1RegenerationMap:NormalizedResponseCurve;
+        attribute level2RegenerationMap:NormalizedResponseCurve;
+        attribute level3RegenerationMap:NormalizedResponseCurve;
+        attribute level4RegenerationMap:NormalizedResponseCurve;
+        attribute level5RegenerationMap:NormalizedResponseCurve;
         attribute level1To5NeutralPercent:Real;
         attribute samePositiveEndpointValidated:Boolean;
         attribute progressiveRegenerationMaximumValidated:Boolean;
@@ -205,10 +205,10 @@ package X2CitySoftwareContract_Platform {
         attribute demandPolicyCalibration:DemandPolicyCalibration;
         attribute actualOutputEstimationCalibration:ActualOutputEstimationCalibration;
     }
-    item def PPltCalibrationOInformation:>CalibrationBundleV1;
-    port def PPltCalibrationO {
+    item def ActiveCalibrationBundle:>CalibrationBundleV1;
+    port def CalibrationBundleOutputPort {
         doc /* Publishes the immutable, validated typed calibration bundle to acquisition, conversion, demand and traction consumers. Components accept their applicable entries only in the matching activation context; missing or unvalidated bundle data cannot be treated as selected defaults. */
-        out item payload:PPltCalibrationOInformation;
+        out item payload:ActiveCalibrationBundle;
     }
 }
 
@@ -224,13 +224,13 @@ package X2CitySoftwareComponent_Platform {
            calibration. It consumes qualified sensor evidence to drive its separate FastSafetyState
            without feeding its health publication back as a new sensor root cause. Platform does
            not own ADC sampling, control math, or PWM/JSQR writes. */
-        port pPltContextO:PPltContextO;
-        port pPltRetentionO:PPltRetentionO;
-        port pPltHealthO:PPltHealthO;
-        port pPltCalibrationO:PPltCalibrationO;
-        port pPltSensorHealthI:PPltSensorHealthI;
+        port platformContextOut:PlatformContextOutputPort;
+        port retentionCandidateOut:RetentionCandidateOutputPort;
+        port platformHealthOut:PlatformHealthOutputPort;
+        port calibrationBundleOut:CalibrationBundleOutputPort;
+        port sensorHealthIn:SensorHealthInputPort;
         // A platform instance also consumes its own generation/health service events.
-        port platformContextRequired:~PPltContextO;
-        port platformHealthRequired:~PPltHealthO;
+        port platformContextIn:~PlatformContextOutputPort;
+        port platformHealthIn:~PlatformHealthOutputPort;
     }
 }

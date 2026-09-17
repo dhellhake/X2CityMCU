@@ -2,7 +2,7 @@ package X2CitySoftwareContract_BatteryProtection {
     private import X2CitySharedSoftwareTypes::*;
     // Payload covers BMS observations, input/output/path observations, effective configuration,
     // current local operating context, and validity-tagged retention candidate (reached10% state).
-    port def PBatObservationsAndContextI {
+    port def BatteryObservationsAndContextInputPort {
         doc /* Receives the qualified battery and operating context assembled from BMS, path observations, configuration, platform context and retained state. BatteryProtection uses the relevant freshness and validity evidence for independent positive propulsion and negative regeneration decisions. */
         in item payload:ContextualSoftwareInformation;
     }
@@ -21,16 +21,16 @@ package X2CitySoftwareContract_BatteryProtection {
         attribute restrictionReason:String;
         attribute restrictionEpisodeGeneration:ContextGeneration;
     }
-    item def PBatEnvelopeOInformation:>ContextualSoftwareInformation {
+    item def BatteryCapabilityEnvelope:>ContextualSoftwareInformation {
         item positivePropulsion:PositivePropulsionCapabilityV1;
         item negativeRegeneration:NegativeRegenerationCapabilityV1;
-        attribute reached10PositiveRestrictionActive:Boolean;
+        attribute lowSocPropulsionCutoffLatched:Boolean;
         attribute activeRestrictionSummary:String;
         attribute batteryFaultSummary:String;
     }
-    port def PBatEnvelopeO {
+    port def BatteryCapabilityEnvelopeOutputPort {
         doc /* Publishes separate qualified positive propulsion and negative regeneration capability branches, together with aggregate restriction and battery-fault context, to SessionPolicy, DemandPolicy, HmiAdapter and service aggregation. A restriction on one sign branch does not invalidate or withdraw the other branch. */
-        out item payload:PBatEnvelopeOInformation;
+        out item payload:BatteryCapabilityEnvelope;
     }
 }
 
@@ -46,9 +46,9 @@ package X2CitySoftwareComponent_BatteryProtection {
            the vehicle reached-10% restriction/recovery above 20% with retained-context validity.
            Supplied BMS hardware remains
            the independent physical protection, while this component owns the software policy role. */
-        port pBatObservationsAndContextI:PBatObservationsAndContextI;
-        port pBatEnvelopeO:PBatEnvelopeO;
-        port platformContextRequired:~PPltContextO;
-        port platformHealthRequired:~PPltHealthO;
+        port batteryObservationsAndContextIn:BatteryObservationsAndContextInputPort;
+        port batteryCapabilityEnvelopeOut:BatteryCapabilityEnvelopeOutputPort;
+        port platformContextIn:~PlatformContextOutputPort;
+        port platformHealthIn:~PlatformHealthOutputPort;
     }
 }

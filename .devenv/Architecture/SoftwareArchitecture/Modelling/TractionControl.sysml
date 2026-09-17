@@ -6,32 +6,32 @@ package X2CitySoftwareContract_TractionControl {
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def PTrAuthI {
+    port def RidingAuthorityInputPort {
         doc /* Receives SessionPolicy authority generation and its independent validity/expiry context. TractionControl accepts commands only when this authority is current in its named clock context. */
-        in item payload:PSesAuthOInformation;
+        in item payload:RidingAuthority;
     }
-    port def PTrCommandI {
+    port def WheelTorqueRequestInputPort {
         doc /* Receives DemandPolicy's requested signed wheel-torque command with authority linkage and independent expiry. TractionControl validates both command and authority before fast actuation. */
-        in item payload:PDemCommandOInformation;
+        in item payload:WheelTorqueRequest;
     }
-    port def PTrHallI {
+    port def HallElectricalPositionInputPort {
         doc /* Receives complete qualified electrical Hall position from HallInterface for FOC phase alignment and direction. It is electrical position evidence, not a substitute for qualified physical vehicle motion. */
         in item payload:HallElectricalPositionV1;
     }
-    port def PTrPhaseCurrentI {
+    port def PhaseCurrentEpochInputPort {
         doc /* Receives the qualified same-aperture phase-current epoch from MotorPhaseInterface for fast FOC feedback. The current record already carries calibration, rank plausibility and timing qualification. */
         in item payload:PhaseCurrentEpochV1;
     }
-    port def PTrFastVdcI {
+    port def FastDcLinkVoltageInputPort {
         doc /* Receives qualified fast DC-link voltage from SupplyInterface for fast control scaling and protection. The value is produced from the dedicated injected acquisition path and its active calibration context. */
         in item payload:FastDcLinkVoltageV1;
     }
-    port def PTrSensorHealthI {
+    port def TractionSensorHealthInputPort {
         doc /* Receives qualified source-health evidence from sensor interfaces to gate traction control. Platform's independent FastSafetyState is published separately and is not recreated from this input. */
         in item payload:SensorHealthConditionV1;
     }
     attribute def CurrentObservationGeneration;
-    item def PTrOutputIoInformation:>ContextualSoftwareInformation {
+    item def TractionOutputStageExchange:>ContextualSoftwareInformation {
         attribute currentObservationGeneration:CurrentObservationGeneration;
         attribute outputStageObservationAvailable:Boolean;
         attribute outputStageObservationTimestampTicks:Integer;
@@ -39,22 +39,22 @@ package X2CitySoftwareContract_TractionControl {
         attribute outputStageEvidenceSourceId:String;
         attribute outputStageEvidenceConfigurationId:String;
     }
-    port def PTrOutputIo {
+    port def TractionOutputStageExchangePort {
         doc /* Exchanges opaque traction information and physical-stage observation with the vehicle boundary in both directions. The boundary carries actuation-stage state and provenance; it is not a register or pin definition and does not turn a requested torque into actual-torque evidence. */
-        inout item payload:PTrOutputIoInformation;
+        inout item payload:TractionOutputStageExchange;
     }
-    port def PTrQualifiedMotionO {
+    port def QualifiedMotionOutputPort {
         doc /* Publishes qualified physical vehicle motion and standstill evidence to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. The publication remains live during startup/disarm and reports unavailable until its qualification criteria are met. */
         out item payload:QualifiedMotionV1;
     }
-    port def PTrActualOutputO {
+    port def AppliedTractionStateOutputPort {
         doc /* Publishes qualified observed applied-output evidence, including independently qualified positive torque and powered-forward travel, to DemandPolicy and service aggregation. It is derived from actual output observations and remains separate from the requested command. */
         out item payload:ActualTractionOutputV1;
     }
-    item def PTrObsOInformation:>ContextualSoftwareInformation;
-    port def PTrObsO {
+    item def TractionObservation:>ContextualSoftwareInformation;
+    port def TractionObservationOutputPort {
         doc /* Publishes the traction observation envelope to SessionPolicy, BatteryProtection, LightPolicy and service aggregation. It provides current traction facts for policy and reporting, not a command or actuation channel. */
-        out item payload:PTrObsOInformation;
+        out item payload:TractionObservation;
     }
 }
 
@@ -71,23 +71,23 @@ package X2CitySoftwareComponent_TractionControl {
            OUTPUT combines it with qualified phase current, electrical position, physical motion
            and activated estimation calibration before publishing an actual wheel-torque estimate;
            it never turns a requested torque command into actual-torque evidence. */
-        port pTrAuthI:PTrAuthI;
-        port pTrCommandI:PTrCommandI;
-        port pTrHallI:PTrHallI;
-        port pTrPhaseCurrentI:PTrPhaseCurrentI;
-        port pTrFastVdcI:PTrFastVdcI;
-        port pTrSensorHealthI:PTrSensorHealthI;
-        port pTrOutputIo:PTrOutputIo;
+        port ridingAuthorityIn:RidingAuthorityInputPort;
+        port wheelTorqueRequestIn:WheelTorqueRequestInputPort;
+        port hallElectricalPositionIn:HallElectricalPositionInputPort;
+        port phaseCurrentEpochIn:PhaseCurrentEpochInputPort;
+        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort;
+        port sensorHealthIn:TractionSensorHealthInputPort;
+        port tractionOutputStageExchange:TractionOutputStageExchangePort;
         // Existing Hall/capture-health evidence and calibration may support this interpretation;
         // static or absent Hall edges alone never establish standstill. This publication remains
         // live during startup/disarm, reporting unavailable until validated qualification criteria
         // support it, so a later Ready guard has no circular command dependency.
-        port pTrQualifiedMotionO:PTrQualifiedMotionO;
-        port pTrActualOutputO:PTrActualOutputO;
-        port pTrObsO:PTrObsO;
-        port platformContextRequired:~PPltContextO;
-        port platformHealthRequired:~PPltHealthO;
-        port calibrationRequired:~PPltCalibrationO;
+        port qualifiedMotionOut:QualifiedMotionOutputPort;
+        port appliedTractionStateOut:AppliedTractionStateOutputPort;
+        port tractionObservationOut:TractionObservationOutputPort;
+        port platformContextIn:~PlatformContextOutputPort;
+        port platformHealthIn:~PlatformHealthOutputPort;
+        port calibrationIn:~CalibrationBundleOutputPort;
         // JEOS-to-output fast handoffs are Detailed Design-owned unit internals; no public SC
         // fast ports or ARCH-003 routes exist here.
     }

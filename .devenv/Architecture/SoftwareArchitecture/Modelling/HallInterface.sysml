@@ -1,15 +1,15 @@
 package X2CitySoftwareContract_HallInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_Platform::*;
-    item def PHallCaptureIInformation:>ContextualSoftwareInformation {
+    item def HallCapture:>ContextualSoftwareInformation {
         attribute capturedHallState:Integer;
         attribute captureChannel:String;
         attribute captureTimestampTicks:Integer;
         attribute captureSequence:Integer;
     }
-    port def PHallCaptureI {
+    port def HallCaptureInputPort {
         doc /* Receives captured Hall channel state, channel identity, timer timestamp and sequence from the vehicle capture boundary. HallInterface validates transitions and capture integrity before deriving electrical position. */
-        in item payload:PHallCaptureIInformation;
+        in item payload:HallCapture;
     }
     item def HallElectricalPositionV1:>ContextualSoftwareInformation {
         attribute electricalAngleDegrees:Real;
@@ -19,11 +19,11 @@ package X2CitySoftwareContract_HallInterface {
         attribute captureSequence:Integer;
         attribute calibrationContextId:String;
     }
-    port def PHallPositionO {
+    port def HallElectricalPositionOutputPort {
         doc /* Publishes complete qualified electrical angle, sector and direction with capture and calibration provenance to TractionControl and service aggregation. This is electrical position evidence, not qualified physical vehicle motion. */
         out item payload:HallElectricalPositionV1;
     }
-    port def PHallHealthO {
+    port def HallHealthOutputPort {
         doc /* Publishes Hall capture and position-estimation health evidence to Platform, SessionPolicy, TractionControl and service aggregation. Overrun, incoherence, age, context or calibration failure is represented through the health qualification. */
         out item payload:SensorHealthConditionV1;
     }
@@ -39,12 +39,12 @@ package X2CitySoftwareComponent_HallInterface {
            calibration map/alignment and complete qualified electrical position estimation. It
            publishes unavailable on overrun, incoherence, age, context or calibration failure;
            traction performs no partial Hall-to-position conversion. */
-        port pHallCaptureI:PHallCaptureI;
-        port pHallPositionO:PHallPositionO;
-        port pHallHealthO:PHallHealthO;
-        port platformContextRequired:~PPltContextO;
-        port platformHealthRequired:~PPltHealthO;
-        port calibrationRequired:~PPltCalibrationO;
+        port hallCaptureIn:HallCaptureInputPort;
+        port hallElectricalPositionOut:HallElectricalPositionOutputPort;
+        port hallHealthOut:HallHealthOutputPort;
+        port platformContextIn:~PlatformContextOutputPort;
+        port platformHealthIn:~PlatformHealthOutputPort;
+        port calibrationIn:~CalibrationBundleOutputPort;
         // U-HALL-CAPTURE and U-HALL-POSITION retain the direct bounded fast-access path.
     }
 }

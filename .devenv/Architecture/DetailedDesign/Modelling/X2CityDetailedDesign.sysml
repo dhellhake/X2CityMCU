@@ -32,50 +32,50 @@ package X2CityDetailedDesign {
     public import X2CityDetailedUnit_ServiceInfoSnapshot::*;
 
     part def RidingUnits {
-        part setState:USetState;
-        part sessionEligibility:USessionEligibility;
-        part sessionReport:USessionReport;
-        part demandArbiter:UDemandArbiter;
-        part hmiAdapter:UHmiAdapter;
-        part lightMode:ULightMode;
+        part setState:RidingSettingsStateManager;
+        part sessionEligibility:SessionEligibilityEvaluator;
+        part sessionReport:SessionReportPublisher;
+        part demandArbiter:DemandArbiter;
+        part hmiAdapter:HmiAdapterUnit;
+        part lightMode:LightModePolicy;
     }
     part def SensorInterfaceUnits {
-        part analogRegular:UAnalogAcqRegular;
-        part analogFast:UAnalogAcqFast;
-        part acceleratorQualify:UAcceleratorQualify;
-        part brakeQualify:UBrakeQualify;
-        part temperatureQualify:UTemperatureQualify;
-        part hallCapture:UHallCapture;
-        part hallPosition:UHallPosition;
-        part motorPhaseFast:UMotorPhaseFast;
-        part motorPhaseDiag:UMotorPhaseDiag;
-        part supplyFast:USupplyFast;
-        part supplyRegular:USupplyRegular;
+        part analogRegular:RegularAnalogAcquisition;
+        part analogFast:FastAnalogAcquisition;
+        part acceleratorQualify:AcceleratorQualifier;
+        part brakeQualify:BrakeQualifier;
+        part temperatureQualify:TemperatureQualifier;
+        part hallCapture:HallCaptureProcessor;
+        part hallPosition:ElectricalPositionEstimator;
+        part motorPhaseFast:FastPhaseCurrentProcessor;
+        part motorPhaseDiag:PhaseVoltageDiagnosticProcessor;
+        part supplyFast:FastSupplyVoltageProcessor;
+        part supplyRegular:RegularSupplyVoltageProcessor;
     }
     part def TractionUnits {
-        part accept:UTractionAccept;
-        part actualOutput:UTractionActualOutput;
-        part motion:UTractionMotion;
-        part control:UTractionControl;
-        part output:UTractionOutput;
+        part accept:TractionCommandAcceptor;
+        part actualOutput:ActualTractionOutputEstimator;
+        part motion:VehicleMotionEstimator;
+        part control:FocControl;
+        part output:TractionOutputCommitter;
     }
     part def PlatformUnits {
-        part context:UPlatformContext;
-        part binding:UPlatformBinding;
-        part calibration:UPlatformCalibration;
-        part retention:UPlatformRetention;
-        part health:UPlatformHealth;
+        part context:PlatformContextManager;
+        part binding:PlatformBinding;
+        part calibration:CalibrationLifecycleManager;
+        part retention:RetentionCandidateManager;
+        part health:PlatformHealthManager;
     }
     part def EnergyUnits {
-        part bmsTransaction:UBmsLinkTransaction;
-        part bmsDecode:UBmsLinkDecode;
-        part bmsPublish:UBmsLinkPublish;
-        part batteryEvaluate:UBatteryProtectionEvaluate;
-        part batteryRestriction:UBatteryProtectionRestriction;
+        part bmsTransaction:BmsTransaction;
+        part bmsDecode:BmsResponseDecoder;
+        part bmsPublish:BmsObservationPublisher;
+        part batteryEvaluate:BatteryCapabilityEvaluator;
+        part batteryRestriction:BatteryCapabilityRestrictor;
     }
     part def ServiceUnits {
-        part collect:UServiceInfoCollect;
-        part snapshot:UServiceInfoSnapshot;
+        part collect:ServiceRecordCollector;
+        part snapshot:ServiceSnapshotPublisher;
     }
     part def VehicleDetailedDesign {
         part riding:RidingUnits;
@@ -119,8 +119,8 @@ package X2CityDetailedDesign {
     flow vHallCaptureHealthToTractionMotion from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.traction.motion.motionHealthIn.payload;
     flow vHallPositionHealthToTractionMotion from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.traction.motion.motionHealthIn.payload;
     flow vMotorPhaseToTraction from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.traction.control.phaseFeedbackIn.payload;
-    flow vSupplyFastToTraction from vehicle.sensors.supplyFast.fastVdcOut.payload to vehicle.traction.control.fastVdcIn.payload;
-    flow vFastCommandToOutput from vehicle.traction.control.fastCommandOut.payload to vehicle.traction.output.fastCommandIn.payload;
+    flow vSupplyFastToTraction from vehicle.sensors.supplyFast.fastDcLinkVoltageOut.payload to vehicle.traction.control.fastDcLinkVoltageIn.payload;
+    flow vPwmAndAdcSamplingPlanToOutput from vehicle.traction.control.pwmAndAdcSamplingPlanOut.payload to vehicle.traction.output.pwmAndAdcSamplingPlanIn.payload;
     flow vOutputObservationToActualOutput from vehicle.traction.output.outputObservationOut.payload to vehicle.traction.actualOutput.outputStageEvidenceIn.payload;
     flow vPhaseFeedbackToActualOutput from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.traction.actualOutput.phaseFeedbackIn.payload;
     flow vHallPositionToActualOutput from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.traction.actualOutput.electricalPositionIn.payload;
@@ -128,7 +128,7 @@ package X2CityDetailedDesign {
     flow vCalibrationToActualOutput from vehicle.platform.calibration.calibrationOut.payload to vehicle.traction.actualOutput.calibrationIn.payload;
     flow vPlatformContextToActualOutput from vehicle.platform.context.contextOut.payload to vehicle.traction.actualOutput.platformContextIn.payload;
     flow vPlatformHealthToActualOutput from vehicle.platform.health.healthOut.payload to vehicle.traction.actualOutput.platformHealthIn.payload;
-    flow vActualOutputEstimateToAccept from vehicle.traction.actualOutput.actualOutputOut.payload to vehicle.traction.accept.actualOutputIn.payload;
+    flow vAppliedTractionStateEstimateToAccept from vehicle.traction.actualOutput.appliedTractionStateOut.payload to vehicle.traction.accept.actualOutputIn.payload;
 
     // Every sensing unit publishes health to platform aggregation, session eligibility and service evidence.
     flow vAnalogRegularHealthToPlatform from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
@@ -189,7 +189,7 @@ package X2CityDetailedDesign {
     flow vDemandToTractionAccept from vehicle.riding.demandArbiter.commandOut.payload to vehicle.traction.accept.commandIn.payload;
     flow vAcceptedDemandToTractionControl from vehicle.traction.accept.acceptedCommandOut.payload to vehicle.traction.control.acceptedDemandIn.payload;
     flow vSessionAuthorityToTractionAccept from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.traction.accept.authorityIn.payload;
-    flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.inputsIn.payload;
+    flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
     flow vAcceleratorToSet from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.setState.requestedSettingsIn.payload;
     flow vAcceleratorToSession from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBrakeToSession from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
@@ -198,13 +198,13 @@ package X2CityDetailedDesign {
     flow vBrakeToDemand from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.demandArbiter.brakeIn.payload;
     flow vSupplyRegularToSession from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.inputsIn.payload;
+    flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
     flow vPlatformContextToSession from vehicle.platform.context.contextOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBatteryRestrictionToSession from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTractionObservationToSession from vehicle.traction.accept.observationOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vTractionActualOutputToDemand from vehicle.traction.accept.actualOutputOut.payload to vehicle.riding.demandArbiter.actualOutputIn.payload;
+    flow vAppliedTractionStateToDemand from vehicle.traction.accept.appliedTractionStateOut.payload to vehicle.riding.demandArbiter.actualOutputIn.payload;
     flow vTractionMotionToDemand from vehicle.traction.motion.qualifiedMotionOut.payload to vehicle.riding.demandArbiter.motionIn.payload;
-    flow vTractionObservationToLight from vehicle.traction.accept.observationOut.payload to vehicle.riding.lightMode.inputsIn.payload;
+    flow vTractionObservationToLight from vehicle.traction.accept.observationOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
     flow vSessionReportToHmi from vehicle.riding.sessionReport.reportOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
     flow vBatteryToHmi from vehicle.energy.batteryRestriction.presentationOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
 
@@ -242,7 +242,7 @@ package X2CityDetailedDesign {
     flow vAcceleratorToService from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vBrakeToService from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vTemperatureToService from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSupplyFastToService from vehicle.sensors.supplyFast.fastVdcOut.payload to vehicle.service.collect.producerRecordIn.payload;
+    flow vSupplyFastToService from vehicle.sensors.supplyFast.fastDcLinkVoltageOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vSupplyRegularToService from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vMotorPhaseFastToService from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vMotorPhaseDiagToService from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.service.collect.producerRecordIn.payload;

@@ -6,27 +6,27 @@ package X2CityDetailedUnit_AnalogAcquisition {
     item def InjectedEpochV1 :> FastInjectedEpochV1;
     item def RegularScanV1 :> RegularAdcScanV1;
     item def FastIrqDispatch :> UnitInformationEnvelope;
-    port def InjectedEpochOut {
+    port def InjectedEpochOutputPort {
         doc /* U-ANALOG-ACQ-FAST sends completed timer-triggered JEOS/JDR raw epochs to the fast phase and supply converters; partial or overwritten epochs are withheld. */
         out item payload:InjectedEpochV1;
     }
-    port def RegularScanOut {
+    port def RegularScanOutputPort {
         doc /* U-ANALOG-ACQ-REGULAR sends completed regular-DMA raw scans to rider, temperature, phase-diagnostic and regular-supply qualification; it is never a substitute for the fast epoch. */
         out item payload:RegularScanV1;
     }
-    port def FastIrqDispatchIn {
+    port def FastIrqDispatchInputPort {
         doc /* U-ANALOG-ACQ-FAST receives the platform's selected JEOS/JDR interrupt-dispatch record that authorizes its raw fast acquisition entry. */
         in item payload:FastIrqDispatch;
     }
-    port def CalibrationIn {
+    port def CalibrationInputPort {
         doc /* Both acquisition units receive the active acquisition configuration needed to associate a completed record with its selected channels and context. */
         in item payload:CalibrationBundleRecord;
     }
-    port def SensorHealthOut {
+    port def SensorHealthOutputPort {
         doc /* The acquisition units publish their DMA/JEOS completion, overflow and context health for consumers that must reject affected raw records. */
         out item payload:SensorHealthConditionV1;
     }
-    part def UAnalogAcqFast { port irqDispatchIn:FastIrqDispatchIn; port calibrationIn:CalibrationIn; port injectedEpochOut:InjectedEpochOut; port sensorHealthOut:SensorHealthOut; }
-    part def UAnalogAcqRegular { port calibrationIn:CalibrationIn; port regularScanOut:RegularScanOut; port sensorHealthOut:SensorHealthOut; }
+    part def FastAnalogAcquisition { port irqDispatchIn:FastIrqDispatchInputPort; port calibrationIn:CalibrationInputPort; port injectedEpochOut:InjectedEpochOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
+    part def RegularAnalogAcquisition { port calibrationIn:CalibrationInputPort; port regularScanOut:RegularScanOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     // SC-ANALOG-ACQ.V: distinct raw JEOS/JDR and regular-DMA records; no semantic conversion.
 }
