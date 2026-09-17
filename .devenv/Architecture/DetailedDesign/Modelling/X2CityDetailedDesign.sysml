@@ -14,6 +14,8 @@ package X2CityDetailedDesign {
     public import X2CityDetailedUnit_RiderTemperatureInterfaces::*;
     public import X2CityDetailedUnit_SupplyInterface::*;
     public import X2CityDetailedUnit_TractionAccept::*;
+    public import X2CityDetailedUnit_TractionActualOutput::*;
+    public import X2CityDetailedUnit_TractionMotion::*;
     public import X2CityDetailedUnit_TractionControl::*;
     public import X2CityDetailedUnit_TractionOutput::*;
     public import X2CityDetailedUnit_PlatformContext::*;
@@ -52,6 +54,8 @@ package X2CityDetailedDesign {
     }
     part def TractionUnits {
         part accept:UTractionAccept;
+        part actualOutput:UTractionActualOutput;
+        part motion:UTractionMotion;
         part control:UTractionControl;
         part output:UTractionOutput;
     }
@@ -108,10 +112,23 @@ package X2CityDetailedDesign {
     flow vFastEpochToSupply from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.sensors.supplyFast.injectedEpochIn.payload;
     flow vHallCaptureToPosition from vehicle.sensors.hallCapture.hallCaptureOut.payload to vehicle.sensors.hallPosition.hallCaptureIn.payload;
     flow vHallPositionToTraction from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.traction.control.electricalPositionIn.payload;
+    flow vHallPositionToTractionMotion from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.traction.motion.electricalPositionIn.payload;
+    flow vCalibrationToTractionMotion from vehicle.platform.calibration.calibrationOut.payload to vehicle.traction.motion.calibrationIn.payload;
+    flow vPlatformContextToTractionMotion from vehicle.platform.context.contextOut.payload to vehicle.traction.motion.platformContextIn.payload;
+    flow vPlatformHealthToTractionMotion from vehicle.platform.health.healthOut.payload to vehicle.traction.motion.platformHealthIn.payload;
+    flow vHallCaptureHealthToTractionMotion from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.traction.motion.motionHealthIn.payload;
+    flow vHallPositionHealthToTractionMotion from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.traction.motion.motionHealthIn.payload;
     flow vMotorPhaseToTraction from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.traction.control.phaseFeedbackIn.payload;
     flow vSupplyFastToTraction from vehicle.sensors.supplyFast.fastVdcOut.payload to vehicle.traction.control.fastVdcIn.payload;
     flow vFastCommandToOutput from vehicle.traction.control.fastCommandOut.payload to vehicle.traction.output.fastCommandIn.payload;
-    flow vOutputObservationToAccept from vehicle.traction.output.outputObservationOut.payload to vehicle.traction.accept.outputObservationIn.payload;
+    flow vOutputObservationToActualOutput from vehicle.traction.output.outputObservationOut.payload to vehicle.traction.actualOutput.outputStageEvidenceIn.payload;
+    flow vPhaseFeedbackToActualOutput from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.traction.actualOutput.phaseFeedbackIn.payload;
+    flow vHallPositionToActualOutput from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.traction.actualOutput.electricalPositionIn.payload;
+    flow vTractionMotionToActualOutput from vehicle.traction.motion.qualifiedMotionOut.payload to vehicle.traction.actualOutput.qualifiedMotionIn.payload;
+    flow vCalibrationToActualOutput from vehicle.platform.calibration.calibrationOut.payload to vehicle.traction.actualOutput.calibrationIn.payload;
+    flow vPlatformContextToActualOutput from vehicle.platform.context.contextOut.payload to vehicle.traction.actualOutput.platformContextIn.payload;
+    flow vPlatformHealthToActualOutput from vehicle.platform.health.healthOut.payload to vehicle.traction.actualOutput.platformHealthIn.payload;
+    flow vActualOutputEstimateToAccept from vehicle.traction.actualOutput.actualOutputOut.payload to vehicle.traction.accept.actualOutputIn.payload;
 
     // Every sensing unit publishes health to platform aggregation, session eligibility and service evidence.
     flow vAnalogRegularHealthToPlatform from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
@@ -164,28 +181,32 @@ package X2CityDetailedDesign {
     flow vHmiSettingsToSet from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.riding.setState.requestedSettingsIn.payload;
     flow vHmiSettingsToSession from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vSetToSession from vehicle.riding.setState.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vSessionEligibilityToReport from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.riding.sessionReport.eligibilityIn.payload;
-    flow vSessionEligibilityToDemand from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.riding.demandArbiter.inputsIn.payload;
-    flow vSetToDemand from vehicle.riding.setState.stateOut.payload to vehicle.riding.demandArbiter.inputsIn.payload;
+    flow vTractionMotionToSet from vehicle.traction.motion.qualifiedMotionOut.payload to vehicle.riding.setState.motionIn.payload;
+    flow vTractionMotionToSession from vehicle.traction.motion.qualifiedMotionOut.payload to vehicle.riding.sessionEligibility.motionIn.payload;
+    flow vSessionEligibilityToReport from vehicle.riding.sessionEligibility.eligibilityObservationOut.payload to vehicle.riding.sessionReport.eligibilityIn.payload;
+    flow vSessionEligibilityToDemand from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.riding.demandArbiter.authorityIn.payload;
+    flow vSetToDemand from vehicle.riding.setState.activeSettingsOut.payload to vehicle.riding.demandArbiter.activeSettingsIn.payload;
     flow vDemandToTractionAccept from vehicle.riding.demandArbiter.commandOut.payload to vehicle.traction.accept.commandIn.payload;
+    flow vAcceptedDemandToTractionControl from vehicle.traction.accept.acceptedCommandOut.payload to vehicle.traction.control.acceptedDemandIn.payload;
     flow vSessionAuthorityToTractionAccept from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.traction.accept.authorityIn.payload;
     flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.inputsIn.payload;
     flow vAcceleratorToSet from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.setState.requestedSettingsIn.payload;
     flow vAcceleratorToSession from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBrakeToSession from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTemperatureToSession from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vAcceleratorToDemand from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.demandArbiter.inputsIn.payload;
-    flow vBrakeToDemand from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.demandArbiter.inputsIn.payload;
+    flow vAcceleratorToDemand from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.demandArbiter.acceleratorIn.payload;
+    flow vBrakeToDemand from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.demandArbiter.brakeIn.payload;
     flow vSupplyRegularToSession from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.inputsIn.payload;
     flow vPlatformContextToSession from vehicle.platform.context.contextOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBatteryRestrictionToSession from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTractionObservationToSession from vehicle.traction.accept.observationOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vTractionObservationToDemand from vehicle.traction.accept.observationOut.payload to vehicle.riding.demandArbiter.inputsIn.payload;
+    flow vTractionActualOutputToDemand from vehicle.traction.accept.actualOutputOut.payload to vehicle.riding.demandArbiter.actualOutputIn.payload;
+    flow vTractionMotionToDemand from vehicle.traction.motion.qualifiedMotionOut.payload to vehicle.riding.demandArbiter.motionIn.payload;
     flow vTractionObservationToLight from vehicle.traction.accept.observationOut.payload to vehicle.riding.lightMode.inputsIn.payload;
     flow vSessionReportToHmi from vehicle.riding.sessionReport.reportOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
-    flow vBatteryToHmi from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
+    flow vBatteryToHmi from vehicle.energy.batteryRestriction.presentationOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
 
     flow vBmsTransactionToDecode from vehicle.energy.bmsTransaction.acceptedPayloadOut.payload to vehicle.energy.bmsDecode.acceptedPayloadIn.payload;
     flow vBmsDecodeToPublish from vehicle.energy.bmsDecode.decodedOut.payload to vehicle.energy.bmsPublish.decodedIn.payload;
@@ -196,7 +217,10 @@ package X2CityDetailedDesign {
     flow vTractionObservationToBatteryEvaluate from vehicle.traction.accept.observationOut.payload to vehicle.energy.batteryEvaluate.observationsAndContextIn.payload;
     flow vBatteryEvaluateToRestriction from vehicle.energy.batteryEvaluate.candidateOut.payload to vehicle.energy.batteryRestriction.candidateIn.payload;
     flow vRetentionToBatteryRestriction from vehicle.platform.retention.candidateOut.payload to vehicle.energy.batteryRestriction.retentionCandidateIn.payload;
-    flow vBatteryRestrictionToDemand from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.demandArbiter.inputsIn.payload;
+    flow vBatteryRestrictionToDemand from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.demandArbiter.batteryCapabilityIn.payload;
+    flow vPlatformContextToDemand from vehicle.platform.context.contextOut.payload to vehicle.riding.demandArbiter.platformContextIn.payload;
+    flow vPlatformHealthToDemand from vehicle.platform.health.healthOut.payload to vehicle.riding.demandArbiter.platformHealthIn.payload;
+    flow vCalibrationToDemand from vehicle.platform.calibration.calibrationOut.payload to vehicle.riding.demandArbiter.calibrationIn.payload;
 
     flow vServiceCollectToSnapshot from vehicle.service.collect.collectedOut.payload to vehicle.service.snapshot.collectedIn.payload;
     flow vHmiSettingsToService from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.service.collect.producerRecordIn.payload;
@@ -204,7 +228,7 @@ package X2CityDetailedDesign {
     flow vSettingsToService from vehicle.riding.setState.stateOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vSessionAuthorityToService from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vSessionReportToService from vehicle.riding.sessionReport.reportOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vDemandToService from vehicle.riding.demandArbiter.commandOut.payload to vehicle.service.collect.producerRecordIn.payload;
+    flow vDemandDiagnosticToService from vehicle.riding.demandArbiter.diagnosticOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vBmsToService from vehicle.energy.bmsPublish.observationOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vBatteryToService from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vLightToService from vehicle.riding.lightMode.intentOut.payload to vehicle.service.collect.producerRecordIn.payload;

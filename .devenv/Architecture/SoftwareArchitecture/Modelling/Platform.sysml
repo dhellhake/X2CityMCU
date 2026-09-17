@@ -1,16 +1,22 @@
 package X2CitySoftwareContract_Platform {
     private import X2CitySharedSoftwareTypes::*;
-    // P-PLT-CONTEXT-O is a stable ARCH-003 port identifier.
     item def PPltContextOInformation:>ContextualSoftwareInformation;
-    port def PPltContextO { out item payload:PPltContextOInformation; }
-    // P-PLT-RETENTION-O is a stable ARCH-003 port identifier.
+    port def PPltContextO {
+        doc /* Publishes the current execution, reset and context generation information to software components that require a coherent local operating context. Consumers use it to qualify observations and reject records from another context. */
+        out item payload:PPltContextOInformation;
+    }
     item def PPltRetentionOInformation:>ContextualSoftwareInformation;
-    port def PPltRetentionO { out item payload:PPltRetentionOInformation; }
-    // P-PLT-HEALTH-O is a stable ARCH-003 port identifier.
+    port def PPltRetentionO {
+        doc /* Publishes retained-state information to policy components and service aggregation. BatteryProtection uses the retained candidate with its validity context for reached-10% recovery handling. */
+        out item payload:PPltRetentionOInformation;
+    }
     item def PPltHealthOInformation:>ContextualSoftwareInformation {
         attribute fastSafetyState:String; // enum: inactive, armed, inhibited, latched.
     }
-    port def PPltHealthO { out item payload:PPltHealthOInformation; }
+    port def PPltHealthO {
+        doc /* Publishes Platform health and its independent FastSafetyState to component service/event receptacles and service aggregation. This platform result is not routed back as a sensor root cause. */
+        out item payload:PPltHealthOInformation;
+    }
     // Normalized qualified evidence from one producer. Platform consumes this evidence without
     // publishing it back as a new sensor cause; a platform fast-safety state is separate from a
     // Session-recognized fault and its fault-code policy.
@@ -23,8 +29,10 @@ package X2CitySoftwareContract_Platform {
         attribute relatedAdcSequence:Integer;
         attribute calibrationContextId:String;
     }
-    // P-PLT-SENSOR-HEALTH-I is a stable normalized health-evidence ingress.
-    port def PPltSensorHealthI { in item payload:SensorHealthConditionV1; }
+    port def PPltSensorHealthI {
+        doc /* Receives normalized health evidence from AnalogAcquisition and semantic sensor interfaces. Platform consumes producer source, severity, timestamp and calibration context to update its separate fast-safety state. */
+        in item payload:SensorHealthConditionV1;
+    }
     // Typed calibration entries carry logical coefficients/identities, never selected numeric
     // values. U-PLATFORM-CALIBRATION validates and freezes the bundle before publication.
     attribute def RawAcquisitionBindingCalibration {
@@ -90,6 +98,98 @@ package X2CitySoftwareContract_Platform {
         attribute boardAdcRank:Integer;
         attribute motorAdcRank:Integer;
     }
+    attribute def NormalizedDemandMapCalibration {
+        attribute inputKnot:Real[1..*];
+        attribute outputKnot:Real[1..*];
+        attribute pairedKnotCountValid:Boolean;
+        attribute strictlyOrderedInputKnots:Boolean;
+        attribute monotonicNondecreasingOutput:Boolean;
+        attribute fullNormalizedDomainCovered:Boolean;
+        attribute zeroAndUnitEndpointsPresent:Boolean;
+    }
+    attribute def DemandRampCalibration {
+        attribute wheelTorqueGradientNewtonMetresPerSecond:Real;
+        attribute responseBoundTicks:Integer;
+    }
+    attribute def RegenerationDynamicGradientCalibration {
+        attribute wheelTorqueGradientNewtonMetresPerSecond:Real;
+        attribute responseBoundTicks:Integer;
+    }
+    attribute def RegenerationTaperCalibration {
+        attribute onsetSpeedKilometresPerHour:Real;
+        attribute taperMap:NormalizedDemandMapCalibration;
+        attribute responseBoundTicks:Integer;
+    }
+    attribute def DemandProfileReferenceLimits {
+        attribute positiveReferenceWheelTorqueNewtonMetres:Real;
+        attribute regenerativeReferenceWheelTorqueMagnitudeNewtonMetres:Real;
+        // This references the fixed 40 km/h parent-rule cutoff for validation; a profile cannot
+        // redefine it. The value remains populated/verified with the activated bundle.
+        attribute hardSpeedCutoffKilometresPerHour:Real;
+    }
+    attribute def ActualOutputEstimationCalibration {
+        attribute estimatorId:String;
+        attribute motorTorqueConstantNewtonMetresPerAmpere:Real;
+        attribute transmissionRatio:Real;
+        attribute estimatorResponseBoundTicks:Integer;
+        attribute activationPermitted:Boolean;
+    }
+    attribute def DemandTimingBoundsCalibration {
+        attribute clockId:String;
+        attribute clockContextId:String;
+        attribute acceleratorMaximumAgeTicks:Integer;
+        attribute brakeMaximumAgeTicks:Integer;
+        attribute activeSettingsMaximumAgeTicks:Integer;
+        attribute batteryCapabilityMaximumAgeTicks:Integer;
+        attribute motionMaximumAgeTicks:Integer;
+        attribute actualOutputMaximumAgeTicks:Integer;
+        attribute authorityMaximumAgeTicks:Integer;
+        attribute inputCoherenceWindowTicks:Integer;
+        attribute decisionPeriodTicks:Integer;
+        attribute commandValidityTicks:Integer;
+        attribute derivedEndToEndBoundTicks:Integer;
+        attribute allBoundsPositiveAndFinite:Boolean;
+        attribute endToEndBoundDerivedAndAccepted:Boolean;
+    }
+    // This immutable resolved profile carries the actual maps, neutral, ramps, taper, reference
+    // limits and symbolic timing bounds. Activation requires paired ordered full-range endpoint
+    // maps, the stated cross-level validations, positive finite accepted bounds and a derived
+    // end-to-end bound. No field receives an architecture-selected value: missing, malformed or
+    // unvalidated values make profileActivationPermitted false.
+    attribute def DemandPolicyCalibration {
+        attribute profileId:String;
+        attribute profileRevision:String;
+        attribute profileActivationPermitted:Boolean;
+        attribute level0PositiveMap:NormalizedDemandMapCalibration;
+        attribute level1PositiveMap:NormalizedDemandMapCalibration;
+        attribute level2PositiveMap:NormalizedDemandMapCalibration;
+        attribute level3PositiveMap:NormalizedDemandMapCalibration;
+        attribute level4PositiveMap:NormalizedDemandMapCalibration;
+        attribute level5PositiveMap:NormalizedDemandMapCalibration;
+        attribute level1RegenerationMap:NormalizedDemandMapCalibration;
+        attribute level2RegenerationMap:NormalizedDemandMapCalibration;
+        attribute level3RegenerationMap:NormalizedDemandMapCalibration;
+        attribute level4RegenerationMap:NormalizedDemandMapCalibration;
+        attribute level5RegenerationMap:NormalizedDemandMapCalibration;
+        attribute level1To5NeutralPercent:Real;
+        attribute samePositiveEndpointValidated:Boolean;
+        attribute progressiveRegenerationMaximumValidated:Boolean;
+        attribute level5LinearMapsValidated:Boolean;
+        attribute level1PositiveResumptionRamp:DemandRampCalibration;
+        attribute level2PositiveResumptionRamp:DemandRampCalibration;
+        attribute level3PositiveResumptionRamp:DemandRampCalibration;
+        attribute level4PositiveResumptionRamp:DemandRampCalibration;
+        // Level 0 uses Level 1's resumption ramp; Level 5 intentionally has no ramp record.
+        attribute level1RegenerationDynamicRamp:RegenerationDynamicGradientCalibration;
+        attribute level2RegenerationDynamicRamp:RegenerationDynamicGradientCalibration;
+        attribute level3RegenerationDynamicRamp:RegenerationDynamicGradientCalibration;
+        attribute level4RegenerationDynamicRamp:RegenerationDynamicGradientCalibration;
+        // Level 5 intentionally has no regenerative torque-time gradient record.
+        attribute level1To5RegenerationTaper:RegenerationTaperCalibration;
+        attribute referenceLimits:DemandProfileReferenceLimits;
+        attribute timingBounds:DemandTimingBoundsCalibration;
+        attribute postStopRegenerationGuardId:String;
+    }
     item def CalibrationBundleV1:>ContextualSoftwareInformation {
         attribute immutable:Boolean;
         attribute bundleId:String;
@@ -102,16 +202,19 @@ package X2CitySoftwareContract_Platform {
         attribute acceleratorCalibration:AcceleratorCalibration;
         attribute brakeCalibration:BrakeCalibration;
         attribute temperatureCalibration:TemperatureCalibration;
+        attribute demandPolicyCalibration:DemandPolicyCalibration;
+        attribute actualOutputEstimationCalibration:ActualOutputEstimationCalibration;
     }
-    // P-PLT-CALIBRATION-O directly carries the immutable typed CalibrationBundleV1.
     item def PPltCalibrationOInformation:>CalibrationBundleV1;
-    port def PPltCalibrationO { out item payload:PPltCalibrationOInformation; }
+    port def PPltCalibrationO {
+        doc /* Publishes the immutable, validated typed calibration bundle to acquisition, conversion, demand and traction consumers. Components accept their applicable entries only in the matching activation context; missing or unvalidated bundle data cannot be treated as selected defaults. */
+        out item payload:PPltCalibrationOInformation;
+    }
 }
 
 package X2CitySoftwareComponent_Platform {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_Platform::*;
-    // SC-PLATFORM; static architecture only. No unit-local API, task, or hardware pin is declared here.
     part def Platform {
         /* Establishes local execution/reset context, retained-state access, and platform-health
            information for its host instance. U-PLATFORM-BINDING owns static peripheral/IRQ/rank/

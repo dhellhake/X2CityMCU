@@ -42,7 +42,7 @@ package X2CitySoftwareArchitecture {
     // These are typed information endpoints at the software scope boundary, not hardware parts,
     // sensor/ADC producers, pin models, or selected implementation APIs.
     part def VehicleSoftwareBoundary {
-        /* Defines the vehicle host’s software-scope exchange boundary for light intent, traction
+        /* Defines the vehicle host's software-scope exchange boundary for light intent, traction
            information/actuation observation, and raw acquisition. It is a typed integration edge,
            not a hardware assembly or an acquisition producer. */
         port lightIntent:~PLgtIntentO;
@@ -89,17 +89,22 @@ package X2CitySoftwareArchitecture {
     flow rV03Supply from supplyInterfaceVehicle.pSupplyRegularO.payload to sessionVehicle.pSesReadyI.payload;
     flow rV04 from hmiVehicle.pHmiSettingsO.payload to sessionVehicle.pSesReadyI.payload;
     flow rV05 from setVehicle.pSetStateO.payload to sessionVehicle.pSesReadyI.payload;
+    // Qualified physical motion is required for the explicit setting-application and Ready
+    // standstill guards; neither guard reconstructs standstill from demand or Hall edge absence.
+    flow rV05QualifiedMotionSet from tractionControlVehicle.pTrQualifiedMotionO.payload to setVehicle.pSetMotionI.payload;
+    flow rV05QualifiedMotionSession from tractionControlVehicle.pTrQualifiedMotionO.payload to sessionVehicle.pSesMotionI.payload;
 
-    // SW-I-003/004/005/006: vehicle policy, authority, signed command and observation routes.
+    // SW-I-003/004/005/006: vehicle policy, dedicated demand inputs, signed command and observations.
     flow rV06 from batteryProtectionVehicle.pBatEnvelopeO.payload to sessionVehicle.pSesReadyI.payload;
     flow rV07 from tractionControlVehicle.pTrObsO.payload to sessionVehicle.pSesReadyI.payload;
     flow rV08 from platformVehicle.pPltContextO.payload to sessionVehicle.startupContextRequired.payload;
-    flow rV09 from sessionVehicle.pSesAuthO.payload to demandVehicle.pDemInputI.payload;
-    flow rV10Accelerator from acceleratorInterfaceVehicle.pAccelPositionO.payload to demandVehicle.pDemInputI.payload;
-    flow rV10Brake from brakeInterfaceVehicle.pBrakeStateO.payload to demandVehicle.pDemInputI.payload;
-    flow rV11 from setVehicle.pSetStateO.payload to demandVehicle.pDemInputI.payload;
-    flow rV12 from batteryProtectionVehicle.pBatEnvelopeO.payload to demandVehicle.pDemInputI.payload;
-    flow rV13 from tractionControlVehicle.pTrObsO.payload to demandVehicle.pDemInputI.payload;
+    flow rV09Authority from sessionVehicle.pSesAuthO.payload to demandVehicle.pDemAuthorityI.payload;
+    flow rV10Accelerator from acceleratorInterfaceVehicle.pAccelPositionO.payload to demandVehicle.pDemAcceleratorI.payload;
+    flow rV10Brake from brakeInterfaceVehicle.pBrakeStateO.payload to demandVehicle.pDemBrakeI.payload;
+    flow rV11ActiveSettings from setVehicle.pSetActiveDemandO.payload to demandVehicle.pDemActiveSettingsI.payload;
+    flow rV12BatteryCapability from batteryProtectionVehicle.pBatEnvelopeO.payload to demandVehicle.pDemBatteryCapabilityI.payload;
+    flow rV13QualifiedMotion from tractionControlVehicle.pTrQualifiedMotionO.payload to demandVehicle.pDemMotionI.payload;
+    flow rV13ActualOutput from tractionControlVehicle.pTrActualOutputO.payload to demandVehicle.pDemActualOutputI.payload;
     flow rV14 from demandVehicle.pDemCommandO.payload to tractionControlVehicle.pTrCommandI.payload;
     flow rV15 from sessionVehicle.pSesAuthO.payload to tractionControlVehicle.pTrAuthI.payload;
     flow rV16 from bmsLinkVehicle.pBmsObsO.payload to batteryProtectionVehicle.pBatObservationsAndContextI.payload;
@@ -155,6 +160,7 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthSession from platformVehicle.pPltHealthO.payload to sessionVehicle.platformHealthRequired.payload;
     flow rV31ContextDemand from platformVehicle.pPltContextO.payload to demandVehicle.platformContextRequired.payload;
     flow rV31HealthDemand from platformVehicle.pPltHealthO.payload to demandVehicle.platformHealthRequired.payload;
+    flow rV31CalibrationDemand from platformVehicle.pPltCalibrationO.payload to demandVehicle.calibrationRequired.payload;
     flow rV31ContextHmi from platformVehicle.pPltContextO.payload to hmiVehicle.platformContextRequired.payload;
     flow rV31HealthHmi from platformVehicle.pPltHealthO.payload to hmiVehicle.platformHealthRequired.payload;
     flow rV31ContextBms from platformVehicle.pPltContextO.payload to bmsLinkVehicle.platformContextRequired.payload;
@@ -181,6 +187,7 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthHall from platformVehicle.pPltHealthO.payload to hallInterfaceVehicle.platformHealthRequired.payload;
     flow rV31ContextTraction from platformVehicle.pPltContextO.payload to tractionControlVehicle.platformContextRequired.payload;
     flow rV31HealthTraction from platformVehicle.pPltHealthO.payload to tractionControlVehicle.platformHealthRequired.payload;
+    flow rV31CalibrationTraction from platformVehicle.pPltCalibrationO.payload to tractionControlVehicle.calibrationRequired.payload;
     flow rV31ContextPlatform from platformVehicle.pPltContextO.payload to platformVehicle.platformContextRequired.payload;
     flow rV31HealthPlatform from platformVehicle.pPltHealthO.payload to platformVehicle.platformHealthRequired.payload;
 
@@ -200,10 +207,12 @@ package X2CitySoftwareArchitecture {
     flow rV32Settings from setVehicle.pSetStateO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32Authority from sessionVehicle.pSesAuthO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32SessionReport from sessionVehicle.pSesReportO.payload to serviceInformationVehicle.pSvcRecordI.payload;
-    flow rV32DemandCommand from demandVehicle.pDemCommandO.payload to serviceInformationVehicle.pSvcRecordI.payload;
+    flow rV32DemandDiagnostic from demandVehicle.pDemDiagnosticO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32Bms from bmsLinkVehicle.pBmsObsO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32Battery from batteryProtectionVehicle.pBatEnvelopeO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32Light from lightPolicyVehicle.pLgtIntentO.payload to serviceInformationVehicle.pSvcRecordI.payload;
+    flow rV32QualifiedMotion from tractionControlVehicle.pTrQualifiedMotionO.payload to serviceInformationVehicle.pSvcRecordI.payload;
+    flow rV32ActualOutput from tractionControlVehicle.pTrActualOutputO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32Traction from tractionControlVehicle.pTrObsO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32PlatformContext from platformVehicle.pPltContextO.payload to serviceInformationVehicle.pSvcRecordI.payload;
     flow rV32PlatformRetention from platformVehicle.pPltRetentionO.payload to serviceInformationVehicle.pSvcRecordI.payload;
@@ -233,11 +242,11 @@ package X2CitySoftwareArchitecture {
     // R-X04 read-only service presentation; there is deliberately no return/control flow.
     flow rX04Vehicle from serviceInformationVehicle.pSvcSnapshotO.payload to vehicleMaintainerBoundary.snapshot.payload;
 
-    // R-V29: P-TR-FAST-COMMAND-O -> P-TR-FAST-COMMAND-I is DD U-TRACTION-CONTROL
-    // to U-TRACTION-OUTPUT using FastCommandV1.
+    // The JEOS-to-output fast chain is Detailed Design-only: U-TRACTION-ACQUISITION directly
+    // hands its FastEpochV1 to U-TRACTION-CONTROL, then U-TRACTION-OUTPUT receives FastCommandV1.
     // R-V33..R-V38 below are direct owner-record handoffs: Analog regular scans are consumed by
     // semantic interfaces; Analog fast epochs go only to MotorPhase and Supply. No raw ADC route
-    // reaches FOC. P-TR-FAST-COMMAND-O/I remain unit-only DD endpoints.
+    // reaches FOC. No public SC fast ports are created by this architecture.
     flow rV33AcceleratorRaw from analogAcquisitionVehicle.pAaRegularO.payload to acceleratorInterfaceVehicle.pAccelRawI.payload;
     flow rV34BrakeRaw from analogAcquisitionVehicle.pAaRegularO.payload to brakeInterfaceVehicle.pBrakeRawI.payload;
     flow rV35TemperatureRaw from analogAcquisitionVehicle.pAaRegularO.payload to temperatureInterfaceVehicle.pTempRawI.payload;

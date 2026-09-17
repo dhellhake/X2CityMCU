@@ -1,18 +1,21 @@
 package X2CitySoftwareContract_ServiceInformation {
     private import X2CitySharedSoftwareTypes::*;
-    // P-SVC-RECORD-I is a stable ARCH-003 port identifier.
     // Producer-specific records retain their owner types while this collector accepts the common envelope.
-    port def PSvcRecordI { in item payload:ContextualSoftwareInformation; }
-    // P-SVC-SNAPSHOT-O is a stable ARCH-003 port identifier.
+    port def PSvcRecordI {
+        doc /* Receives producer-owned observations, policy records and platform context through the common contextual base type. ServiceInformation preserves producer identity and qualification while aggregating current records. */
+        in item payload:ContextualSoftwareInformation;
+    }
     item def PSvcSnapshotOInformation:>ContextualSoftwareInformation;
-    port def PSvcSnapshotO { out item payload:PSvcSnapshotOInformation; }
+    port def PSvcSnapshotO {
+        doc /* Publishes the read-only aggregated service snapshot to the vehicle maintenance boundary. The snapshot is a presentation result and carries no return or control path to producers. */
+        out item payload:PSvcSnapshotOInformation;
+    }
 }
 
 package X2CitySoftwareComponent_ServiceInformation {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_ServiceInformation::*;
     private import X2CitySoftwareContract_Platform::*;
-    // SC-SERVICE-INFO; static architecture only. No unit-local API, task, or hardware pin is declared here.
     part def ServiceInformation {
         /* Collects current producer observations together with identity, qualification, reset, and
            configuration context, then presents a read-only service snapshot. It does not perform

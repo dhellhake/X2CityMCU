@@ -13,6 +13,7 @@ package X2CityComponent_Traction {
         port authorityIn:RidingAuthorityIn;
         port torqueCommandIn:TorqueCommandIn;
         port batteryObservationOut:BatteryObservationOut;
+        port qualifiedMotionOut:QualifiedMotionOut;
         port actualOutputOut:ActualOutputOut;
     }
 }

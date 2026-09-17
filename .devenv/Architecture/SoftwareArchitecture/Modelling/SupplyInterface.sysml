@@ -2,8 +2,14 @@ package X2CitySoftwareContract_SupplyInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def PSupplyFastRawI { in item payload:FastInjectedEpochV1; }
-    port def PSupplyRegularRawI { in item payload:RegularAdcScanV1; }
+    port def PSupplyFastRawI {
+        doc /* Receives paired raw injected ADC values from AnalogAcquisition for fast DC-link voltage conversion. SupplyInterface applies its accepted fast-link calibration and aperture qualification before publishing Vdc. */
+        in item payload:FastInjectedEpochV1;
+    }
+    port def PSupplyRegularRawI {
+        doc /* Receives completed regular ADC scans from AnalogAcquisition for regular supply-rail conversion. The regular path keeps its own source binding, state and calibration context separate from fast DC-link acquisition. */
+        in item payload:RegularAdcScanV1;
+    }
     item def FastDcLinkVoltageV1:>ContextualSoftwareInformation {
         attribute dcLinkVoltageVolts:Real;
         attribute sourceAdcRank:Integer;
@@ -12,7 +18,10 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
-    port def PSupplyFastVdcO { out item payload:FastDcLinkVoltageV1; }
+    port def PSupplyFastVdcO {
+        doc /* Publishes qualified fast DC-link voltage with paired source ranks, aperture, timestamp and calibration context to TractionControl and service aggregation. This output is the fast Vdc control input and is not derived by MotorPhaseInterface. */
+        out item payload:FastDcLinkVoltageV1;
+    }
     item def SupplyVoltageV1:>ContextualSoftwareInformation {
         attribute supplyRail:String; // enum: board, logic, auxiliary, or fitted rail identity.
         attribute railVoltageVolts:Real;
@@ -22,8 +31,14 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
-    port def PSupplyRegularO { out item payload:SupplyVoltageV1; }
-    port def PSupplyHealthO { out item payload:SensorHealthConditionV1; }
+    port def PSupplyRegularO {
+        doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy, BatteryProtection and service aggregation. The record retains the selected rail identity and source provenance. */
+        out item payload:SupplyVoltageV1;
+    }
+    port def PSupplyHealthO {
+        doc /* Publishes supply conversion health evidence to Platform, SessionPolicy, TractionControl and service aggregation. It qualifies the fast and regular source paths rather than carrying a voltage command. */
+        out item payload:SensorHealthConditionV1;
+    }
 }
 
 package X2CitySoftwareComponent_SupplyInterface {

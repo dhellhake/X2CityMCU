@@ -2,7 +2,10 @@ package X2CitySoftwareContract_AcceleratorInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
-    port def PAccelRawI { in item payload:RegularAdcScanV1; }
+    port def PAccelRawI {
+        doc /* Receives completed regular ADC scan records from AnalogAcquisition. The accelerator interface uses the source rank, sequence, timestamp and active calibration context to produce a semantic position; the inbound record remains raw ADC evidence. */
+        in item payload:RegularAdcScanV1;
+    }
     item def AcceleratorPositionV1:>ContextualSoftwareInformation {
         attribute acceleratorPositionPercent:Real; // percent, 0..100 after qualified scaling.
         attribute acceleratorAtRest:Boolean;
@@ -11,8 +14,14 @@ package X2CitySoftwareContract_AcceleratorInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
-    port def PAccelPositionO { out item payload:AcceleratorPositionV1; }
-    port def PAccelHealthO { out item payload:SensorHealthConditionV1; }
+    port def PAccelPositionO {
+        doc /* Publishes the qualified accelerator percentage, rest indication and source provenance to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. Consumers must treat the position as unavailable when the source or calibration qualification carried by the record is not valid. */
+        out item payload:AcceleratorPositionV1;
+    }
+    port def PAccelHealthO {
+        doc /* Publishes accelerator-source health evidence to Platform, SessionPolicy and service aggregation. The record identifies the producer condition and evidence context; it is a health observation, not a rider-position command. */
+        out item payload:SensorHealthConditionV1;
+    }
 }
 
 package X2CitySoftwareComponent_AcceleratorInterface {

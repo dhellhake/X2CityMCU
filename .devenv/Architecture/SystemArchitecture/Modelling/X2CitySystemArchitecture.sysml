@@ -1,11 +1,5 @@
-// SysML v2 textual model: static logical system architecture only.
-// Canonical source: ARCH-001 logical composition and IF-A-001..009.
-// IF-A-010..013 are physical energy, protection, mechanical, and handling boundaries,
-// not information flows in this model.
 package X2CitySystemArchitecture {
 
-    // Information items summarize the canonical IF-A contracts. Fields, protocols,
-    // numerical bounds, timing, behavior, and software-unit routes are intentionally absent.
     attribute def Validity;
     attribute def Freshness;
     attribute def SourceContext;
@@ -19,8 +13,9 @@ package X2CitySystemArchitecture {
 
     item def QualifiedRiderMotionInformation:>ContextualInformation;
     item def SettingsInformation:>ContextualInformation;
+    item def ActiveSettingsInformation:>SettingsInformation;
     item def BatteryObservationInformation:>ContextualInformation;
-    item def BatteryCapabilityStatus:>ContextualInformation;
+    item def BatteryEnvelopeInformation:>ContextualInformation;
     item def RidingAuthorityInformation:>ContextualInformation {
         attribute expiry:Expiry;
     }
@@ -28,41 +23,140 @@ package X2CitySystemArchitecture {
         attribute expiry:Expiry;
     }
     item def ActualOutputInformation:>ContextualInformation;
+    item def QualifiedMotionInformation:>ContextualInformation;
     item def RiderInformation:>ContextualInformation;
     item def LightInputInformation:>ContextualInformation;
     item def LightIntentInformation:>ContextualInformation;
     item def ServiceConfigurationInformation:>ContextualInformation;
+    item def DemandPolicyDiagnosticInformation:>ServiceConfigurationInformation;
     item def BmsTelemetryInformation:>ContextualInformation;
     item def BmsReadRequestInformation:>ContextualInformation;
 
-    port def QualifiedRiderMotionOut { out item payload:QualifiedRiderMotionInformation; }
-    port def QualifiedRiderMotionIn { in item payload:QualifiedRiderMotionInformation; }
-    port def SettingsOut { out item payload:SettingsInformation; }
-    port def SettingsIn { in item payload:SettingsInformation; }
-    port def BatteryObservationOut { out item payload:BatteryObservationInformation; }
-    port def BatteryObservationIn { in item payload:BatteryObservationInformation; }
-    port def BatteryCapabilityOut { out item payload:BatteryCapabilityStatus; }
-    port def BatteryCapabilityIn { in item payload:BatteryCapabilityStatus; }
-    port def RidingAuthorityOut { out item payload:RidingAuthorityInformation; }
-    port def RidingAuthorityIn { in item payload:RidingAuthorityInformation; }
-    port def TorqueCommandOut { out item payload:SignedWheelTorqueCommand; }
-    port def TorqueCommandIn { in item payload:SignedWheelTorqueCommand; }
-    port def ActualOutputOut { out item payload:ActualOutputInformation; }
-    port def ActualOutputIn { in item payload:ActualOutputInformation; }
-    port def RiderInformationOut { out item payload:RiderInformation; }
-    port def RiderInformationIn { in item payload:RiderInformation; }
-    port def LightInputOut { out item payload:LightInputInformation; }
-    port def LightInputIn { in item payload:LightInputInformation; }
-    port def LightIntentOut { out item payload:LightIntentInformation; }
-    port def LightIntentIn { in item payload:LightIntentInformation; }
-    port def ServiceConfigurationOut { out item payload:ServiceConfigurationInformation; }
-    port def ServiceConfigurationIn { in item payload:ServiceConfigurationInformation; }
-    port def BmsTelemetryOut { out item payload:BmsTelemetryInformation; }
-    port def BmsTelemetryIn { in item payload:BmsTelemetryInformation; }
-    port def BmsReadRequestOut { out item payload:BmsReadRequestInformation; }
-    port def BmsReadRequestIn { in item payload:BmsReadRequestInformation; }
+    port def QualifiedRiderMotionOut {
+        doc /* Carries input-qualified accelerator/rest and coded-brake facts to SettingsPolicy, SessionPolicy, DemandPolicy and LightPolicy. These are rider control observations; Traction separately publishes vehicle speed, direction and standstill qualification. */
+        out item payload:QualifiedRiderMotionInformation;
+    }
+    port def QualifiedRiderMotionIn {
+        doc /* Carries input-qualified accelerator/rest and coded-brake facts to SettingsPolicy, SessionPolicy, DemandPolicy and LightPolicy. These are rider control observations; Traction separately publishes vehicle speed, direction and standstill qualification. */
+        in item payload:QualifiedRiderMotionInformation;
+    }
+    port def SettingsOut {
+        doc /* Carries owner-qualified rider settings requests from HMI or Input to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
+        out item payload:SettingsInformation;
+    }
+    port def SettingsIn {
+        doc /* Carries owner-qualified rider settings requests from HMI or Input to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
+        in item payload:SettingsInformation;
+    }
+    port def ActiveSettingsOut {
+        doc /* Carries SettingsPolicy's resolved active riding level and speed projection to DemandPolicy. Only applied active state crosses this contract; requested or pending values cannot drive demand. */
+        out item payload:ActiveSettingsInformation;
+    }
+    port def ActiveSettingsIn {
+        doc /* Carries SettingsPolicy's resolved active riding level and speed projection to DemandPolicy. Only applied active state crosses this contract; requested or pending values cannot drive demand. */
+        in item payload:ActiveSettingsInformation;
+    }
+    port def BatteryObservationOut {
+        doc /* Carries battery and traction condition observations assembled by Input from the BMS/energy and traction paths to BatteryProtection. These records remain qualified observations; they do not contain the resulting charge or discharge envelope. */
+        out item payload:BatteryObservationInformation;
+    }
+    port def BatteryObservationIn {
+        doc /* Carries battery and traction condition observations assembled by Input from the BMS/energy and traction paths to BatteryProtection. These records remain qualified observations; they do not contain the resulting charge or discharge envelope. */
+        in item payload:BatteryObservationInformation;
+    }
+    port def BatteryEnvelopeOut {
+        doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
+        out item payload:BatteryEnvelopeInformation;
+    }
+    port def BatteryEnvelopeIn {
+        doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
+        in item payload:BatteryEnvelopeInformation;
+    }
+    port def RidingAuthorityOut {
+        doc /* Carries SessionPolicy's current riding authority and expiry to DemandPolicy and Traction. Consumers use it as an authorization boundary for motion output; the torque command is a separate contract. */
+        out item payload:RidingAuthorityInformation;
+    }
+    port def RidingAuthorityIn {
+        doc /* Carries SessionPolicy's current riding authority and expiry to DemandPolicy and Traction. Consumers use it as an authorization boundary for motion output; the torque command is a separate contract. */
+        in item payload:RidingAuthorityInformation;
+    }
+    port def TorqueCommandOut {
+        doc /* Carries DemandPolicy's signed wheel-torque request and expiry to Traction. It is a demand boundary only; SessionPolicy authority remains an independent authorization input. */
+        out item payload:SignedWheelTorqueCommand;
+    }
+    port def TorqueCommandIn {
+        doc /* Carries DemandPolicy's signed wheel-torque request and expiry to Traction. It is a demand boundary only; SessionPolicy authority remains an independent authorization input. */
+        in item payload:SignedWheelTorqueCommand;
+    }
+    port def ActualOutputOut {
+        doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy, DemandPolicy and LightPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command. */
+        out item payload:ActualOutputInformation;
+    }
+    port def ActualOutputIn {
+        doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy, DemandPolicy and LightPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command. */
+        in item payload:ActualOutputInformation;
+    }
+    port def QualifiedMotionOut {
+        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
+        out item payload:QualifiedMotionInformation;
+    }
+    port def QualifiedMotionIn {
+        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
+        in item payload:QualifiedMotionInformation;
+    }
+    port def RiderInformationOut {
+        doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
+        out item payload:RiderInformation;
+    }
+    port def RiderInformationIn {
+        doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
+        in item payload:RiderInformation;
+    }
+    port def LightInputOut {
+        doc /* Carries the HMI normal-light request or Input-qualified rider and brake lighting facts to LightPolicy. LightPolicy combines these context inputs with traction observations before producing logical light intent. */
+        out item payload:LightInputInformation;
+    }
+    port def LightInputIn {
+        doc /* Carries the HMI normal-light request or Input-qualified rider and brake lighting facts to LightPolicy. LightPolicy combines these context inputs with traction observations before producing logical light intent. */
+        in item payload:LightInputInformation;
+    }
+    port def LightIntentOut {
+        doc /* Carries LightPolicy's selected front and rear logical lamp modes to the Auxiliary actuation boundary. Auxiliary applies the intent to lamp hardware; this contract does not define the physical drive implementation. */
+        out item payload:LightIntentInformation;
+    }
+    port def LightIntentIn {
+        doc /* Carries LightPolicy's selected front and rear logical lamp modes to the Auxiliary actuation boundary. Auxiliary applies the intent to lamp hardware; this contract does not define the physical drive implementation. */
+        in item payload:LightIntentInformation;
+    }
+    port def ServiceConfigurationOut {
+        doc /* Carries producer status, configuration and diagnostic observations from logical components to ServiceInformation and then service access. The records support read-only service presentation and do not configure or command their producers. */
+        out item payload:ServiceConfigurationInformation;
+    }
+    port def ServiceConfigurationIn {
+        doc /* Carries producer status, configuration and diagnostic observations from logical components to ServiceInformation and then service access. The records support read-only service presentation and do not configure or command their producers. */
+        in item payload:ServiceConfigurationInformation;
+    }
+    port def DemandPolicyDiagnosticOut {
+        doc /* Carries DemandPolicy's read-only policy status and diagnostic observations to ServiceInformation. It supports service reporting only and cannot authorize, refresh or command traction. */
+        out item payload:DemandPolicyDiagnosticInformation;
+    }
+    port def BmsTelemetryOut {
+        doc /* Carries battery data and protection-state observations from the supplied BMS assembly to BmsLink. BmsLink validates and qualifies this telemetry before using it as battery evidence; the path carries no software control decision. */
+        out item payload:BmsTelemetryInformation;
+    }
+    port def BmsTelemetryIn {
+        doc /* Carries battery data and protection-state observations from the supplied BMS assembly to BmsLink. BmsLink validates and qualifies this telemetry before using it as battery evidence; the path carries no software control decision. */
+        in item payload:BmsTelemetryInformation;
+    }
+    port def BmsReadRequestOut {
+        doc /* Carries a read-only battery-information request from BmsLink to the supplied BMS assembly. The request selects observation retrieval and does not write or command the BMS protection function. */
+        out item payload:BmsReadRequestInformation;
+    }
+    port def BmsReadRequestIn {
+        doc /* Carries a read-only battery-information request from BmsLink to the supplied BMS assembly. The request selects observation retrieval and does not write or command the BMS protection function. */
+        in item payload:BmsReadRequestInformation;
+    }
 
-    // Interface definitions establish the reusable producer and consumer roles.
     interface def IfA001QualifiedRiderMotion {
         end producer:QualifiedRiderMotionOut;
         end consumer:QualifiedRiderMotionIn;
@@ -73,14 +167,19 @@ package X2CitySystemArchitecture {
         end consumer:SettingsIn;
         flow producer.payload to consumer.payload;
     }
+    interface def IfA002ActiveSettings {
+        end producer:ActiveSettingsOut;
+        end consumer:ActiveSettingsIn;
+        flow producer.payload to consumer.payload;
+    }
     interface def IfA003BatteryObservation {
         end producer:BatteryObservationOut;
         end consumer:BatteryObservationIn;
         flow producer.payload to consumer.payload;
     }
-    interface def IfA003BatteryCapability {
-        end producer:BatteryCapabilityOut;
-        end consumer:BatteryCapabilityIn;
+    interface def IfA003BatteryEnvelope {
+        end producer:BatteryEnvelopeOut;
+        end consumer:BatteryEnvelopeIn;
         flow producer.payload to consumer.payload;
     }
     interface def IfA004RidingAuthority {
@@ -96,6 +195,11 @@ package X2CitySystemArchitecture {
     interface def IfA005ActualOutput {
         end producer:ActualOutputOut;
         end consumer:ActualOutputIn;
+        flow producer.payload to consumer.payload;
+    }
+    interface def IfA005QualifiedMotion {
+        end producer:QualifiedMotionOut;
+        end consumer:QualifiedMotionIn;
         flow producer.payload to consumer.payload;
     }
     interface def IfA006RiderInformation {
@@ -118,6 +222,11 @@ package X2CitySystemArchitecture {
         end consumer:ServiceConfigurationIn;
         flow producer.payload to consumer.payload;
     }
+    interface def IfA008DemandPolicyDiagnostic {
+        end producer:DemandPolicyDiagnosticOut;
+        end consumer:ServiceConfigurationIn;
+        flow producer.payload to consumer.payload;
+    }
     interface def IfA009BmsReadRequest {
         end producer:BmsReadRequestOut;
         end consumer:BmsReadRequestIn;
@@ -128,7 +237,7 @@ package X2CitySystemArchitecture {
         end consumer:BmsTelemetryIn;
         flow producer.payload to consumer.payload;
     }
-    // ARCH-001 logical component catalogue. LE identifiers remain authoritative.
+    // ARCH-001; LE identifiers remain authoritative.
     part def RidingSupervisor { // LE-RIDING
         part settings:SettingsPolicy;
         part session:SessionPolicy;
@@ -138,32 +247,34 @@ package X2CitySystemArchitecture {
 
     part def SettingsPolicy { // LE-SET
         port riderMotionIn:QualifiedRiderMotionIn;
+        port qualifiedMotionIn:QualifiedMotionIn;
         port hmiSettingsIn:SettingsIn;
         port inputSettingsIn:SettingsIn;
+        port activeSettingsOut:ActiveSettingsOut;
         port serviceConfigurationOut:ServiceConfigurationOut;
     }
 
     part def SessionPolicy { // LE-SESSION
         port riderMotionIn:QualifiedRiderMotionIn;
+        port qualifiedMotionIn:QualifiedMotionIn;
         port hmiSettingsIn:SettingsIn;
         port inputSettingsIn:SettingsIn;
-        port capabilityIn:BatteryCapabilityIn;
+        port batteryEnvelopeIn:BatteryEnvelopeIn;
         port tractionOutputIn:ActualOutputIn;
-        port inputOutputIn:ActualOutputIn;
         port authorityOut:RidingAuthorityOut;
         port riderInformationOut:RiderInformationOut;
         port serviceConfigurationOut:ServiceConfigurationOut;
     }
 
     part def DemandPolicy { // LE-DEMAND
-        port riderMotionIn:QualifiedRiderMotionIn;
-        port hmiSettingsIn:SettingsIn;
-        port inputSettingsIn:SettingsIn;
-        port capabilityIn:BatteryCapabilityIn;
-        port tractionOutputIn:ActualOutputIn;
-        port inputOutputIn:ActualOutputIn;
+        port qualifiedRiderMotionIn:QualifiedRiderMotionIn;
+        port qualifiedMotionIn:QualifiedMotionIn;
+        port activeSettingsIn:ActiveSettingsIn;
+        port ridingAuthorityIn:RidingAuthorityIn;
+        port batteryEnvelopeIn:BatteryEnvelopeIn;
+        port actualOutputIn:ActualOutputIn;
         port torqueCommandOut:TorqueCommandOut;
-        port serviceConfigurationOut:ServiceConfigurationOut;
+        port demandPolicyDiagnosticOut:DemandPolicyDiagnosticOut;
     }
 
     part def HmiAdapter { // LE-HMI
@@ -184,7 +295,6 @@ package X2CitySystemArchitecture {
         port energyObservationIn:BatteryObservationIn;
         port tractionObservationIn:BatteryObservationIn;
         port batteryObservationOut:BatteryObservationOut;
-        port actualOutputOut:ActualOutputOut;
         port lightInputOut:LightInputOut;
     }
 
@@ -209,6 +319,7 @@ package X2CitySystemArchitecture {
         port authorityIn:RidingAuthorityIn;
         port torqueCommandIn:TorqueCommandIn;
         port batteryObservationOut:BatteryObservationOut;
+        port qualifiedMotionOut:QualifiedMotionOut;
         port actualOutputOut:ActualOutputOut;
     }
 
@@ -234,7 +345,7 @@ package X2CitySystemArchitecture {
 
     part def BatteryPolicy { // LE-BAT-POLICY
         port batteryObservationIn:BatteryObservationIn;
-        port capabilityOut:BatteryCapabilityOut;
+        port batteryEnvelopeOut:BatteryEnvelopeOut;
         port serviceConfigurationOut:ServiceConfigurationOut;
     }
 
@@ -250,7 +361,6 @@ package X2CitySystemArchitecture {
     part def LightPolicy { // LE-LIGHT-POLICY
         port riderMotionIn:QualifiedRiderMotionIn;
         port tractionOutputIn:ActualOutputIn;
-        port inputOutputIn:ActualOutputIn;
         port hmiLightInputIn:LightInputIn;
         port inputLightInputIn:LightInputIn;
         port lightIntentOut:LightIntentOut;
@@ -322,38 +432,38 @@ package X2CitySystemArchitecture {
     // applicable instances have independent state; no flow denotes a live bridge.
     part x2City:ProjectEquipmentModel;
 
-    // IF-A-001: LE-INPUT to riding and light policy.
+    // IF-A-001: LE-INPUT owns qualified rider facts; LE-TRACTION owns qualified motion.
     flow ifA001ToSettings from x2City.epcs.input.riderMotionOut.payload to x2City.epcs.riding.settings.riderMotionIn.payload;
     flow ifA001ToSession from x2City.epcs.input.riderMotionOut.payload to x2City.epcs.riding.session.riderMotionIn.payload;
-    flow ifA001ToDemand from x2City.epcs.input.riderMotionOut.payload to x2City.epcs.riding.demand.riderMotionIn.payload;
+    flow ifA001ToDemand from x2City.epcs.input.riderMotionOut.payload to x2City.epcs.riding.demand.qualifiedRiderMotionIn.payload;
     flow ifA001ToLightPolicy from x2City.epcs.input.riderMotionOut.payload to x2City.epcs.auxiliary.lightPolicy.riderMotionIn.payload;
+    flow ifA001MotionToSettings from x2City.epcs.traction.qualifiedMotionOut.payload to x2City.epcs.riding.settings.qualifiedMotionIn.payload;
+    flow ifA001MotionToSession from x2City.epcs.traction.qualifiedMotionOut.payload to x2City.epcs.riding.session.qualifiedMotionIn.payload;
 
-    // IF-A-002: LE-HMI and LE-INPUT to riding policy components.
+    // IF-A-002: raw requests feed LE-SET and startup receipt reaches LE-SESSION; demand receives only active settings.
     flow ifA002HmiToSettings from x2City.epcs.riding.hmi.settingsOut.payload to x2City.epcs.riding.settings.hmiSettingsIn.payload;
     flow ifA002HmiToSession from x2City.epcs.riding.hmi.settingsOut.payload to x2City.epcs.riding.session.hmiSettingsIn.payload;
-    flow ifA002HmiToDemand from x2City.epcs.riding.hmi.settingsOut.payload to x2City.epcs.riding.demand.hmiSettingsIn.payload;
     flow ifA002InputToSettings from x2City.epcs.input.settingsOut.payload to x2City.epcs.riding.settings.inputSettingsIn.payload;
     flow ifA002InputToSession from x2City.epcs.input.settingsOut.payload to x2City.epcs.riding.session.inputSettingsIn.payload;
-    flow ifA002InputToDemand from x2City.epcs.input.settingsOut.payload to x2City.epcs.riding.demand.inputSettingsIn.payload;
+    flow ifA002ActiveSettingsToDemand from x2City.epcs.riding.settings.activeSettingsOut.payload to x2City.epcs.riding.demand.activeSettingsIn.payload;
 
-    // IF-A-003: energy and traction observations, then battery capability/status.
+    // IF-A-003: energy and traction observations, then the battery envelope/status.
     flow ifA003EnergyToInput from x2City.epcs.energy.batteryObservationOut.payload to x2City.epcs.input.energyObservationIn.payload;
     flow ifA003TractionToInput from x2City.epcs.traction.batteryObservationOut.payload to x2City.epcs.input.tractionObservationIn.payload;
     flow ifA003InputToBatteryPolicy from x2City.epcs.input.batteryObservationOut.payload to x2City.epcs.energy.batteryPolicy.batteryObservationIn.payload;
-    flow ifA003ToSession from x2City.epcs.energy.batteryPolicy.capabilityOut.payload to x2City.epcs.riding.session.capabilityIn.payload;
-    flow ifA003ToDemand from x2City.epcs.energy.batteryPolicy.capabilityOut.payload to x2City.epcs.riding.demand.capabilityIn.payload;
+    flow ifA003ToSession from x2City.epcs.energy.batteryPolicy.batteryEnvelopeOut.payload to x2City.epcs.riding.session.batteryEnvelopeIn.payload;
+    flow ifA003ToDemand from x2City.epcs.energy.batteryPolicy.batteryEnvelopeOut.payload to x2City.epcs.riding.demand.batteryEnvelopeIn.payload;
 
-    // IF-A-004: LE-SESSION and LE-DEMAND to LE-TRACTION.
+    // IF-A-004: authority informs demand and traction; demand alone provides the signed command.
+    flow ifA004AuthorityToDemand from x2City.epcs.riding.session.authorityOut.payload to x2City.epcs.riding.demand.ridingAuthorityIn.payload;
     flow ifA004Authority from x2City.epcs.riding.session.authorityOut.payload to x2City.epcs.traction.authorityIn.payload;
     flow ifA004TorqueCommand from x2City.epcs.riding.demand.torqueCommandOut.payload to x2City.epcs.traction.torqueCommandIn.payload;
 
-    // IF-A-005: LE-TRACTION and LE-INPUT actual-output information.
+    // IF-A-005: LE-TRACTION owns qualified motion and actual-output feedback.
     flow ifA005TractionToSession from x2City.epcs.traction.actualOutputOut.payload to x2City.epcs.riding.session.tractionOutputIn.payload;
-    flow ifA005TractionToDemand from x2City.epcs.traction.actualOutputOut.payload to x2City.epcs.riding.demand.tractionOutputIn.payload;
+    flow ifA005MotionToDemand from x2City.epcs.traction.qualifiedMotionOut.payload to x2City.epcs.riding.demand.qualifiedMotionIn.payload;
+    flow ifA005TractionToDemand from x2City.epcs.traction.actualOutputOut.payload to x2City.epcs.riding.demand.actualOutputIn.payload;
     flow ifA005TractionToLightPolicy from x2City.epcs.traction.actualOutputOut.payload to x2City.epcs.auxiliary.lightPolicy.tractionOutputIn.payload;
-    flow ifA005InputToSession from x2City.epcs.input.actualOutputOut.payload to x2City.epcs.riding.session.inputOutputIn.payload;
-    flow ifA005InputToDemand from x2City.epcs.input.actualOutputOut.payload to x2City.epcs.riding.demand.inputOutputIn.payload;
-    flow ifA005InputToLightPolicy from x2City.epcs.input.actualOutputOut.payload to x2City.epcs.auxiliary.lightPolicy.inputOutputIn.payload;
 
     // IF-A-006: rider presentation and logical lighting information.
     flow ifA006SessionToHmi from x2City.epcs.riding.session.riderInformationOut.payload to x2City.epcs.riding.hmi.riderInformationIn.payload;
@@ -366,7 +476,7 @@ package X2CitySystemArchitecture {
     // IF-A-008: applicable producer information to LE-SERVICE-INFO.
     flow ifA008SettingsToService from x2City.epcs.riding.settings.serviceConfigurationOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;
     flow ifA008SessionToService from x2City.epcs.riding.session.serviceConfigurationOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;
-    flow ifA008DemandToService from x2City.epcs.riding.demand.serviceConfigurationOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;
+    flow ifA008DemandDiagnosticToService from x2City.epcs.riding.demand.demandPolicyDiagnosticOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;
     flow ifA008HmiToService from x2City.epcs.riding.hmi.serviceConfigurationOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;
     flow ifA008InputQualificationToService from x2City.epcs.input.inputQualification.serviceConfigurationOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;
     flow ifA008BmsLinkToService from x2City.epcs.input.bmsLink.serviceConfigurationOut.payload to x2City.epcs.service.serviceInformation.serviceConfigurationIn.payload;

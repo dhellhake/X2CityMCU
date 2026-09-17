@@ -1,19 +1,43 @@
 package X2CitySoftwareContract_BatteryProtection {
     private import X2CitySharedSoftwareTypes::*;
-    // P-BAT-FACTS-I is a stable ARCH-003 port identifier; model name: PBatObservationsAndContextI.
     // Payload covers BMS observations, input/output/path observations, effective configuration,
     // current local operating context, and validity-tagged retention candidate (reached10% state).
-    port def PBatObservationsAndContextI { in item payload:ContextualSoftwareInformation; }
-    // P-BAT-ENVELOPE-O is a stable ARCH-003 port identifier.
-    item def PBatEnvelopeOInformation:>ContextualSoftwareInformation;
-    port def PBatEnvelopeO { out item payload:PBatEnvelopeOInformation; }
+    port def PBatObservationsAndContextI {
+        doc /* Receives the qualified battery and operating context assembled from BMS, path observations, configuration, platform context and retained state. BatteryProtection uses the relevant freshness and validity evidence for independent positive propulsion and negative regeneration decisions. */
+        in item payload:ContextualSoftwareInformation;
+    }
+    // Each sign branch carries its own value, qualification and restriction evidence. Consumers
+    // must use the relevant branch, never the aggregate envelope validity, when deciding one sign.
+    item def PositivePropulsionCapabilityV1:>ContextualSoftwareInformation {
+        attribute positivePropulsionPermitted:Boolean;
+        attribute maximumPositiveWheelTorqueNewtonMetres:Real;
+        attribute maximumForwardSpeedKilometresPerHour:Real;
+        attribute restrictionReason:String;
+        attribute restrictionEpisodeGeneration:ContextGeneration;
+    }
+    item def NegativeRegenerationCapabilityV1:>ContextualSoftwareInformation {
+        attribute negativeRegenerationPermitted:Boolean;
+        attribute maximumRegenerativeWheelTorqueMagnitudeNewtonMetres:Real;
+        attribute restrictionReason:String;
+        attribute restrictionEpisodeGeneration:ContextGeneration;
+    }
+    item def PBatEnvelopeOInformation:>ContextualSoftwareInformation {
+        item positivePropulsion:PositivePropulsionCapabilityV1;
+        item negativeRegeneration:NegativeRegenerationCapabilityV1;
+        attribute reached10PositiveRestrictionActive:Boolean;
+        attribute activeRestrictionSummary:String;
+        attribute batteryFaultSummary:String;
+    }
+    port def PBatEnvelopeO {
+        doc /* Publishes separate qualified positive propulsion and negative regeneration capability branches, together with aggregate restriction and battery-fault context, to SessionPolicy, DemandPolicy, HmiAdapter and service aggregation. A restriction on one sign branch does not invalidate or withdraw the other branch. */
+        out item payload:PBatEnvelopeOInformation;
+    }
 }
 
 package X2CitySoftwareComponent_BatteryProtection {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
     private import X2CitySoftwareContract_Platform::*;
-    // SC-BAT-POLICY; static architecture only. No unit-local API, task, or hardware pin is declared here.
     part def BatteryProtection {
         /* Derives separate charge and discharge capability envelopes from qualified BMS,
            path, configuration, and operating observations, selecting the most restrictive valid
