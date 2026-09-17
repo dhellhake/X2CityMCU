@@ -128,9 +128,11 @@ package X2CityDetailedDesign {
     flow vSupplyFastToTraction from vehicle.sensors.supplyFast.fastDcLinkVoltageOut.payload to vehicle.traction.fastDcLinkVoltageIn.payload;
 
     // Every sensing unit publishes health to platform aggregation, session eligibility and service evidence.
+    // Accelerator's one composite conveys its Qualification to Platform and reaches Session and
+    // Service through the same composite position route below.
     flow vAnalogRegularHealthToPlatform from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vAnalogFastHealthToPlatform from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
-    flow vAcceleratorHealthToPlatform from vehicle.sensors.acceleratorQualify.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
+    flow vAcceleratorHealthToPlatform from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload.Qualification to vehicle.platform.health.acceleratorQualificationIn.payload;
     flow vBrakeHealthToPlatform from vehicle.sensors.brakeQualify.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vTemperatureHealthToPlatform from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vHallCaptureHealthToPlatform from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
@@ -142,7 +144,6 @@ package X2CityDetailedDesign {
 
     flow vAnalogRegularHealthToSession from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vAnalogFastHealthToSession from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vAcceleratorHealthToSession from vehicle.sensors.acceleratorQualify.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBrakeHealthToSession from vehicle.sensors.brakeQualify.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTemperatureHealthToSession from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vHallCaptureHealthToSession from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
@@ -155,7 +156,6 @@ package X2CityDetailedDesign {
 
     flow vAnalogRegularHealthToService from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAnalogFastHealthToService from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAcceleratorHealthToService from vehicle.sensors.acceleratorQualify.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vBrakeHealthToService from vehicle.sensors.brakeQualify.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vTemperatureHealthToService from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vHallCaptureHealthToService from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
@@ -186,11 +186,11 @@ package X2CityDetailedDesign {
     flow vDemandToTractionAccept from vehicle.riding.demandArbiter.commandOut.payload to vehicle.traction.wheelTorqueRequestIn.payload;
     flow vSessionAuthorityToTractionAccept from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.traction.ridingAuthorityIn.payload;
     flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
-    flow vAcceleratorToSet from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.setState.requestedSettingsIn.payload;
-    flow vAcceleratorToSession from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
+    flow vAcceleratorToSet from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.setState.acceleratorPositionIn.payload;
+    flow vAcceleratorToSession from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.sessionEligibility.acceleratorPositionIn.payload;
     flow vBrakeToSession from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTemperatureToSession from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vAcceleratorToDemand from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.riding.demandArbiter.acceleratorIn.payload;
+    flow vAcceleratorToDemand from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.demandArbiter.acceleratorIn.payload;
     flow vBrakeToDemand from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.demandArbiter.brakeIn.payload;
     flow vSupplyRegularToSession from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
@@ -235,7 +235,7 @@ package X2CityDetailedDesign {
     flow vPlatformCalibrationToService from vehicle.platform.calibration.calibrationOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAnalogRegularToService from vehicle.sensors.analogRegular.regularScanOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAnalogFastToService from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAcceleratorToService from vehicle.sensors.acceleratorQualify.positionOut.payload to vehicle.service.collect.producerRecordIn.payload;
+    flow vAcceleratorToService from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.service.collect.acceleratorPositionIn.payload;
     flow vBrakeToService from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vTemperatureToService from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vSupplyFastToService from vehicle.sensors.supplyFast.fastDcLinkVoltageOut.payload to vehicle.service.collect.producerRecordIn.payload;

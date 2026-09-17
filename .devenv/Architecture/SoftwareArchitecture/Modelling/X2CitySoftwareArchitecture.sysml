@@ -81,9 +81,9 @@ package X2CitySoftwareArchitecture {
     part vehicleMaintainerBoundary:MaintainerServiceBoundary;
 
     // SW-I-001/002: qualified rider/settings information and setting/session consumers.
-    flow rV01 from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to setVehicle.settingsRequestIn.payload;
+    flow rV01 from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to setVehicle.acceleratorPositionIn.payload;
     flow rV02 from hmiVehicle.hmiSettingsRequestOut.payload to setVehicle.settingsRequestIn.payload;
-    flow rV03Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to sessionVehicle.ridingReadinessIn.payload;
+    flow rV03Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to sessionVehicle.acceleratorPositionIn.payload;
     flow rV03Brake from brakeInterfaceVehicle.brakeStateOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV03Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV03Supply from supplyInterfaceVehicle.supplyVoltageOut.payload to sessionVehicle.ridingReadinessIn.payload;
@@ -132,20 +132,21 @@ package X2CitySoftwareArchitecture {
     flow rV28Phase from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to tractionControlVehicle.phaseCurrentEpochIn.payload;
     flow rV28Supply from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to tractionControlVehicle.fastDcLinkVoltageIn.payload;
 
-    // R-V41..R-V44 carry one-way qualified sensor evidence. SensorHealthCondition derives
-    // ContextualSoftwareInformation, so the Session and Service record-collection inputs accept
-    // it as a typed base-record handoff; Platform and Traction use the exact derived payload.
+    // R-V41..R-V44 carry one-way qualified sensor evidence. The accelerator composite carries
+    // its SensorHealthCondition-compatible Qualification member with Position, avoiding a second
+    // accelerator health publication to Session or Service. SensorHealthCondition derives
+    // ContextualSoftwareInformation, so the generic record-collection inputs accept composites
+    // and other sensor evidence; Platform and Traction use exact derived health payloads.
     // Platform may latch FastSafetyState from an explicit request. Its platformHealthOut is never a
     // route back into sensorHealthIn, so a platform result cannot become a sensor root cause.
     flow rV41AnalogHealthPlatform from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to platformVehicle.sensorHealthIn.payload;
-    flow rV41AcceleratorHealthPlatform from acceleratorInterfaceVehicle.acceleratorHealthOut.payload to platformVehicle.sensorHealthIn.payload;
+    flow rV41AcceleratorHealthPlatform from acceleratorInterfaceVehicle.acceleratorPositionOut.payload.Qualification to platformVehicle.acceleratorQualificationIn.payload;
     flow rV41BrakeHealthPlatform from brakeInterfaceVehicle.brakeHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41TemperatureHealthPlatform from temperatureInterfaceVehicle.temperatureHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41SupplyHealthPlatform from supplyInterfaceVehicle.supplyHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41PhaseHealthPlatform from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41HallHealthPlatform from hallInterfaceVehicle.hallHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV42AnalogHealthSession from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
-    flow rV42AcceleratorHealthSession from acceleratorInterfaceVehicle.acceleratorHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42BrakeHealthSession from brakeInterfaceVehicle.brakeHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42TemperatureHealthSession from temperatureInterfaceVehicle.temperatureHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42SupplyHealthSession from supplyInterfaceVehicle.supplyHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
@@ -197,7 +198,7 @@ package X2CitySoftwareArchitecture {
     // SW-I-008 / R-V32: all explicit vehicle producer ports retain their owner types.
     flow rV32AnalogRegular from analogAcquisitionVehicle.regularAdcScanOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32AnalogFast from analogAcquisitionVehicle.fastInjectedEpochOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
+    flow rV32Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to serviceInformationVehicle.acceleratorPositionIn.payload;
     flow rV32Brake from brakeInterfaceVehicle.brakeStateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32SupplyFast from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
@@ -222,7 +223,6 @@ package X2CitySoftwareArchitecture {
     flow rV32PlatformHealth from platformVehicle.platformHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32PlatformCalibration from platformVehicle.calibrationBundleOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44AnalogHealthService from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44AcceleratorHealthService from acceleratorInterfaceVehicle.acceleratorHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44BrakeHealthService from brakeInterfaceVehicle.brakeHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44TemperatureHealthService from temperatureInterfaceVehicle.temperatureHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44SupplyHealthService from supplyInterfaceVehicle.supplyHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;

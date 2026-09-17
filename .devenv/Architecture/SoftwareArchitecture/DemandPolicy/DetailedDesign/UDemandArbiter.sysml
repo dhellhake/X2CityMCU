@@ -12,7 +12,7 @@ package X2CityDetailedUnit_DemandArbiter {
     private import X2CityDetailedUnit_PlatformCalibration::*;
     // Owner: SC-DEMAND; DD-001; UR-DEMAND-001; SW-I-001..005.
     port def DemandAcceleratorInputPort {
-        doc /* Receives the qualified accelerator position from U-ACCELERATOR-QUALIFY as the active-profile request source. */
+        doc /* Receives U-ACCELERATOR-QUALIFY's composite. It uses Position as the active-profile request source only when contained Qualification supports it, and retains the health evidence when Position is unavailable. */
         in item payload:AcceleratorPosition;
     }
     port def DemandBrakeInputPort {

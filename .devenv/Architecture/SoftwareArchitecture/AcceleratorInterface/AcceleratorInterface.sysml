@@ -6,7 +6,7 @@ package X2CitySoftwareContract_AcceleratorInterface {
         doc /* Receives completed regular ADC scan records from AnalogAcquisition. The accelerator interface uses the source rank, sequence, timestamp and active calibration context to produce a semantic position; the inbound record remains raw ADC evidence. */
         in item payload:RegularAdcScan;
     }
-    item def AcceleratorPosition:>ContextualSoftwareInformation {
+    item def AcceleratorPositionValue {
         attribute acceleratorPositionPercent:Real; // percent, 0..100 after qualified scaling.
         attribute acceleratorAtRest:Boolean;
         attribute sourceAdcRank:Integer;
@@ -14,13 +14,34 @@ package X2CitySoftwareContract_AcceleratorInterface {
         attribute sampleTimestampTicks:Integer;
         attribute calibrationContextId:String;
     }
+    item def AcceleratorPositionQualification :> SensorHealthCondition {
+        // This is the sole authoritative measurement-status set for Position. Inherited
+        // SensorHealthCondition fields preserve current source, reason, severity, health evidence
+        // and immediate inhibit request even when Position values are unusable.
+        attribute measurementValidity:Validity;
+        attribute measurementQualification:Qualification;
+        attribute measurementFreshness:Freshness;
+    }
+    item def AcceleratorPosition:>ContextualSoftwareInformation {
+        // The inherited contextual qualification describes this composite publication. Position
+        // status is carried only by Qualification, so a current publication can report an
+        // unavailable Position (whose values are unusable) without masking source-health evidence.
+        // A health-only publication retains the actual Position sample provenance and age; updating
+        // this envelope or health evidence never refreshes measurement freshness.
+        item Position:AcceleratorPositionValue;
+        item Qualification:AcceleratorPositionQualification;
+    }
     port def AcceleratorPositionOutputPort {
-        doc /* Publishes the qualified accelerator percentage, rest indication and source provenance to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. Consumers must treat the position as unavailable when the source or calibration qualification carried by the record is not valid. */
+        doc /* Publishes one current composite record to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample provenance/age and never refreshes measurement freshness. */
         out item payload:AcceleratorPosition;
     }
-    port def AcceleratorHealthOutputPort {
-        doc /* Publishes accelerator-source health evidence to Platform, SessionPolicy and service aggregation. The record identifies the producer condition and evidence context; it is a health observation, not a rider-position command. */
-        out item payload:SensorHealthCondition;
+    port def AcceleratorPositionInputPort {
+        doc /* Receives AcceleratorInterface's single position-and-health composite. Consumers use Position only when contained Qualification supports it, while processing Qualification even when Position is unavailable. */
+        in item payload:AcceleratorPosition;
+    }
+    port def AcceleratorQualificationInputPort {
+        doc /* Receives the SensorHealthCondition-compatible Qualification projected from AcceleratorPosition for platform health aggregation. */
+        in item payload:AcceleratorPositionQualification;
     }
 }
 
@@ -31,11 +52,12 @@ package X2CitySoftwareComponent_AcceleratorInterface {
     // SC-ACCELERATOR-IF.V; semantic rider-position interface.
     part def AcceleratorInterface {
         /* Accepts a completed regular scan and active calibration only in the current context,
-           then publishes accelerator position/rest/availability. It owns no DMA storage or rider
-           demand decision. */
+           then publishes position/rest plus current measurement and source-health qualification.
+           It also publishes unavailability and health when no new ADC sample is available, without
+           refreshing the prior Position sample's freshness. It owns no DMA storage or rider demand
+           decision. */
         port regularAdcScanIn:RegularAdcScanInputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
-        port acceleratorHealthOut:AcceleratorHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
         port calibrationIn:~CalibrationBundleOutputPort;

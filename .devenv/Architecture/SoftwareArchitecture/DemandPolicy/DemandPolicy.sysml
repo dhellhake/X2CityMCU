@@ -6,7 +6,7 @@ package X2CitySoftwareContract_DemandPolicy {
     private import X2CitySoftwareContract_SettingsPolicy::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
     port def AcceleratorPositionInputPort {
-        doc /* Receives the qualified accelerator position and rest indication from AcceleratorInterface. DemandPolicy uses the record as rider input only after its source, age and calibration context are acceptable. */
+        doc /* Receives AcceleratorInterface's composite. DemandPolicy uses Position as rider input only when the contained Qualification supports its source, age and calibration context, and processes the contained health even when Position is unavailable. */
         in item payload:AcceleratorPosition;
     }
     port def BrakeStateInputPort {

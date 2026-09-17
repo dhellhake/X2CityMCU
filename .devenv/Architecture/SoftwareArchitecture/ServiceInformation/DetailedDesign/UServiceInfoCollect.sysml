@@ -2,10 +2,11 @@ package X2CityDetailedUnit_ServiceInfoCollect {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedUnit_PlatformContext::*;
+    private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorPositionInputPort;
     // Owner: SC-SERVICE-INFO.V; DD-002; SW-I-008/009. Preserves source provenance and has no control return.
     item def ServiceCollectedRecord :> UnitInformationEnvelope;
     port def ProducerRecordInputPort {
-        doc /* Receives source-tagged diagnostic and policy records for service collection without changing their availability or converting them into control permission. */
+        doc /* Receives non-accelerator source-tagged diagnostic and policy records for service collection without converting them into control permission. Accelerator composites use acceleratorPositionIn. */
         in item payload:ContextualSoftwareInformation;
     }
     port def PlatformContextInputPort {
@@ -18,5 +19,5 @@ package X2CityDetailedUnit_ServiceInfoCollect {
     }
     part def ServiceRecordCollector {
         /* Collects current producer-tagged records and platform context into a source-aware service collection. It withdraws old-context entries and never converts missing data into a permission or fallback fact. */
-        port producerRecordIn:ProducerRecordInputPort; port contextIn:PlatformContextInputPort; port collectedOut:ServiceCollectedOutputPort; }
+        port producerRecordIn:ProducerRecordInputPort; port acceleratorPositionIn:AcceleratorPositionInputPort; port contextIn:PlatformContextInputPort; port collectedOut:ServiceCollectedOutputPort; }
 }

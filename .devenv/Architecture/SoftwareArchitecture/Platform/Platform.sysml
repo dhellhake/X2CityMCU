@@ -214,6 +214,7 @@ package X2CitySoftwareContract_Platform {
 
 package X2CitySoftwareComponent_Platform {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorQualificationInputPort;
     private import X2CitySoftwareContract_Platform::*;
     part def Platform {
         /* Establishes local execution/reset context, retained-state access, and platform-health
@@ -229,6 +230,7 @@ package X2CitySoftwareComponent_Platform {
         port platformHealthOut:PlatformHealthOutputPort;
         port calibrationBundleOut:CalibrationBundleOutputPort;
         port sensorHealthIn:SensorHealthInputPort;
+        port acceleratorQualificationIn:AcceleratorQualificationInputPort;
         // A platform instance also consumes its own generation/health service events.
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;

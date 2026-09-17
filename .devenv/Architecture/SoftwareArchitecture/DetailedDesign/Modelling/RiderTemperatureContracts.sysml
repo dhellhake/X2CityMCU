@@ -24,7 +24,7 @@ package X2CityDetailedUnit_RiderTemperatureInterfaces {
         in item payload:CalibrationBundleRecord;
     }
     port def SensorHealthOutputPort {
-        doc /* Each qualifier publishes its conversion, plausibility and source health so dependent policy can withhold affected observations. */
+        doc /* Brake and temperature qualifiers publish their conversion, plausibility and source health so dependent policy can withhold affected observations. */
         out item payload:SensorHealthCondition;
     }
 }

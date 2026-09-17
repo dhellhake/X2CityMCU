@@ -1,7 +1,7 @@
 package X2CitySoftwareContract_SessionPolicy {
     private import X2CitySharedSoftwareTypes::*;
     port def RidingReadinessInputPort {
-        doc /* Receives the heterogeneous current-context facts used to determine Ready eligibility, including qualified rider inputs, settings, health and battery/traction observations. SessionPolicy evaluates the attached producer qualification and freshness rather than reconstructing physical state. */
+        doc /* Receives heterogeneous non-accelerator current-context facts used to determine Ready eligibility, including rider inputs, settings, health and battery/traction observations. Accelerator composites use the dedicated acceleratorPositionIn port. */
         in item payload:ContextualSoftwareInformation;
     }
     port def QualifiedMotionInputPort {
@@ -30,6 +30,7 @@ package X2CitySoftwareContract_SessionPolicy {
 
 package X2CitySoftwareComponent_SessionPolicy {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorPositionInputPort;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_Platform::*;
     part def SessionPolicy {
@@ -37,6 +38,7 @@ package X2CitySoftwareComponent_SessionPolicy {
            reportable fault/session status. It issues authority generation and expiry for consumers;
            physical torque withdrawal and input self-test execution remain allocated elsewhere. */
         port ridingReadinessIn:RidingReadinessInputPort;
+        port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
         port sessionReportOut:SessionReportOutputPort;

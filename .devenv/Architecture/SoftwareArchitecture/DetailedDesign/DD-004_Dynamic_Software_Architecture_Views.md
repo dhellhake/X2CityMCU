@@ -33,7 +33,7 @@ sequenceDiagram
     P->>B: startup/reset context
     P->>T: startup/reset context
     P->>BP: retention candidate with validity/context
-    A-->>S: qualified current-startup accelerator/rest fact
+    A-->>S: full current-startup AcceleratorPosition (Position + Qualification)
     BR-->>S: qualified current-startup brake fact
     H-->>S: qualified current-startup level and speed receipt
     B-->>BP: qualified BMS observations in current BMS context
@@ -198,7 +198,7 @@ sequenceDiagram
 
     VD->>H: settings and normal-light request
     H-->>SET: current qualified decoded request
-    A-->>SET: qualified physical accelerator-rest fact
+    A-->>SET: AcceleratorPosition; use qualified Position.acceleratorAtRest
     T-->>SET: qualified standstill fact
     alt interpretable setting and both application facts hold
         SET->>SET: atomically apply latest valid pending setting
@@ -206,7 +206,7 @@ sequenceDiagram
         SET->>SET: retain as pending, active setting unchanged
     end
     SET-->>D: current active setting
-    A-->>D: qualified accelerator fact
+    A-->>D: AcceleratorPosition; use qualified Position
     B-->>D: qualified brake fact
     T-->>D: qualified vehicle-motion and actual-output observations
     D-->>T: current signed demand when authority and capability permit
@@ -218,7 +218,7 @@ sequenceDiagram
     H-->>SET: no new qualified receipt
     SET->>SET: retain existing active/pending settings
     L->>L: retain normal-light request
-    A-->>D: live qualified accelerator fact continues
+    A-->>D: live AcceleratorPosition continues
     B-->>D: live qualified brake fact continues
     T-->>D: live qualified vehicle-motion and actual-output observations continue
     D-->>T: do not reuse a frozen demand

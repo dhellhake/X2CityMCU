@@ -257,7 +257,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPosition] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
+    ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPosition: Position + Qualification] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
     BRK[U-BRAKE-QUALIFY\nBrakeState] -->|P-DEM-BRAKE-I| D
     SET[U-SET-STATE\nActiveRidingSettings] -->|P-DEM-ACTIVE-SETTINGS-I| D
     SES["U-SESSION-ELIGIBILITY<br/>RidingAuthority"] -->|P-DEM-AUTHORITY-I| D
@@ -291,18 +291,19 @@ flowchart LR
         ACC[SC-ACCELERATOR-IF.V]
         BRK[SC-BRAKE-IF.V]
         HMI[SC-HMI.V]
-        SET[SC-SET.V]
-        SES[SC-SESSION.V]
+        SET[SC-SET.V\nacceleratorPositionIn]
+        SES[SC-SESSION.V\nacceleratorPositionIn]
         DEM[SC-DEMAND.V]
         TR[SC-TRACTION-CTRL.V]
         BAT[SC-BAT-POLICY.V]
         LGT[SC-LIGHT-POLICY.V]
         BMS[SC-BMS-LINK.V]
-        PLV[SC-PLATFORM.V]
-        SIV[SC-SERVICE-INFO.V]
-        ACC -->|SW-I-001 data| SET
-        ACC -->|SW-I-001 data| SES
-        ACC -->|SW-I-001 accelerator data| DEM
+        PLV[SC-PLATFORM.V\nacceleratorQualificationIn]
+        SIV[SC-SERVICE-INFO.V\nacceleratorPositionIn]
+        ACC -->|SW-I-001 AcceleratorPosition| SET
+        ACC -->|SW-I-001 full AcceleratorPosition| SES
+        ACC -->|SW-I-001 qualified Position + Qualification| DEM
+        ACC -->|R-V41-ACCELERATOR Qualification projection| PLV
         BRK -->|SW-I-001 data| SES
         BRK -->|SW-I-001 brake data| DEM
         BRK -->|SW-I-001 data| LGT
@@ -327,7 +328,7 @@ flowchart LR
         PLV -->|SW-I-009 event/service| BAT
         PLV -->|SW-I-009 event/service| TR
         PLV -->|SW-I-009 event/service| SIV
-        ACC -->|SW-I-008 data| SIV
+        ACC -->|R-V32 full AcceleratorPosition| SIV
         BRK -->|SW-I-008 data| SIV
         DEM -->|SW-I-008 policy diagnostic| SIV
         SES -->|SW-I-008 data| SIV
@@ -336,7 +337,7 @@ flowchart LR
     end
 ```
 
-`SW-I-008` is representative in the drawing: ARCH-003 defines it from all local producers to `SC-SERVICE-INFO`; the omitted producer edges are not a change in endpoint scope. `SW-I-009` likewise applies to all local components; selected edges keep the view legible. This figure also suppresses parts of `SW-I-003`, `SW-I-006` and `SW-I-007` where their crossing edges would obscure the host boundary. The complete endpoint, route, fanout and representational-omission record is [ARCH-003 port registry and route catalogue](../ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue); the `SW-I-*` interface definitions remain in [ARCH-003](../ARCH-003_Software_Architecture.md#typed-software-interactions).
+`SW-I-008` is representative in the drawing: ARCH-003 defines it from all local producers to `SC-SERVICE-INFO`; the accelerator full `AcceleratorPosition` record is the one service delivery for that producer, including current qualification/diagnostic evidence. The omitted producer edges are not a change in endpoint scope. `SW-I-009` likewise applies to all local components; selected edges keep the view legible. This figure also suppresses parts of `SW-I-003`, `SW-I-006` and `SW-I-007` where their crossing edges would obscure the host boundary. The complete endpoint, route, fanout and representational-omission record is [ARCH-003 port registry and route catalogue](../ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue); the `SW-I-*` interface definitions remain in [ARCH-003](../ARCH-003_Software_Architecture.md#typed-software-interactions).
 
 ## Cross-view use
 

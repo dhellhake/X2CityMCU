@@ -4,7 +4,7 @@
 
 ### Units, interfaces and executable order
 
-`U-SERVICE-INFO-COLLECT` receives producer-tagged publications through `SW-I-008` and reset/platform context through `SW-I-009`. It retains no source value across a producer-context change. It preserves source availability, validity, freshness and qualification; it does not replace unavailable battery current with the HMI's 0 A fallback or infer actual output from a command.
+`U-SERVICE-INFO-COLLECT` receives the concrete accelerator record once on `acceleratorPositionIn`, with other producer-tagged publications through `SW-I-008` and reset/platform context through `SW-I-009`. It preserves the full record, including qualification and health evidence when Position is unavailable. It retains no source value across a producer-context change. It preserves source availability, validity, freshness and qualification; it does not replace unavailable battery current with the HMI's 0 A fallback or infer actual output from a command.
 
 `U-SERVICE-INFO-SNAPSHOT` forms an atomic current readout keyed to service task and source contexts. It includes available identity/effective configuration, check state, current recognized conditions, restriction/inhibition reasons, selected indication, requested versus qualified actual output, relevant battery data and vehicle-session state. It labels incomplete/pass/fail separately and reports each unavailable part explicitly. The snapshot is read-only and has no control return path.
 
