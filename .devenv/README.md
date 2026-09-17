@@ -10,8 +10,8 @@
   Their [release record](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#release-identity) preserves the historical released composition, while the current vehicle-only architecture and completion B remain open.
 - [ARCH-003 static port registry and route catalogue](Architecture/SoftwareArchitecture/ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue)
   indexes the 14 component types, 19 local instances, architectural ports and complete local/external route catalogue.
-- [Detailed design](Architecture/DetailedDesign/DD-001_Software_Unit_Design.md), [battery-protection design](Architecture/DetailedDesign/DD-002_Battery_Protection_Unit_Design.md),
-  [static views](Architecture/DetailedDesign/DD-003_Static_Software_Architecture_Views.md) and [dynamic views](Architecture/DetailedDesign/DD-004_Dynamic_Software_Architecture_Views.md)
+- [Detailed design](Architecture/SoftwareArchitecture/DetailedDesign/DD-001_Software_Unit_Design.md), [battery-protection design](Architecture/SoftwareArchitecture/DetailedDesign/DD-002_Battery_Protection_Unit_Design.md),
+  [static views](Architecture/SoftwareArchitecture/DetailedDesign/DD-003_Static_Software_Architecture_Views.md) and [dynamic views](Architecture/SoftwareArchitecture/DetailedDesign/DD-004_Dynamic_Software_Architecture_Views.md)
   retain **DD-002-R1.0** and REQ-001-R2.0; **DD-001/003/004 Draft1.3/1.3/1.3** are working successors. They cover unit composition, local host instances,
   interfaces and documented interaction/state examples; they make no implementation or physical-acceptance claim.
 - [Motor evidence](Motor/MOT-001_Motor_Interface_Evidence.md) and [Hall-sensored FOC technical design](Motor/MCD-001_Hall_Sensored_FOC_Technical_Design.md)

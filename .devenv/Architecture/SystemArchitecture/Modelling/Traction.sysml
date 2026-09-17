@@ -15,5 +15,11 @@ package X2CityComponent_Traction {
         port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
         port actualTractionOutputOut:ActualTractionOutputPort;
+        // Delegates the existing logical traction boundary to its sole MotorControl occurrence.
+        // Battery observation ownership remains at Traction and is not changed by this pilot.
+        flow ridingAuthorityToMotorControl from ridingAuthorityIn.payload to motorControl.ridingAuthorityIn.payload;
+        flow wheelTorqueCommandToMotorControl from wheelTorqueCommandIn.payload to motorControl.wheelTorqueCommandIn.payload;
+        flow qualifiedMotionFromMotorControl from motorControl.qualifiedVehicleMotionOut.payload to qualifiedVehicleMotionOut.payload;
+        flow actualOutputFromMotorControl from motorControl.actualTractionOutputOut.payload to actualTractionOutputOut.payload;
     }
 }

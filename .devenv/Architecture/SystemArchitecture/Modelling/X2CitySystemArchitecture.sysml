@@ -1,33 +1,30 @@
 package X2CitySystemArchitecture {
+    private import X2CitySharedContracts::*;
+    private import X2CityContract_SessionPolicy::*;
+    private import X2CityContract_DemandPolicy::*;
+    private import X2CityContract_MotorControl::*;
+    private import X2CityContract_ServiceInformation::*;
+    private import X2CityComponent_MotorControl::*;
 
-    attribute def ValidityStatus;
-    attribute def FreshnessStatus;
-    attribute def SourceContext;
-    attribute def Expiry;
-
-    item def QualifiedInformationRecord {
-        attribute validity:ValidityStatus;
-        attribute freshness:FreshnessStatus;
-        attribute sourceContext:SourceContext;
-    }
+    alias ValidityStatus for X2CitySharedContracts::ValidityStatus;
+    alias FreshnessStatus for X2CitySharedContracts::FreshnessStatus;
+    alias SourceContext for X2CitySharedContracts::SourceContext;
+    alias Expiry for X2CitySharedContracts::Expiry;
+    alias QualifiedInformationRecord for X2CitySharedContracts::QualifiedInformationRecord;
 
     item def QualifiedRiderInput:>QualifiedInformationRecord;
     item def RiderSettingsRequest:>QualifiedInformationRecord;
     item def ActiveRidingSettings:>RiderSettingsRequest;
     item def BatteryConditionObservation:>QualifiedInformationRecord;
     item def BatteryCapabilityEnvelope:>QualifiedInformationRecord;
-    item def RidingAuthority:>QualifiedInformationRecord {
-        attribute expiry:Expiry;
-    }
-    item def SignedWheelTorqueRequest:>QualifiedInformationRecord {
-        attribute expiry:Expiry;
-    }
-    item def ActualTractionOutput:>QualifiedInformationRecord;
-    item def QualifiedVehicleMotion:>QualifiedInformationRecord;
+    alias RidingAuthority for X2CityContract_SessionPolicy::RidingAuthority;
+    alias SignedWheelTorqueRequest for X2CityContract_DemandPolicy::SignedWheelTorqueRequest;
+    alias ActualTractionOutput for X2CityContract_MotorControl::ActualTractionOutput;
+    alias QualifiedVehicleMotion for X2CityContract_MotorControl::QualifiedVehicleMotion;
     item def RiderStatusInformation:>QualifiedInformationRecord;
     item def LightingContext:>QualifiedInformationRecord;
     item def LightActuationIntent:>QualifiedInformationRecord;
-    item def ServiceReportInformation:>QualifiedInformationRecord;
+    alias ServiceReportInformation for X2CityContract_ServiceInformation::ServiceReportInformation;
     item def DemandPolicyDiagnostics:>ServiceReportInformation;
     item def BmsTelemetry:>QualifiedInformationRecord;
     item def BmsReadRequest:>QualifiedInformationRecord;
@@ -72,38 +69,14 @@ package X2CitySystemArchitecture {
         doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
         in item payload:BatteryCapabilityEnvelope;
     }
-    port def RidingAuthorityOutputPort {
-        doc /* Carries SessionPolicy's current riding authority and expiry to DemandPolicy and Traction. Consumers use it as an authorization boundary for motion output; the torque command is a separate contract. */
-        out item payload:RidingAuthority;
-    }
-    port def RidingAuthorityInputPort {
-        doc /* Carries SessionPolicy's current riding authority and expiry to DemandPolicy and Traction. Consumers use it as an authorization boundary for motion output; the torque command is a separate contract. */
-        in item payload:RidingAuthority;
-    }
-    port def WheelTorqueCommandOutputPort {
-        doc /* Carries DemandPolicy's signed wheel-torque request and expiry to Traction. It is a demand boundary only; SessionPolicy authority remains an independent authorization input. */
-        out item payload:SignedWheelTorqueRequest;
-    }
-    port def WheelTorqueCommandInputPort {
-        doc /* Carries DemandPolicy's signed wheel-torque request and expiry to Traction. It is a demand boundary only; SessionPolicy authority remains an independent authorization input. */
-        in item payload:SignedWheelTorqueRequest;
-    }
-    port def ActualTractionOutputPort {
-        doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy, DemandPolicy and LightPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command. */
-        out item payload:ActualTractionOutput;
-    }
-    port def ActualTractionInputPort {
-        doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy, DemandPolicy and LightPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command. */
-        in item payload:ActualTractionOutput;
-    }
-    port def QualifiedVehicleMotionOutputPort {
-        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
-        out item payload:QualifiedVehicleMotion;
-    }
-    port def QualifiedVehicleMotionInputPort {
-        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
-        in item payload:QualifiedVehicleMotion;
-    }
+    alias RidingAuthorityOutputPort for X2CityContract_SessionPolicy::RidingAuthorityOutputPort;
+    alias RidingAuthorityInputPort for X2CityContract_SessionPolicy::RidingAuthorityInputPort;
+    alias WheelTorqueCommandOutputPort for X2CityContract_DemandPolicy::WheelTorqueCommandOutputPort;
+    alias WheelTorqueCommandInputPort for X2CityContract_DemandPolicy::WheelTorqueCommandInputPort;
+    alias ActualTractionOutputPort for X2CityContract_MotorControl::ActualTractionOutputPort;
+    alias ActualTractionInputPort for X2CityContract_MotorControl::ActualTractionInputPort;
+    alias QualifiedVehicleMotionOutputPort for X2CityContract_MotorControl::QualifiedVehicleMotionOutputPort;
+    alias QualifiedVehicleMotionInputPort for X2CityContract_MotorControl::QualifiedVehicleMotionInputPort;
     port def RiderStatusInformationOutputPort {
         doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
         out item payload:RiderStatusInformation;
@@ -128,14 +101,8 @@ package X2CitySystemArchitecture {
         doc /* Carries LightPolicy's selected front and rear logical lamp modes to the Auxiliary actuation boundary. Auxiliary applies the intent to lamp hardware; this contract does not define the physical drive implementation. */
         in item payload:LightActuationIntent;
     }
-    port def ServiceReportOutputPort {
-        doc /* Carries producer status, configuration and diagnostic observations from logical components to ServiceInformation and then service access. The records support read-only service presentation and do not configure or command their producers. */
-        out item payload:ServiceReportInformation;
-    }
-    port def ServiceReportInputPort {
-        doc /* Carries producer status, configuration and diagnostic observations from logical components to ServiceInformation and then service access. The records support read-only service presentation and do not configure or command their producers. */
-        in item payload:ServiceReportInformation;
-    }
+    alias ServiceReportOutputPort for X2CityContract_ServiceInformation::ServiceReportOutputPort;
+    alias ServiceReportInputPort for X2CityContract_ServiceInformation::ServiceReportInputPort;
     port def DemandPolicyDiagnosticsOutputPort {
         doc /* Carries DemandPolicy's read-only policy status and diagnostic observations to ServiceInformation. It supports service reporting only and cannot authorize, refresh or command traction. */
         out item payload:DemandPolicyDiagnostics;
@@ -314,17 +281,17 @@ package X2CitySystemArchitecture {
     }
 
     part def Traction { // LE-TRACTION
-        part motorControl:MotorControl;
+        part motorControl:X2CityComponent_MotorControl::MotorControl;
         part tractionHardware:TractionHardware;
         port ridingAuthorityIn:RidingAuthorityInputPort;
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort;
         port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
         port actualTractionOutputOut:ActualTractionOutputPort;
-    }
-
-    part def MotorControl { // LE-MOTOR-CTRL
-        port serviceReportOut:ServiceReportOutputPort;
+        flow ridingAuthorityToMotorControl from ridingAuthorityIn.payload to motorControl.ridingAuthorityIn.payload;
+        flow wheelTorqueCommandToMotorControl from wheelTorqueCommandIn.payload to motorControl.wheelTorqueCommandIn.payload;
+        flow qualifiedMotionFromMotorControl from motorControl.qualifiedVehicleMotionOut.payload to qualifiedVehicleMotionOut.payload;
+        flow actualOutputFromMotorControl from motorControl.actualTractionOutputOut.payload to actualTractionOutputOut.payload;
     }
     part def TractionHardware; // LE-TRACTION-HW
 
@@ -429,8 +396,9 @@ package X2CitySystemArchitecture {
         part installedVehicle:InstalledVehicleScope;
     }
 
-    // applicable instances have independent state; no flow denotes a live bridge.
-    part x2CityVehicle:ProjectVehicleModel;
+    // The selected detailed vehicle binds this System reference to the one MotorControl pilot
+    // occurrence; System flows retain their logical IF ownership and do not add a live bridge.
+    ref part x2CityVehicle:ProjectVehicleModel;
 
     // IF-A-001: LE-INPUT owns qualified accelerator/rest and coded-brake inputs; LE-TRACTION owns qualified vehicle motion.
     flow ifA001ToSettings from x2CityVehicle.epcs.input.qualifiedRiderInputOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedRiderInputIn.payload;

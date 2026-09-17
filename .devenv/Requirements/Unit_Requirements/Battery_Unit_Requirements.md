@@ -1,6 +1,6 @@
 # Battery unit requirements
 
-**Released in REQ-001-R1.9 — 2026-09-13.** These are detailed-design Unit Requirements. Each has one unit target and derives only from its named approved Abstract Software Requirement. System/HW constraints cited by the parent remain sources/dependencies, not parents. The units and supporting design are in [DD-002](../../Architecture/DetailedDesign/DD-002_Battery_Protection_Unit_Design.md).
+**Released in REQ-001-R1.9 — 2026-09-13.** These are detailed-design Unit Requirements. Each has one unit target and derives only from its named approved Abstract Software Requirement. System/HW constraints cited by the parent remain sources/dependencies, not parents. The units and supporting design are in [DD-002](../../Architecture/SoftwareArchitecture/DetailedDesign/DD-002_Battery_Protection_Unit_Design.md).
 
 ## Unit Requirements
 
@@ -15,4 +15,3 @@
 | <a id="ur-service-info-002"></a>`UR-SERVICE-INFO-002` | The snapshot unit shall expose current available and unavailable service information while distinguishing check result, current fault, retained inhibition/restriction, selected indication, requested output and qualified actual output, without a control path that changes operation. | `REQ-SYS-SVCIF-001` | `U-SERVICE-INFO-SNAPSHOT` | `T-SW`: mixed-source snapshots; `T-SYS`: compare with independent physical evidence. |
 
 The requirements do not allocate BMS writes, vendor internals, physical energy paths, host/electrical realization or numeric thresholds. Their parent Abstract Software Requirements are in [BMS Information](../Abstract_Software_Requirements/BMS_Information.md), [Battery Capability Policy](../Abstract_Software_Requirements/Battery_Capability_Policy.md), and [Service Information](../Abstract_Software_Requirements/Service_Information.md).
-

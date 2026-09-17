@@ -33,6 +33,15 @@ The following are supplied opaque software components, deliberately outside the 
 
 The DRV8300DRGE-EVM and WeAct STM32H723VGT6 are selected vehicle traction board and `HC-CONTROLLER`, respectively, under their [integration contracts](../DRV8300DRGE-EVM/DRV8300DRGE-EVM_Integration_and_Requirements_Fit.md), [vehicle-host contract](../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md), [allocated traction HSI](../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md), and [runtime integration contract](Runtime_Integration_Contract.md). The HSI assigns acquisition and FOC execution to SC-TRACTION-CTRL.V using a configuration-identified ADC epoch; SC-ANALOG-ACQ.V owns raw regular/injected records and the named sensor interfaces own their semantic records. The runtime contract maps logical owners to project bindings and direct/scheduled execution without making a component or unit synonymous with an OS task. It does not establish physical qualification evidence.
 
+For the bounded MotorControl specialization pilot, `SC-TRACTION-CTRL` is the
+software specialization of the canonical `MotorControl` boundary represented by
+`LE-MOTOR-CTRL`. Its detailed-design specialization and the one selected occurrence
+are documented with the five existing unit parts in [DD-003 — Static software
+architecture views](TractionControl/DetailedDesign/TractionControl_Detailed_Design.md#draft-motorcontrol-specialization-pilot).
+The `:>>` selection is an occurrence mapping across these views; it does not add a
+runtime component or task. This pilot covers this chain only, while the remaining
+architecture chains retain their existing modeling relationships.
+
 The deployment view shows execution boundaries; detailed component membership is in the table above. Each deployed type has the explicit vehicle-local state shown below.
 
 ```mermaid
@@ -89,7 +98,7 @@ Calls request a bounded local service and return completion/availability only; t
 
 ## Static port registry and connection catalogue
 
-This is the canonical static architecture view: it identifies component instances, their explicit architectural ports, the payloads exchanged, connection ownership and the local host boundary. “Static” describes this structural view. It does **not** require global/static-memory variables, create an API, task, queue or intercom endpoint, or expose private implementation fields. Detailed unit-local fields, IRQ mechanics and implementation bindings remain in [DD-003](../DetailedDesign/DD-003_Static_Software_Architecture_Views.md) and the [runtime integration contract](Runtime_Integration_Contract.md).
+This is the canonical static architecture view: it identifies component instances, their explicit architectural ports, the payloads exchanged, connection ownership and the local host boundary. “Static” describes this structural view. It does **not** require global/static-memory variables, create an API, task, queue or intercom endpoint, or expose private implementation fields. Detailed unit-local fields, IRQ mechanics and implementation bindings remain in [DD-003](DetailedDesign/DD-003_Static_Software_Architecture_Views.md) and the [runtime integration contract](Runtime_Integration_Contract.md).
 
 Each publication carries producer identity, producer/reset context, applicable configuration, semantic value, qualification and freshness/source-age evidence. Its common timing metadata preserves source timestamp/clock/context and, where a consumer uses a common policy clock, the converted timestamp/clock/context plus conversion qualification. Capture-timer time remains distinct until conversion is qualified. Consumers independently validate what they use. `Unknown`, `Invalid`, `Stale` and `Qualified` remain different outcomes. A control intent, zero request, command acceptance or output/activity observation is not physical-state evidence.
 
@@ -103,7 +112,7 @@ The four endpoint-level views below show every selected `P-*` contract inside it
 
 | Owner | Named state or snapshot | Readers / route family | Boundary |
 |---|---|---|---|
-| `SC-ANALOG-ACQ.V` and SC-HALL-IF.V | `RegularAdcScanV1`, injected epochs and Hall capture rings with sampled state | the named sensor interfaces and `U-TRACTION-POSITION` | Analog acquisition owns scan storage/loss admissibility; Hall owns its capture interpretation. |
+| `SC-ANALOG-ACQ.V` and SC-HALL-IF.V | `RegularAdcScanV1`, injected epochs and Hall capture rings with sampled state | the named sensor interfaces and `U-HALL-POSITION` | Analog acquisition owns scan storage/loss admissibility; Hall owns its capture and electrical-position interpretation. |
 | `U-TRACTION-ACQUISITION` / `U-TRACTION-CONTROL` / `U-TRACTION-OUTPUT` | Direct fast records internal to Detailed Design, including `FastEpochV1` and `PWMAndADCSamplingPlanV1` | the immediately following detailed unit only | These are not SC public ports or ARCH-003 `R-V*` routes. The runtime contract and DD own the direct JEOS-to-output allocation. |
 | `SC-SET.V` | requested, pending and active setting state plus active-only demand projection | session, service and demand routes | A retained active setting is not a current-startup receipt; a pending setting is never a demand input. |
 | `SC-SESSION.V` | authority context, current riding-session inhibition and selected report state | demand, traction and HMI routes | Session owns Ready conjunction and its volatile fault latch. |
@@ -124,6 +133,7 @@ The port registry names each vehicle instance explicitly; the `.V` suffix keeps 
 | `P-AA-REGULAR-O` / `P-AA-FAST-O` | `SC-ANALOG-ACQ.V` | provided internal record | Completed regular scan / injected epoch snapshot | Acquisition owns storage and loss detection. DMA error, overwrite, cache/coherency loss, context change or incomplete scan is unavailable. |
 | `P-ACCEL-POSITION-O` / `P-BRAKE-STATE-O` | `SC-ACCELERATOR-IF.V` / `SC-BRAKE-IF.V` | provided | Qualified accelerator/rest and coded brake state | These distinct owners publish semantic rider facts; neither infers demand or actual output. |
 | `P-HALL-POSITION-O` | `SC-HALL-IF.V` | provided | Qualified electrical position only | Electrical direction/edge evidence is not physical vehicle speed, direction or standstill. |
+| `P-HALL-HEALTH-O` | `SC-HALL-IF.V` | provided | Hall capture/position health evidence | HallInterface owns capture and position interpretation; this health is also the motion-specific qualification input. |
 | `P-HMI-TRANSPORT-I/O` | `SC-HMI.V` | required/provided external boundary | VD18MT UART bytes, framing/error observations and outgoing report bytes | `U-HMI-ADAPTER` owns parser/TX state and project byte queues. Link/byte loss is interpreted here; it does not itself create a generic system fault. |
 | `P-HMI-SETTINGS-O` | `SC-HMI.V` | provided | Current-context decoded settings receipt/request | A setting exists only after valid frame interpretation. Initial receipt is distinct from retained active settings. |
 | `P-HMI-LIGHT-O` | `SC-HMI.V` | provided | Rider normal-light request and current HMI availability | A valid retained normal-light request follows the existing HMI loss rule. |
@@ -149,7 +159,8 @@ The port registry names each vehicle instance explicitly; the `.V` suffix keeps 
 | `P-BAT-ENVELOPE-O` | `SC-BAT-POLICY.V` | provided | Independently qualified positive-propulsion torque/speed cap and negative-regeneration torque cap, with branch reasons/episodes plus aggregate restriction and battery-fault information | The vehicle instance owns `reached10%` propulsion restriction and retains no battery-fault history. Aggregate envelope validity cannot replace a branch’s own qualification. |
 | `P-TR-AUTH-I` | `SC-TRACTION-CTRL.V` | required | `P-SES-AUTH-O` authority context | Traction independently accepts or rejects authority. Loss/mismatch/expiry commands zero in the software realization. |
 | `P-TR-COMMAND-I` | `SC-TRACTION-CTRL.V` | required | `P-DEM-COMMAND-O` signed command | A command is accepted only with valid current authority, context and configuration. |
-| `P-TR-HALL-I` | `SC-TRACTION-CTRL.V` | required internal | Stable sampled Hall state and `HallCaptureV1` edge record | `U-TRACTION-POSITION` is the consumer; SC-HALL-IF remains owner of capture interpretation/record admissibility. |
+| `P-TR-HALL-I` | `SC-TRACTION-CTRL.V` | required | Qualified `HallElectricalPositionV1` | `U-TRACTION-CONTROL`, `U-TRACTION-MOTION` and `U-TRACTION-ACTUAL-OUTPUT` consume the position; SC-HALL-IF owns capture and electrical-position interpretation/admissibility. |
+| `P-TR-MOTION-HEALTH-I` | `SC-TRACTION-CTRL.V` | required | Hall capture/position health for motion qualification | `U-TRACTION-MOTION` consumes this Hall-only health; the broader FOC health fan-in remains on `sensorHealthIn`. |
 | `P-TR-OUTPUT-I/O` | `SC-TRACTION-CTRL.V` | required/provided external boundary | Staged PWM/ADC context and output-stage state, timestamp, source and configuration provenance | `U-TRACTION-ACTUAL-OUTPUT` combines this physical-stage evidence with qualified current/position/motion and active estimator calibration to publish wheel-torque estimate; the boundary is not a demand command. `U-TRACTION-OUTPUT` alone commits literal `CCR1..4`/JSQR. |
 | `P-TR-QUALIFIED-MOTION-O` | `SC-TRACTION-CTRL.V` | provided | Physical vehicle speed, direction and standstill with independent qualification | It is a validated interpretation of existing Hall/capture-health and calibration evidence; static or absent edges alone are unavailable, not standstill. Its criteria, timing and diagnostic coverage remain WS-OI-001/006 validation gates. |
 | `P-TR-ACTUAL-OUTPUT-O` | `SC-TRACTION-CTRL.V` | provided | Actual applied wheel-torque estimate/evidence, active electrical-braking, output availability and powered-forward travel | It is not a demand command. Positive applied torque and powered-forward travel are independently qualified. |
@@ -194,7 +205,7 @@ Route IDs are used in every figure. Delivery labels describe the selected archit
 | `R-V24` | `SC-BAT-POLICY.V.P-BAT-ENVELOPE-O` -> `SC-HMI.V.P-HMI-REPORT-I` | SW-I-006, IF-A-006 | Scheduled direct/owned snapshot; battery policy owns envelope | Presentation fallback is not a qualified battery fact. |
 | `R-V25` | `SC-LIGHT-POLICY.V.P-LGT-INTENT-O` -> physical `LE-AUX` | SW-I-006, IF-A-006 | Local output intent; light policy owns intent | Intent does not prove lamp output or visibility. |
 | `R-V26` | physical traction/energy boundary -> `SC-TRACTION-CTRL.V.P-TR-OUTPUT-I/O` | HSI-004/009 | Direct hardware acquisition/output binding | Hardware break/external inhibit withdraw physical permit independently. |
-| `R-V27` | `SC-HALL-IF.V.P-HALL-POSITION-O` -> `SC-TRACTION-CTRL.V.P-TR-HALL-I` | HSI-009, traction HSI | Direct read-only stable accessor; Hall interface owns records | Position rejects overrun, incoherent, stale or foreign-context Hall evidence. |
+| `R-V27` | `SC-HALL-IF.V.P-HALL-POSITION-O` -> `SC-TRACTION-CTRL.V.P-TR-HALL-I`; `SC-HALL-IF.V.P-HALL-HEALTH-O` -> `SC-TRACTION-CTRL.V.P-TR-MOTION-HEALTH-I` | HSI-009, traction HSI | Direct read-only position/health publication; Hall interface owns records | The three traction consumers reject overrun, incoherent, stale or foreign-context position; motion consumes Hall-only health separately from the broader FOC health fan-in. |
 | `R-V30` | `SC-ANALOG-ACQ.V.P-AA-REGULAR-O` -> each named regular sensor-interface raw input | runtime contract | Owned completed-record handoff; analog acquisition owns record and sensor interfaces consume it | A failed, overwritten, incomplete or old-context scan remains unavailable to semantic qualification. |
 | `R-V31` | `SC-PLATFORM.V.P-PLT-CONTEXT-O`, `P-PLT-HEALTH-O` and required calibration outputs -> vehicle components' context-dependent ports | SW-I-009 | Service/event fanout; platform owns context/health/calibration events | Applies to every applicable vehicle component; figures show selected edges only. |
 | `R-V32` | vehicle producer output ports -> `SC-SERVICE-INFO.V.P-SVC-RECORD-I` | SW-I-008, IF-A-008 | Current producer snapshots; each producer owns its record | Applies to all local vehicle producers. Service drops old-context cache entries and has no control return. |
@@ -275,11 +286,13 @@ flowchart LR
         APO[P-ACCEL-POSITION-O]
         BSO[P-BRAKE-STATE-O]
         HPO[P-HALL-POSITION-O]
+        HHO[P-HALL-HEALTH-O]
     end
     subgraph TR[SC-TRACTION-CTRL.V]
         TAI[P-TR-AUTH-I]
         TCI2[P-TR-COMMAND-I]
         THI[P-TR-HALL-I]
+        TMH[P-TR-MOTION-HEALTH-I]
         TIO[P-TR-OUTPUT-I/O]
         TMO[P-TR-QUALIFIED-MOTION-O]
         TAO[P-TR-ACTUAL-OUTPUT-O]
@@ -300,6 +313,7 @@ flowchart LR
     APO -->|R-V10 accelerator| DAI2[P-DEM-ACCELERATOR-I on SC-DEMAND.V]
     BSO -->|R-V10 brake| DBI2[P-DEM-BRAKE-I on SC-DEMAND.V]
     TOB -->|R-V07 output facts| SEDI2[P-SES-READY-I on SC-SESSION.V]
+    HHO -->|R-V27 Hall-only health| TMH
     TMO -->|R-V13 qualified motion| DMI2[P-DEM-MOTION-I on SC-DEMAND.V]
     TMO -->|R-V05 qualified standstill| SMI2[P-SET-MOTION-I on SC-SET.V]
     TMO -->|R-V05 qualified standstill| SEMI2[P-SES-MOTION-I on SC-SESSION.V]
@@ -334,7 +348,7 @@ flowchart LR
 
 ## Behavioural summaries and timing allocation
 
-The material below explains lifecycle and execution constraints that apply to the static contracts. It does not alter the port ownership or route catalogue above. Detailed sequence/state views remain in [DD-004](../DetailedDesign/DD-004_Dynamic_Software_Architecture_Views.md).
+The material below explains lifecycle and execution constraints that apply to the static contracts. It does not alter the port ownership or route catalogue above. Detailed sequence/state views remain in [DD-004](DetailedDesign/DD-004_Dynamic_Software_Architecture_Views.md).
 
 **Vehicle startup.** SC-PLATFORM.V creates a new context, marks prior observations unusable and activates only a validated immutable calibration bundle. SC-ANALOG-ACQ.V, the named sensor interfaces, SC-BMS-LINK.V and SC-TRACTION-CTRL.V execute their allocated self-tests/qualification without granting torque; SC-SET.V receives current-startup settings; SC-BAT-POLICY.V restores/qualifies `reached10%` and produces the current envelope. Each producer reports pass/fail/incomplete with its context to SC-SESSION.V. SC-SESSION.V alone evaluates the simultaneous Ready guard and issues SW-I-004 authority. SC-DEMAND.V may then publish a context-matched command only with its individually usable dependencies and active demand profile, which SC-TRACTION-CTRL.V must separately accept. Torque remains commanded to zero until both current authority and a valid command are accepted, and returns to zero when either expires or becomes invalid; physical zero/output protection remains the traction and energy realization responsibility.
 

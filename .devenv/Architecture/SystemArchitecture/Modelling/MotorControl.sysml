@@ -25,9 +25,19 @@ package X2CityContract_MotorControl {
 package X2CityComponent_MotorControl {
     private import X2CitySharedContracts::*;
     private import X2CityContract_MotorControl::*;
+    private import X2CityContract_SessionPolicy::*;
+    private import X2CityContract_DemandPolicy::*;
     private import X2CityContract_ServiceInformation::*;
     part def MotorControl { // LE-MOTOR-CTRL
-        /* Provides the motor-control boundary that applies traction commands to the drive hardware and makes actual output available to observers. It publishes service report information; demand evaluation remains in DemandPolicy. */
+        /* Provides the logical motor-control boundary. It accepts independent riding authority
+           and signed torque demand, then publishes qualified physical-motion and actual-output
+           observations. It publishes service report information; demand evaluation remains in
+           DemandPolicy. This is an architectural boundary only: it selects neither software
+           units, calibration, hardware nor an execution mechanism. */
+        port ridingAuthorityIn:RidingAuthorityInputPort;
+        port wheelTorqueCommandIn:WheelTorqueCommandInputPort;
+        port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
+        port actualTractionOutputOut:ActualTractionOutputPort;
         port serviceReportOut:ServiceReportOutputPort;
     }
 }

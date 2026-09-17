@@ -78,6 +78,12 @@ flowchart TB
 | <a id="le-enclosure-hw"></a>LE-ENCLOSURE-HW | [LE-INTEGRATION](#le-integration) | HW | Vehicle and pack enclosures/mounting/thermal interfaces; physical access/contact/environment provisions. | [HC-VEH-ENCLOSURE](../ARCH-002_Hardware_Architecture.md#hc-veh-enclosure), [HC-PACK-ENCLOSURE](../ARCH-002_Hardware_Architecture.md#hc-pack-enclosure) |
 | <a id="le-harness-hw"></a>LE-HARNESS-HW | [LE-INTEGRATION](#le-integration) | HW | Vehicle harness: routing, flex/strain/abrasion protection and connection interfaces. Pack internal connections remain with those assemblies. | [HC-VEH-HARNESS](../ARCH-002_Hardware_Architecture.md#hc-veh-harness) |
 
+The bounded MotorControl specialization pilot is traced from this system row to
+`SC-TRACTION-CTRL` and its selected detailed-design occurrence in [DD-003 — Static
+software architecture views](../SoftwareArchitecture/TractionControl/DetailedDesign/TractionControl_Detailed_Design.md#draft-motorcontrol-specialization-pilot).
+That view records the five existing units, their port ownership and the `:>>`
+same-occurrence selection. Other system/software chains retain the current model.
+
 ### Structural connections and port contracts
 
 This view shows component exchange through canonical IF-A contracts; containment is defined above. Physical energy and qualified information are different exchanges. Regenerative energy remains a vehicle transfer constrained by the supplied pack charge-acceptance envelope.

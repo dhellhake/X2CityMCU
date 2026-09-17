@@ -72,7 +72,7 @@ package X2CitySoftwareArchitecture {
     part supplyInterfaceVehicle:SupplyInterface;
     part motorPhaseInterfaceVehicle:MotorPhaseInterface;
     part hallInterfaceVehicle:HallInterface;
-    part tractionControlVehicle:TractionControl;
+    ref part tractionControlVehicle:TractionControl;
     part platformVehicle:Platform;
 
     part suppliedBmsVehicle:SuppliedBms;
@@ -126,6 +126,9 @@ package X2CitySoftwareArchitecture {
 
     // R-V27 is complete qualified electrical position; it is not vehicle-speed qualification.
     flow rV27 from hallInterfaceVehicle.hallElectricalPositionOut.payload to tractionControlVehicle.hallElectricalPositionIn.payload;
+    // R-V27 / P-TR-MOTION-HEALTH-I: Hall-only health preserves the existing motion
+    // qualification input separately from the broader FOC sensor-health gate.
+    flow rV27MotionHealth from hallInterfaceVehicle.hallHealthOut.payload to tractionControlVehicle.motionHealthIn.payload;
     flow rV28Phase from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to tractionControlVehicle.phaseCurrentEpochIn.payload;
     flow rV28Supply from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to tractionControlVehicle.fastDcLinkVoltageIn.payload;
 
