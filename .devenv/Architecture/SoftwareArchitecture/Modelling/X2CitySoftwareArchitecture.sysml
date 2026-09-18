@@ -55,6 +55,13 @@ package X2CitySoftwareArchitecture {
            carries presentation data only and has no control path back into the software architecture. */
         port snapshot:~ServiceSnapshotOutputPort;
     }
+    part def CallingExecutionContextBoundary {
+        doc /* Runtime boundary representing the caller's execution context. Immediately before
+           invoking a component, its caller samples the live host-boot monotonic microsecond
+           clock and supplies that fixed value. This is not an application peer, clock service,
+           scheduler release-time promise, or queued stream. */
+        port executionTimeOut:ExecutionTimeOutputPort;
+    }
 
     // ARCH-003 vehicle (.V) instances share one local vehicle context only.
     part setVehicle:SettingsPolicy;
@@ -79,6 +86,28 @@ package X2CitySoftwareArchitecture {
     part suppliedVd18mtVehicle:SuppliedVd18mt;
     part vehicleBoundary:VehicleSoftwareBoundary;
     part vehicleMaintainerBoundary:MaintainerServiceBoundary;
+    part callingExecutionContext:CallingExecutionContextBoundary;
+
+    // Every project-owned software component receives its invocation reference from the runtime
+    // calling context. Each component may use it to evaluate its own timeouts; no component reads
+    // a clock service directly.
+    flow executionTimeToSettingsPolicy from callingExecutionContext.executionTimeOut.payload to setVehicle.executionTimeIn.payload;
+    flow executionTimeToSessionPolicy from callingExecutionContext.executionTimeOut.payload to sessionVehicle.executionTimeIn.payload;
+    flow executionTimeToDemandPolicy from callingExecutionContext.executionTimeOut.payload to demandVehicle.executionTimeIn.payload;
+    flow executionTimeToHmiAdapter from callingExecutionContext.executionTimeOut.payload to hmiVehicle.executionTimeIn.payload;
+    flow executionTimeToBmsLink from callingExecutionContext.executionTimeOut.payload to bmsLinkVehicle.executionTimeIn.payload;
+    flow executionTimeToBatteryProtection from callingExecutionContext.executionTimeOut.payload to batteryProtectionVehicle.executionTimeIn.payload;
+    flow executionTimeToLightPolicy from callingExecutionContext.executionTimeOut.payload to lightPolicyVehicle.executionTimeIn.payload;
+    flow executionTimeToServiceInformation from callingExecutionContext.executionTimeOut.payload to serviceInformationVehicle.executionTimeIn.payload;
+    flow executionTimeToAnalogAcquisition from callingExecutionContext.executionTimeOut.payload to analogAcquisitionVehicle.executionTimeIn.payload;
+    flow executionTimeToAcceleratorInterface from callingExecutionContext.executionTimeOut.payload to acceleratorInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToBrakeInterface from callingExecutionContext.executionTimeOut.payload to brakeInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToTemperatureInterface from callingExecutionContext.executionTimeOut.payload to temperatureInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToSupplyInterface from callingExecutionContext.executionTimeOut.payload to supplyInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToMotorPhaseInterface from callingExecutionContext.executionTimeOut.payload to motorPhaseInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToHallInterface from callingExecutionContext.executionTimeOut.payload to hallInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToTractionControl from callingExecutionContext.executionTimeOut.payload to tractionControlVehicle.executionTimeIn.payload;
+    flow executionTimeToPlatform from callingExecutionContext.executionTimeOut.payload to platformVehicle.executionTimeIn.payload;
 
     // SW-I-001/002: qualified rider/settings information and setting/session consumers.
     flow rV01 from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to setVehicle.acceleratorPositionIn.payload;
@@ -164,7 +193,6 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthSession from platformVehicle.platformHealthOut.payload to sessionVehicle.platformHealthIn.payload;
     flow rV31ContextDemand from platformVehicle.platformContextOut.payload to demandVehicle.platformContextIn.payload;
     flow rV31HealthDemand from platformVehicle.platformHealthOut.payload to demandVehicle.platformHealthIn.payload;
-    flow rV31CalibrationDemand from platformVehicle.calibrationBundleOut.payload to demandVehicle.calibrationIn.payload;
     flow rV31ContextHmi from platformVehicle.platformContextOut.payload to hmiVehicle.platformContextIn.payload;
     flow rV31HealthHmi from platformVehicle.platformHealthOut.payload to hmiVehicle.platformHealthIn.payload;
     flow rV31ContextBms from platformVehicle.platformContextOut.payload to bmsLinkVehicle.platformContextIn.payload;
@@ -191,7 +219,6 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthHall from platformVehicle.platformHealthOut.payload to hallInterfaceVehicle.platformHealthIn.payload;
     flow rV31ContextTraction from platformVehicle.platformContextOut.payload to tractionControlVehicle.platformContextIn.payload;
     flow rV31HealthTraction from platformVehicle.platformHealthOut.payload to tractionControlVehicle.platformHealthIn.payload;
-    flow rV31CalibrationTraction from platformVehicle.calibrationBundleOut.payload to tractionControlVehicle.calibrationIn.payload;
     flow rV31ContextPlatform from platformVehicle.platformContextOut.payload to platformVehicle.platformContextIn.payload;
     flow rV31HealthPlatform from platformVehicle.platformHealthOut.payload to platformVehicle.platformHealthIn.payload;
 
@@ -221,7 +248,6 @@ package X2CitySoftwareArchitecture {
     flow rV32PlatformContext from platformVehicle.platformContextOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32PlatformRetention from platformVehicle.retentionCandidateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV32PlatformHealth from platformVehicle.platformHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32PlatformCalibration from platformVehicle.calibrationBundleOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44AnalogHealthService from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44BrakeHealthService from brakeInterfaceVehicle.brakeHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
     flow rV44TemperatureHealthService from temperatureInterfaceVehicle.temperatureHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
@@ -257,11 +283,4 @@ package X2CitySoftwareArchitecture {
     flow rV37PhaseRegularRaw from analogAcquisitionVehicle.analogSampleOut.payload to motorPhaseInterfaceVehicle.analogSampleIn.payload;
     flow rV38PhaseFastRaw from analogAcquisitionVehicle.fastInjectedEpochOut.payload to motorPhaseInterfaceVehicle.fastInjectedEpochIn.payload;
     flow rV39SupplyFastRaw from analogAcquisitionVehicle.fastInjectedEpochOut.payload to supplyInterfaceVehicle.fastInjectedEpochIn.payload;
-    flow rV40CalibrationAnalog from platformVehicle.calibrationBundleOut.payload to analogAcquisitionVehicle.calibrationIn.payload;
-    flow rV40CalibrationAccelerator from platformVehicle.calibrationBundleOut.payload to acceleratorInterfaceVehicle.calibrationIn.payload;
-    flow rV40CalibrationBrake from platformVehicle.calibrationBundleOut.payload to brakeInterfaceVehicle.calibrationIn.payload;
-    flow rV40CalibrationTemperature from platformVehicle.calibrationBundleOut.payload to temperatureInterfaceVehicle.calibrationIn.payload;
-    flow rV40CalibrationSupply from platformVehicle.calibrationBundleOut.payload to supplyInterfaceVehicle.calibrationIn.payload;
-    flow rV40CalibrationPhase from platformVehicle.calibrationBundleOut.payload to motorPhaseInterfaceVehicle.calibrationIn.payload;
-    flow rV40CalibrationHall from platformVehicle.calibrationBundleOut.payload to hallInterfaceVehicle.calibrationIn.payload;
 }

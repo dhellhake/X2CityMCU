@@ -19,5 +19,5 @@ package X2CityDetailedUnit_ServiceInfoCollect {
     }
     part def ServiceRecordCollector {
         /* Collects current producer-tagged records and platform context into a source-aware service collection. It withdraws old-context entries and never converts missing data into a permission or fallback fact. */
-        port producerRecordIn:ProducerRecordInputPort; port acceleratorPositionIn:AcceleratorPositionInputPort; port contextIn:PlatformContextInputPort; port collectedOut:ServiceCollectedOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port producerRecordIn:ProducerRecordInputPort; port acceleratorPositionIn:AcceleratorPositionInputPort; port contextIn:PlatformContextInputPort; port collectedOut:ServiceCollectedOutputPort; }
 }

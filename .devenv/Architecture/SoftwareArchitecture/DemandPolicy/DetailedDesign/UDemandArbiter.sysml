@@ -9,7 +9,6 @@ package X2CityDetailedUnit_DemandArbiter {
     private import X2CitySoftwareContract_TractionControl::*;
     private import X2CitySoftwareContract_DemandPolicy::*;
     private import X2CitySoftwareContract_Platform::*;
-    private import X2CityDetailedUnit_PlatformCalibration::*;
     // Owner: SC-DEMAND; DD-001; UR-DEMAND-001; SW-I-001..005.
     port def DemandAcceleratorInputPort {
         doc /* Receives U-ACCELERATOR-QUALIFY's composite. It uses Position as the active-profile request source only when contained Qualification supports it, and retains the health evidence when Position is unavailable. */
@@ -47,10 +46,6 @@ package X2CityDetailedUnit_DemandArbiter {
         doc /* Receives platform health that can withdraw both torque signs without inventing a Session fault latch. */
         in item payload:PlatformHealth;
     }
-    port def DemandCalibrationInputPort {
-        doc /* Receives the activated resolved DemandPolicyCalibration maps, endpoints, ramps, taper and timing data; an ID without resolved data is unusable. */
-        in item payload:CalibrationBundleRecord;
-    }
     port def DemandCommandOutputPort {
         doc /* Sends the signed requested wheel torque, decision sequence and independently expiring command to U-TRACTION-ACCEPT; it is a request, never output evidence. */
         out item payload:WheelTorqueRequest;
@@ -65,6 +60,7 @@ package X2CityDetailedUnit_DemandArbiter {
            independent authority generation and command expiry; diagnostic reasons are
            service-only. Pending settings, a command or PWM/register state never establish
            motion, actual applied torque, powered-forward travel or post-stop regen rearm. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port acceleratorIn:DemandAcceleratorInputPort;
         port brakeIn:DemandBrakeInputPort;
         port activeSettingsIn:DemandActiveSettingsInputPort;
@@ -74,7 +70,9 @@ package X2CityDetailedUnit_DemandArbiter {
         port actualOutputIn:DemandActualOutputInputPort;
         port platformContextIn:DemandPlatformContextInputPort;
         port platformHealthIn:DemandPlatformHealthInputPort;
-        port calibrationIn:DemandCalibrationInputPort;
+        attribute compiledCalibrationId:String;
+        attribute compiledDemandPolicyCalibration:DemandPolicyCalibration;
+        attribute compiledCalibrationValid:Boolean;
         port commandOut:DemandCommandOutputPort;
         port diagnosticOut:DemandDiagnosticOutputPort;
     }

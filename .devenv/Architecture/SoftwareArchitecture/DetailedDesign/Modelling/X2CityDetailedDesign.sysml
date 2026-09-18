@@ -23,7 +23,6 @@ package X2CityDetailedDesign {
     public import X2CityDetailedComponent_TractionControlImplementation::*;
     public import X2CityDetailedUnit_PlatformContext::*;
     public import X2CityDetailedUnit_PlatformBinding::*;
-    public import X2CityDetailedUnit_PlatformCalibration::*;
     public import X2CityDetailedUnit_PlatformRetention::*;
     public import X2CityDetailedUnit_PlatformHealth::*;
     public import X2CityDetailedUnit_BmsLinkTransaction::*;
@@ -58,7 +57,6 @@ package X2CityDetailedDesign {
     part def PlatformUnits {
         part context:PlatformContextManager;
         part binding:PlatformBinding;
-        part calibration:CalibrationLifecycleManager;
         part retention:RetentionCandidateManager;
         part health:PlatformHealthManager;
     }
@@ -89,25 +87,94 @@ package X2CityDetailedDesign {
         part platform:PlatformUnits;
         part energy:EnergyUnits;
         part service:ServiceUnits;
+        // References the one software-architecture runtime boundary rather than creating an
+        // application clock producer in the detailed design.
+        ref part callingExecutionContext:CallingExecutionContextBoundary = X2CitySoftwareArchitecture::callingExecutionContext;
     }
     part vehicle:VehicleDetailedDesign;
     bind X2CitySystemArchitecture::x2CityVehicle = vehicle;
     bind X2CitySoftwareArchitecture::tractionControlVehicle = vehicle.epcs.traction.motorControl;
 
-    // Platform context, calibration and deterministic acquisition dispatch.
-    flow vPlatformContextToCalibration from vehicle.platform.context.contextOut.payload to vehicle.platform.calibration.contextIn.payload;
-    flow vCalibrationToBinding from vehicle.platform.calibration.calibrationOut.payload to vehicle.platform.binding.calibrationIn.payload;
+    // Direct callers provide a freshly sampled host-boot monotonic reference to each detailed
+    // unit invocation. Fast IRQ/direct chains remain direct on this same domain; no cyclic
+    // scheduler route or queued FOC handoff is introduced.
+    flow vExecutionTimeToSetState from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.riding.setState.executionTimeIn.payload;
+    flow vExecutionTimeToSessionEligibility from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.riding.sessionEligibility.executionTimeIn.payload;
+    flow vExecutionTimeToSessionReport from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.riding.sessionReport.executionTimeIn.payload;
+    flow vExecutionTimeToDemandArbiter from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.riding.demandArbiter.executionTimeIn.payload;
+    flow vExecutionTimeToHmiAdapter from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.riding.hmiAdapter.executionTimeIn.payload;
+    flow vExecutionTimeToLightMode from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.riding.lightMode.executionTimeIn.payload;
+    flow vExecutionTimeToAnalogRegular from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.analogRegular.executionTimeIn.payload;
+    flow vExecutionTimeToAnalogFast from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.analogFast.executionTimeIn.payload;
+    flow vExecutionTimeToAcceleratorQualifier from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.acceleratorQualify.executionTimeIn.payload;
+    flow vExecutionTimeToBrakeQualifier from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.brakeQualify.executionTimeIn.payload;
+    flow vExecutionTimeToTemperatureQualifier from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.temperatureQualify.executionTimeIn.payload;
+    flow vExecutionTimeToHallCapture from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.hallCapture.executionTimeIn.payload;
+    flow vExecutionTimeToHallPosition from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.hallPosition.executionTimeIn.payload;
+    flow vExecutionTimeToMotorPhaseFast from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.motorPhaseFast.executionTimeIn.payload;
+    flow vExecutionTimeToMotorPhaseDiagnostic from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.motorPhaseDiag.executionTimeIn.payload;
+    flow vExecutionTimeToSupplyFast from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.supplyFast.executionTimeIn.payload;
+    flow vExecutionTimeToSupplyRegular from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.supplyRegular.executionTimeIn.payload;
+    flow vExecutionTimeToPlatformContext from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.context.executionTimeIn.payload;
+    flow vExecutionTimeToPlatformBinding from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.binding.executionTimeIn.payload;
+    flow vExecutionTimeToPlatformRetention from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.retention.executionTimeIn.payload;
+    flow vExecutionTimeToPlatformHealth from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.health.executionTimeIn.payload;
+    flow vExecutionTimeToBmsTransaction from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.bmsTransaction.executionTimeIn.payload;
+    flow vExecutionTimeToBmsDecode from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.bmsDecode.executionTimeIn.payload;
+    flow vExecutionTimeToBmsPublish from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.bmsPublish.executionTimeIn.payload;
+    flow vExecutionTimeToBatteryEvaluate from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.batteryEvaluate.executionTimeIn.payload;
+    flow vExecutionTimeToBatteryRestriction from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.batteryRestriction.executionTimeIn.payload;
+    flow vExecutionTimeToServiceCollect from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.service.collect.executionTimeIn.payload;
+    flow vExecutionTimeToServiceSnapshot from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.service.snapshot.executionTimeIn.payload;
+    // vehicle.traction is the sole selected occurrence bound to tractionControlVehicle, so its
+    // inherited executionTimeIn is supplied by executionTimeToTractionControl at software scope.
+    // TractionControlImplementation forwards that one bounded invocation reference to its units.
+
+    // Platform context and deterministic acquisition dispatch. Configuration is compiled into
+    // its owning component and is therefore not a runtime route.
+    // These are static build/startup consistency bindings: PlatformBinding's peripheral/rank/
+    // trigger setup must match AnalogAcquisition's compiled interpretation configuration.
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledAcquisitionBinding = vehicle.platform.binding.compiledAcquisitionBinding;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledConfigurationId = vehicle.platform.binding.compiledConfigurationId;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledConfigurationValid = vehicle.platform.binding.compiledConfigurationValid;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledAcquisitionBinding = vehicle.sensors.analogRegular.compiledAcquisitionBinding;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledAcquisitionBinding = vehicle.sensors.analogFast.compiledAcquisitionBinding;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledConfigurationId = vehicle.sensors.analogRegular.compiledAcquisitionConfigurationId;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledConfigurationId = vehicle.sensors.analogFast.compiledAcquisitionConfigurationId;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledConfigurationValid = vehicle.sensors.analogRegular.compiledConfigurationValid;
+    bind X2CitySoftwareArchitecture::analogAcquisitionVehicle.compiledConfigurationValid = vehicle.sensors.analogFast.compiledConfigurationValid;
+    bind vehicle.platform.binding.compiledAcquisitionBinding = vehicle.sensors.analogRegular.compiledAcquisitionBinding;
+    bind vehicle.platform.binding.compiledAcquisitionBinding = vehicle.sensors.analogFast.compiledAcquisitionBinding;
+    // Each qualifier consumes exactly its owning SoftwareComponent's fixed compiled set. These
+    // structural bindings are deployment/build consistency constraints, never runtime flows.
+    bind X2CitySoftwareArchitecture::acceleratorInterfaceVehicle.compiledCalibration = vehicle.sensors.acceleratorQualify.compiledCalibration;
+    bind X2CitySoftwareArchitecture::acceleratorInterfaceVehicle.compiledCalibrationId = vehicle.sensors.acceleratorQualify.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::acceleratorInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.acceleratorQualify.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::brakeInterfaceVehicle.compiledCalibration = vehicle.sensors.brakeQualify.compiledCalibration;
+    bind X2CitySoftwareArchitecture::brakeInterfaceVehicle.compiledCalibrationId = vehicle.sensors.brakeQualify.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::brakeInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.brakeQualify.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::temperatureInterfaceVehicle.compiledCalibration = vehicle.sensors.temperatureQualify.compiledCalibration;
+    bind X2CitySoftwareArchitecture::temperatureInterfaceVehicle.compiledCalibrationId = vehicle.sensors.temperatureQualify.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::temperatureInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.temperatureQualify.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::hallInterfaceVehicle.compiledHallCalibration = vehicle.sensors.hallPosition.compiledHallCalibration;
+    bind X2CitySoftwareArchitecture::hallInterfaceVehicle.compiledCalibrationId = vehicle.sensors.hallPosition.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::hallInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.hallPosition.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCurrentPhaseCalibration = vehicle.sensors.motorPhaseFast.compiledCurrentPhaseCalibration;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCurrentPhaseCalibration = vehicle.sensors.motorPhaseDiag.compiledCurrentPhaseCalibration;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationId = vehicle.sensors.motorPhaseFast.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationId = vehicle.sensors.motorPhaseDiag.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.motorPhaseFast.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.motorPhaseDiag.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledSupplyCalibration = vehicle.sensors.supplyFast.compiledSupplyCalibration;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledSupplyCalibration = vehicle.sensors.supplyRegular.compiledSupplyCalibration;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationId = vehicle.sensors.supplyFast.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationId = vehicle.sensors.supplyRegular.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.supplyFast.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.supplyRegular.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::demandVehicle.compiledDemandPolicyCalibration = vehicle.riding.demandArbiter.compiledDemandPolicyCalibration;
+    bind X2CitySoftwareArchitecture::demandVehicle.compiledCalibrationId = vehicle.riding.demandArbiter.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::demandVehicle.compiledCalibrationValid = vehicle.riding.demandArbiter.compiledCalibrationValid;
     flow vBindingDispatchToAnalogFast from vehicle.platform.binding.fastIrqDispatchOut.payload to vehicle.sensors.analogFast.irqDispatchIn.payload;
-    flow vCalibrationToAnalogRegular from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.analogRegular.calibrationIn.payload;
-    flow vCalibrationToAnalogFast from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.analogFast.calibrationIn.payload;
-    flow vCalibrationToAccelerator from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.acceleratorQualify.calibrationIn.payload;
-    flow vCalibrationToBrake from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.brakeQualify.calibrationIn.payload;
-    flow vCalibrationToTemperature from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.temperatureQualify.calibrationIn.payload;
-    flow vCalibrationToHallPosition from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.hallPosition.calibrationIn.payload;
-    flow vCalibrationToMotorPhaseFast from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.motorPhaseFast.calibrationIn.payload;
-    flow vCalibrationToMotorPhaseDiag from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.motorPhaseDiag.calibrationIn.payload;
-    flow vCalibrationToSupplyFast from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.supplyFast.calibrationIn.payload;
-    flow vCalibrationToSupplyRegular from vehicle.platform.calibration.calibrationOut.payload to vehicle.sensors.supplyRegular.calibrationIn.payload;
 
     // Five regular consumers and two fast consumers preserve the acquisition split.
     flow vRegularScanToAccelerator from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.sensors.acceleratorQualify.analogSampleIn.payload;
@@ -119,7 +186,6 @@ package X2CityDetailedDesign {
     flow vFastEpochToSupply from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.sensors.supplyFast.injectedEpochIn.payload;
     flow vHallCaptureToPosition from vehicle.sensors.hallCapture.hallCaptureOut.payload to vehicle.sensors.hallPosition.hallCaptureIn.payload;
     flow vHallPositionToTraction from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.traction.hallElectricalPositionIn.payload;
-    flow vCalibrationToTractionMotion from vehicle.platform.calibration.calibrationOut.payload to vehicle.traction.calibrationIn.payload;
     flow vPlatformContextToTractionMotion from vehicle.platform.context.contextOut.payload to vehicle.traction.platformContextIn.payload;
     flow vPlatformHealthToTractionMotion from vehicle.platform.health.healthOut.payload to vehicle.traction.platformHealthIn.payload;
     flow vHallCaptureHealthToTractionMotion from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.traction.motionHealthIn.payload;
@@ -216,7 +282,6 @@ package X2CityDetailedDesign {
     flow vBatteryRestrictionToDemand from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.demandArbiter.batteryCapabilityIn.payload;
     flow vPlatformContextToDemand from vehicle.platform.context.contextOut.payload to vehicle.riding.demandArbiter.platformContextIn.payload;
     flow vPlatformHealthToDemand from vehicle.platform.health.healthOut.payload to vehicle.riding.demandArbiter.platformHealthIn.payload;
-    flow vCalibrationToDemand from vehicle.platform.calibration.calibrationOut.payload to vehicle.riding.demandArbiter.calibrationIn.payload;
 
     flow vServiceCollectToSnapshot from vehicle.service.collect.collectedOut.payload to vehicle.service.snapshot.collectedIn.payload;
     flow vHmiSettingsToService from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.service.collect.producerRecordIn.payload;
@@ -232,7 +297,6 @@ package X2CityDetailedDesign {
     flow vPlatformContextToService from vehicle.platform.context.contextOut.payload to vehicle.service.collect.contextIn.payload;
     flow vPlatformRetentionToService from vehicle.platform.retention.candidateOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vPlatformHealthToService from vehicle.platform.health.healthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vPlatformCalibrationToService from vehicle.platform.calibration.calibrationOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAnalogRegularToService from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAnalogFastToService from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.service.collect.producerRecordIn.payload;
     flow vAcceleratorToService from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.service.collect.acceleratorPositionIn.payload;

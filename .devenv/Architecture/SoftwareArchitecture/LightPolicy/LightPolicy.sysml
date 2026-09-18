@@ -19,6 +19,7 @@ package X2CitySoftwareComponent_LightPolicy {
         /* Retains the normal light request in the current session and selects independent front
            and rear logical modes from qualified inputs. It publishes light intent; physical lamp
            drive and unpowered-state behavior remain outside this software policy component. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port lightPolicyInputIn:LightPolicyInputPort;
         port lightIntentOut:LightIntentOutputPort;
         port platformContextIn:~PlatformContextOutputPort;

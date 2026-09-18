@@ -1,5 +1,10 @@
 # DD-002 — Battery protection and BMS software-unit design: BmsLink
 
+## Caller supplied execution time
+
+Invocation timing follows the canonical caller supplied `ExecutionTime` contract in [Runtime Integration Contract](../../Runtime_Integration_Contract.md). Component-specific age, expiry and timeout ownership remains defined by each unit contract.
+
+
 ## SC-BMS-LINK
 
 ### Units, interfaces and executable order
@@ -8,7 +13,7 @@
 
 `U-BMS-LINK-DECODE` dispatches accepted payloads by command. It decodes `0x03` only after the selected-unit layout is qualified; binds current/capacity scale to the same response; preserves signed-current meaning; requires reported series count 14 for pack-data qualification; and keeps optional fields independently unavailable where their qualified layout permits. It accepts `0x04` only as exactly 28 bytes of 14 ordered big-endian mV group values, preserving position identity. It accepts `0x05` only with selected-unit-supported encoding/length. Temperature conversion preserves probe position/count and uses the approved conversion. It does not infer source accuracy, actual SOC, physical plausibility limits, or configuration identity from generic protocol material.
 
-`U-BMS-LINK-PUBLISH` updates a field only from the decoder's accepted, internally consistent result. It stores receipt freshness separately from measurement age. A malformed/inconsistent frame supplies no qualifying update; an optional-field failure need not invalidate independently accepted fields. At host startup, recognized BMS reset, or loss of required source qualification, it marks affected fields for requalification. A wake or short interruption alone retains an otherwise justified unexpired field. It emits each field and set with value, validity/freshness, layout/scale/probe/group metadata and BMS producer context.
+`U-BMS-LINK-PUBLISH` updates a field only from the decoder's accepted, internally consistent result. It stores transaction receipt qualification separately from any measurement age reported by the selected unit; it never fabricates a remote sample timestamp. A malformed/inconsistent frame supplies no qualifying update; an optional-field failure need not invalidate independently accepted fields. At host startup, recognized BMS reset, or loss of required source qualification, it marks affected fields for requalification. A wake or short interruption alone retains an otherwise justified unexpired field. It emits each field and set with value, validity, layout/scale/probe/group metadata and BMS producer context.
 
 Execution is: request/receive → transaction gate → command decoder → field/set qualification → atomic publication. Publication consumes one accepted frame; consumers may combine fields only through their own cross-field qualification. Command order, retry policy, polling rate, response deadline and stale thresholds remain parameter-derivation gates from captured selected-unit behavior and energy/control budgets.
 

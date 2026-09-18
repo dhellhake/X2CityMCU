@@ -1,5 +1,10 @@
 # DD-001 — Software unit design: SessionPolicy
 
+## Caller supplied execution time
+
+Invocation timing follows the canonical caller supplied `ExecutionTime` contract in [Runtime Integration Contract](../../Runtime_Integration_Contract.md). Component-specific age, expiry and timeout ownership remains defined by each unit contract.
+
+
 ### U-SESSION-ELIGIBILITY and U-SESSION-REPORT
 
 Eligibility starts ineligible in each new vehicle context. `U-SESSION-ELIGIBILITY` receives the concrete `AcceleratorPosition` once on `acceleratorPositionIn`; it evaluates contained qualification and retains health/diagnostic evidence even when Position is unavailable. Only the complete parent Ready guard issues an authority token with current context and expiry; any absent, invalid, expired or mismatched prerequisite withdraws it. A recognized parent-defined riding fault latches current-session inhibition, which cleared observation alone cannot remove. The unit consumes self-test results and does not claim their diagnostic coverage or physical inhibition.

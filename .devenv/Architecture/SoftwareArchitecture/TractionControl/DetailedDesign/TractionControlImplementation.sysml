@@ -35,7 +35,12 @@ package X2CityDetailedComponent_TractionControlImplementation {
         port tractionObservationOut:DetailedTractionObservationOutputPort :>> TractionControl::tractionObservationOut;
         port platformContextIn:~X2CitySoftwareContract_Platform::PlatformContextOutputPort :>> TractionControl::platformContextIn;
         port platformHealthIn:~X2CitySoftwareContract_Platform::PlatformHealthOutputPort :>> TractionControl::platformHealthIn;
-        port calibrationIn:~X2CitySoftwareContract_Platform::CalibrationBundleOutputPort :>> TractionControl::calibrationIn;
+        // The inherited component owns one immutable compiled parameter set. These attributes
+        // bind that same set to the two detailed estimators; no unit receives a runtime message.
+        attribute compiledCalibrationId:String :>> TractionControl::compiledCalibrationId;
+        attribute compiledActualOutputEstimationCalibration:ActualOutputEstimationCalibration :>> TractionControl::compiledActualOutputEstimationCalibration;
+        attribute compiledMotionEstimationCalibration:MotionEstimationCalibration :>> TractionControl::compiledMotionEstimationCalibration;
+        attribute compiledCalibrationValid:Boolean :>> TractionControl::compiledCalibrationValid;
 
         part accept:TractionCommandAcceptor;
         part actualOutput:ActualTractionOutputEstimator;
@@ -46,6 +51,17 @@ package X2CityDetailedComponent_TractionControlImplementation {
         // Boundary-to-unit mappings preserve the current direct handoffs; they introduce no
         // scheduler, queue, second command path, or change to the qualification conditions.
         flow authorityToAccept from ridingAuthorityIn.payload to accept.authorityIn.payload;
+        // This selected realization inherits TractionControl.executionTimeIn as its sole
+        // boundary occurrence. The direct fast caller supplies the same fixed invocation
+        // reference to every unit within this one bounded component invocation. A separately
+        // dispatched component or standalone unit receives a fresh caller sample. These mappings
+        // add no scheduler or queue; timeout/deadline guards conservatively cover elapsed time
+        // from this snapshot through their relevant effect.
+        flow executionTimeToAccept from executionTimeIn.payload to accept.executionTimeIn.payload;
+        flow executionTimeToActualOutput from executionTimeIn.payload to actualOutput.executionTimeIn.payload;
+        flow executionTimeToMotion from executionTimeIn.payload to motion.executionTimeIn.payload;
+        flow executionTimeToControl from executionTimeIn.payload to control.executionTimeIn.payload;
+        flow executionTimeToOutput from executionTimeIn.payload to output.executionTimeIn.payload;
         flow commandToAccept from wheelTorqueRequestIn.payload to accept.commandIn.payload;
         flow hallToControl from hallElectricalPositionIn.payload to control.electricalPositionIn.payload;
         flow hallToMotion from hallElectricalPositionIn.payload to motion.electricalPositionIn.payload;
@@ -68,8 +84,12 @@ package X2CityDetailedComponent_TractionControlImplementation {
         flow platformContextToActualOutput from platformContextIn.payload to actualOutput.platformContextIn.payload;
         flow platformHealthToMotion from platformHealthIn.payload to motion.platformHealthIn.payload;
         flow platformHealthToActualOutput from platformHealthIn.payload to actualOutput.platformHealthIn.payload;
-        flow calibrationToMotion from calibrationIn.payload to motion.calibrationIn.payload;
-        flow calibrationToActualOutput from calibrationIn.payload to actualOutput.calibrationIn.payload;
+        bind compiledCalibrationId = motion.compiledCalibrationId;
+        bind compiledCalibrationId = actualOutput.compiledCalibrationId;
+        bind compiledMotionEstimationCalibration = motion.compiledMotionEstimationCalibration;
+        bind compiledActualOutputEstimationCalibration = actualOutput.compiledActualOutputEstimationCalibration;
+        bind compiledCalibrationValid = motion.compiledCalibrationValid;
+        bind compiledCalibrationValid = actualOutput.compiledCalibrationValid;
         flow acceptedDemandToControl from accept.acceptedCommandOut.payload to control.acceptedDemandIn.payload;
     }
 }

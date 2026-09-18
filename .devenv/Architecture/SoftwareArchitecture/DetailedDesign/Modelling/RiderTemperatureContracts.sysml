@@ -2,7 +2,6 @@ package X2CityDetailedUnit_RiderTemperatureInterfaces {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityDetailedUnit_AnalogAcquisition::*;
-    private import X2CityDetailedUnit_PlatformCalibration::*;
 
     // Compatibility aliases preserve the original public API names and qualified identities.
     alias AcceleratorPositionRecord for X2CityDetailedUnit_AcceleratorInterface::AcceleratorPositionRecord;
@@ -18,10 +17,6 @@ package X2CityDetailedUnit_RiderTemperatureInterfaces {
     port def AnalogSampleInputPort {
         doc /* The accelerator, brake and temperature qualifiers receive only the completed regular-DMA scan from U-ANALOG-ACQ-REGULAR. */
         in item payload:AnalogSampleRecord;
-    }
-    port def CalibrationInputPort {
-        doc /* Receives the active channel conversion, plausibility and calibration data used to qualify rider and temperature observations. */
-        in item payload:CalibrationBundleRecord;
     }
     port def SensorHealthOutputPort {
         doc /* Brake and temperature qualifiers publish their conversion, plausibility and source health so dependent policy can withhold affected observations. */

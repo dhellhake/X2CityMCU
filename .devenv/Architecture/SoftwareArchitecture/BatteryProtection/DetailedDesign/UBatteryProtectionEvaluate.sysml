@@ -14,5 +14,5 @@ package X2CityDetailedUnit_BatteryProtectionEvaluate {
     }
     part def BatteryCapabilityEvaluator {
         /* Evaluates qualified battery observations and operating context into independent charge/discharge envelope candidates. It preserves reason and qualification metadata; it does not implement physical protection or current regulation. */
-        port observationsAndContextIn:BatteryObservationsAndContextInputPort; port candidateOut:EnvelopeCandidateOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port observationsAndContextIn:BatteryObservationsAndContextInputPort; port candidateOut:EnvelopeCandidateOutputPort; }
 }

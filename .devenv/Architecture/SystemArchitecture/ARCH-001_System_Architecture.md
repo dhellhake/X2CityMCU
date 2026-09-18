@@ -178,7 +178,7 @@ The [battery qualification/event matrix](../../Requirements/System_Requirements/
 
 The [speed-cutoff budget](../../Requirements/System_Requirements/Interface_Qualification.md#speed-cutoff-uncertainty-and-response-budget) connects source error/age and zero-command delay to the active cutoff without selecting a threshold. The [input/coherence and transport contracts](../../Requirements/System_Requirements/Interface_Qualification.md#information-coherence-and-command-authority) define current-context authority and nominal wire-time contributions. The [startup/runtime catalogue](../../Requirements/System_Requirements/Power_Startup_and_Faults.md#startup-and-runtime-fault-scope) assigns diagnostic contributors and coverage gaps. Neither selects a sensing circuit, execution monitor or completed protective architecture.
 
-For every numerical or temporal contract, define its reference, valid range, uncertainty, qualification/freshness and response budget before dependent allocation can be accepted. Logical validity metadata need not imply a particular wire format, timestamp implementation or sensor.
+For every numerical or temporal contract, define its reference, valid range, uncertainty, qualification and local age and response budget before dependent allocation can be accepted. Logical validity metadata need not imply a particular wire format, timestamp implementation or sensor.
 
 ## Functional-concept binding
 

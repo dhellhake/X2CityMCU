@@ -8,8 +8,23 @@ package X2CitySoftwareContract_TractionControl {
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
     private import X2CitySoftwareContract_Platform::*;
+    attribute def ActualOutputEstimationCalibration {
+        attribute estimatorId:String;
+        attribute motorTorqueConstantNewtonMetresPerAmpere:Real;
+        attribute transmissionRatio:Real;
+        attribute estimatorResponseBoundMicroseconds:Integer;
+        attribute buildValidated:Boolean;
+    }
+    attribute def MotionEstimationCalibration {
+        attribute electricalMapId:String;
+        attribute motorPolePairCount:Integer;
+        attribute finalDriveRatio:Real;
+        attribute loadedWheelCircumferenceMetres:Real;
+        attribute standstillObservabilityBoundMicroseconds:Integer;
+        attribute buildValidated:Boolean;
+    }
     port def RidingAuthorityInputPort :> X2CityContract_SessionPolicy::RidingAuthorityInputPort {
-        doc /* Receives SessionPolicy authority generation and its independent validity/expiry context. TractionControl accepts commands only when this authority is current in its named clock context. */
+        doc /* Receives SessionPolicy authority generation and its independent validity/expiry context. TractionControl accepts commands only when this authority is current in the common host-boot monotonic microsecond domain. */
         in item payload:RidingAuthority :>> X2CityContract_SessionPolicy::RidingAuthorityInputPort::payload;
     }
     port def WheelTorqueRequestInputPort :> X2CityContract_DemandPolicy::WheelTorqueCommandInputPort {
@@ -25,7 +40,7 @@ package X2CitySoftwareContract_TractionControl {
         in item payload:PhaseCurrentEpoch;
     }
     port def FastDcLinkVoltageInputPort {
-        doc /* Receives qualified fast DC-link voltage from SupplyInterface for fast control scaling and protection. The value is produced from the dedicated injected acquisition path and its active calibration context. */
+        doc /* Receives qualified fast DC-link voltage from SupplyInterface for fast control scaling and protection. The value is produced from the dedicated injected acquisition path and its fixed compiled configuration provenance. */
         in item payload:FastDcLinkVoltage;
     }
     port def TractionSensorHealthInputPort {
@@ -40,7 +55,7 @@ package X2CitySoftwareContract_TractionControl {
     item def TractionOutputStageExchange:>ContextualSoftwareInformation {
         attribute currentObservationGeneration:CurrentObservationGeneration;
         attribute outputStageObservationAvailable:Boolean;
-        attribute outputStageObservationTimestampTicks:Integer;
+        attribute outputStageObservationTimeMicroseconds:Integer;
         attribute outputStageState:String;
         attribute outputStageEvidenceSourceId:String;
         attribute outputStageEvidenceConfigurationId:String;
@@ -76,8 +91,9 @@ package X2CitySoftwareComponent_TractionControl {
            component boundary does not imply a task, queue or delayed fast handoff. Its physical
            output boundary provides physical-stage state/provenance evidence. U-TRACTION-ACTUAL-
            OUTPUT combines it with qualified phase current, electrical position, physical motion
-           and activated estimation calibration before publishing an actual wheel-torque estimate;
+           and compiled estimation calibration before publishing an actual wheel-torque estimate;
            it never turns a requested torque command into actual-torque evidence. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port ridingAuthorityIn:RidingAuthorityInputPort :>> MotorControl::ridingAuthorityIn;
         port wheelTorqueRequestIn:WheelTorqueRequestInputPort :>> MotorControl::wheelTorqueCommandIn;
         port hallElectricalPositionIn:HallElectricalPositionInputPort;
@@ -95,7 +111,12 @@ package X2CitySoftwareComponent_TractionControl {
         port tractionObservationOut:TractionObservationOutputPort :>> MotorControl::serviceReportOut;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
-        port calibrationIn:~CalibrationBundleOutputPort;
+        // Fixed build-time estimation and motion parameters. The ID is read-only provenance and
+        // does not select or activate calibration at runtime.
+        attribute compiledCalibrationId:String;
+        attribute compiledActualOutputEstimationCalibration:ActualOutputEstimationCalibration;
+        attribute compiledMotionEstimationCalibration:MotionEstimationCalibration;
+        attribute compiledCalibrationValid:Boolean; // Build/startup validation failure withholds dependent estimate/motion results.
         // JEOS-to-output fast handoffs are Detailed Design-owned unit internals; no public SC
         // fast ports or ARCH-003 routes exist here.
     }

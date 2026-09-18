@@ -23,6 +23,7 @@ package X2CitySoftwareContract_SettingsPolicy {
         out item payload:RidingSettingsState;
     }
     item def ActiveRidingSettings:>ContextualSoftwareInformation {
+        attribute activeSettingsUpdateTimeMicroseconds:Integer;
         attribute activeLevel:String;
         attribute activeSpeedLimitKilometresPerHour:Real;
         attribute activeSettingsGeneration:ContextGeneration;
@@ -42,6 +43,7 @@ package X2CitySoftwareComponent_SettingsPolicy {
         /* Validates and retains requested, pending, and active riding settings, publishing the
            applied state for session and demand policy. It preserves owner and qualification context
            across requests without selecting a concrete HMI or actuator implementation. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port settingsRequestIn:SettingsRequestInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;

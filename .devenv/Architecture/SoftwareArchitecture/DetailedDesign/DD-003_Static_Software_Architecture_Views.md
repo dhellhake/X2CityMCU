@@ -76,7 +76,6 @@ contracts; unit model files are linked for review of the corresponding ports.
 | `appliedTractionStateOut` | `P-TR-ACTUAL-OUTPUT-O`; `SW-I-005` / `R-V13` | [`U-TRACTION-ACTUAL-OUTPUT.appliedTractionStateOut`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) → [`U-TRACTION-ACCEPT.actualOutputIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml); [`U-TRACTION-ACCEPT.appliedTractionStateOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → public boundary | `REQ-SYS-TRQCTL-001`, `UR-TRACTION-ACTUAL-OUTPUT-001` |
 | `platformContextIn` | `SW-I-009`; current-context service input | [`U-TRACTION-MOTION.platformContextIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.platformContextIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-HSI-007`, `REQ-SYS-PLT-001` |
 | `platformHealthIn` | `SW-I-009`; current-health service input | [`U-TRACTION-MOTION.platformHealthIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.platformHealthIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-HSI-007`, `REQ-SYS-PLT-001` |
-| `calibrationIn` | `SW-I-009`; current-calibration service input | [`U-TRACTION-MOTION.calibrationIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.calibrationIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-PLT-001`, `REQ-SYS-PLT-CAL-001` |
 
 `U-TRACTION-ACCEPT` forwards the independently produced actual-output record to
 Demand without gating or refreshing it and publishes the legacy observation
@@ -99,7 +98,7 @@ unit sensor inputs accept the software schema types; producer wrappers
 `HallElectricalPositionRecord`, `PhaseCurrentFeedbackRecord` and
 `FastDcLinkVoltageRecord` remain detailed subtypes. The DD observation boundary
 `TractionObservationRecord` refines `TractionObservation` while retaining
-`UnitInformationEnvelope`. Software `ExpiryTimestampTicks` is an `Integer`
+`UnitInformationEnvelope`. Software `ExpiryTimeMicroseconds` is an `Integer`
 refinement, while logical `Expiry` remains abstract and opaque. Values, field
 meanings and expiry semantics remain unchanged; this schema alignment is scoped
 to the MotorControl pilot and does not alter requirement contracts.
@@ -136,7 +135,6 @@ flowchart TB
         TRDD -->|contains| UTO[U-TRACTION-OUTPUT]
         PLATFORM[SC-PLATFORM] -->|contains| UPC[U-PLATFORM-CONTEXT]
         PLATFORM -->|contains| UPB[U-PLATFORM-BINDING]
-        PLATFORM -->|contains| UPCA[U-PLATFORM-CALIBRATION]
         PLATFORM -->|contains| UPR[U-PLATFORM-RETENTION]
         PLATFORM -->|contains| UPH[U-PLATFORM-HEALTH]
     end
@@ -184,9 +182,11 @@ flowchart LR
         FUT[ADC/TIM/DMA/IRQ and compiler plus hardware barrier support: proposed]
     end
     subgraph P[Project bindings inside named units]
+        CALL[CallingExecutionContextBoundary\ncallingExecutionContext / ExecutionTime]
         BOOT[U-PLATFORM-BINDING\nB-PLATFORM-BOOT]
         DISP[U-PLATFORM-BINDING\nB-PLATFORM-IRQ-DISPATCH]
         DMA[U-ANALOG-ACQ-REGULAR\nB-REGULAR-ADC-DMA]
+        SLOW[Scheduled regular qualification and policy units]
     end
     subgraph F[Direct fast traction chain]
         JEOS[U-ANALOG-ACQ-FAST\nB-FAST-ANALOG-JEOS / InjectedEpoch]
@@ -194,7 +194,11 @@ flowchart LR
         FOC["U-TRACTION-CONTROL<br/>PWMAndADCSamplingPlan: CCR1..3, CCR4, ADC context"]
         OUT[U-TRACTION-OUTPUT\nsole CCR1..4 + JSQR / UDIS commit lease]
     end
-    OS[CortexOs cyclic scheduler\ncurrent tasks] -->|scheduled regular qualification/policy| DMA
+    OS[CortexOs cyclic scheduler\ncurrent tasks] -->|releases selected cyclic invocations| DMA
+    OS -->|releases selected cyclic invocations| SLOW
+    CALL -->|fresh executionTimeIn per invocation| DMA
+    CALL -->|fresh executionTimeIn per invocation| SLOW
+    CALL -->|fresh executionTimeIn per direct fast invocation| JEOS
     JEOS == direct raw epoch ==> QUAL
     QUAL == direct, no queue ==> FOC
     BOOT --> DISP
@@ -208,7 +212,7 @@ flowchart LR
     Q -. scheduled project routes only .-> OS
 ```
 
-Solid fast-path edges are direct calls. Dashed nodes identify capability work, not implemented drivers or intercom endpoints. Project route identity, context, freshness, expiry and fault policy remain outside generic `src/os` transport mechanics.
+Solid fast-path edges are direct calls. `CallingExecutionContextBoundary` represents the task or IRQ caller, not CortexOs as a modeled time-consuming component: it samples live time and supplies `executionTimeIn` directly to each invoked unit or group. Bounded internal leaves may inherit one fixed reference within the parent invocation. Dashed nodes identify capability work, not implemented drivers or intercom endpoints. Project route identity, context, age, expiry and fault policy remain outside generic `src/os` transport mechanics.
 
 ### Battery, BMS and service domain
 
@@ -253,7 +257,7 @@ flowchart LR
 
 ## Demand-arbitration typed boundary
 
-`U-DEMAND-ARBITER` has no generic `lightingContextIn` collection. Each ingress below carries its own value, qualification, freshness, producer/context, configuration identity and generation. Demand evaluates one coherent snapshot; a route being drawn does not make a prior record current.
+`U-DEMAND-ARBITER` has no generic `lightingContextIn` collection. Each ingress below carries its own value, qualification, producer/context, configuration identity and generation; age is evaluated locally from caller supplied `ExecutionTime`. Demand evaluates one coherent snapshot; a route being drawn does not make a prior record current.
 
 ```mermaid
 flowchart LR
@@ -265,21 +269,21 @@ flowchart LR
     MOT[U-TRACTION-MOTION\nQualifiedMotion] -->|P-DEM-MOTION-I| D
     OUT[U-TRACTION-ACTUAL-OUTPUT\nActualTractionOutput estimate] -->|P-DEM-ACTUAL-OUTPUT-I| D
     PLT[U-PLATFORM-CONTEXT / HEALTH\ncurrent generation] --> D
-    CAL[U-PLATFORM-CALIBRATION\nresolved validated DemandPolicyCalibration data] --> D
-    D -->|"P-DEM-COMMAND-O<br/>requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimestampTicks, commandClockId/context"| TA[U-TRACTION-ACCEPT]
-    TA -->|accepted signed request\neffectiveAcceptedExpiryTimestampTicks with acceptanceClockId/context| TC[U-TRACTION-CONTROL]
+    CAL[SC-DEMAND build\nimmutable DemandPolicyCalibration] -.->|owner-local attribute| D
+    D -->|"P-DEM-COMMAND-O<br/>requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds"| TA[U-TRACTION-ACCEPT]
+    TA -->|accepted signed request\neffectiveAcceptedExpiryTimeMicroseconds| TC[U-TRACTION-CONTROL]
     D -->|P-DEM-DIAGNOSTIC-O\nservice only| SI[U-SERVICE-INFO-COLLECT]
 ```
 
-`U-TRACTION-MOTION` is a real producer route, not a reinterpretation of a Demand command: it interprets current qualified Hall capture/position evidence only with current capture health, map/pole-pair/final-drive/loaded-wheel calibration and a released bounded-observability/standstill criterion before publishing speed, direction and standstill. A static Hall state or no edge alone is unavailable for this purpose. `U-TRACTION-ACTUAL-OUTPUT` publishes `ActualTractionOutput` only as a current qualified estimate from post-stage physical evidence with provenance plus same-operation phase-current/position and qualified vehicle-motion evidence with activated estimator calibration. It operates independently of acceptance; `U-TRACTION-ACCEPT` passes that observation without refreshing or gating it while separately issuing accepted demand to control. Its applied-torque and powered-forward-travel fields must be unavailable if that chain has only a requested torque, FOC reference, register/PWM state, output-stage event or acceptance result. The command is a request; neither observation proves physical torque or vehicle travel.
+`U-TRACTION-MOTION` is a real producer route, not a reinterpretation of a Demand command: it interprets current qualified Hall capture/position evidence only with current capture health, its compiled map/pole-pair/final-drive/loaded-wheel parameters and a released bounded-observability/standstill criterion before publishing speed, direction and standstill. A static Hall state or no edge alone is unavailable for this purpose. `U-TRACTION-ACTUAL-OUTPUT` publishes `ActualTractionOutput` only as a current qualified estimate from post-stage physical evidence with provenance plus same-operation phase-current/position and qualified vehicle-motion evidence with its immutable compiled estimator parameters. It operates independently of acceptance; `U-TRACTION-ACCEPT` passes that observation without refreshing or gating it while separately issuing accepted demand to control. Its applied-torque and powered-forward-travel fields must be unavailable if that chain has only a requested torque, FOC reference, register/PWM state, output-stage event or acceptance result. The command is a request; neither observation proves physical torque or vehicle travel.
 
 | Decision input/output | Consumer acceptance and ownership |
 |---|---|
 | Active settings | Only the active level/speed setting is used. Pending values, receipt order and setting activation remain `SC-SET` ownership. |
-| Authority and command | `authorityExpiryTimestampTicks` and `commandExpiryTimestampTicks` carry independent decision sequences and named `authorityClockId`/`authorityClockContextId` and `commandClockId`/`commandClockContextId`. Acceptance emits `effectiveAcceptedExpiryTimestampTicks` only after clock/context equality or qualified conversion; Demand cannot refresh authority by issuing a command. |
+| Authority and command | `authorityExpiryTimeMicroseconds` and `commandExpiryTimeMicroseconds` carry independent decision sequences in the shared host monotonic domain. Acceptance emits `effectiveAcceptedExpiryTimeMicroseconds`; Demand cannot refresh authority by issuing a command. |
 | Motion and actual output | Demand requires current qualified motion for speed/standstill decisions and current qualified actual positive applied torque plus forward travel to re-arm regeneration after stop. Hand-push travel cannot satisfy the latter proof. |
 | Capability | `BatteryCapabilityEnvelope` supplies independently qualified positive/negative ceilings, reasons and restriction generations. Demand clamps signs independently, owns regeneration-recovery episode qualification, and does not own protection. |
-| Calibration and diagnostic | `DemandPolicyCalibration` carries resolved, validated release-controlled maps, ramps, taper, reference limits and timing-bound data. Diagnostic reason/generation goes one way to service; it has no rider or control route. |
+| Calibration and diagnostic | `SC-DEMAND` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. Diagnostic reason/generation goes one way to service; it has no rider or control route. |
 
 ## Static local-interface view
 

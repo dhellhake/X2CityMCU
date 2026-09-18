@@ -20,5 +20,5 @@ package X2CityDetailedUnit_HmiAdapter {
     }
     part def HmiAdapterUnit {
         /* Interprets qualified VD18MT settings/light input and forms outgoing HMI-related reports. It owns transport/parser observations and link-loss handling, while retaining no authority to grant operation. */
-        port settingsOut:HmiSettingsOutputPort; port lightOut:HmiLightOutputPort; port reportIn:HmiReportInputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port settingsOut:HmiSettingsOutputPort; port lightOut:HmiLightOutputPort; port reportIn:HmiReportInputPort; }
 }

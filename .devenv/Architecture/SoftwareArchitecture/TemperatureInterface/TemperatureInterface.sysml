@@ -2,6 +2,17 @@ package X2CitySoftwareContract_TemperatureInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
+    attribute def TemperatureCalibration {
+        attribute boardTemperatureSourceId:String;
+        attribute motorTemperatureSourceId:String;
+        attribute engineeringUnit:String; // degC.
+        attribute boardTemperatureOffsetCelsius:Real;
+        attribute boardTemperatureGainCelsiusPerAdcCode:Real;
+        attribute motorTemperatureOffsetCelsius:Real;
+        attribute motorTemperatureGainCelsiusPerAdcCode:Real;
+        attribute boardAdcRank:Integer;
+        attribute motorAdcRank:Integer;
+    }
     port def AnalogSampleInputPort {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for configured temperature channels. TemperatureInterface applies accepted board or motor calibration and retains source rank, sequence and timestamp provenance. */
         in item payload:AnalogSample;
@@ -11,8 +22,8 @@ package X2CitySoftwareContract_TemperatureInterface {
         attribute temperatureCelsius:Real;
         attribute sourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
-        attribute sampleTimestampTicks:Integer;
-        attribute calibrationContextId:String;
+        attribute sampleTimeMicroseconds:Integer;
+        attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def QualifiedTemperatureOutputPort {
         doc /* Publishes qualified temperature observations for the configured traction-board and motor sources to SessionPolicy, BatteryProtection and service aggregation. The output is converted semantic temperature, with source and calibration context retained; battery temperature observations come through BmsLink. */
@@ -33,11 +44,14 @@ package X2CitySoftwareComponent_TemperatureInterface {
         /* Converts regular-scan temperature channels under accepted calibration and publishes
            qualified temperature/current health. It owns no thermal operating decision or
            battery restriction. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port analogSampleIn:AnalogSampleInputPort;
         port qualifiedTemperatureOut:QualifiedTemperatureOutputPort;
         port temperatureHealthOut:TemperatureHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
-        port calibrationIn:~CalibrationBundleOutputPort;
+        attribute compiledCalibrationId:String;
+        attribute compiledCalibration:TemperatureCalibration;
+        attribute compiledCalibrationValid:Boolean; // Startup check failure withholds usable temperature conversion.
     }
 }

@@ -1,5 +1,10 @@
 # DD-002 — Battery protection and BMS software-unit design: ServiceInformation
 
+## Caller supplied execution time
+
+Invocation timing follows the canonical caller supplied `ExecutionTime` contract in [Runtime Integration Contract](../../Runtime_Integration_Contract.md). Component-specific age, expiry and timeout ownership remains defined by each unit contract.
+
+
 ## SC-SERVICE-INFO
 
 ### Units, interfaces and executable order

@@ -7,6 +7,9 @@ package X2CitySoftwareContract_BmsLink {
     }
     attribute def BmsSourceQualificationContext;
     item def BmsObservation:>ContextualSoftwareInformation {
+        // Time at which BmsLink accepted this transport observation; it is not asserted as a
+        // physical cell-acquisition time within the opaque supplied BMS.
+        attribute bmsObservationReceiptTimeMicroseconds:Integer;
         attribute sourceQualificationContext:BmsSourceQualificationContext;
     }
     port def BmsObservationOutputPort {
@@ -23,6 +26,7 @@ package X2CitySoftwareComponent_BmsLink {
         /* Exchanges read transactions with the supplied BMS endpoint and interprets accepted
            responses into qualified, provenance-preserving battery observations. It does not
            implement vendor BMS firmware or physical protection. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port bmsTransportExchange:BmsTransportExchangePort;
         port bmsObservationOut:BmsObservationOutputPort;
         port platformContextIn:~PlatformContextOutputPort;

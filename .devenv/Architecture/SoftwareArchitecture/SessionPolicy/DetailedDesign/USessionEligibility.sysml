@@ -25,6 +25,7 @@ package X2CityDetailedUnit_SessionEligibility {
     }
     part def SessionEligibilityEvaluator {
         /* Evaluates current Ready prerequisites and riding-session inhibition to publish authority only when all required facts are current and qualified. Direct sensor-health conditions retain producer source/reason for the existing first-recognized-fault policy, while the independent PlatformHealthRecord retains platform fault/readiness input; this unit owns neither physical proof nor sensor aggregation. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port prerequisitesIn:SessionEligibilityInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         // A typed current physical-motion result gates Ready; absence is not standstill.

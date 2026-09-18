@@ -1,18 +1,21 @@
 package X2CityDetailedUnit_AcceleratorInterface {
+    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::CalibrationInputPort;
 
     item def AcceleratorPositionRecord :> AcceleratorPosition;
     port def AcceleratorPositionOutputPort {
-        doc /* U-ACCELERATOR-QUALIFY sends one position-and-health composite to Settings, Session, Demand and Service. Position is used only when its contained Qualification supports it; unavailability and current health are published even with no new ADC sample, without refreshing Position sample provenance or measurement freshness. */
+        doc /* U-ACCELERATOR-QUALIFY sends one position-and-health composite to Settings, Session, Demand and Service. Position is used only when its contained Qualification supports it; unavailability and current health are published even with no new ADC sample, without rejuvenating Position sample provenance or age. */
         out item payload:AcceleratorPositionRecord;
     }
     part def AcceleratorQualifier {
         port analogSampleIn:AnalogSampleInputPort;
-        port calibrationIn:CalibrationInputPort;
+        attribute compiledCalibrationId:String;
+        attribute compiledCalibration:AcceleratorCalibration;
+        attribute compiledCalibrationValid:Boolean;
+        port executionTimeIn:ExecutionTimeInputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
     }
-    // Each owner interprets only its named regular scan under the active calibration/context.
+    // The owner's fixed build-time set qualifies its named regular scan; configuration provenance is not live state.
 }

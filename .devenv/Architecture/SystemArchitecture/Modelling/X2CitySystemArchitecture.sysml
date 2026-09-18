@@ -7,7 +7,6 @@ package X2CitySystemArchitecture {
     private import X2CityComponent_MotorControl::*;
 
     alias ValidityStatus for X2CitySharedContracts::ValidityStatus;
-    alias FreshnessStatus for X2CitySharedContracts::FreshnessStatus;
     alias SourceContext for X2CitySharedContracts::SourceContext;
     alias Expiry for X2CitySharedContracts::Expiry;
     alias QualifiedInformationRecord for X2CitySharedContracts::QualifiedInformationRecord;

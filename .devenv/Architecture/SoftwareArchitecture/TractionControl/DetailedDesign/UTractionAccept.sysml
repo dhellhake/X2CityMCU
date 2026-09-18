@@ -6,7 +6,7 @@ package X2CityDetailedUnit_TractionAccept {
     private import X2CitySoftwareContract_TractionControl::*;
     // Owner: SC-TRACTION-CTRL.V; DD-001; REQ-SYS-TRQACC-001; SW-I-004/005.
     port def TractionAuthorityInputPort {
-        doc /* Receives Session authority with generation, expiry and clock context for independent acceptance checks. */
+        doc /* Receives Session authority with generation and expiry in the common host-boot monotonic microsecond domain for independent acceptance checks. */
         in item payload:RidingAuthority;
     }
     port def TractionCommandInputPort {
@@ -22,14 +22,11 @@ package X2CityDetailedUnit_TractionAccept {
         out item payload:ActualTractionOutput;
     }
     item def AcceptedTractionCommandRecord :> WheelTorqueRequest {
-        // Calculated only when authority and command clock/context match, or their approved
-        // conversion is qualified: min(authority expiry, command expiry, acceptance freshness).
-        attribute effectiveAcceptedExpiryTimestampTicks:Integer;
-        attribute acceptanceClockId:String;
-        attribute acceptanceClockContextId:String;
+        // Calculated from the common-domain minimum of authority expiry and command expiry.
+        attribute effectiveAcceptedExpiryTimeMicroseconds:Integer;
     }
     port def AcceptedTractionCommandOutputPort {
-        doc /* Sends the accepted signed request to U-TRACTION-CONTROL with effectiveAcceptedExpiryTimestampTicks equal to the qualified minimum of both expiries and acceptance freshness. */
+        doc /* Sends the accepted signed request to U-TRACTION-CONTROL with effectiveAcceptedExpiryTimeMicroseconds equal to the qualified minimum of authority expiry and command expiry. A failed local timeout independently rejects or withdraws the accepted record. */
         out item payload:AcceptedTractionCommandRecord;
     }
     item def TractionObservationRecord :> UnitInformationEnvelope, TractionObservation;
@@ -40,14 +37,16 @@ package X2CityDetailedUnit_TractionAccept {
     part def TractionCommandAcceptor {
         /* Accepts only current authority and demand with independent valid expiry and matching
            context/configuration. It publishes AcceptedTractionCommandRecord only with effective
-           expiry equal to the qualified minimum of authority expiry, command expiry and the
-           acceptance freshness bound in one clock/context; otherwise its accepted record is a
-           both-sign withdrawal. The separately produced qualified actual-output observation
+            expiry equal to the qualified minimum of authority expiry and command expiry in the
+            common host-boot monotonic microsecond domain. A failed local timeout independently
+            rejects or withdraws the accepted record; any other failed acceptance condition also
+            produces both-sign withdrawal. The separately produced qualified actual-output observation
            remains published across startup, disarmed and withdrawal states; requested torque,
            PWM/register state and acceptance never substitute for actual applied wheel torque or
            powered-forward-travel evidence. It independently publishes a
            generic qualified traction-observation summary for legacy Session/Battery/Light/Service
            consumers; that summary cannot replace the typed actual-output route to Demand. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port authorityIn:TractionAuthorityInputPort;
         port commandIn:TractionCommandInputPort;
         port actualOutputIn:TractionActualOutputInputPort;

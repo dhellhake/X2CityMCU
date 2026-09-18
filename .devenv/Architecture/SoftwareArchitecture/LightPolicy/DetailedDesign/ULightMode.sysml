@@ -15,5 +15,5 @@ package X2CityDetailedUnit_LightMode {
     }
     part def LightModePolicy {
         /* Combines qualified rider/braking observations with the retained normal-light request to publish a logical front/rear light mode. The output is software intent and does not prove lamp power or visible behavior. */
-        port lightingContextIn:LightingContextInputPort; port intentOut:LightIntentOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port lightingContextIn:LightingContextInputPort; port intentOut:LightIntentOutputPort; }
 }

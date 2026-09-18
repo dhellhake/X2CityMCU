@@ -3,7 +3,7 @@ package X2CitySoftwareContract_BatteryProtection {
     // Payload covers BMS observations, input/output/path observations, effective configuration,
     // current local operating context, and validity-tagged retention candidate (reached10% state).
     port def BatteryObservationsAndContextInputPort {
-        doc /* Receives the qualified battery and operating context assembled from BMS, path observations, configuration, platform context and retained state. BatteryProtection uses the relevant freshness and validity evidence for independent positive propulsion and negative regeneration decisions. */
+        doc /* Receives the qualified battery and operating context assembled from BMS, path observations, configuration, platform context and retained state. BatteryProtection uses relevant observation age, timeout and validity evidence for independent positive propulsion and negative regeneration decisions. */
         in item payload:ContextualSoftwareInformation;
     }
     // Each sign branch carries its own value, qualification and restriction evidence. Consumers
@@ -22,6 +22,7 @@ package X2CitySoftwareContract_BatteryProtection {
         attribute restrictionEpisodeGeneration:ContextGeneration;
     }
     item def BatteryCapabilityEnvelope:>ContextualSoftwareInformation {
+        attribute capabilityAssessmentTimeMicroseconds:Integer;
         item positivePropulsion:PositivePropulsionCapability;
         item negativeRegeneration:NegativeRegenerationCapability;
         attribute lowSocPropulsionCutoffLatched:Boolean;
@@ -46,6 +47,7 @@ package X2CitySoftwareComponent_BatteryProtection {
            the vehicle reached-10% restriction/recovery above 20% with retained-context validity.
            Supplied BMS hardware remains
            the independent physical protection, while this component owns the software policy role. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port batteryObservationsAndContextIn:BatteryObservationsAndContextInputPort;
         port batteryCapabilityEnvelopeOut:BatteryCapabilityEnvelopeOutputPort;
         port platformContextIn:~PlatformContextOutputPort;

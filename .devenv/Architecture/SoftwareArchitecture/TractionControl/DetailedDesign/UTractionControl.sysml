@@ -1,4 +1,5 @@
 package X2CityDetailedUnit_TractionControl {
+    private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedSharedContracts::*;
     private import X2CityDetailedUnit_HallInterface::*;
     private import X2CityDetailedUnit_MotorPhaseInterface::*;
@@ -29,7 +30,7 @@ package X2CityDetailedUnit_TractionControl {
         in item payload:SensorHealthCondition;
     }
     port def AcceptedDemandInputPort {
-        doc /* Receives the signed accepted wheel request and rechecks effective expiry in its accepted clock/context before Nm-to-Iq realization. */
+        doc /* Receives the signed accepted wheel request and rechecks effective expiry in the common host-boot monotonic microsecond domain before Nm-to-Iq realization. */
         in item payload:AcceptedTractionCommandRecord;
     }
     port def PWMAndADCSamplingPlanOutputPort {
@@ -40,8 +41,8 @@ package X2CityDetailedUnit_TractionControl {
         /* Consumes only a current accepted signed demand with matched context/expiry, plus
            complete electrical position, phase feedback and fast Vdc for FOC/current-control
            calculation. It independently rejects stale/foreign acceptance or an expired
-           effectiveAcceptedExpiryTimestampTicks in the accepted clock/context before Nm-to-Iq
+           effectiveAcceptedExpiryTimeMicroseconds in the common host-boot monotonic domain before Nm-to-Iq
            realization. It produces PWMAndADCSamplingPlan including compare and sampling-plan data; output
            register commit belongs to TractionOutputCommitter. */
-        port electricalPositionIn:ElectricalPositionInputPort; port phaseFeedbackIn:PhaseFeedbackInputPort; port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort; port sensorHealthIn:SensorHealthInputPort; port acceptedDemandIn:AcceptedDemandInputPort; port pwmAndAdcSamplingPlanOut:PWMAndADCSamplingPlanOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port electricalPositionIn:ElectricalPositionInputPort; port phaseFeedbackIn:PhaseFeedbackInputPort; port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort; port sensorHealthIn:SensorHealthInputPort; port acceptedDemandIn:AcceptedDemandInputPort; port pwmAndAdcSamplingPlanOut:PWMAndADCSamplingPlanOutputPort; }
 }

@@ -1,8 +1,8 @@
 package X2CityDetailedUnit_TemperatureInterface {
+    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_TemperatureInterface::*;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::CalibrationInputPort;
     private import X2CityDetailedUnit_RiderTemperatureInterfaces::SensorHealthOutputPort;
 
     item def TemperatureRecord :> QualifiedTemperature;
@@ -11,10 +11,13 @@ package X2CityDetailedUnit_TemperatureInterface {
         out item payload:TemperatureRecord;
     }
     part def TemperatureQualifier {
+        port executionTimeIn:ExecutionTimeInputPort;
         port analogSampleIn:AnalogSampleInputPort;
-        port calibrationIn:CalibrationInputPort;
+        attribute compiledCalibrationId:String;
+        attribute compiledCalibration:TemperatureCalibration;
+        attribute compiledCalibrationValid:Boolean;
         port temperatureOut:TemperatureOutputPort;
         port sensorHealthOut:SensorHealthOutputPort;
     }
-    // Each owner interprets only its named regular scan under the active calibration/context.
+    // The owner's fixed build-time set qualifies its named regular scan; configuration provenance is not live state.
 }

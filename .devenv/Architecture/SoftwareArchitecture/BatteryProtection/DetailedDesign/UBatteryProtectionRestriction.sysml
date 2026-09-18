@@ -1,4 +1,5 @@
 package X2CityDetailedUnit_BatteryProtectionRestriction {
+    private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedSharedContracts::*;
     private import X2CityDetailedUnit_BatteryProtectionEvaluate::*;
     private import X2CityDetailedUnit_PlatformRetention::*;
@@ -25,5 +26,5 @@ package X2CityDetailedUnit_BatteryProtectionRestriction {
     }
     part def BatteryCapabilityRestrictor {
         /* Applies operation context to battery envelope candidates and publishes propulsion and regeneration consequences. Vehicle scope owns the reached10% restriction until qualified actual SOC exceeds 20%; retention is accepted only after requalification, and this unit does not provide physical protection. */
-        port candidateIn:BatteryEnvelopeCandidateInputPort; port retentionCandidateIn:RetentionCandidateInputPort; port envelopeOut:BatteryEnvelopeOutputPort; port presentationOut:BatteryEnvelopePresentationOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port candidateIn:BatteryEnvelopeCandidateInputPort; port retentionCandidateIn:RetentionCandidateInputPort; port envelopeOut:BatteryEnvelopeOutputPort; port presentationOut:BatteryEnvelopePresentationOutputPort; }
 }

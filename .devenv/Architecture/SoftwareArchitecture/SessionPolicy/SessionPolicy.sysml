@@ -12,13 +12,11 @@ package X2CitySoftwareContract_SessionPolicy {
     item def RidingAuthority:>ContextualSoftwareInformation, X2CityContract_SessionPolicy::RidingAuthority {
         attribute authorityGeneration:AuthorityGeneration;
         attribute authorityDecisionSequence:Integer;
-        attribute authorityDecisionTimestampTicks:Integer;
-        attribute authorityExpiryTimestampTicks:ExpiryTimestampTicks :>> X2CityContract_SessionPolicy::RidingAuthority::expiry;
-        attribute authorityClockId:String;
-        attribute authorityClockContextId:String;
+        attribute authorityDecisionTimeMicroseconds:Integer;
+        attribute authorityExpiryTimeMicroseconds:ExpiryTimeMicroseconds :>> X2CityContract_SessionPolicy::RidingAuthority::expiry;
     }
     port def RidingAuthorityOutputPort {
-        doc /* Publishes independently generated authority with decision sequence, timestamp, expiry and named clock context to DemandPolicy, TractionControl and service aggregation. A newer command or telemetry record cannot refresh this authority. */
+        doc /* Publishes independently generated authority with decision sequence, host-boot monotonic decision time and independent expiry to DemandPolicy, TractionControl and service aggregation. A newer command or telemetry record cannot refresh this authority. */
         out item payload:RidingAuthority;
     }
     item def SessionReport:>ContextualSoftwareInformation;
@@ -37,6 +35,7 @@ package X2CitySoftwareComponent_SessionPolicy {
         /* Forms Ready eligibility, retains current riding-session inhibition, and selects the
            reportable fault/session status. It issues authority generation and expiry for consumers;
            physical torque withdrawal and input self-test execution remain allocated elsewhere. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port ridingReadinessIn:RidingReadinessInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;

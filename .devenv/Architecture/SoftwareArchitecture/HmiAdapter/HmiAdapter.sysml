@@ -29,6 +29,7 @@ package X2CitySoftwareComponent_HmiAdapter {
         /* Interprets the supplied VD18MT byte exchange into qualified settings/light information
            and consumes session/battery reports for outgoing information. It owns protocol parsing
            and link-loss interpretation, while the supplied display firmware remains opaque. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port hmiTransportExchange:HmiTransportExchangePort;
         port hmiSettingsRequestOut:HmiSettingsRequestOutputPort;
         port hmiLightRequestOut:HmiLightRequestOutputPort;

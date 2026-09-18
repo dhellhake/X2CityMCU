@@ -5,7 +5,7 @@
 
 ## Scope and reading rules
 
-Every received or published record retains value, qualification/freshness and producer/reset context.  In these diagrams, `qualified` means the consumer may use the stated fact under its canonical contract; it never means a physical condition is proved.  An intent, command, acknowledgement, zero request, or logical light/status mode is software intent.  `actual-output` and `actual-activity/path` are qualified observations; their physical truth, response and protection remain system acceptance work.
+Every received or published record retains value, qualification and producer/reset context; age is evaluated by the receiving component from caller supplied `ExecutionTime`. In these diagrams, `qualified` means the consumer may use the stated fact under its canonical contract; it never means a physical condition is proved. An intent, command, acknowledgement, zero request, or logical light/status mode is software intent. `actual-output` and `actual-activity/path` are qualified observations; their physical truth, response and protection remain system acceptance work.
 
 The diagrams cover all vehicle ARCH-003 component roles. Supplied BMS and VD18MT firmware are shown only as external participants where their boundary helps explain the interaction.
 
@@ -26,7 +26,10 @@ sequenceDiagram
     participant T as SC-TRACTION-CTRL.V
     participant L as SC-LIGHT-POLICY.V
     participant SI as SC-SERVICE-INFO.V
+    participant CE as CallingExecutionContextBoundary
 
+    CE->>CE: sample live monotonic currentTimeMicroseconds immediately before each component invocation
+    CE->>P: executionTimeIn: ExecutionTime(currentTimeMicroseconds)
     P->>P: create new vehicle context, invalidate prior inputs
     P->>A: startup/reset context
     P->>BR: startup/reset context
@@ -44,7 +47,7 @@ sequenceDiagram
         S-->>D: current authority token
         S-->>T: current authority token
         D->>D: form signed command from qualified current inputs and capability
-        D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimestampTicks and commandClockId/context
+        D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds
         T->>T: accept current authority/command, require valid Hall/current/Vdc/configuration
         T->>T: FOC with zero d-axis demand and qualified torque-current target
         T-->>S: qualified acceptance/output/energy observation
@@ -99,6 +102,8 @@ The exact pins, commanded-vector-selected ADC contexts, rearm order, cache polic
 
 The selected scheduler can run cyclic slow work; it does not make a software component a task or supply an intercom endpoint. `U-ANALOG-ACQ-REGULAR` owns DMA completed-record stability, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` publishes qualified electrical position. Named accelerator, brake, temperature, supply and motor-phase units consume regular scans under their own qualification contracts. A later static intercom transport may carry a project-declared route only after its route-specific context, age, capacity and loss policy are defined.
 
+Receiver validity and qualification remain separate from local age supervision. Reading cached data, a health-only update, an invalid sample, or republishing unchanged evidence does not refresh a local measurement timeout; a genuinely new qualified sample does. Retained settings and light requests follow their component contracts and may remain current through HMI loss. If a future intercom uses the existing FIFO, one pop returns the oldest item, overflow overwrites the oldest and reports a lost count; receipt time is not acquisition time, and capacity alone supplies no time bound. Consumers retain measurement timestamps and apply private input timeouts/transport scheduling bounds.
+
 ```mermaid
 sequenceDiagram
     participant PB as U-PLATFORM-BINDING
@@ -109,9 +114,12 @@ sequenceDiagram
     participant OS as CortexOs scheduler
     participant R as Future static intercom
     participant C as Project consumer
+    participant CE as CallingExecutionContextBoundary
     PB->>AR: regular DMA completion/error dispatch, index/status only
     AR->>AR: retain stable regular record or mark unavailable
-    OS->>IQ: selected cyclic qualification (planned release timestamp)
+    OS->>CE: release selected qualifier invocation; no time argument
+    CE->>CE: sample live currentTimeMicroseconds immediately before this invocation
+    CE->>IQ: invocation(executionTimeIn)
     AR-->>IQ: completed regular scan with context/timestamp
     Note over OS,IQ: A delayed release is not observation/current time
     PB->>HC: Hall capture completion/error dispatch, index/status only
@@ -120,8 +128,11 @@ sequenceDiagram
     opt a deferred project route is qualified
         IQ->>R: static route record + context/sequence/age
         R-->>C: bounded delivery/loss mechanics
-        C->>C: apply its own expiry/fault policy
     end
+    OS->>CE: independently release consumer invocation; no time argument
+    CE->>CE: sample live currentTimeMicroseconds immediately before this invocation
+    CE->>C: invocation(executionTimeIn)
+    C->>C: apply its own expiry/fault policy, including when no new intercom data arrived
 ```
 
 For example, a lossy telemetry route can surface sequence loss, whereas `SC-SESSION` retains the first reportable fault in owned state and authority/command expiry is rejected at `U-TRACTION-ACCEPT`. VD18MT byte/link loss is interpreted only by `SC-HMI` under its existing continuity rule. These behaviors are not generic queue semantics.
@@ -155,7 +166,7 @@ This does not require an edge at rest, treat an absent edge as a default fault, 
 
 ## Demand decision, withdrawal and post-stop regeneration rearm
 
-`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimestampTicks` independently from `commandExpiryTimestampTicks`, using their named clock/context fields; a new `decisionSequence` never refreshes authority. A missing, stale, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; an unavailable positive or negative capability branch constrains only that sign. It does not reuse a prior value. The profile/ramp/taper and freshness/coherency bounds are release-controlled parameters, so this interaction claims no numerical response time.
+`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; an unavailable positive or negative capability branch constrains only that sign. It does not reuse a prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-DEMAND` build parameters, so this interaction claims no numerical response time.
 
 ```mermaid
 sequenceDiagram
@@ -174,7 +185,7 @@ sequenceDiagram
         D->>D: keep regeneration disabled
     end
     D->>D: apply both-sign inhibits; then sign-specific limits and active profile
-    D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimestampTicks and commandClockId/context
+    D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds
     D-->>SI: reason, decision generation and restriction state only
     Note over SI: no rider indication or control return
 ```

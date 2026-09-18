@@ -1,4 +1,5 @@
 package X2CityDetailedUnit_ServiceInfoSnapshot {
+    private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedSharedContracts::*;
     private import X2CityDetailedUnit_ServiceInfoCollect::*;
     // Owner: SC-SERVICE-INFO.V; DD-002. Atomic read-only current snapshot; no control return.
@@ -12,6 +13,6 @@ package X2CityDetailedUnit_ServiceInfoSnapshot {
         out item payload:ServiceSnapshotRecord;
     }
     part def ServiceSnapshotPublisher {
-        /* Forms an atomic, read-only service snapshot from collected records, preserving availability, qualification, freshness, and source context. It has no control or authority return path. */
-        port collectedIn:ServiceCollectedInputPort; port snapshotOut:ServiceSnapshotOutputPort; }
+        /* Forms an atomic, read-only service snapshot from collected records, preserving availability, qualification, source age/provenance and context. It has no control or authority return path. */
+        port executionTimeIn:ExecutionTimeInputPort; port collectedIn:ServiceCollectedInputPort; port snapshotOut:ServiceSnapshotOutputPort; }
 }

@@ -1,4 +1,5 @@
 package X2CityDetailedUnit_SessionReport {
+    private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedSharedContracts::*;
     // Owner: SC-SESSION; DD-001; UR-SESSION-002.
     item def SessionReportRecord :> UnitInformationEnvelope;
@@ -12,5 +13,5 @@ package X2CityDetailedUnit_SessionReport {
     }
     part def SessionReportPublisher {
         /* Selects and publishes the current session report group from eligibility and related observations. It reports state without granting authority or changing session inhibition. */
-        port eligibilityIn:SessionReportInputPort; port reportOut:SessionReportOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port eligibilityIn:SessionReportInputPort; port reportOut:SessionReportOutputPort; }
 }

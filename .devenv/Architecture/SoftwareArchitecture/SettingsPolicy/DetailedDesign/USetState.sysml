@@ -26,6 +26,7 @@ package X2CityDetailedUnit_SetState {
     }
     part def RidingSettingsStateManager {
         /* Validates and manages requested, pending, and active settings using current application guards and context. It publishes settings state without treating a retained value as a current startup receipt. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port requestedSettingsIn:SettingsStateInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         // Current motion is a separate standstill guard; settings never infer it from demand.

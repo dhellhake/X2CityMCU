@@ -21,6 +21,7 @@ package X2CitySoftwareComponent_ServiceInformation {
         /* Collects current producer observations together with identity, qualification, reset, and
            configuration context, then presents a read-only service snapshot. It does not perform
            the producer diagnostics or provide a return/control path. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port serviceRecordIn:ServiceRecordInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port serviceSnapshotOut:ServiceSnapshotOutputPort;

@@ -2,6 +2,17 @@ package X2CitySoftwareContract_MotorPhaseInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
+    attribute def CurrentPhaseCalibration {
+        attribute sourceId:String;
+        attribute engineeringUnit:String; // A and A/ADC-code as applicable.
+        attribute phaseAssociation:String;
+        attribute currentOffsetAmperes:Real;
+        attribute currentGainAmperesPerAdcCode:Real;
+        attribute currentPolarity:String;
+        attribute referenceCurrentAmperes:Real;
+        attribute firstAdcRank:Integer;
+        attribute secondAdcRank:Integer;
+    }
     port def FastInjectedEpochInputPort {
         doc /* Receives paired raw injected ADC values from AnalogAcquisition for same-aperture phase-current reconstruction. MotorPhaseInterface applies accepted current calibration and plausibility checks before publishing feedback. */
         in item payload:FastInjectedEpoch;
@@ -20,9 +31,9 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         attribute secondSourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
         attribute apertureNanoseconds:Real;
-        attribute sampleTimestampTicks:Integer;
+        attribute sampleTimeMicroseconds:Integer;
         attribute currentWindowAccepted:Boolean;
-        attribute calibrationContextId:String;
+        attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def PhaseCurrentEpochOutputPort {
         doc /* Publishes the qualified same-aperture three-phase current epoch to TractionControl and service aggregation. The record includes reconstruction, rank, timing and calibration context required by the fast control consumer. */
@@ -33,8 +44,8 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         attribute phaseVoltageVolts:Real;
         attribute sourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
-        attribute sampleTimestampTicks:Integer;
-        attribute calibrationContextId:String;
+        attribute sampleTimeMicroseconds:Integer;
+        attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def PhaseVoltageDiagnosticOutputPort {
         doc /* Publishes separately qualified phase-voltage diagnostic observations to BatteryProtection and service aggregation. This slow diagnostic output is not used as fast FOC feedback. */
@@ -55,6 +66,7 @@ package X2CitySoftwareComponent_MotorPhaseInterface {
         /* Owns current scaling, accepted offset/gain/polarity calibration, valid-window checks,
            same-aperture reconstruction and rank plausibility for the fast current epoch. It also
            owns separate slow regular phase-voltage diagnostics, which are never fast FOC feedback. */
+        port executionTimeIn:ExecutionTimeInputPort;
         port fastInjectedEpochIn:FastInjectedEpochInputPort;
         port analogSampleIn:AnalogSampleInputPort;
         port phaseCurrentEpochOut:PhaseCurrentEpochOutputPort;
@@ -62,7 +74,9 @@ package X2CitySoftwareComponent_MotorPhaseInterface {
         port motorPhaseHealthOut:MotorPhaseHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
-        port calibrationIn:~CalibrationBundleOutputPort;
+        attribute compiledCalibrationId:String;
+        attribute compiledCurrentPhaseCalibration:CurrentPhaseCalibration;
+        attribute compiledCalibrationValid:Boolean; // Startup check failure withholds affected phase conversion.
         // U-MOTOR-PHASE-FAST and U-MOTOR-PHASE-DIAG have distinct contexts.
     }
 }
