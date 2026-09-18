@@ -18,4 +18,6 @@ flowchart LR
 
 Settings, Session, and Demand consume the composite; Platform consumes its Qualification projection. The lower acquisition boundary may retain raw source, rank, sequence, and compiled binding information, but those details are not exported by `Position`.
 
+`AcceleratorPositionProcessing` owns one immutable compiled `AcceleratorEndpointCalibration` set containing four endpoint bounds. Its members are TBD values in volts, measured relative to the sensor reference return. Vehicle validation establishes them from stationary-handle voltage variation at each mechanical stop; their bands have ordered bounds and do not overlap. It classifies only otherwise qualified measurements: fault, stale, invalid, unavailable, or absent evidence cannot become valid through endpoint-band membership. A qualified value outside the rest band is not at rest; this model does not select intermediate mapping shape, polarity, clamping, or hardware measurement implementation.
+
 Electrical mapping and rest characterization, sensor compatibility, error, freshness, response, and recognized-fault characterization remain Draft acceptance work. This model selects no ADC, DMA, driver, circuit, queue, or Session-latch implementation.

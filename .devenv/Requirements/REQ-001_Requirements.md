@@ -145,10 +145,11 @@ The current working inventory includes the Draft interconnection/runtime refinem
 
 | Type | Default folder | Records |
 |---|---|---:|
-| System Requirement | [System_Requirements](System_Requirements) | 179 |
+| System Requirement | [System_Requirements](System_Requirements) | 183 |
 | Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 40 |
 | Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 9 |
 | Unit Requirement | [Unit_Requirements](Unit_Requirements) | 30 |
+| **Current working catalogue total** | — | **262** |
 
 | System Requirement cluster | IDs / scope | Records |
 |---|---|---:|
@@ -163,7 +164,7 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Built battery and supplied BMS](System_Requirements/Battery_Integration.md) | `REQ-SYS-BAT-002`, `REQ-SYS-BMS-*` | 10 |
 | [Energy and protection](System_Requirements/Energy_and_Protection.md) | `REQ-SYS-ENE-*` | 4 |
 | [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*` | 4 |
-| [Accelerator position identification](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/AcceleratorPositionIdentification_Requirements.md) | System; Draft `REQ-SYS-ACC-001`, `REQ-SYS-ACC-004`–`009`, `REQ-SYS-ACC-022`, `REQ-SYS-ACC-024`, `026`–`027`, `029`, `031` | 13 |
+| [Accelerator position identification](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/AcceleratorPositionIdentification_Requirements.md) | System; Draft `REQ-SYS-ACC-001`, `REQ-SYS-ACC-004`–`009`, `REQ-SYS-ACC-022`, `REQ-SYS-ACC-024`, `026`–`027`, `029`, `031`, `046`–`049` | 17 |
 | [System hardware/software interface](System_Requirements/System_Hardware_Software_Interface.md) | Approved in R1.8 `REQ-SYS-HSI-001`–`007`; Draft successor `REQ-SYS-HSI-008` debugger inspection and Draft `REQ-SYS-HSI-009` traction interconnection | 9 |
 | [Service and durability](System_Requirements/Service_and_Durability.md) | `REQ-VEH-DUR-*`, `REQ-VEH-SVC-*`, `REQ-SYS-SVC-*` | 4 |
 | [Riding safety functions](System_Requirements/Riding_Safety_Functions.md) | Draft `REQ-SYS-FSC-001`, `REQ-VEH-FSC-002/003/004` | 4 |

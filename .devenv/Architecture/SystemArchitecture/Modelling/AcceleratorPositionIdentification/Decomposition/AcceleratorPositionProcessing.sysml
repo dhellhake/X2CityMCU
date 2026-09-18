@@ -18,6 +18,12 @@ package X2CityContract_AcceleratorPositionProcessing {
     port def AcceleratorHealthInputPort { doc /* Receives the Qualification health projection; it cannot make a Position valid or fresh. */ in item qualification:AcceleratorPositionQualification; }
     interface def IfA001AcceleratorPosition { end producer:AcceleratorPositionOutputPort; end consumer:AcceleratorPositionInputPort; flow producer.acceleratorPosition to consumer.acceleratorPosition; }
     interface def IfA008AcceleratorHealth { end producer:AcceleratorHealthOutputPort; end consumer:AcceleratorHealthInputPort; flow producer.qualification to consumer.qualification; }
+    attribute def AcceleratorEndpointCalibration {
+        attribute restVoltageMinimumVolts:Real { doc /* Validated lower bound, in volts, of the accelerator signal relative to sensor reference return at the mechanical released stop. */ }
+        attribute restVoltageMaximumVolts:Real { doc /* Validated upper bound, in volts, of the accelerator signal relative to sensor reference return at the mechanical released stop. */ }
+        attribute fullThrottleVoltageMinimumVolts:Real { doc /* Validated lower bound, in volts, of the accelerator signal relative to sensor reference return at the mechanical full-throttle stop. */ }
+        attribute fullThrottleVoltageMaximumVolts:Real { doc /* Validated upper bound, in volts, of the accelerator signal relative to sensor reference return at the mechanical full-throttle stop. */ }
+    }
 }
 
 package X2CityComponent_AcceleratorPositionProcessing {
@@ -25,6 +31,7 @@ package X2CityComponent_AcceleratorPositionProcessing {
     private import X2CityContract_AcceleratorSignalMeasurement::*;
     part def AcceleratorPositionProcessing { // LE-ACCELERATOR-QUAL
         /* Software responsibility for handling accelerator measurement evidence and publishing semantic position/rest, measurement time, and qualification. */
+        attribute endpointCalibration:AcceleratorEndpointCalibration { doc /* One immutable compiled calibration set; all four limits are determined during vehicle validation and used and validated together. */ }
         port measurementIn:AcceleratorMeasurementInputPort { doc /* Consumes abstract accelerator measurement evidence. */ }
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Provides the one semantic Position/Qualification composite. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Provides only the Qualification projection to platform health. */ }
