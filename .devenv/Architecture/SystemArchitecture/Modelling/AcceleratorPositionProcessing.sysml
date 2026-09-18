@@ -12,12 +12,12 @@ package X2CityContract_AcceleratorPositionProcessing {
         item Position:AcceleratorPositionValue;
         item Qualification:AcceleratorPositionQualification;
     }
-    port def AcceleratorPositionOutputPort { doc /* Publishes qualified position/rest and measurement provenance without torque mapping, authorization or session state. */ out item payload:AcceleratorPosition; }
-    port def AcceleratorPositionInputPort { doc /* Receives the single qualified accelerator Position/Qualification composite. */ in item payload:AcceleratorPosition; }
-    port def AcceleratorHealthOutputPort { doc /* Publishes the Qualification health projection to the platform health owner. */ out item payload:AcceleratorPositionQualification; }
-    port def AcceleratorHealthInputPort { doc /* Receives the Qualification health projection; it cannot make a Position valid or fresh. */ in item payload:AcceleratorPositionQualification; }
-    interface def IfA001AcceleratorPosition { end producer:AcceleratorPositionOutputPort; end consumer:AcceleratorPositionInputPort; flow producer.payload to consumer.payload; }
-    interface def IfA008AcceleratorHealth { end producer:AcceleratorHealthOutputPort; end consumer:AcceleratorHealthInputPort; flow producer.payload to consumer.payload; }
+    port def AcceleratorPositionOutputPort { doc /* Publishes qualified position/rest and measurement provenance without torque mapping, authorization or session state. */ out item acceleratorPosition:AcceleratorPosition; }
+    port def AcceleratorPositionInputPort { doc /* Receives the single qualified accelerator Position/Qualification composite. */ in item acceleratorPosition:AcceleratorPosition; }
+    port def AcceleratorHealthOutputPort { doc /* Publishes the Qualification health projection to the platform health owner. */ out item qualification:AcceleratorPositionQualification; }
+    port def AcceleratorHealthInputPort { doc /* Receives the Qualification health projection; it cannot make a Position valid or fresh. */ in item qualification:AcceleratorPositionQualification; }
+    interface def IfA001AcceleratorPosition { end producer:AcceleratorPositionOutputPort; end consumer:AcceleratorPositionInputPort; flow producer.acceleratorPosition to consumer.acceleratorPosition; }
+    interface def IfA008AcceleratorHealth { end producer:AcceleratorHealthOutputPort; end consumer:AcceleratorHealthInputPort; flow producer.qualification to consumer.qualification; }
 }
 
 package X2CityComponent_AcceleratorPositionProcessing {
@@ -29,6 +29,6 @@ package X2CityComponent_AcceleratorPositionProcessing {
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Provides the one semantic Position/Qualification composite. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Provides only the Qualification projection to platform health. */ }
         // The health publication is a projection of one AcceleratorPosition composite.
-        flow healthProjectionFromPosition from acceleratorPositionOut.payload.Qualification to acceleratorHealthOut.payload;
+        flow healthProjectionFromPosition from acceleratorPositionOut.acceleratorPosition.Qualification to acceleratorHealthOut.qualification;
     }
 }

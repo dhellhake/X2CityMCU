@@ -254,9 +254,9 @@ package X2CitySystemArchitecture {
         port tractionBatteryObservationIn:BatteryConditionObservationInputPort;
         port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         port lightingContextOut:LightingContextOutputPort;
-        flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.payload to acceleratorPositionOut.payload;
-        flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.payload to acceleratorHealthOut.payload;
-        flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.payload to accelerator.electricalSignalIn.payload;
+        flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
+        flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
+        flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.signal to accelerator.electricalSignalIn.signal;
     }
 
     part def RiderDevices { // LE-RIDER-DEVICES
@@ -381,10 +381,10 @@ package X2CitySystemArchitecture {
     flow ifA001BrakeToSession from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.riding.session.qualifiedBrakeInputIn.payload;
     flow ifA001BrakeToDemand from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.riding.demand.qualifiedBrakeInputIn.payload;
     flow ifA001BrakeToLightPolicy from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.auxiliary.lightPolicy.qualifiedBrakeInputIn.payload;
-    flow ifA001AcceleratorToSettings from x2CityVehicle.epcs.input.acceleratorPositionOut.payload to x2CityVehicle.epcs.riding.settings.acceleratorPositionIn.payload;
-    flow ifA001AcceleratorToSession from x2CityVehicle.epcs.input.acceleratorPositionOut.payload to x2CityVehicle.epcs.riding.session.acceleratorPositionIn.payload;
-    flow ifA001AcceleratorToDemand from x2CityVehicle.epcs.input.acceleratorPositionOut.payload to x2CityVehicle.epcs.riding.demand.acceleratorPositionIn.payload;
-    flow ifA001AcceleratorToPlatform from x2CityVehicle.epcs.input.acceleratorHealthOut.payload to x2CityVehicle.epcs.compute.platform.acceleratorHealthIn.payload;
+    flow ifA001AcceleratorToSettings from x2CityVehicle.epcs.input.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.settings.acceleratorPositionIn.acceleratorPosition;
+    flow ifA001AcceleratorToSession from x2CityVehicle.epcs.input.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.session.acceleratorPositionIn.acceleratorPosition;
+    flow ifA001AcceleratorToDemand from x2CityVehicle.epcs.input.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.demand.acceleratorPositionIn.acceleratorPosition;
+    flow ifA001AcceleratorToPlatform from x2CityVehicle.epcs.input.acceleratorHealthOut.qualification to x2CityVehicle.epcs.compute.platform.acceleratorHealthIn.qualification;
     flow ifA001VehicleMotionToSettings from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedVehicleMotionIn.payload;
     flow ifA001VehicleMotionToSession from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.session.qualifiedVehicleMotionIn.payload;
 

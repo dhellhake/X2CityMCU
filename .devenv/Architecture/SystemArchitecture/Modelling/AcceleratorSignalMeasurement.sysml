@@ -14,12 +14,12 @@ package X2CityContract_AcceleratorSignalMeasurement {
         attribute measuredSignalValue:Real;
         attribute measurementIntegrityStatus:ValidityStatus;
     }
-    port def AcceleratorElectricalSignalOutputPort { doc /* Presents RiderDevices' unqualified accelerator electrical observation. */ out item payload:AcceleratorElectricalSignal; }
-    port def AcceleratorElectricalSignalInputPort { doc /* Receives RiderDevices' unqualified accelerator electrical observation. */ in item payload:AcceleratorElectricalSignal; }
-    port def AcceleratorMeasurementOutputPort { doc /* Publishes adequate abstract accelerator measurement evidence for position processing. */ out item payload:AcceleratorMeasurement; }
-    port def AcceleratorMeasurementInputPort { doc /* Receives abstract accelerator measurement evidence for position processing. */ in item payload:AcceleratorMeasurement; }
-    interface def IfA001AcceleratorElectricalSignal { end producer:AcceleratorElectricalSignalOutputPort; end consumer:AcceleratorElectricalSignalInputPort; flow producer.payload to consumer.payload; }
-    interface def IfA001AcceleratorMeasurement { end producer:AcceleratorMeasurementOutputPort; end consumer:AcceleratorMeasurementInputPort; flow producer.payload to consumer.payload; }
+    port def AcceleratorElectricalSignalOutputPort { doc /* Presents RiderDevices' unqualified accelerator electrical observation. */ out item signal:AcceleratorElectricalSignal; }
+    port def AcceleratorElectricalSignalInputPort { doc /* Receives RiderDevices' unqualified accelerator electrical observation. */ in item signal:AcceleratorElectricalSignal; }
+    port def AcceleratorMeasurementOutputPort { doc /* Publishes adequate abstract accelerator measurement evidence for position processing. */ out item measurement:AcceleratorMeasurement; }
+    port def AcceleratorMeasurementInputPort { doc /* Receives abstract accelerator measurement evidence for position processing. */ in item measurement:AcceleratorMeasurement; }
+    interface def IfA001AcceleratorElectricalSignal { end producer:AcceleratorElectricalSignalOutputPort; end consumer:AcceleratorElectricalSignalInputPort; flow producer.signal to consumer.signal; }
+    interface def IfA001AcceleratorMeasurement { end producer:AcceleratorMeasurementOutputPort; end consumer:AcceleratorMeasurementInputPort; flow producer.measurement to consumer.measurement; }
 }
 
 package X2CityComponent_AcceleratorSignalMeasurement {

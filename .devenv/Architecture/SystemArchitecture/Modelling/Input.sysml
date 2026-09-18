@@ -42,8 +42,8 @@ package X2CityComponent_Input {
         port tractionBatteryObservationIn:BatteryConditionObservationInputPort;
         port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         port lightingContextOut:LightingContextOutputPort;
-        flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.payload to acceleratorPositionOut.payload;
-        flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.payload to acceleratorHealthOut.payload;
-        flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.payload to accelerator.electricalSignalIn.payload;
+        flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
+        flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
+        flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.signal to accelerator.electricalSignalIn.signal;
     }
 }

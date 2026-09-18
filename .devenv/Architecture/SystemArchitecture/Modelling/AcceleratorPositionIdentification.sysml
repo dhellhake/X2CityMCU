@@ -11,9 +11,10 @@ package X2CityComponent_AcceleratorPositionIdentification {
         port electricalSignalIn:AcceleratorElectricalSignalInputPort { doc /* Receives RiderDevices' unqualified electrical accelerator signal. */ }
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Publishes one Position/Qualification composite to policy consumers. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Publishes the composite Qualification projection to platform health. */ }
-        flow electricalSignalToSignalMeasurement from electricalSignalIn.payload to signalMeasurement.electricalSignalIn.payload;
-        flow measurementToPositionProcessing from signalMeasurement.measurementOut.payload to positionProcessing.measurementIn.payload;
-        flow positionFromPositionProcessing from positionProcessing.acceleratorPositionOut.payload to acceleratorPositionOut.payload;
-        flow healthFromPositionProcessing from positionProcessing.acceleratorHealthOut.payload to acceleratorHealthOut.payload;
+        flow electricalSignalToSignalMeasurement from electricalSignalIn.signal to signalMeasurement.electricalSignalIn.signal;
+        interface measurementToPositionProcessing : IfA001AcceleratorMeasurement
+            connect signalMeasurement.measurementOut to positionProcessing.measurementIn;
+        flow positionFromPositionProcessing from positionProcessing.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
+        flow healthFromPositionProcessing from positionProcessing.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
     }
 }
