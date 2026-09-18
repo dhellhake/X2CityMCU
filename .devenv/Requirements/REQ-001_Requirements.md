@@ -99,7 +99,7 @@ The existing **Sources** column records provenance and related requirements; a c
 
 Functional contribution trace is a separate relation: [FC-002](../Architecture/FC-002_Function_Trace.md) maps every record to functions or cross-cutting constraints without changing its responsible target. The 12 FSC rows explicitly derive from SG-001-R1.0 goal IDs; existing supporting requirement citations are not additional parents unless named in the Derived from field. A functional-safety or broader-safety role does not change the System Requirement type.
 
-Use one canonical requirement record and one Markdown file per coherent cluster under its type folder. Keep stable per-record anchors when relocating records, update inbound links and the cluster index, and retain status/source/verification qualifications. Unresolved allocation is not closure. PD process obligations, assumptions and exclusions keep their [upstream disposition](REQ-001_Requirements.md#pd-obligation-disposition) without artificial hardware/software descendants.
+Use one canonical requirement record and one Markdown file per coherent cluster under its type folder; component-owned canonical files may reside beside the owning architecture model while retaining the recorded requirement Type. Keep stable per-record anchors when relocating records, update inbound links and the cluster index, and retain status/source/verification qualifications. Unresolved allocation is not closure. PD process obligations, assumptions and exclusions keep their [upstream disposition](REQ-001_Requirements.md#pd-obligation-disposition) without artificial hardware/software descendants.
 
 This is project tailoring; method references are [NASA logical decomposition](https://www.nasa.gov/reference/4-3-logical-decomposition/) and [OMG requirement/allocation relationships](https://www.omg.org/sysml/sysmlv1/).
 
@@ -134,17 +134,20 @@ The following shared coverage applies where relevant; row cases add distinguishi
 - A riding restart discards past-failure history and applies fresh Ready qualification. This selects behavior, not a memory implementation.
 - The PD obligation disposition below retains upstream obligations and identifies their active elaboration and remaining derivation; PD source status and conditions remain controlling.
 
+<a id="accelerator-position-identification"></a>
 ## Requirement clusters
 
-The current working inventory includes the Draft interconnection/runtime refinement chain `REQ-SYS-HSI-009`, `REQ-SYS-TRQHW-002`, `REQ-SYS-INP-002`, `REQ-SYS-ACC-001/002/003`, `REQ-SYS-TRQIO-001`, `REQ-SYS-TRQEX-001`, `REQ-SYS-PHASE-IF-001`, `REQ-SYS-SUPPLY-IF-001`, `REQ-SYS-PLT-002`, `REQ-SYS-PLT-CAL-001` and their named Unit children. They refine released parent contracts and do not alter their bodies. The current working architecture allocates separate regular/injected analog acquisition, accelerator electrical measurement and position processing, Hall-position, phase, supply and component-owned compiled-parameter responsibilities; its status remains Draft pending the stated verification and acceptance gates. Historical R2.0 remains the unchanged 228-record snapshot (211 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); R1.9 remains 223 records (206 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); the historical R1.8 197-record release also remains unchanged. The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. Detailed-design approval does not close electrical, physical, timing, resource, retention, protection, diagnostic or verification gates.
+Requirement quality convention: each row states one independently verifiable obligation, keeps rationale separate from the obligation, and makes numerical gaps explicit rather than implying values.
+
+The current working inventory includes the Draft interconnection/runtime refinement chain `REQ-SYS-HSI-009`, `REQ-SYS-TRQHW-002`, `REQ-SYS-INP-002`, the [accelerator requirement clusters](#accelerator-position-identification), `REQ-SYS-TRQIO-001`, `REQ-SYS-TRQEX-001`, `REQ-SYS-PHASE-IF-001`, `REQ-SYS-SUPPLY-IF-001`, `REQ-SYS-PLT-002`, `REQ-SYS-PLT-CAL-001` and their named Unit children. They refine released parent contracts and do not alter their bodies. The current working architecture allocates separate regular/injected analog acquisition, accelerator electrical measurement and position processing, Hall-position, phase, supply and component-owned compiled-parameter responsibilities; its status remains Draft pending the stated verification and acceptance gates. Historical R2.0 remains the unchanged 228-record snapshot (211 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); R1.9 remains 223 records (206 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); the historical R1.8 197-record release also remains unchanged. The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. Detailed-design approval does not close electrical, physical, timing, resource, retention, protection, diagnostic or verification gates.
 
 **Draft successor clarification — 2026-09-18:** `REQ-SYS-PLT-CAL-001` retains its identifier for trace continuity, but the working architecture has no platform-calibration owner or calibration unit. It allocates immutable compiled parameter validation to SC-PLATFORM.V for static hardware binding and to each requiring software component. `UR-PLATFORM-CALIBRATION-001` is Withdrawn; the active successor obligations remain with the listed component-owned units. Current working counts include that disposition only; the historical release counts above remain unchanged.
 
-| Type | Folder | Records |
+| Type | Default folder | Records |
 |---|---|---:|
-| System Requirement | [System_Requirements](System_Requirements) | 167 |
-| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 29 |
-| Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 7 |
+| System Requirement | [System_Requirements](System_Requirements) | 174 |
+| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 38 |
+| Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 11 |
 | Unit Requirement | [Unit_Requirements](Unit_Requirements) | 30 |
 
 | System Requirement cluster | IDs / scope | Records |
@@ -159,7 +162,8 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Environment and storage](System_Requirements/Environment_and_Storage.md) | `REQ-VEH-ENV-*`, `REQ-SYS-STO-*` | 5 |
 | [Built battery and supplied BMS](System_Requirements/Battery_Integration.md) | `REQ-SYS-BAT-002`, `REQ-SYS-BMS-*` | 10 |
 | [Energy and protection](System_Requirements/Energy_and_Protection.md) | `REQ-SYS-ENE-*` | 4 |
-| [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*`, Draft `REQ-SYS-ACC-001` | 5 |
+| [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*` | 4 |
+| [Accelerator position identification](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/AcceleratorPositionIdentification_Requirements.md) | System; Draft `REQ-SYS-ACC-001`, `REQ-SYS-ACC-004`–`009`, `REQ-SYS-ACC-022` | 8 |
 | [System hardware/software interface](System_Requirements/System_Hardware_Software_Interface.md) | Approved in R1.8 `REQ-SYS-HSI-001`–`007`; Draft successor `REQ-SYS-HSI-008` debugger inspection and Draft `REQ-SYS-HSI-009` traction interconnection | 9 |
 | [Service and durability](System_Requirements/Service_and_Durability.md) | `REQ-VEH-DUR-*`, `REQ-VEH-SVC-*`, `REQ-SYS-SVC-*` | 4 |
 | [Riding safety functions](System_Requirements/Riding_Safety_Functions.md) | Draft `REQ-SYS-FSC-001`, `REQ-VEH-FSC-002/003/004` | 4 |
@@ -172,11 +176,12 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Retained mechanical control](Abstract_Hardware_Requirements/Retained_Mechanical_Control.md) | Abstract Hardware; approved steering/mechanical-braking independence plus R1.8-approved physical-integration refinement | 3 |
 | [Fixed cell bank](Abstract_Hardware_Requirements/Cell_Bank.md) | Abstract Hardware; fixed 14S5P composition | 1 |
 | [Traction-control hardware](Abstract_Hardware_Requirements/Traction_Control_Hardware.md) | Abstract Hardware; three low-side current channels, local DC-link observation and independent fault shutdown allocation | 2 |
-| [Accelerator signal measurement](Abstract_Hardware_Requirements/Accelerator_Signal_Measurement.md) | Abstract Hardware; accelerator electrical measurement integrity, allocated accuracy and response | 1 |
+| [Accelerator signal measurement](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/Decomposition/AcceleratorSignalMeasurement_Requirements.md) | Abstract Hardware; Draft `REQ-SYS-ACC-003`, `REQ-SYS-ACC-014`–`016`, `REQ-SYS-ACC-023` | 5 |
 | [BMS information](Abstract_Software_Requirements/BMS_Information.md) | Abstract Software; selected-unit UART read-data qualification and acceptance contract | 1 |
 | [Battery capability policy](Abstract_Software_Requirements/Battery_Capability_Policy.md) | Abstract Software; battery envelopes, operation-specific restrictions and fault information | 1 |
 | [Lighting policy](Abstract_Software_Requirements/Lighting_Policy.md) | Abstract Software; current-session normal request and front/rear logical mode arbitration | 1 |
-| [Detailed-design interface allocations](Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md) | Approved allocations plus Draft regular-DMA/Hall, platform-binding and fast-traction runtime refinements | 9 |
+| [Accelerator position processing](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/Decomposition/AcceleratorPositionProcessing_Requirements.md) | Abstract Software; Draft `REQ-SYS-ACC-002`, `REQ-SYS-ACC-010`–`013`, `REQ-SYS-ACC-017`–`021` | 10 |
+| [Detailed-design interface allocations](Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md) | Approved allocations plus Draft regular-DMA/Hall, platform-binding and fast-traction runtime refinements | 8 |
 | [Control Unit Requirements](Unit_Requirements/Control_Unit_Requirements.md) | Approved Unit Requirements plus Draft regular-DMA/Hall, platform-binding and fast-traction runtime refinements | 15 |
 | [Battery Unit Requirements](Unit_Requirements/Battery_Unit_Requirements.md) | Approved Unit Requirements; BMS and battery policy units | 5 |
 
