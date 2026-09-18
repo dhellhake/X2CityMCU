@@ -145,9 +145,9 @@ The current working inventory includes the Draft interconnection/runtime refinem
 
 | Type | Default folder | Records |
 |---|---|---:|
-| System Requirement | [System_Requirements](System_Requirements) | 174 |
-| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 38 |
-| Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 11 |
+| System Requirement | [System_Requirements](System_Requirements) | 179 |
+| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 40 |
+| Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 9 |
 | Unit Requirement | [Unit_Requirements](Unit_Requirements) | 30 |
 
 | System Requirement cluster | IDs / scope | Records |
@@ -163,7 +163,7 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Built battery and supplied BMS](System_Requirements/Battery_Integration.md) | `REQ-SYS-BAT-002`, `REQ-SYS-BMS-*` | 10 |
 | [Energy and protection](System_Requirements/Energy_and_Protection.md) | `REQ-SYS-ENE-*` | 4 |
 | [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*` | 4 |
-| [Accelerator position identification](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/AcceleratorPositionIdentification_Requirements.md) | System; Draft `REQ-SYS-ACC-001`, `REQ-SYS-ACC-004`–`009`, `REQ-SYS-ACC-022` | 8 |
+| [Accelerator position identification](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/AcceleratorPositionIdentification_Requirements.md) | System; Draft `REQ-SYS-ACC-001`, `REQ-SYS-ACC-004`–`009`, `REQ-SYS-ACC-022`, `REQ-SYS-ACC-024`, `026`–`027`, `029`, `031` | 13 |
 | [System hardware/software interface](System_Requirements/System_Hardware_Software_Interface.md) | Approved in R1.8 `REQ-SYS-HSI-001`–`007`; Draft successor `REQ-SYS-HSI-008` debugger inspection and Draft `REQ-SYS-HSI-009` traction interconnection | 9 |
 | [Service and durability](System_Requirements/Service_and_Durability.md) | `REQ-VEH-DUR-*`, `REQ-VEH-SVC-*`, `REQ-SYS-SVC-*` | 4 |
 | [Riding safety functions](System_Requirements/Riding_Safety_Functions.md) | Draft `REQ-SYS-FSC-001`, `REQ-VEH-FSC-002/003/004` | 4 |
@@ -176,11 +176,11 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Retained mechanical control](Abstract_Hardware_Requirements/Retained_Mechanical_Control.md) | Abstract Hardware; approved steering/mechanical-braking independence plus R1.8-approved physical-integration refinement | 3 |
 | [Fixed cell bank](Abstract_Hardware_Requirements/Cell_Bank.md) | Abstract Hardware; fixed 14S5P composition | 1 |
 | [Traction-control hardware](Abstract_Hardware_Requirements/Traction_Control_Hardware.md) | Abstract Hardware; three low-side current channels, local DC-link observation and independent fault shutdown allocation | 2 |
-| [Accelerator signal measurement](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/Decomposition/AcceleratorSignalMeasurement_Requirements.md) | Abstract Hardware; Draft `REQ-SYS-ACC-003`, `REQ-SYS-ACC-014`–`016`, `REQ-SYS-ACC-023` | 5 |
+| [Accelerator signal measurement](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/Decomposition/AcceleratorSignalMeasurement_Requirements.md) | Abstract Hardware; Draft `REQ-SYS-ACC-003`, `REQ-SYS-ACC-014`, `REQ-SYS-ACC-043` | 3 |
 | [BMS information](Abstract_Software_Requirements/BMS_Information.md) | Abstract Software; selected-unit UART read-data qualification and acceptance contract | 1 |
 | [Battery capability policy](Abstract_Software_Requirements/Battery_Capability_Policy.md) | Abstract Software; battery envelopes, operation-specific restrictions and fault information | 1 |
 | [Lighting policy](Abstract_Software_Requirements/Lighting_Policy.md) | Abstract Software; current-session normal request and front/rear logical mode arbitration | 1 |
-| [Accelerator position processing](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/Decomposition/AcceleratorPositionProcessing_Requirements.md) | Abstract Software; Draft `REQ-SYS-ACC-002`, `REQ-SYS-ACC-010`–`013`, `REQ-SYS-ACC-017`–`021` | 10 |
+| [Accelerator position processing](../Architecture/SystemArchitecture/Modelling/AcceleratorPositionIdentification/Decomposition/AcceleratorPositionProcessing_Requirements.md) | Abstract Software; Draft `REQ-SYS-ACC-002`, `REQ-SYS-ACC-010`–`013`, `REQ-SYS-ACC-017`–`018`, `020`–`021`, `038`–`040` | 12 |
 | [Detailed-design interface allocations](Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md) | Approved allocations plus Draft regular-DMA/Hall, platform-binding and fast-traction runtime refinements | 8 |
 | [Control Unit Requirements](Unit_Requirements/Control_Unit_Requirements.md) | Approved Unit Requirements plus Draft regular-DMA/Hall, platform-binding and fast-traction runtime refinements | 15 |
 | [Battery Unit Requirements](Unit_Requirements/Battery_Unit_Requirements.md) | Approved Unit Requirements; BMS and battery policy units | 5 |

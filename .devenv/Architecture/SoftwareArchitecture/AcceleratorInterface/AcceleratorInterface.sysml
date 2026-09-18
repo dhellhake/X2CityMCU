@@ -17,10 +17,7 @@ package X2CitySoftwareContract_AcceleratorInterface {
     item def AcceleratorPositionValue {
         attribute acceleratorPositionPercent:Real; // percent, 0..100 after qualified scaling.
         attribute acceleratorAtRest:Boolean;
-        attribute sourceAdcRank:Integer;
-        attribute sourceAdcSequence:Integer;
         attribute sampleTimeMicroseconds:Integer;
-        attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     item def AcceleratorPositionQualification :> SensorHealthCondition {
         // This is the sole authoritative measurement-status set for Position. Inherited
@@ -29,17 +26,15 @@ package X2CitySoftwareContract_AcceleratorInterface {
         attribute measurementValidity:Validity;
         attribute measurementQualification:Qualification;
     }
-    item def AcceleratorPosition:>ContextualSoftwareInformation {
-        // The inherited contextual qualification describes this composite publication. Position
-        // status is carried only by Qualification, so a current publication can report an
-        // unavailable Position (whose values are unusable) without masking source-health evidence.
-        // A health-only publication retains the actual Position sample provenance and age; updating
-        // this envelope or health evidence never rejuvenates the Position sample.
+    item def AcceleratorPosition {
+        // Position status is carried only by Qualification, so a health update can report an
+        // unavailable Position without masking source-health evidence. A health-only publication
+        // never rejuvenates the Position sample time.
         item Position:AcceleratorPositionValue;
         item Qualification:AcceleratorPositionQualification;
     }
     port def AcceleratorPositionOutputPort {
-        doc /* Publishes one current composite record to SettingsPolicy, SessionPolicy and DemandPolicy. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample provenance/age and never rejuvenates it. */
+        doc /* Publishes one current composite record to SettingsPolicy, SessionPolicy and DemandPolicy. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample time and never refreshes measurement age. */
         out item payload:AcceleratorPosition;
     }
     port def AcceleratorPositionInputPort {
@@ -71,6 +66,6 @@ package X2CitySoftwareComponent_AcceleratorInterface {
         port platformHealthIn:~PlatformHealthOutputPort;
         attribute compiledCalibrationId:String;
         attribute compiledCalibration:AcceleratorCalibration;
-        attribute compiledCalibrationValid:Boolean; // Startup check failure withholds position and qualification results.
+        attribute compiledCalibrationValid:Boolean; // Startup check failure withholds usable Position while retaining Qualification and health publication.
     }
 }

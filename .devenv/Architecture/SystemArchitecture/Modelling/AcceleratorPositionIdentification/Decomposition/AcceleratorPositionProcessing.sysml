@@ -1,18 +1,18 @@
 package X2CityContract_AcceleratorPositionProcessing {
     private import X2CitySharedContracts::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
-    item def AcceleratorPositionValue { attribute acceleratorPositionPercent:Real; attribute acceleratorAtRest:Boolean; attribute sourceId:String; attribute acquisitionSequence:Integer; attribute measurementTimeMicroseconds:Integer; attribute configurationContextId:String; }
+    item def AcceleratorPositionValue { attribute acceleratorPositionPercent:Real; attribute acceleratorAtRest:Boolean; attribute measurementTimeMicroseconds:Integer; }
     item def AcceleratorPositionQualification:>QualifiedInformationRecord {
-        doc /* Position qualification and source-health evidence. Initial unqualification and recognized measurement fault are distinct; health-only updates never rejuvenate Position measurement time. */
+        doc /* Position qualification and source-health evidence. Initial unqualification and recognized measurement fault are distinct; health-only updates never change Position measurement time. */
         attribute initialQualificationPending:Boolean;
         attribute recognizedMeasurementFault:Boolean;
     }
-    item def AcceleratorPosition:>QualifiedInformationRecord {
+    item def AcceleratorPosition {
         doc /* Single composite publication with Position and Qualification. Consumers use Position only when Qualification permits it, while retaining Qualification when Position is unavailable. */
         item Position:AcceleratorPositionValue;
         item Qualification:AcceleratorPositionQualification;
     }
-    port def AcceleratorPositionOutputPort { doc /* Publishes qualified position/rest and measurement provenance without torque mapping, authorization or session state. */ out item acceleratorPosition:AcceleratorPosition; }
+    port def AcceleratorPositionOutputPort { doc /* Publishes qualified position/rest and actual Position measurement time without torque mapping, authorization or session state. */ out item acceleratorPosition:AcceleratorPosition; }
     port def AcceleratorPositionInputPort { doc /* Receives the single qualified accelerator Position/Qualification composite. */ in item acceleratorPosition:AcceleratorPosition; }
     port def AcceleratorHealthOutputPort { doc /* Publishes the Qualification health projection to the platform health owner. */ out item qualification:AcceleratorPositionQualification; }
     port def AcceleratorHealthInputPort { doc /* Receives the Qualification health projection; it cannot make a Position valid or fresh. */ in item qualification:AcceleratorPositionQualification; }
@@ -24,7 +24,7 @@ package X2CityComponent_AcceleratorPositionProcessing {
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
     part def AcceleratorPositionProcessing { // LE-ACCELERATOR-QUAL
-        /* Software responsibility for obtaining and handling accelerator measurement evidence, then publishing semantic position/rest and qualification. It owns neither demand/session policy nor a fixed acquisition or transfer realization. */
+        /* Software responsibility for handling accelerator measurement evidence and publishing semantic position/rest, measurement time, and qualification. */
         port measurementIn:AcceleratorMeasurementInputPort { doc /* Consumes abstract accelerator measurement evidence. */ }
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Provides the one semantic Position/Qualification composite. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Provides only the Qualification projection to platform health. */ }
