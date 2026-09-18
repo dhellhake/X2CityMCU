@@ -26,11 +26,11 @@ package X2CitySoftwareContract_TemperatureInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def QualifiedTemperatureOutputPort {
-        doc /* Publishes qualified temperature observations for the configured traction-board and motor sources to SessionPolicy, BatteryProtection and service aggregation. The output is converted semantic temperature, with source and calibration context retained; battery temperature observations come through BmsLink. */
+        doc /* Publishes qualified temperature observations for the configured traction-board and motor sources to SessionPolicy and BatteryProtection. The output is converted semantic temperature, with source and calibration context retained; battery temperature observations come through BmsLink. */
         out item payload:QualifiedTemperature;
     }
     port def TemperatureHealthOutputPort {
-        doc /* Publishes temperature conversion health evidence to Platform, SessionPolicy and service aggregation. It reports source qualification and freshness rather than making a thermal operating decision. */
+        doc /* Publishes temperature conversion health evidence to Platform and SessionPolicy. It reports source qualification and freshness rather than making a thermal operating decision. */
         out item payload:SensorHealthCondition;
     }
 }

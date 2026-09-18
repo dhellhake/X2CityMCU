@@ -21,9 +21,8 @@ package X2CityComponent_SessionPolicy {
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_HmiAdapter::*;
     private import X2CityContract_SessionPolicy::*;
-    private import X2CityContract_ServiceInformation::*;
     part def SessionPolicy { // LE-SESSION
-        /* Evaluates qualified accelerator position/rest, coded brake, vehicle motion, settings, battery capability, and observed outputs into riding authority and rider information. It publishes authority, presentation, and service reporting while leaving traction actuation to Traction. */
+        /* Evaluates qualified accelerator position/rest, coded brake, vehicle motion, settings, battery capability, and observed outputs into riding authority and rider information while leaving traction actuation to Traction. */
         port qualifiedBrakeInputIn:BrakeStateInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
@@ -33,6 +32,5 @@ package X2CityComponent_SessionPolicy {
         port actualTractionOutputIn:ActualTractionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 }

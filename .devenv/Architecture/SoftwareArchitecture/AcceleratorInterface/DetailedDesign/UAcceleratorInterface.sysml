@@ -6,7 +6,7 @@ package X2CityDetailedUnit_AcceleratorInterface {
 
     item def AcceleratorPositionRecord :> AcceleratorPosition;
     port def AcceleratorPositionOutputPort {
-        doc /* U-ACCELERATOR-QUALIFY sends one position-and-health composite to Settings, Session, Demand and Service. Position is used only when its contained Qualification supports it; unavailability and current health are published even with no new ADC sample, without rejuvenating Position sample provenance or age. */
+        doc /* U-ACCELERATOR-QUALIFY sends one position-and-health composite to Settings, Session and Demand. Position is used only when its contained Qualification supports it; unavailability and current health are published even with no new ADC sample, without rejuvenating Position sample provenance or age. */
         out item payload:AcceleratorPositionRecord;
     }
     part def AcceleratorQualifier {

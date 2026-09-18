@@ -5,7 +5,7 @@
 
 ## Reading this architecture
 
-ARCH-003 is the canonical software architecture document. It contains the static component, port, dataflow and state-ownership view. Its `SW-I-*`, `P-*` and `R-*` names are stable cross-view architecture identifiers. Component interfaces define contracts, not literal Rust statics, pins, task contexts, firmware APIs or presently delivered intercom endpoints. Supplied `SC-BMS` and `SC-VD18MT` remain external opaque components. All project component instances in this document are vehicle-scoped (`.V`) with independent producer/reset context and validity.
+ARCH-003 is the canonical software architecture document. It contains the static component, port, dataflow and state-ownership view. Its `SW-I-*`, `P-*` and `R-*` names are stable cross-view architecture identifiers. Component interfaces define contracts, not literal Rust statics, pins, task contexts, firmware APIs or presently delivered intercom endpoints. Troubleshooting inspects component-local state and operational records with a debugger; the architecture adds no reporting or aggregation path for that purpose. Supplied `SC-BMS` and `SC-VD18MT` remain external opaque components. All project component instances in this document are vehicle-scoped (`.V`) with independent producer/reset context and validity.
 
 ## Scope, component identities and hosts
 
@@ -20,7 +20,6 @@ ARCH-003 is the canonical software architecture document. It contains the static
 | LE-BMS-LINK | <a id="sc-bms-link"></a>SC-BMS-LINK | Selected BMS UART response interpretation and qualification. |
 | LE-BAT-POLICY | <a id="sc-bat-policy"></a>SC-BAT-POLICY | Battery capability, restriction and battery-fault information policy. |
 | LE-LIGHT-POLICY | <a id="sc-light-policy"></a>SC-LIGHT-POLICY | Normal-light retention and front/rear mode arbitration. |
-| LE-SERVICE-INFO | <a id="sc-service-info"></a>SC-SERVICE-INFO | Current producer/reset-context diagnostic presentation. |
 | LE-INPUT, within LE-INPUT | SC-ANALOG-ACQ, SC-ACCELERATOR-IF, SC-BRAKE-IF, SC-TEMPERATURE-IF, SC-SUPPLY-IF, SC-MOTOR-PHASE-IF and SC-HALL-IF | The seven existing acquisition/sensor-specific components own their respective raw-record access and semantic qualification. AcceleratorInterface publishes one composite position/qualification record; the other sensor-specific health ports remain separate. |
 | LE-MOTOR-CTRL, within LE-TRACTION | <a id="sc-traction-ctrl"></a>SC-TRACTION-CTRL | Authority-context command acceptance, configuration-qualified electrical rotor-sector/direction/edge-time interpretation, selected Hall-sensored FOC execution and qualified output/energy observation. |
 | LE-PLATFORM | <a id="sc-platform"></a>SC-PLATFORM | Local execution, reset-context, persistence and platform-health services. |
@@ -29,7 +28,7 @@ The following are supplied opaque software components, deliberately outside the 
 
 | Deployment | Instances | Host and boundary |
 |---|---|---|
-| Vehicle (`.V`) | SC-SET.V, SC-SESSION.V, SC-DEMAND.V, SC-HMI.V, SC-BMS-LINK.V, SC-BAT-POLICY.V, SC-LIGHT-POLICY.V, SC-SERVICE-INFO.V, SC-ANALOG-ACQ.V, SC-ACCELERATOR-IF.V, SC-BRAKE-IF.V, SC-TEMPERATURE-IF.V, SC-SUPPLY-IF.V, SC-MOTOR-PHASE-IF.V, SC-HALL-IF.V, SC-TRACTION-CTRL.V and SC-PLATFORM.V | **HC-CONTROLLER** is the one selected vehicle host, including motor control. It exchanges electrical signals with the physical input, traction, lighting, energy and HMI components defined by ARCH-001/ARCH-002. |
+| Vehicle (`.V`) | SC-SET.V, SC-SESSION.V, SC-DEMAND.V, SC-HMI.V, SC-BMS-LINK.V, SC-BAT-POLICY.V, SC-LIGHT-POLICY.V, SC-ANALOG-ACQ.V, SC-ACCELERATOR-IF.V, SC-BRAKE-IF.V, SC-TEMPERATURE-IF.V, SC-SUPPLY-IF.V, SC-MOTOR-PHASE-IF.V, SC-HALL-IF.V, SC-TRACTION-CTRL.V and SC-PLATFORM.V | **HC-CONTROLLER** is the one selected vehicle host, including motor control. It exchanges electrical signals with the physical input, traction, lighting, energy and HMI components defined by ARCH-001/ARCH-002. |
 
 The DRV8300DRGE-EVM and WeAct STM32H723VGT6 are selected vehicle traction board and `HC-CONTROLLER`, respectively, under their [integration contracts](../DRV8300DRGE-EVM/DRV8300DRGE-EVM_Integration_and_Requirements_Fit.md), [vehicle-host contract](../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md), [allocated traction HSI](../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md), and [runtime integration contract](Runtime_Integration_Contract.md). The HSI assigns acquisition and FOC execution to SC-TRACTION-CTRL.V using a configuration-identified ADC epoch; SC-ANALOG-ACQ.V owns raw regular/injected records and the named sensor interfaces own their semantic records. The runtime contract maps logical owners to project bindings and direct/scheduled execution without making a component or unit synonymous with an OS task. It does not establish physical qualification evidence.
 
@@ -51,7 +50,7 @@ flowchart LR
         VPolicy["SC-SET.V / SC-SESSION.V / SC-DEMAND.V"]
         VIO["SC-HMI.V / SC-LIGHT-POLICY.V"]
         VDrive["SC-TRACTION-CTRL.V"]
-        VCommon["SC-BMS-LINK.V / SC-BAT-POLICY.V / seven sensor-specific components / SC-SERVICE-INFO.V / SC-PLATFORM.V"]
+        VCommon["SC-BMS-LINK.V / SC-BAT-POLICY.V / seven sensor-specific components / SC-PLATFORM.V"]
     end
     VCommon -->|qualified data and platform services| VPolicy
     CALL -->|executionTimeIn: fresh per component invocation| VPolicy
@@ -70,12 +69,11 @@ flowchart LR
 | SC-ANALOG-ACQ and SC-ACCELERATOR-IF / SC-BRAKE-IF / SC-TEMPERATURE-IF / SC-SUPPLY-IF / SC-MOTOR-PHASE-IF / SC-HALL-IF | Raw acquisition records → each owner’s typed value and qualification with producer/reset context and locally evaluated age | These seven components keep acquisition, sensor semantics and Hall position distinct. AcceleratorInterface’s `AcceleratorPosition` contains `Position` and `Qualification`; its qualification carries current health/diagnostic evidence. None owns a rider-demand decision, physical truth or command authority. |
 | SC-SET | Qualified settings receipt → requested/pending/active settings | Owns setting state; retained valid settings are distinct from current-startup receipt. |
 | SC-SESSION | Qualified startup facts/self-test results/fault notices → authority, session inhibition and report state | Owns Ready conjunction and current-session fault latch. It neither performs all tests nor proves physical inhibition. |
-| SC-DEMAND | Individually typed accelerator, brake, active-settings, authority, battery-capability, qualified-motion and actual-output evidence → signed requested wheel command plus policy diagnostic | Owns demand arbitration and regeneration/restriction episodes. Pending settings never govern demand; it does not own actual torque, raw ADC, FOC, hardware or authority issuance. |
+| SC-DEMAND | Individually typed accelerator, brake, active-settings, authority, battery-capability, qualified-motion and actual-output evidence → signed requested wheel command | Owns demand arbitration and regeneration/restriction episodes. Pending settings never govern demand; it does not own actual torque, raw ADC, FOC, hardware or authority issuance. |
 | SC-TRACTION-CTRL | Authority-context command plus physical observations → physical-stage command, qualified physical-motion and actual-output evidence | It publishes vehicle speed/direction/standstill separately from actual applied wheel torque/active electrical braking. Its `U-TRACTION-ACQUISITION` owns direct JEOS/JDR epoch publication, `U-TRACTION-CONTROL` produces next compare/context data including `CCR4`, and `U-TRACTION-OUTPUT` alone stages/commits CCR1..4/JSQR. It executes the MCD-001 Hall-sensored FOC contract only with valid current/voltage/configuration evidence; then rejects absent, invalid, expired or context-mismatched authority/commands and commands both torque signs to zero within the derived bound (REQ-SYS-INT-004). A commanded zero is not physical protection or proof of zero torque. |
 | SC-BMS-LINK | Qualified UART transport → selected-unit battery observations | Owns protocol interpretation only, not UART electrical safety, measurement accuracy or BMS protection. |
 | SC-BAT-POLICY | Qualified battery/output/path observations plus configuration/context → distinct charge/discharge envelopes, restrictions and battery-fault information | `.V` owns the reached-10%-cutoff restriction state described below. It does not own hardware protection or the SC-SESSION fault latch. |
 | SC-HMI / SC-LIGHT-POLICY | HMI messages/reports and rider-light request; qualified lever/output states → HMI fields and front/rear logical light intent | Light policy owns normal request retention and mode arbitration, not lamp electrical output or visibility. |
-| SC-SERVICE-INFO | Producer-tagged current observations → service information | Owns no operation permission, persistent fault history or parameter-writing path. |
 | SC-PLATFORM | Reset, scheduling, persistence and local health events → context/retention services and self-test contribution | Owns project startup/peripheral/IRQ bindings, execution priority/scheduling selection and platform service state; each consumer owns interpretation of a lost/reset context. Generic register drivers remain resource access only. |
 
 ### Retained restriction and reset state
@@ -91,13 +89,12 @@ The caller samples the shared monotonic host clock immediately before each compo
 
 | Local interface | Endpoints | Semantic kind | Exchange |
 |---|---|---|---|
-| <a id="sw-i-001"></a>SW-I-001 | SC-ACCELERATOR-IF → SET, SESSION, DEMAND; SC-BRAKE-IF → SESSION, DEMAND, LIGHT-POLICY; SC-TRACTION-CTRL → DEMAND | Data publication | IF-A-001 qualified `AcceleratorPosition` and coded-brake state/unknown; IF-A-005 qualified physical vehicle motion/direction/standstill. Accelerator health is carried in the accelerator record and is not a separate Session or Service delivery. |
+| <a id="sw-i-001"></a>SW-I-001 | SC-ACCELERATOR-IF → SET, SESSION, DEMAND; SC-BRAKE-IF → SESSION, DEMAND, LIGHT-POLICY; SC-TRACTION-CTRL → DEMAND | Data publication | IF-A-001 qualified `AcceleratorPosition` and coded-brake state/unknown; IF-A-005 qualified physical vehicle motion/direction/standstill. Accelerator health is carried in the accelerator record and is not a separate Session delivery. |
 | <a id="sw-i-002"></a>SW-I-002 | SC-HMI + SC-ACCELERATOR-IF → SET; SC-SET active projection → DEMAND | Data publication | IF-A-002 current-startup settings receipt and decoded request; only already-applied active level/speed settings reach demand. |
 | <a id="sw-i-003"></a>SW-I-003 | BMS-LINK / sensor-specific interfaces / TRACTION-CTRL → BAT-POLICY; BAT-POLICY → SESSION and DEMAND | Data publication | IF-A-003/009 observations and capability/fault/restriction outputs; charge and discharge permissions remain separate. |
 | <a id="sw-i-004"></a>SW-I-004 | SESSION → TRACTION-CTRL; DEMAND → TRACTION-CTRL | Control token plus data | IF-A-004 authority context/expiry and signed command/context/expiry. A consumer-side acceptance operation is local and must fail closed. |
 | <a id="sw-i-005"></a>SW-I-005 | TRACTION-CTRL → SESSION, DEMAND, LIGHT-POLICY | Data publication | IF-A-005 actual applied-output/active-braking evidence and qualified physical motion. |
 | <a id="sw-i-006"></a>SW-I-006 | SESSION/BAT-POLICY → HMI; HMI/BRAKE-IF/TRACTION-CTRL → LIGHT-POLICY | Data publication | IF-A-006 reports and light inputs; LIGHT-POLICY emits lamp intent to physical LE-AUX. |
-| <a id="sw-i-008"></a>SW-I-008 | All producers → SERVICE-INFO | Data publication | IF-A-008 current, producer-tagged observations, identity and states. |
 | <a id="sw-i-009"></a>SW-I-009 | PLATFORM → all local components | Event and local service call | Startup, reset-context invalidation, retention restore result, watchdog/platform-health and scheduling-service events. |
 
 Calls request a bounded local service and return completion/availability only; they do not transfer permission by themselves.  Data publications are sampled with explicit age/context checks at the consumer.  Events record a discrete reset, withdrawal, detected fault or physical transition; consumers must not reconstruct an event from a static value alone.
@@ -120,11 +117,10 @@ The four endpoint-level views below show every selected `P-*` contract inside it
 |---|---|---|---|
 | `SC-ANALOG-ACQ.V` and SC-HALL-IF.V | `AnalogSample`, injected epochs and Hall capture rings with sampled state | the named sensor interfaces and `U-HALL-POSITION` | Analog acquisition owns scan storage/loss admissibility; Hall owns its capture and electrical-position interpretation. |
 | `U-TRACTION-ACQUISITION` / `U-TRACTION-CONTROL` / `U-TRACTION-OUTPUT` | Direct fast records internal to Detailed Design, including `FastEpoch` and `PWMAndADCSamplingPlan` | the immediately following detailed unit only | These are not SC public ports or ARCH-003 `R-V*` routes. The runtime contract and DD own the direct JEOS-to-output allocation. |
-| `SC-SET.V` | requested, pending and active setting state plus active-only demand projection | session, service and demand routes | A retained active setting is not a current-startup receipt; a pending setting is never a demand input. |
+| `SC-SET.V` | requested, pending and active setting state plus active-only demand projection | session and demand routes | A retained active setting is not a current-startup receipt; a pending setting is never a demand input. |
 | `SC-SESSION.V` | authority context, current riding-session inhibition and selected report state | demand, traction and HMI routes | Session owns Ready conjunction and its volatile fault latch. |
-| `SC-DEMAND.V` | signed requested wheel-torque command plus policy diagnostic | traction through R-V14 and service through R-V32 | Demand owns arbitration and diagnostic explanation, never actual torque or authority. |
+| `SC-DEMAND.V` | signed requested wheel-torque command | traction through R-V14 | Demand owns arbitration, never actual torque or authority. |
 | `SC-BAT-POLICY.V` | `reached10%` restriction state and current envelope | session, demand and HMI routes | Only the validity-tagged restriction may be retained by the vehicle host. |
-| Every local producer | current producer-tagged service snapshot | service-info fanout R-V32 | Service reads do not return control or permission. |
 
 ### Complete port registry
 
@@ -160,7 +156,6 @@ The port registry names each vehicle instance explicitly; the `.V` suffix keeps 
 | `P-DEM-BATTERY-CAPABILITY-I` | `SC-DEMAND.V` | required | Independently qualified positive-propulsion and negative-regeneration capability | Unavailability/restriction withdraws only the dependent permission; positive-only low-SOC restriction does not prohibit permitted regeneration. |
 | `P-DEM-MOTION-I` / `P-DEM-ACTUAL-OUTPUT-I` | `SC-DEMAND.V` | required | Qualified physical speed/direction/standstill / actual applied wheel torque and active electrical-braking evidence | Demand uses motion for both-sign speed cutoff and uses actual powered-forward positive torque with forward motion for post-stop regeneration rearm. Requested torque is never evidence. |
 | `P-DEM-COMMAND-O` | `SC-DEMAND.V` | provided | Requested signed rear-wheel torque in N m, validity/context, authority generation, decision sequence/timestamp and expiry timestamp | `SC-DEMAND.V` owns arbitration, not actual torque. Command age/renewal never refreshes authority and is independent of telemetry routes. |
-| `P-DEM-DIAGNOSTIC-O` | `SC-DEMAND.V` | provided service-only | Current active profile, sign dispositions, restriction episode and post-stop rearm state | It is read-only service information and cannot grant authority or control traction. |
 | `P-BMS-TRANSPORT-I/O` | `SC-BMS-LINK.V` | required/provided external boundary | Selected BMS UART read transaction and received transport observations | Vendor firmware is opaque. No BMS write/control capability is exposed by this architecture. |
 | `P-BMS-OBS-O` | `SC-BMS-LINK.V` | provided | Current-context accepted battery observations, transaction freshness, layout/scale metadata | Transaction/decode/publication owns protocol interpretation. Packet return or BMS wake does not restore vehicle authority or regenerative charge acceptance. |
 | `P-BAT-FACTS-I` | `SC-BAT-POLICY.V` | required | BMS facts, input/output/path observations, configuration and local context | Separate charge/discharge candidates require their needed qualified inputs. |
@@ -172,17 +167,14 @@ The port registry names each vehicle instance explicitly; the `.V` suffix keeps 
 | `P-TR-OUTPUT-I/O` | `SC-TRACTION-CTRL.V` | required/provided external boundary | Staged PWM/ADC context and output-stage state, timestamp, source and configuration provenance | `U-TRACTION-ACTUAL-OUTPUT` combines this physical-stage evidence with qualified current/position/motion and its immutable compiled estimator parameters to publish wheel-torque estimate; the boundary is not a demand command. `U-TRACTION-OUTPUT` alone commits literal `CCR1..4`/JSQR. |
 | `P-TR-QUALIFIED-MOTION-O` | `SC-TRACTION-CTRL.V` | provided | Physical vehicle speed, direction and standstill with independent qualification | It is a validated interpretation of existing Hall/capture-health and calibration evidence; static or absent edges alone are unavailable, not standstill. Its criteria, timing and diagnostic coverage remain WS-OI-001/006 validation gates. |
 | `P-TR-ACTUAL-OUTPUT-O` | `SC-TRACTION-CTRL.V` | provided | Actual applied wheel-torque estimate/evidence, active electrical-braking, output availability and powered-forward travel | It is not a demand command. Positive applied torque and powered-forward travel are independently qualified. |
-| `P-TR-OBS-O` | `SC-TRACTION-CTRL.V` | provided | Aggregate output/energy/fault availability observation for existing Session, Battery, Light and service consumers | It reports observation, never proof that a command achieved physical torque or zero output. |
+| `P-TR-OBS-O` | `SC-TRACTION-CTRL.V` | provided | Aggregate output/energy/fault availability observation for Session, Battery and Light consumers | It reports observation, never proof that a command achieved physical torque or zero output. |
 | `P-LGT-INPUT-I` | `SC-LIGHT-POLICY.V` | required | HMI request, qualified/unknown brake, traction braking/output and session/light context | Unknown brake or actual-braking state remains distinct from a valid lever state. |
 | `P-LGT-INTENT-O` | `SC-LIGHT-POLICY.V` | provided external intent | Front/rear logical lamp intent to physical `LE-AUX` | Policy owns mode arbitration, not lamp electrical output, conservative startup behaviour or visibility. |
-| `P-SVC-RECORD-I` | `SC-SERVICE-INFO.V` | required | Current producer-tagged identity, state, context, quality and observations | The collector drops old source-context entries and never promotes a fallback to a qualified value. |
-| `P-SVC-ACCELERATOR-POSITION-I` (`acceleratorPositionIn`) | `SC-SERVICE-INFO.V` | required | Concrete `AcceleratorPosition` | Service receives the full accelerator record once; publication/context validity never qualifies its contained measurement. |
 | `P-PLT-ACCELERATOR-QUALIFICATION-I` (`acceleratorQualificationIn`) | `SC-PLATFORM.V` | required | Concrete `AcceleratorPositionQualification` projection | Platform receives only the accelerator `Qualification` projection through its dedicated typed input; other sensor health inputs remain separate. |
-| `P-SVC-SNAPSHOT-O` | `SC-SERVICE-INFO.V` | provided external read-only service boundary | Atomic current diagnostic/service snapshot | No control return route exists. A service read cannot clear a latch, grant authority or grant riding authority. |
 
 The registry contains **vehicle-scoped port contracts**, expressed by **the retained distinct `P-*` names**. The `.V` scopes identify the vehicle-local instances. This is not a count of physically instantiated endpoints, MCU pins or deployed API objects. Multiple consumer attachments to one output port are intentional fanout; a port's data owner remains its producer and each consumer owns acceptance/use.
 
-Accelerator routes use the dedicated typed recipients `acceleratorPositionIn` on SettingsPolicy, SessionPolicy and ServiceInformation, and `acceleratorQualificationIn` on Platform. The remaining generic contextual and sensor-health inputs continue to serve their other records; no accelerator record is routed through them. Each typed recipient carries the full `AcceleratorPosition` or `AcceleratorPositionQualification` contract, including qualification evidence when `Position` is unavailable.
+Accelerator routes use the dedicated typed recipients `acceleratorPositionIn` on SettingsPolicy and SessionPolicy, and `acceleratorQualificationIn` on Platform. The remaining generic contextual and sensor-health inputs continue to serve their other records; no accelerator record is routed through them. Each typed recipient carries the full `AcceleratorPosition` or `AcceleratorPositionQualification` contract, including qualification evidence when `Position` is unavailable.
 
 ### Complete connection route catalogue
 
@@ -221,13 +213,11 @@ Route IDs are used in every figure. Delivery labels describe the selected archit
 | `R-V41-ACCELERATOR` | `SC-ACCELERATOR-IF.V.P-ACCEL-POSITION-O.Qualification` -> `SC-PLATFORM.V.P-PLT-ACCELERATOR-QUALIFICATION-I` (`acceleratorQualificationIn`) | SW-I-009, IF-A-001 | Scheduled direct/owned typed qualification projection | Platform receives the `Qualification` health/diagnostic reason/severity/protection request projection. This update may be published without a new ADC sample; it does not make `Position` valid. |
 | `R-V30` | `SC-ANALOG-ACQ.V.P-AA-ANALOG-SAMPLE-O` -> each named regular sensor-interface raw input | runtime contract | Owned completed-record handoff; analog acquisition owns record and sensor interfaces consume it | A failed, overwritten, incomplete or old-context scan remains unavailable to semantic qualification. |
 | `R-V31` | `SC-PLATFORM.V.P-PLT-CONTEXT-O`, `P-PLT-HEALTH-O` -> vehicle components' context-dependent ports | SW-I-009 | Service/event fanout; platform owns context/health events | Applies to every applicable vehicle component; figures show selected edges only. |
-| `R-V32` | `SC-ACCELERATOR-IF.V.P-ACCEL-POSITION-O` -> `SC-SERVICE-INFO.V.P-SVC-ACCELERATOR-POSITION-I` (`acceleratorPositionIn`); other vehicle producer output ports -> `SC-SERVICE-INFO.V.P-SVC-RECORD-I` | SW-I-008, IF-A-008 | Current producer snapshots; each producer owns its record | Accelerator is delivered once as the full typed record. Applies to all local vehicle producers; service drops old-context cache entries and has no control return. |
 | `R-X01` | supplied VD18MT -> `SC-HMI.V.P-HMI-TRANSPORT-I/O` | IF-A-002/006 | Electrical/transport boundary, HMI adapter owns interpretation | No decoded setting exists on loss, restart or invalid frame. |
 | `R-X02` | supplied BMS -> `SC-BMS-LINK.V.P-BMS-TRANSPORT-I/O` | IF-A-003/009 | One active protected endpoint in the fitted-pack vehicle configuration | BMS vendor internals are out of scope; no second master or exposed vendor endpoint is created. |
 | `R-X03` | rider/input acquisition -> `SC-ANALOG-ACQ.V` and the named sensor interfaces’ raw routes | IF-A-001 | Local acquisition boundary | Raw signals/transfer alone are not qualified semantic observations. |
-| `R-X04` | `SC-SERVICE-INFO.V.P-SVC-SNAPSHOT-O` -> maintainer/service boundary | IF-A-008/013 | Read-only local service presentation | Snapshot cannot energize endpoint, clear latch or write BMS configuration. |
 
-The vehicle catalogue uses route families rather than a fixed route count; individual family members are named where their source or consumer is distinct. `R-V31` and `R-V32` are explicit local fanout families, not invented message APIs. Every selected port in the registry participates in at least one route or is a local external-boundary endpoint.
+The vehicle catalogue uses route families rather than a fixed route count; individual family members are named where their source or consumer is distinct. `R-V31` is an explicit local fanout family, not an invented message API. Every selected port in the registry participates in at least one route or is a local external-boundary endpoint.
 
 ### Endpoint-level static dataflow views
 
@@ -341,7 +331,7 @@ flowchart LR
     TOB -->|R-V22 braking observation| LII2[P-LGT-INPUT-I on SC-LIGHT-POLICY.V]
 ```
 
-#### Vehicle platform and service ports
+#### Vehicle platform ports
 
 ```mermaid
 flowchart LR
@@ -350,20 +340,12 @@ flowchart LR
         PVRO[P-PLT-RETENTION-O]
         PVHO[P-PLT-HEALTH-O]
     end
-    subgraph SVC[SC-SERVICE-INFO.V]
-        SVRI[P-SVC-RECORD-I]
-        SVAI[P-SVC-ACCELERATOR-POSITION-I\nacceleratorPositionIn]
-        SVSO[P-SVC-SNAPSHOT-O]
-    end
     PVCO -->|R-V31 context reset service| VC[explicit R-V31 vehicle member set below]
     PVHO -->|R-V31 health service| VC
     PVRO -->|R-V19 restore result| BP[P-BAT-FACTS-I on SC-BAT-POLICY.V]
-    AIP2[P-ACCEL-POSITION-O\nSC-ACCELERATOR-IF.V] -->|R-V32 full AcceleratorPosition| SVAI
-    VP[other explicit R-V32 vehicle producer-port set below] -->|R-V32 current tagged records| SVRI
-    SVSO -->|R-X04 read-only service snapshot| VM[maintainer service boundary]
 ```
 
-`R-V31` applies its `P-PLT-CONTEXT-O` and `P-PLT-HEALTH-O` service/event family to context-dependent consumption in `SC-SET.V`, `SC-SESSION.V`, `SC-DEMAND.V`, `SC-HMI.V`, `SC-BMS-LINK.V`, `SC-BAT-POLICY.V`, `SC-LIGHT-POLICY.V`, `SC-SERVICE-INFO.V`, the seven sensor-specific components, `SC-TRACTION-CTRL.V` and `SC-PLATFORM.V`. Each component owns its immutable calibration parameter set as part of its firmware build; there is no calibration route. `R-V32` sources current records from explicit vehicle producer ports, including `P-DEM-DIAGNOSTIC-O`, `P-TR-QUALIFIED-MOTION-O` and `P-TR-ACTUAL-OUTPUT-O`; service has no control return route. Each is scoped `.V` and keeps its producer ownership.
+`R-V31` applies its `P-PLT-CONTEXT-O` and `P-PLT-HEALTH-O` event family to context-dependent consumption in `SC-SET.V`, `SC-SESSION.V`, `SC-DEMAND.V`, `SC-HMI.V`, `SC-BMS-LINK.V`, `SC-BAT-POLICY.V`, `SC-LIGHT-POLICY.V`, the seven sensor-specific components, `SC-TRACTION-CTRL.V` and `SC-PLATFORM.V`. Each component owns its immutable calibration parameter set as part of its firmware build; there is no calibration route. Each is scoped `.V` and keeps its producer ownership.
 
 ## Behavioural summaries and timing allocation
 

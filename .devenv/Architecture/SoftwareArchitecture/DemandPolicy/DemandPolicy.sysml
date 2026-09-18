@@ -123,21 +123,6 @@ package X2CitySoftwareContract_DemandPolicy {
         doc /* Publishes the requested signed wheel torque to TractionControl with decision sequence, authority generation, decision time and independent command expiry. Consumers validate both authority and command expiry in the common host-boot monotonic microsecond domain. */
         out item payload:WheelTorqueRequest;
     }
-    item def DemandPolicyDiagnostic:>ContextualSoftwareInformation {
-        attribute activeLevel:String;
-        attribute activeSpeedLimitKilometresPerHour:Real;
-        attribute positiveDemandDisposition:String;
-        attribute regenerationDisposition:String;
-        attribute applicableRestrictionEpisodeGeneration:ContextGeneration;
-        attribute regenerationRecoveryEpisodeGeneration:ContextGeneration;
-        attribute regenerationRecoveryQualified:Boolean;
-        attribute postStopRegenerationRearmState:String;
-        attribute profileId:String;
-    }
-    port def DemandPolicyDiagnosticOutputPort {
-        doc /* Publishes the current demand-policy explanation, including active settings, sign dispositions, restriction and recovery generations, to ServiceInformation. This record is diagnostic context and cannot authorize or refresh a command. */
-        out item payload:DemandPolicyDiagnostic;
-    }
 }
 
 package X2CitySoftwareComponent_DemandPolicy {
@@ -147,7 +132,7 @@ package X2CitySoftwareComponent_DemandPolicy {
     part def DemandPolicy {
         /* Arbitrates typed qualified rider inputs, applied settings, authority, battery capability,
            qualified physical motion and actual applied-output evidence. It publishes a requested
-           signed wheel-torque command with generation and expiry plus a read-only policy diagnostic.
+           signed wheel-torque command with generation and expiry.
            Brake actuation blocks positive demand only; accelerator alone can request regeneration.
            Demand never owns actual torque, ADC/FOC/hardware or authority issuance. */
         port executionTimeIn:ExecutionTimeInputPort;
@@ -159,7 +144,6 @@ package X2CitySoftwareComponent_DemandPolicy {
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port actualTractionOutputIn:ActualTractionOutputInputPort;
         port wheelTorqueRequestOut:WheelTorqueRequestOutputPort;
-        port demandPolicyDiagnosticOut:DemandPolicyDiagnosticOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
         // This parameter set is compiled into SC-DEMAND; its identity is provenance only and

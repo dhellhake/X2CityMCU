@@ -19,7 +19,7 @@ package X2CitySoftwareContract_SettingsPolicy {
         attribute activeSpeedLimitKilometresPerHour:Real;
     }
     port def RidingSettingsStateOutputPort {
-        doc /* Publishes the complete requested, pending and active settings view to SessionPolicy and service aggregation. DemandPolicy does not consume this broad view for torque profiles, preventing a pending request from becoming active demand. */
+        doc /* Publishes the complete requested, pending and active settings view to SessionPolicy. DemandPolicy does not consume this broad view for torque profiles, preventing a pending request from becoming active demand. */
         out item payload:RidingSettingsState;
     }
     item def ActiveRidingSettings:>ContextualSoftwareInformation {

@@ -39,7 +39,7 @@ package X2CitySoftwareContract_AcceleratorInterface {
         item Qualification:AcceleratorPositionQualification;
     }
     port def AcceleratorPositionOutputPort {
-        doc /* Publishes one current composite record to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample provenance/age and never rejuvenates it. */
+        doc /* Publishes one current composite record to SettingsPolicy, SessionPolicy and DemandPolicy. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample provenance/age and never rejuvenates it. */
         out item payload:AcceleratorPosition;
     }
     port def AcceleratorPositionInputPort {

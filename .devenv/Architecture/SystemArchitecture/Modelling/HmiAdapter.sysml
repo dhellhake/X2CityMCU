@@ -27,13 +27,11 @@ package X2CityComponent_HmiAdapter {
     private import X2CityContract_SettingsPolicy::*;
     private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_HmiAdapter::*;
-    private import X2CityContract_ServiceInformation::*;
     part def HmiAdapter { // LE-HMI
-        /* Adapts rider-facing controls and presentation to settings, lighting input, and rider information contracts. It translates between rider devices and policy components and publishes service report information. */
+        /* Adapts rider-facing controls and presentation to settings, lighting input, and rider information contracts. It translates between rider devices and policy components. */
         port riderSettingsRequestOut:RiderSettingsRequestOutputPort;
         port lightingContextOut:LightingContextOutputPort;
         port riderStatusInformationIn:RiderStatusInformationInputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 }

@@ -23,11 +23,11 @@ package X2CitySoftwareContract_BrakeInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def BrakeStateOutputPort {
-        doc /* Publishes qualified released, applied, implausible or unavailable brake state with source resistance and acquisition provenance to SettingsPolicy, SessionPolicy, DemandPolicy, LightPolicy and service aggregation. Demand uses this state to block positive demand only. */
+        doc /* Publishes qualified released, applied, implausible or unavailable brake state with source resistance and acquisition provenance to SettingsPolicy, SessionPolicy, DemandPolicy and LightPolicy. Demand uses this state to block positive demand only. */
         out item payload:BrakeState;
     }
     port def BrakeHealthOutputPort {
-        doc /* Publishes brake-sensor health evidence to Platform, SessionPolicy and service aggregation. It qualifies the source conversion and freshness rather than commanding physical brake actuation. */
+        doc /* Publishes brake-sensor health evidence to Platform and SessionPolicy. It qualifies the source conversion and freshness rather than commanding physical brake actuation. */
         out item payload:SensorHealthCondition;
     }
 }

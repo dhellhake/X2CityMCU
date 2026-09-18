@@ -1,7 +1,6 @@
 package X2CitySoftwareContract_TractionControl {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityContract_MotorControl::*;
-    private import X2CityContract_ServiceInformation::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_DemandPolicy::*;
     private import X2CitySoftwareContract_HallInterface::*;
@@ -65,17 +64,17 @@ package X2CitySoftwareContract_TractionControl {
         inout item payload:TractionOutputStageExchange;
     }
     port def QualifiedMotionOutputPort :> QualifiedVehicleMotionOutputPort {
-        doc /* Publishes qualified physical vehicle motion and standstill evidence to SettingsPolicy, SessionPolicy, DemandPolicy and service aggregation. The publication remains live during startup/disarm and reports unavailable until its qualification criteria are met. */
+        doc /* Publishes qualified physical vehicle motion and standstill evidence to SettingsPolicy, SessionPolicy and DemandPolicy. The publication remains live during startup/disarm and reports unavailable until its qualification criteria are met. */
         out item payload:QualifiedMotion :>> QualifiedVehicleMotionOutputPort::payload;
     }
     port def AppliedTractionStateOutputPort :> ActualTractionOutputPort {
-        doc /* Publishes qualified observed applied-output evidence, including independently qualified positive torque and powered-forward travel, to DemandPolicy and service aggregation. It is derived from actual output observations and remains separate from the requested command. */
+        doc /* Publishes qualified observed applied-output evidence, including independently qualified positive torque and powered-forward travel, to DemandPolicy. It is derived from actual output observations and remains separate from the requested command. */
         out item payload:X2CitySharedSoftwareTypes::ActualTractionOutput :>> ActualTractionOutputPort::payload;
     }
-    item def TractionObservation:>ContextualSoftwareInformation, ServiceReportInformation;
-    port def TractionObservationOutputPort :> ServiceReportOutputPort {
-        doc /* Publishes the traction observation envelope to SessionPolicy, BatteryProtection, LightPolicy and service aggregation. It provides current traction facts for policy and reporting, not a command or actuation channel. */
-        out item payload:TractionObservation :>> ServiceReportOutputPort::payload;
+    item def TractionObservation:>ContextualSoftwareInformation;
+    port def TractionObservationOutputPort {
+        doc /* Publishes the traction observation envelope to SessionPolicy, BatteryProtection and LightPolicy. It provides current traction facts for operational policy, not a command or actuation channel. */
+        out item payload:TractionObservation;
     }
 }
 
@@ -108,7 +107,7 @@ package X2CitySoftwareComponent_TractionControl {
         // support it, so a later Ready guard has no circular command dependency.
         port qualifiedMotionOut:QualifiedMotionOutputPort :>> MotorControl::qualifiedVehicleMotionOut;
         port appliedTractionStateOut:AppliedTractionStateOutputPort :>> MotorControl::actualTractionOutputOut;
-        port tractionObservationOut:TractionObservationOutputPort :>> MotorControl::serviceReportOut;
+        port tractionObservationOut:TractionObservationOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
         // Fixed build-time estimation and motion parameters. The ID is read-only provenance and

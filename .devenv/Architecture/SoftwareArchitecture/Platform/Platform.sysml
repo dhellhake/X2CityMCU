@@ -7,14 +7,14 @@ package X2CitySoftwareContract_Platform {
     }
     item def RetentionCandidate:>ContextualSoftwareInformation;
     port def RetentionCandidateOutputPort {
-        doc /* Publishes retained-state information to policy components and service aggregation. BatteryProtection uses the retained candidate with its validity context for reached-10% recovery handling. */
+        doc /* Publishes retained-state information to policy components. BatteryProtection uses the retained candidate with its validity context for reached-10% recovery handling. */
         out item payload:RetentionCandidate;
     }
     item def PlatformHealth:>ContextualSoftwareInformation {
         attribute fastSafetyState:String; // enum: inactive, armed, inhibited, latched.
     }
     port def PlatformHealthOutputPort {
-        doc /* Publishes Platform health and its independent FastSafetyState to component service/event receptacles and service aggregation. This platform result is not routed back as a sensor root cause. */
+        doc /* Publishes Platform health and its independent FastSafetyState to component event receptacles. This platform result is not routed back as a sensor root cause. */
         out item payload:PlatformHealth;
     }
     // Normalized qualified evidence from one producer. Platform consumes this evidence without

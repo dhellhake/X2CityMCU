@@ -50,15 +50,10 @@ package X2CityDetailedUnit_DemandArbiter {
         doc /* Sends the signed requested wheel torque, decision sequence and independently expiring command to U-TRACTION-ACCEPT; it is a request, never output evidence. */
         out item payload:WheelTorqueRequest;
     }
-    port def DemandDiagnosticOutputPort {
-        doc /* Sends service-only restriction, unavailable and regeneration-recovery episode diagnostics to Service; it has no rider indication or control return path. */
-        out item payload:DemandPolicyDiagnostic;
-    }
     part def DemandArbiter {
         /* Atomically evaluates current qualified rider, active-setting, authority, capability,
            motion and actual-output snapshots. It emits requestedWheelTorqueNewtonMetres with
-           independent authority generation and command expiry; diagnostic reasons are
-           service-only. Pending settings, a command or PWM/register state never establish
+           independent authority generation and command expiry. Pending settings, a command or PWM/register state never establish
            motion, actual applied torque, powered-forward travel or post-stop regen rearm. */
         port executionTimeIn:ExecutionTimeInputPort;
         port acceleratorIn:DemandAcceleratorInputPort;
@@ -74,6 +69,5 @@ package X2CityDetailedUnit_DemandArbiter {
         attribute compiledDemandPolicyCalibration:DemandPolicyCalibration;
         attribute compiledCalibrationValid:Boolean;
         port commandOut:DemandCommandOutputPort;
-        port diagnosticOut:DemandDiagnosticOutputPort;
     }
 }

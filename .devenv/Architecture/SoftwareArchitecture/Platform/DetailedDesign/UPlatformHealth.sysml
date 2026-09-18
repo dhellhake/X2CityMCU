@@ -15,7 +15,7 @@ package X2CityDetailedUnit_PlatformHealth {
     }
     part def PlatformHealthManager {
         /* Receives normalized sensor health without returning it as a sensor cause, then publishes
-           platform health/dispatch/resource events. Session and service consumers retain fault
+           platform health/dispatch/resource events. Session consumers retain fault
            recognition and reporting policy; this unit creates no feedback route to a sensor. */
         port executionTimeIn:ExecutionTimeInputPort; port sensorHealthIn:SensorHealthInputPort; port acceleratorQualificationIn:AcceleratorQualificationInputPort; port healthOut:PlatformHealthOutputPort; }
 }

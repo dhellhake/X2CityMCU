@@ -36,7 +36,7 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def PhaseCurrentEpochOutputPort {
-        doc /* Publishes the qualified same-aperture three-phase current epoch to TractionControl and service aggregation. The record includes reconstruction, rank, timing and calibration context required by the fast control consumer. */
+        doc /* Publishes the qualified same-aperture three-phase current epoch to TractionControl. The record includes reconstruction, rank, timing and calibration context required by the fast control consumer. */
         out item payload:PhaseCurrentEpoch;
     }
     item def PhaseVoltageDiagnostic:>ContextualSoftwareInformation {
@@ -48,11 +48,11 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def PhaseVoltageDiagnosticOutputPort {
-        doc /* Publishes separately qualified phase-voltage diagnostic observations to BatteryProtection and service aggregation. This slow diagnostic output is not used as fast FOC feedback. */
+        doc /* Publishes separately qualified phase-voltage diagnostic observations to BatteryProtection. This slow diagnostic output is not used as fast FOC feedback. */
         out item payload:PhaseVoltageDiagnostic;
     }
     port def MotorPhaseHealthOutputPort {
-        doc /* Publishes phase-current and phase-voltage conversion health evidence to Platform, SessionPolicy, TractionControl and service aggregation. It carries qualification state rather than a phase command. */
+        doc /* Publishes phase-current and phase-voltage conversion health evidence to Platform, SessionPolicy and TractionControl. It carries qualification state rather than a phase command. */
         out item payload:SensorHealthCondition;
     }
 }

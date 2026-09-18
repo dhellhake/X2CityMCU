@@ -29,7 +29,7 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def FastDcLinkVoltageOutputPort {
-        doc /* Publishes qualified fast DC-link voltage with paired source ranks, aperture, timestamp and calibration context to TractionControl and service aggregation. This output is the fast Vdc control input and is not derived by MotorPhaseInterface. */
+        doc /* Publishes qualified fast DC-link voltage with paired source ranks, aperture, timestamp and calibration context to TractionControl. This output is the fast Vdc control input and is not derived by MotorPhaseInterface. */
         out item payload:FastDcLinkVoltage;
     }
     item def SupplyVoltage:>ContextualSoftwareInformation {
@@ -42,11 +42,11 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def SupplyVoltageOutputPort {
-        doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy, BatteryProtection and service aggregation. The record retains the selected rail identity and source provenance. */
+        doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy and BatteryProtection. The record retains the selected rail identity and source provenance. */
         out item payload:SupplyVoltage;
     }
     port def SupplyHealthOutputPort {
-        doc /* Publishes supply conversion health evidence to Platform, SessionPolicy, TractionControl and service aggregation. It qualifies the fast and regular source paths rather than carrying a voltage command. */
+        doc /* Publishes supply conversion health evidence to Platform, SessionPolicy and TractionControl. It qualifies the fast and regular source paths rather than carrying a voltage command. */
         out item payload:SensorHealthCondition;
     }
 }

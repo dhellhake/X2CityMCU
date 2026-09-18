@@ -14,8 +14,6 @@ package X2CitySoftwareArchitecture {
     public import X2CitySoftwareContract_BatteryProtection::*;
     public import X2CitySoftwareComponent_LightPolicy::*;
     public import X2CitySoftwareContract_LightPolicy::*;
-    public import X2CitySoftwareComponent_ServiceInformation::*;
-    public import X2CitySoftwareContract_ServiceInformation::*;
     public import X2CitySoftwareComponent_AnalogAcquisition::*;
     public import X2CitySoftwareContract_AnalogAcquisition::*;
     public import X2CitySoftwareComponent_AcceleratorInterface::*;
@@ -50,11 +48,6 @@ package X2CitySoftwareArchitecture {
         port analogRawAcquisition:~RawAdcAcquisitionInputPort;
         port hallCapture:~HallCaptureInputPort;
     }
-    part def MaintainerServiceBoundary {
-        /* Exposes a read-only service snapshot to a maintainer or service consumer. This boundary
-           carries presentation data only and has no control path back into the software architecture. */
-        port snapshot:~ServiceSnapshotOutputPort;
-    }
     part def CallingExecutionContextBoundary {
         doc /* Runtime boundary representing the caller's execution context. Immediately before
            invoking a component, its caller samples the live host-boot monotonic microsecond
@@ -71,7 +64,6 @@ package X2CitySoftwareArchitecture {
     part bmsLinkVehicle:BmsLink;
     part batteryProtectionVehicle:BatteryProtection;
     part lightPolicyVehicle:LightPolicy;
-    part serviceInformationVehicle:ServiceInformation;
     part analogAcquisitionVehicle:AnalogAcquisition;
     part acceleratorInterfaceVehicle:AcceleratorInterface;
     part brakeInterfaceVehicle:BrakeInterface;
@@ -85,7 +77,6 @@ package X2CitySoftwareArchitecture {
     part suppliedBmsVehicle:SuppliedBms;
     part suppliedVd18mtVehicle:SuppliedVd18mt;
     part vehicleBoundary:VehicleSoftwareBoundary;
-    part vehicleMaintainerBoundary:MaintainerServiceBoundary;
     part callingExecutionContext:CallingExecutionContextBoundary;
 
     // Every project-owned software component receives its invocation reference from the runtime
@@ -98,7 +89,6 @@ package X2CitySoftwareArchitecture {
     flow executionTimeToBmsLink from callingExecutionContext.executionTimeOut.payload to bmsLinkVehicle.executionTimeIn.payload;
     flow executionTimeToBatteryProtection from callingExecutionContext.executionTimeOut.payload to batteryProtectionVehicle.executionTimeIn.payload;
     flow executionTimeToLightPolicy from callingExecutionContext.executionTimeOut.payload to lightPolicyVehicle.executionTimeIn.payload;
-    flow executionTimeToServiceInformation from callingExecutionContext.executionTimeOut.payload to serviceInformationVehicle.executionTimeIn.payload;
     flow executionTimeToAnalogAcquisition from callingExecutionContext.executionTimeOut.payload to analogAcquisitionVehicle.executionTimeIn.payload;
     flow executionTimeToAcceleratorInterface from callingExecutionContext.executionTimeOut.payload to acceleratorInterfaceVehicle.executionTimeIn.payload;
     flow executionTimeToBrakeInterface from callingExecutionContext.executionTimeOut.payload to brakeInterfaceVehicle.executionTimeIn.payload;
@@ -163,9 +153,8 @@ package X2CitySoftwareArchitecture {
 
     // R-V41..R-V44 carry one-way qualified sensor evidence. The accelerator composite carries
     // its SensorHealthCondition-compatible Qualification member with Position, avoiding a second
-    // accelerator health publication to Session or Service. SensorHealthCondition derives
-    // ContextualSoftwareInformation, so the generic record-collection inputs accept composites
-    // and other sensor evidence; Platform and Traction use exact derived health payloads.
+    // accelerator health publication to Session. Platform and Traction use exact derived health
+    // payloads.
     // Platform may latch FastSafetyState from an explicit request. Its platformHealthOut is never a
     // route back into sensorHealthIn, so a platform result cannot become a sensor root cause.
     flow rV41AnalogHealthPlatform from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to platformVehicle.sensorHealthIn.payload;
@@ -186,7 +175,7 @@ package X2CitySoftwareArchitecture {
     flow rV43PhaseHealthTraction from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
     flow rV43HallHealthTraction from hallInterfaceVehicle.hallHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
 
-    // SW-I-009 / R-V31: exact vehicle-local context and health service/event family.
+    // SW-I-009 / R-V31: exact vehicle-local context and health event family.
     flow rV31ContextSet from platformVehicle.platformContextOut.payload to setVehicle.platformContextIn.payload;
     flow rV31HealthSet from platformVehicle.platformHealthOut.payload to setVehicle.platformHealthIn.payload;
     flow rV31ContextSession from platformVehicle.platformContextOut.payload to sessionVehicle.platformContextIn.payload;
@@ -201,8 +190,6 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthBattery from platformVehicle.platformHealthOut.payload to batteryProtectionVehicle.platformHealthIn.payload;
     flow rV31ContextLight from platformVehicle.platformContextOut.payload to lightPolicyVehicle.platformContextIn.payload;
     flow rV31HealthLight from platformVehicle.platformHealthOut.payload to lightPolicyVehicle.platformHealthIn.payload;
-    flow rV31ContextService from platformVehicle.platformContextOut.payload to serviceInformationVehicle.platformContextIn.payload;
-    flow rV31HealthService from platformVehicle.platformHealthOut.payload to serviceInformationVehicle.platformHealthIn.payload;
     flow rV31ContextAnalog from platformVehicle.platformContextOut.payload to analogAcquisitionVehicle.platformContextIn.payload;
     flow rV31HealthAnalog from platformVehicle.platformHealthOut.payload to analogAcquisitionVehicle.platformHealthIn.payload;
     flow rV31ContextAccelerator from platformVehicle.platformContextOut.payload to acceleratorInterfaceVehicle.platformContextIn.payload;
@@ -222,39 +209,6 @@ package X2CitySoftwareArchitecture {
     flow rV31ContextPlatform from platformVehicle.platformContextOut.payload to platformVehicle.platformContextIn.payload;
     flow rV31HealthPlatform from platformVehicle.platformHealthOut.payload to platformVehicle.platformHealthIn.payload;
 
-    // SW-I-008 / R-V32: all explicit vehicle producer ports retain their owner types.
-    flow rV32AnalogRegular from analogAcquisitionVehicle.analogSampleOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32AnalogFast from analogAcquisitionVehicle.fastInjectedEpochOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to serviceInformationVehicle.acceleratorPositionIn.payload;
-    flow rV32Brake from brakeInterfaceVehicle.brakeStateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32SupplyFast from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32SupplyRegular from supplyInterfaceVehicle.supplyVoltageOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32PhaseCurrent from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32PhaseDiagnostic from motorPhaseInterfaceVehicle.phaseVoltageDiagnosticOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Hall from hallInterfaceVehicle.hallElectricalPositionOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32HmiSettings from hmiVehicle.hmiSettingsRequestOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32HmiLight from hmiVehicle.hmiLightRequestOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Settings from setVehicle.ridingSettingsStateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Authority from sessionVehicle.ridingAuthorityOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32SessionReport from sessionVehicle.sessionReportOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32DemandDiagnostic from demandVehicle.demandPolicyDiagnosticOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Bms from bmsLinkVehicle.bmsObservationOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Battery from batteryProtectionVehicle.batteryCapabilityEnvelopeOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Light from lightPolicyVehicle.lightIntentOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32QualifiedMotion from tractionControlVehicle.qualifiedMotionOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32ActualOutput from tractionControlVehicle.appliedTractionStateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32Traction from tractionControlVehicle.tractionObservationOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32PlatformContext from platformVehicle.platformContextOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32PlatformRetention from platformVehicle.retentionCandidateOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV32PlatformHealth from platformVehicle.platformHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44AnalogHealthService from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44BrakeHealthService from brakeInterfaceVehicle.brakeHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44TemperatureHealthService from temperatureInterfaceVehicle.temperatureHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44SupplyHealthService from supplyInterfaceVehicle.supplyHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44PhaseHealthService from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-    flow rV44HallHealthService from hallInterfaceVehicle.hallHealthOut.payload to serviceInformationVehicle.serviceRecordIn.payload;
-
     // R-X01: opaque supplied VD18MT transport, both byte/report directions.
     flow rX01Receive from suppliedVd18mtVehicle.hmiTransportIo.payload to hmiVehicle.hmiTransportExchange.payload;
     flow rX01Transmit from hmiVehicle.hmiTransportExchange.payload to suppliedVd18mtVehicle.hmiTransportIo.payload;
@@ -267,9 +221,6 @@ package X2CitySoftwareArchitecture {
     // vehicle acquisition records.
     flow rX03VehicleAnalog from vehicleBoundary.analogRawAcquisition.payload to analogAcquisitionVehicle.rawAdcAcquisitionIn.payload;
     flow rX03VehicleHall from vehicleBoundary.hallCapture.payload to hallInterfaceVehicle.hallCaptureIn.payload;
-
-    // R-X04 read-only service presentation; there is deliberately no return/control flow.
-    flow rX04Vehicle from serviceInformationVehicle.serviceSnapshotOut.payload to vehicleMaintainerBoundary.snapshot.payload;
 
     // The JEOS-to-output fast chain is Detailed Design-only: U-TRACTION-ACQUISITION directly
     // hands its FastEpoch to U-TRACTION-CONTROL, then U-TRACTION-OUTPUT receives PWMAndADCSamplingPlan.

@@ -25,12 +25,10 @@ package X2CityContract_BatteryProtection {
 package X2CityComponent_BatteryProtection {
     private import X2CitySharedContracts::*;
     private import X2CityContract_BatteryProtection::*;
-    private import X2CityContract_ServiceInformation::*;
     part def BatteryProtection { // LE-BAT-POLICY
         /* Assesses battery observations for the distinct positive-discharge and negative-charge
            envelope, restrictions, and protection/fault status used by riding policies. */
         port batteryConditionObservationIn:BatteryConditionObservationInputPort;
         port batteryCapabilityEnvelopeOut:BatteryCapabilityEnvelopeOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 }

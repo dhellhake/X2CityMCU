@@ -25,7 +25,6 @@ sequenceDiagram
     participant D as SC-DEMAND.V
     participant T as SC-TRACTION-CTRL.V
     participant L as SC-LIGHT-POLICY.V
-    participant SI as SC-SERVICE-INFO.V
     participant CE as CallingExecutionContextBoundary
 
     CE->>CE: sample live monotonic currentTimeMicroseconds immediately before each component invocation
@@ -58,12 +57,9 @@ sequenceDiagram
     end
     S-->>H: selected report
     BP-->>H: usable charge/current information or presentation fallback input
-    H-->>SI: current HMI-related observation
-    L-->>SI: current logical light intent
-    T-->>SI: requested versus qualified actual-output observation
 ```
 
-`SC-TRACTION-CTRL.V` requesting zero does not prove zero physical torque or protection.  `SC-SERVICE-INFO.V` only assembles producer-tagged current observations and cannot grant authority or clear inhibition.
+`SC-TRACTION-CTRL.V` requesting zero does not prove zero physical torque or protection.
 
 ## Fast traction epoch and output latch
 
@@ -174,7 +170,6 @@ sequenceDiagram
     participant O as U-TRACTION-ACTUAL-OUTPUT
     participant D as U-DEMAND-ARBITER
     participant T as U-TRACTION-ACCEPT
-    participant SI as U-SERVICE-INFO-COLLECT
     Note over D: Post-stop regen disabled at new context and on qualified standstill
     M-->>D: current speed, direction, standstill or unavailable
     O-->>D: current qualified applied-torque estimate / powered-forward-travel or unavailable
@@ -186,8 +181,6 @@ sequenceDiagram
     end
     D->>D: apply both-sign inhibits; then sign-specific limits and active profile
     D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds
-    D-->>SI: reason, decision generation and restriction state only
-    Note over SI: no rider indication or control return
 ```
 
 For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm, regeneration recovery hold and the negative capability branch constrain negative only; lever and the positive branch constrain positive only; active-profile/ramp/taper results are then clamped within the remaining envelopes. A restriction recovery or capability increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies current branch limits and restriction generation; `SC-DEMAND` owns qualification of each reduction episode: regenerative-range exit or standstill qualifies it before or after clearance, while clearance/partial relaxation during continuous moving regenerative demand cannot increase the held negative ceiling. When qualification and current clearance both exist, recovery is automatic, including at standstill; each new reduction starts a new episode. Session fault restart remains `SC-SESSION` state; neither that nor restriction recovery re-arms post-stop regeneration.
@@ -267,6 +260,6 @@ stateDiagram-v2
 
 ## Traceability and limits
 
-The vehicle views elaborate `SW-I-001` through `SW-I-006` and `SW-I-008/009`. They retain the ownership and constraints of [ARCH-003](../ARCH-003_Software_Architecture.md), its [retention rules](../ARCH-003_Software_Architecture.md#retained-restriction-and-reset-state) and [typed interactions](../ARCH-003_Software_Architecture.md#typed-software-interactions); [Vehicle startup, Ready and command acceptance](#vehicle-startup-ready-and-command-acceptance) is the canonical dynamic startup view.
+The vehicle views elaborate `SW-I-001` through `SW-I-006` and `SW-I-009`. They retain the ownership and constraints of [ARCH-003](../ARCH-003_Software_Architecture.md), its [retention rules](../ARCH-003_Software_Architecture.md#retained-restriction-and-reset-state) and [typed interactions](../ARCH-003_Software_Architecture.md#typed-software-interactions); [Vehicle startup, Ready and command acceptance](#vehicle-startup-ready-and-command-acceptance) is the canonical dynamic startup view.
 
 The source remains underdefined on event-detection mechanism, timing and concurrent-sampling realization, physical activity/path evidence, self-test scope, retained-state integrity, and diagnostic coverage. The coherent-snapshot precedence is defined; these views do not resolve the remaining qualification gates.

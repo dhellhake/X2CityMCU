@@ -7,12 +7,12 @@ package X2CitySoftwareContract_HmiAdapter {
     }
     item def HmiSettingsRequest:>ContextualSoftwareInformation;
     port def HmiSettingsRequestOutputPort {
-        doc /* Publishes the HMI settings information parsed and qualified by HmiAdapter to SettingsPolicy and service aggregation. The record is a settings request/context handoff, not an already active demand selection. */
+        doc /* Publishes the HMI settings information parsed and qualified by HmiAdapter to SettingsPolicy. The record is a settings request/context handoff, not an already active demand selection. */
         out item payload:HmiSettingsRequest;
     }
     item def HmiLightRequest:>ContextualSoftwareInformation;
     port def HmiLightRequestOutputPort {
-        doc /* Publishes parsed and qualified HMI light requests to LightPolicy and service aggregation. HmiAdapter does not select physical lamp drive modes at this boundary. */
+        doc /* Publishes parsed and qualified HMI light requests to LightPolicy. HmiAdapter does not select physical lamp drive modes at this boundary. */
         out item payload:HmiLightRequest;
     }
     port def HmiReportInputPort {

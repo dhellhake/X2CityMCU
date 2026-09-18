@@ -3,7 +3,6 @@ package X2CitySystemArchitecture {
     private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_DemandPolicy::*;
     private import X2CityContract_MotorControl::*;
-    private import X2CityContract_ServiceInformation::*;
     private import X2CityContract_Input::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
@@ -45,8 +44,6 @@ package X2CitySystemArchitecture {
     item def RiderStatusInformation:>QualifiedInformationRecord;
     item def LightingContext:>QualifiedInformationRecord;
     item def LightActuationIntent:>QualifiedInformationRecord;
-    alias ServiceReportInformation for X2CityContract_ServiceInformation::ServiceReportInformation;
-    item def DemandPolicyDiagnostics:>ServiceReportInformation;
     item def BmsTelemetry:>QualifiedInformationRecord;
     item def BmsReadRequest:>QualifiedInformationRecord;
 
@@ -113,12 +110,6 @@ package X2CitySystemArchitecture {
     port def LightActuationIntentInputPort {
         doc /* Carries LightPolicy's selected front and rear logical lamp modes to the Auxiliary actuation boundary. Auxiliary applies the intent to lamp hardware; this contract does not define the physical drive implementation. */
         in item payload:LightActuationIntent;
-    }
-    alias ServiceReportOutputPort for X2CityContract_ServiceInformation::ServiceReportOutputPort;
-    alias ServiceReportInputPort for X2CityContract_ServiceInformation::ServiceReportInputPort;
-    port def DemandPolicyDiagnosticsOutputPort {
-        doc /* Carries DemandPolicy's read-only policy status and diagnostic observations to ServiceInformation. It supports service reporting only and cannot authorize, refresh or command traction. */
-        out item payload:DemandPolicyDiagnostics;
     }
     port def BmsTelemetryOutputPort {
         doc /* Carries battery data and protection-state observations from the supplied BMS assembly to BmsLink. BmsLink validates and qualifies this telemetry before using it as battery evidence; the path carries no software control decision. */
@@ -192,16 +183,6 @@ package X2CitySystemArchitecture {
         end consumer:LightActuationIntentInputPort;
         flow producer.payload to consumer.payload;
     }
-    interface def IfA008ServiceReport {
-        end producer:ServiceReportOutputPort;
-        end consumer:ServiceReportInputPort;
-        flow producer.payload to consumer.payload;
-    }
-    interface def IfA008DemandPolicyDiagnostics {
-        end producer:DemandPolicyDiagnosticsOutputPort;
-        end consumer:ServiceReportInputPort;
-        flow producer.payload to consumer.payload;
-    }
     interface def IfA009BmsReadRequest {
         end producer:BmsReadRequestOutputPort;
         end consumer:BmsReadRequestInputPort;
@@ -227,7 +208,6 @@ package X2CitySystemArchitecture {
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port activeRidingSettingsOut:ActiveRidingSettingsOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def SessionPolicy { // LE-SESSION
@@ -240,7 +220,6 @@ package X2CitySystemArchitecture {
         port actualTractionOutputIn:ActualTractionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def DemandPolicy { // LE-DEMAND
@@ -252,7 +231,6 @@ package X2CitySystemArchitecture {
         port batteryCapabilityEnvelopeIn:BatteryCapabilityEnvelopeInputPort;
         port actualTractionOutputIn:ActualTractionInputPort;
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort;
-        port demandPolicyDiagnosticsOut:DemandPolicyDiagnosticsOutputPort;
     }
 
     part def HmiAdapter { // LE-HMI
@@ -260,7 +238,6 @@ package X2CitySystemArchitecture {
         port lightingContextOut:LightingContextOutputPort;
         port riderStatusInformationIn:RiderStatusInformationInputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def Input { // LE-INPUT
@@ -289,13 +266,11 @@ package X2CitySystemArchitecture {
 
     part def InputHardware; // LE-INPUT-HW
     part def InputQualification { // LE-INPUT-QUAL
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def BmsLink { // LE-BMS-LINK
         port bmsTelemetryIn:BmsTelemetryInputPort;
         port bmsReadRequestOut:BmsReadRequestOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def Traction { // LE-TRACTION
@@ -331,7 +306,6 @@ package X2CitySystemArchitecture {
     part def BatteryProtection { // LE-BAT-POLICY
         port batteryConditionObservationIn:BatteryConditionObservationInputPort;
         port batteryCapabilityEnvelopeOut:BatteryCapabilityEnvelopeOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def EnergyPath; // LE-ENERGY-PATH
@@ -349,7 +323,6 @@ package X2CitySystemArchitecture {
         port hmiLightingContextIn:LightingContextInputPort;
         port inputLightingContextIn:LightingContextInputPort;
         port lightActuationIntentOut:LightActuationIntentOutputPort;
-        port serviceReportOut:ServiceReportOutputPort;
     }
 
     part def AuxiliaryPower; // LE-AUX-POWER
@@ -365,22 +338,7 @@ package X2CitySystemArchitecture {
 
     part def ComputeHardware; // LE-COMPUTE-HW
     part def Platform { // LE-PLATFORM
-        port serviceReportOut:ServiceReportOutputPort;
         port acceleratorHealthIn:AcceleratorHealthInputPort;
-    }
-
-    part def Service { // LE-SERVICE
-        part serviceInformation:ServiceInformation;
-        part serviceAccess:ServiceAccess;
-    }
-
-    part def ServiceInformation { // LE-SERVICE-INFO
-        port serviceReportIn:ServiceReportInputPort;
-        port serviceReportOut:ServiceReportOutputPort;
-    }
-
-    part def ServiceAccess { // LE-SERVICE-ACCESS
-        port serviceReportIn:ServiceReportInputPort;
     }
 
     part def MechanicalControl; // LE-MECH; physical mechanical control boundary
@@ -402,7 +360,6 @@ package X2CitySystemArchitecture {
         part energy:Energy;
         part auxiliary:Auxiliary;
         part compute:Compute;
-        part service:Service;
     }
 
     // LE-VEH is an installed-vehicle scope view, not a parent of the whole EPCS.
@@ -463,21 +420,6 @@ package X2CitySystemArchitecture {
     flow ifA006InputToLightPolicy from x2CityVehicle.epcs.input.lightingContextOut.payload to x2CityVehicle.epcs.auxiliary.lightPolicy.inputLightingContextIn.payload;
     flow ifA006LightPolicyToAuxiliary from x2CityVehicle.epcs.auxiliary.lightPolicy.lightActuationIntentOut.payload to x2CityVehicle.epcs.auxiliary.lightActuationIntentIn.payload;
 
-
-    // IF-A-008: applicable producer information to LE-SERVICE-INFO.
-    flow ifA008SettingsToService from x2CityVehicle.epcs.riding.settings.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008SessionToService from x2CityVehicle.epcs.riding.session.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008DemandDiagnosticsToService from x2CityVehicle.epcs.riding.demand.demandPolicyDiagnosticsOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008HmiToService from x2CityVehicle.epcs.riding.hmi.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008InputQualificationToService from x2CityVehicle.epcs.input.inputQualification.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008AcceleratorToService from x2CityVehicle.epcs.input.accelerator.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008BmsLinkToService from x2CityVehicle.epcs.input.bmsLink.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008MotorControlToService from x2CityVehicle.epcs.traction.motorControl.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008BatteryProtectionToService from x2CityVehicle.epcs.energy.batteryProtection.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008LightPolicyToService from x2CityVehicle.epcs.auxiliary.lightPolicy.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    flow ifA008PlatformToService from x2CityVehicle.epcs.compute.platform.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
-    // IF-A-008: current service/configuration information to the service access boundary.
-    flow ifA008ServiceReport from x2CityVehicle.epcs.service.serviceInformation.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceAccess.serviceReportIn.payload;
 
     // IF-A-009: the selected BMS read information endpoint.
     flow ifA009BmsReadRequest from x2CityVehicle.epcs.input.bmsLink.bmsReadRequestOut.payload to x2CityVehicle.epcs.energy.bms.bmsReadRequestIn.payload;

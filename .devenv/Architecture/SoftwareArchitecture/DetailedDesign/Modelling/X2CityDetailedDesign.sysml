@@ -30,8 +30,6 @@ package X2CityDetailedDesign {
     public import X2CityDetailedUnit_BmsLinkPublish::*;
     public import X2CityDetailedUnit_BatteryProtectionEvaluate::*;
     public import X2CityDetailedUnit_BatteryProtectionRestriction::*;
-    public import X2CityDetailedUnit_ServiceInfoCollect::*;
-    public import X2CityDetailedUnit_ServiceInfoSnapshot::*;
 
     part def RidingUnits {
         part setState:RidingSettingsStateManager;
@@ -67,10 +65,6 @@ package X2CityDetailedDesign {
         part batteryEvaluate:BatteryCapabilityEvaluator;
         part batteryRestriction:BatteryCapabilityRestrictor;
     }
-    part def ServiceUnits {
-        part collect:ServiceRecordCollector;
-        part snapshot:ServiceSnapshotPublisher;
-    }
     part def SelectedTraction :> X2CitySystemArchitecture::Traction {
         part motorControl:TractionControlImplementation :>> X2CitySystemArchitecture::Traction::motorControl;
     }
@@ -86,7 +80,6 @@ package X2CityDetailedDesign {
         ref part traction:TractionControlImplementation = epcs.traction.motorControl;
         part platform:PlatformUnits;
         part energy:EnergyUnits;
-        part service:ServiceUnits;
         // References the one software-architecture runtime boundary rather than creating an
         // application clock producer in the detailed design.
         ref part callingExecutionContext:CallingExecutionContextBoundary = X2CitySoftwareArchitecture::callingExecutionContext;
@@ -124,8 +117,6 @@ package X2CityDetailedDesign {
     flow vExecutionTimeToBmsPublish from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.bmsPublish.executionTimeIn.payload;
     flow vExecutionTimeToBatteryEvaluate from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.batteryEvaluate.executionTimeIn.payload;
     flow vExecutionTimeToBatteryRestriction from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.batteryRestriction.executionTimeIn.payload;
-    flow vExecutionTimeToServiceCollect from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.service.collect.executionTimeIn.payload;
-    flow vExecutionTimeToServiceSnapshot from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.service.snapshot.executionTimeIn.payload;
     // vehicle.traction is the sole selected occurrence bound to tractionControlVehicle, so its
     // inherited executionTimeIn is supplied by executionTimeToTractionControl at software scope.
     // TractionControlImplementation forwards that one bounded invocation reference to its units.
@@ -193,9 +184,9 @@ package X2CityDetailedDesign {
     flow vMotorPhaseToTraction from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.traction.phaseCurrentEpochIn.payload;
     flow vSupplyFastToTraction from vehicle.sensors.supplyFast.fastDcLinkVoltageOut.payload to vehicle.traction.fastDcLinkVoltageIn.payload;
 
-    // Every sensing unit publishes health to platform aggregation, session eligibility and service evidence.
-    // Accelerator's one composite conveys its Qualification to Platform and reaches Session and
-    // Service through the same composite position route below.
+    // Every sensing unit publishes health to platform aggregation and session eligibility.
+    // Accelerator's one composite conveys its Qualification to Platform and reaches Session
+    // through the same composite position route below.
     flow vAnalogRegularHealthToPlatform from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vAnalogFastHealthToPlatform from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vAcceleratorHealthToPlatform from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload.Qualification to vehicle.platform.health.acceleratorQualificationIn.payload;
@@ -220,17 +211,6 @@ package X2CityDetailedDesign {
     flow vSupplyRegularHealthToSession from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPlatformHealthToSession from vehicle.platform.health.healthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
 
-    flow vAnalogRegularHealthToService from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAnalogFastHealthToService from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vBrakeHealthToService from vehicle.sensors.brakeQualify.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vTemperatureHealthToService from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vHallCaptureHealthToService from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vHallPositionHealthToService from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vMotorPhaseFastHealthToService from vehicle.sensors.motorPhaseFast.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vMotorPhaseDiagHealthToService from vehicle.sensors.motorPhaseDiag.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSupplyFastHealthToService from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSupplyRegularHealthToService from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-
     // Seven safety-relevant direct health inputs independently inhibit traction control.
     flow vSupplyRegularHealthToTraction from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vHallCaptureHealthToTraction from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
@@ -240,7 +220,7 @@ package X2CityDetailedDesign {
     flow vSupplyFastHealthToTraction from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vTemperatureHealthToTraction from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
 
-    // Riding, energy, service and platform routes retained from the complete vehicle design.
+    // Riding, energy and platform routes retained from the complete vehicle design.
     flow vHmiSettingsToSet from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.riding.setState.requestedSettingsIn.payload;
     flow vHmiSettingsToSession from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vSetToSession from vehicle.riding.setState.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
@@ -283,28 +263,4 @@ package X2CityDetailedDesign {
     flow vPlatformContextToDemand from vehicle.platform.context.contextOut.payload to vehicle.riding.demandArbiter.platformContextIn.payload;
     flow vPlatformHealthToDemand from vehicle.platform.health.healthOut.payload to vehicle.riding.demandArbiter.platformHealthIn.payload;
 
-    flow vServiceCollectToSnapshot from vehicle.service.collect.collectedOut.payload to vehicle.service.snapshot.collectedIn.payload;
-    flow vHmiSettingsToService from vehicle.riding.hmiAdapter.settingsOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vHmiLightToService from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSettingsToService from vehicle.riding.setState.stateOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSessionAuthorityToService from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSessionReportToService from vehicle.riding.sessionReport.reportOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vDemandDiagnosticToService from vehicle.riding.demandArbiter.diagnosticOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vBmsToService from vehicle.energy.bmsPublish.observationOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vBatteryToService from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vLightToService from vehicle.riding.lightMode.intentOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vTractionToService from vehicle.traction.tractionObservationOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vPlatformContextToService from vehicle.platform.context.contextOut.payload to vehicle.service.collect.contextIn.payload;
-    flow vPlatformRetentionToService from vehicle.platform.retention.candidateOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vPlatformHealthToService from vehicle.platform.health.healthOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAnalogRegularToService from vehicle.sensors.analogRegular.analogSampleOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAnalogFastToService from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vAcceleratorToService from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.service.collect.acceleratorPositionIn.payload;
-    flow vBrakeToService from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vTemperatureToService from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSupplyFastToService from vehicle.sensors.supplyFast.fastDcLinkVoltageOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vSupplyRegularToService from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vMotorPhaseFastToService from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vMotorPhaseDiagToService from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.service.collect.producerRecordIn.payload;
-    flow vHallPositionToService from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.service.collect.producerRecordIn.payload;
 }

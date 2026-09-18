@@ -11,7 +11,7 @@ package X2CityDetailedUnit_MotorPhaseInterface {
         out item payload:PhaseCurrentFeedbackRecord;
     }
     port def PhaseVoltageDiagnosticOutputPort {
-        doc /* U-MOTOR-PHASE-DIAG sends regular-scan phase-voltage diagnostics for policy and service use; it cannot replace fast current feedback. */
+        doc /* U-MOTOR-PHASE-DIAG sends regular-scan phase-voltage diagnostics for policy use; it cannot replace fast current feedback. */
         out item payload:PhaseVoltageDiagnosticRecord;
     }
     port def InjectedEpochInputPort {

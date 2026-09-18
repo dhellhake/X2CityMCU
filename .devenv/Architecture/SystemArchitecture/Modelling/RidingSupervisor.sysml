@@ -6,7 +6,7 @@ package X2CityComponent_RidingSupervisor {
     private import X2CityComponent_HmiAdapter::*;
     // ARCH-001; LE identifiers remain authoritative.
     part def RidingSupervisor { // LE-RIDING
-        /* Composes settings, session, demand, and HMI policy components for supervised riding. It coordinates rider intent, authority, demand, presentation, and service information across those policies. */
+        /* Composes settings, session, demand, and HMI policy components for supervised riding. It coordinates rider intent, authority, demand and presentation across those policies. */
         part settings:SettingsPolicy;
         part session:SessionPolicy;
         part demand:DemandPolicy;

@@ -30,7 +30,7 @@ package X2CitySoftwareContract_BatteryProtection {
         attribute batteryFaultSummary:String;
     }
     port def BatteryCapabilityEnvelopeOutputPort {
-        doc /* Publishes separate qualified positive propulsion and negative regeneration capability branches, together with aggregate restriction and battery-fault context, to SessionPolicy, DemandPolicy, HmiAdapter and service aggregation. A restriction on one sign branch does not invalidate or withdraw the other branch. */
+        doc /* Publishes separate qualified positive propulsion and negative regeneration capability branches, together with aggregate restriction and battery-fault context, to SessionPolicy, DemandPolicy and HmiAdapter. A restriction on one sign branch does not invalidate or withdraw the other branch. */
         out item payload:BatteryCapabilityEnvelope;
     }
 }

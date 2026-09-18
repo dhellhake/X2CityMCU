@@ -1,6 +1,5 @@
 package X2CityContract_AcceleratorPositionProcessing {
     private import X2CitySharedContracts::*;
-    private import X2CityContract_ServiceInformation::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
     item def AcceleratorPositionValue { attribute acceleratorPositionPercent:Real; attribute acceleratorAtRest:Boolean; attribute sourceId:String; attribute acquisitionSequence:Integer; attribute measurementTimeMicroseconds:Integer; attribute configurationContextId:String; }
     item def AcceleratorPositionQualification:>QualifiedInformationRecord {
@@ -8,7 +7,7 @@ package X2CityContract_AcceleratorPositionProcessing {
         attribute initialQualificationPending:Boolean;
         attribute recognizedMeasurementFault:Boolean;
     }
-    item def AcceleratorPosition:>ServiceReportInformation {
+    item def AcceleratorPosition:>QualifiedInformationRecord {
         doc /* Single composite publication with Position and Qualification. Consumers use Position only when Qualification permits it, while retaining Qualification when Position is unavailable. */
         item Position:AcceleratorPositionValue;
         item Qualification:AcceleratorPositionQualification;
@@ -24,15 +23,12 @@ package X2CityContract_AcceleratorPositionProcessing {
 package X2CityComponent_AcceleratorPositionProcessing {
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
-    private import X2CityContract_ServiceInformation::*;
     part def AcceleratorPositionProcessing { // LE-ACCELERATOR-QUAL
         /* Software responsibility for obtaining and handling accelerator measurement evidence, then publishing semantic position/rest and qualification. It owns neither demand/session policy nor a fixed acquisition or transfer realization. */
         port measurementIn:AcceleratorMeasurementInputPort { doc /* Consumes abstract accelerator measurement evidence. */ }
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Provides the one semantic Position/Qualification composite. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Provides only the Qualification projection to platform health. */ }
-        port serviceReportOut:ServiceReportOutputPort { doc /* Provides the same Position/Qualification composite to service. */ }
-        // Both secondary publications are projections of one AcceleratorPosition composite.
+        // The health publication is a projection of one AcceleratorPosition composite.
         flow healthProjectionFromPosition from acceleratorPositionOut.payload.Qualification to acceleratorHealthOut.payload;
-        flow serviceProjectionFromPosition from acceleratorPositionOut.payload to serviceReportOut.payload;
     }
 }

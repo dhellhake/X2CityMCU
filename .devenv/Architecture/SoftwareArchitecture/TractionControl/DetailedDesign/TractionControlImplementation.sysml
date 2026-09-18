@@ -8,10 +8,10 @@ package X2CityDetailedComponent_TractionControlImplementation {
     private import X2CityDetailedUnit_TractionControl::*;
     private import X2CityDetailedUnit_TractionOutput::*;
 
-    // Retains the existing detailed observation envelope at the selected DD boundary while
-    // refining the software service-report occurrence with its compatible owner record.
+    // Retains the existing detailed observation envelope at the selected DD boundary with its
+    // compatible owner record.
     port def DetailedTractionObservationOutputPort :> X2CitySoftwareContract_TractionControl::TractionObservationOutputPort {
-        doc /* Publishes the existing U-TRACTION-ACCEPT observation envelope at the selected detailed boundary. The record remains compatible with the inherited software service-report occurrence and with existing detailed generic consumers. */
+        doc /* Publishes the existing U-TRACTION-ACCEPT observation envelope at the selected detailed boundary for the existing detailed consumers. */
         out item payload:TractionObservationRecord :>> X2CitySoftwareContract_TractionControl::TractionObservationOutputPort::payload;
     }
 

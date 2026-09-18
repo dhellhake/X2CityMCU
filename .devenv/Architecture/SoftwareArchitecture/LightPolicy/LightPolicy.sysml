@@ -6,7 +6,7 @@ package X2CitySoftwareContract_LightPolicy {
     }
     item def LightIntent:>ContextualSoftwareInformation;
     port def LightIntentOutputPort {
-        doc /* Publishes logical light intent to the vehicle boundary and service aggregation. The intent describes policy selection; physical lamp drive and unpowered behavior remain outside this port contract. */
+        doc /* Publishes logical light intent to the vehicle boundary. The intent describes policy selection; physical lamp drive and unpowered behavior remain outside this port contract. */
         out item payload:LightIntent;
     }
 }

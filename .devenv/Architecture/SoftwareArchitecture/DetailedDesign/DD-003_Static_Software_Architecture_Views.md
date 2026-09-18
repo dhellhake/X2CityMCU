@@ -1,6 +1,6 @@
 # DD-003 — Static software architecture views
 
-**Draft vehicle baseline — 2026-09-16.** Full static composition, Hall/FOC ownership, runtime realization, battery/BMS/service units, deployment and local-interface views are retained.
+**Draft vehicle baseline — 2026-09-16.** Full static composition, Hall/FOC ownership, runtime realization, battery/BMS units, deployment and local-interface views are retained.
 **Draft 1.3 — 2026-09-14; successor to DD-003-R1.1.** These controlled views include Hall-position/FOC composition and the selected EVM physical boundary, and make the Draft [ARCH-003 component and host allocation](../ARCH-003_Software_Architecture.md) and the unit catalogues in [DD-001](DD-001_Software_Unit_Design.md) and [DD-002](DD-002_Battery_Protection_Unit_Design.md) easier to inspect.
 
 ## Scope and notation
@@ -63,7 +63,7 @@ contracts; unit model files are linked for review of the corresponding ports.
 
 | MotorControl / SC-TRACTION-CTRL boundary | Canonical port / route | Existing DD owner and port | Requirement/interface trace |
 |---|---|---|---|
-| `MotorControl.serviceReportOut` / `SC-TRACTION-CTRL.tractionObservationOut` | `P-TR-OBS-O`; `SW-I-008` / `R-V32` | [`U-TRACTION-ACCEPT.observationOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → `SC-SERVICE-INFO` | `REQ-SYS-HSI-008`, `REQ-SYS-HSI-009` (shared service envelope ancestry retained) |
+| `SC-TRACTION-CTRL.tractionObservationOut` | `P-TR-OBS-O`; `SW-I-005` | [`U-TRACTION-ACCEPT.observationOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → Session, Battery and Light consumers | `REQ-SYS-HSI-008`, `REQ-SYS-HSI-009` |
 | `ridingAuthorityIn` | `P-TR-AUTH-I`; `SW-I-004` / `R-V15` | [`U-TRACTION-ACCEPT.authorityIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
 | `wheelTorqueRequestIn` | `P-TR-COMMAND-I`; `SW-I-004` / `R-V14` | [`U-TRACTION-ACCEPT.commandIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
 | `hallElectricalPositionIn` | `P-TR-HALL-I`; `R-V27` | [`U-TRACTION-CONTROL.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-MOTION.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-TRQPOS-001`, `REQ-SYS-TRQCTL-001` |
@@ -214,18 +214,16 @@ flowchart LR
 
 Solid fast-path edges are direct calls. `CallingExecutionContextBoundary` represents the task or IRQ caller, not CortexOs as a modeled time-consuming component: it samples live time and supplies `executionTimeIn` directly to each invoked unit or group. Bounded internal leaves may inherit one fixed reference within the parent invocation. Dashed nodes identify capability work, not implemented drivers or intercom endpoints. Project route identity, context, age, expiry and fault policy remain outside generic `src/os` transport mechanics.
 
-### Battery, BMS and service domain
+### Battery and BMS domain
 
 ```mermaid
 flowchart TB
-    subgraph E[Energy and service component types]
+    subgraph E[Energy component types]
         BMS[SC-BMS-LINK] -->|contains| UBT[U-BMS-LINK-TRANSACTION]
         BMS -->|contains| UBD[U-BMS-LINK-DECODE]
         BMS -->|contains| UBP[U-BMS-LINK-PUBLISH]
         BAT[SC-BAT-POLICY] -->|contains| UBPE[U-BAT-POLICY-EVALUATE]
         BAT -->|contains| UBPR[U-BAT-POLICY-RESTRICTION]
-        SERVICE[SC-SERVICE-INFO] -->|contains| USIC[U-SERVICE-INFO-COLLECT]
-        SERVICE -->|contains| USIS[U-SERVICE-INFO-SNAPSHOT]
     end
 ```
 
@@ -248,8 +246,7 @@ flowchart LR
         V7[SC-TRACTION-CTRL.V]
         V8[SC-BMS-LINK.V]
         V9[SC-BAT-POLICY.V]
-        V10[SC-SERVICE-INFO.V]
-        V11[SC-PLATFORM.V]
+        V10[SC-PLATFORM.V]
     end
 ```
 
@@ -272,7 +269,6 @@ flowchart LR
     CAL[SC-DEMAND build\nimmutable DemandPolicyCalibration] -.->|owner-local attribute| D
     D -->|"P-DEM-COMMAND-O<br/>requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds"| TA[U-TRACTION-ACCEPT]
     TA -->|accepted signed request\neffectiveAcceptedExpiryTimeMicroseconds| TC[U-TRACTION-CONTROL]
-    D -->|P-DEM-DIAGNOSTIC-O\nservice only| SI[U-SERVICE-INFO-COLLECT]
 ```
 
 `U-TRACTION-MOTION` is a real producer route, not a reinterpretation of a Demand command: it interprets current qualified Hall capture/position evidence only with current capture health, its compiled map/pole-pair/final-drive/loaded-wheel parameters and a released bounded-observability/standstill criterion before publishing speed, direction and standstill. A static Hall state or no edge alone is unavailable for this purpose. `U-TRACTION-ACTUAL-OUTPUT` publishes `ActualTractionOutput` only as a current qualified estimate from post-stage physical evidence with provenance plus same-operation phase-current/position and qualified vehicle-motion evidence with its immutable compiled estimator parameters. It operates independently of acceptance; `U-TRACTION-ACCEPT` passes that observation without refreshing or gating it while separately issuing accepted demand to control. Its applied-torque and powered-forward-travel fields must be unavailable if that chain has only a requested torque, FOC reference, register/PWM state, output-stage event or acceptance result. The command is a request; neither observation proves physical torque or vehicle travel.
@@ -283,7 +279,7 @@ flowchart LR
 | Authority and command | `authorityExpiryTimeMicroseconds` and `commandExpiryTimeMicroseconds` carry independent decision sequences in the shared host monotonic domain. Acceptance emits `effectiveAcceptedExpiryTimeMicroseconds`; Demand cannot refresh authority by issuing a command. |
 | Motion and actual output | Demand requires current qualified motion for speed/standstill decisions and current qualified actual positive applied torque plus forward travel to re-arm regeneration after stop. Hand-push travel cannot satisfy the latter proof. |
 | Capability | `BatteryCapabilityEnvelope` supplies independently qualified positive/negative ceilings, reasons and restriction generations. Demand clamps signs independently, owns regeneration-recovery episode qualification, and does not own protection. |
-| Calibration and diagnostic | `SC-DEMAND` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. Diagnostic reason/generation goes one way to service; it has no rider or control route. |
+| Calibration | `SC-DEMAND` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. |
 
 ## Static local-interface view
 
@@ -303,7 +299,6 @@ flowchart LR
         LGT[SC-LIGHT-POLICY.V]
         BMS[SC-BMS-LINK.V]
         PLV[SC-PLATFORM.V\nacceleratorQualificationIn]
-        SIV[SC-SERVICE-INFO.V\nacceleratorPositionIn]
         ACC -->|SW-I-001 AcceleratorPosition| SET
         ACC -->|SW-I-001 full AcceleratorPosition| SES
         ACC -->|SW-I-001 qualified Position + Qualification| DEM
@@ -331,18 +326,11 @@ flowchart LR
         PLV -->|SW-I-009 event/service| SES
         PLV -->|SW-I-009 event/service| BAT
         PLV -->|SW-I-009 event/service| TR
-        PLV -->|SW-I-009 event/service| SIV
-        ACC -->|R-V32 full AcceleratorPosition| SIV
-        BRK -->|SW-I-008 data| SIV
-        DEM -->|SW-I-008 policy diagnostic| SIV
-        SES -->|SW-I-008 data| SIV
-        BAT -->|SW-I-008 data| SIV
-        TR -->|SW-I-008 data| SIV
     end
 ```
 
-`SW-I-008` is representative in the drawing: ARCH-003 defines it from all local producers to `SC-SERVICE-INFO`; the accelerator full `AcceleratorPosition` record is the one service delivery for that producer, including current qualification/diagnostic evidence. The omitted producer edges are not a change in endpoint scope. `SW-I-009` likewise applies to all local components; selected edges keep the view legible. This figure also suppresses parts of `SW-I-003`, `SW-I-006` and `SW-I-007` where their crossing edges would obscure the host boundary. The complete endpoint, route, fanout and representational-omission record is [ARCH-003 port registry and route catalogue](../ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue); the `SW-I-*` interface definitions remain in [ARCH-003](../ARCH-003_Software_Architecture.md#typed-software-interactions).
+`SW-I-009` applies to all local components; selected edges keep the view legible. This figure also suppresses parts of `SW-I-003`, `SW-I-006` and `SW-I-007` where their crossing edges would obscure the host boundary. The complete endpoint, route and fanout record is [ARCH-003 port registry and route catalogue](../ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue); the `SW-I-*` interface definitions remain in [ARCH-003](../ARCH-003_Software_Architecture.md#typed-software-interactions).
 
 ## Cross-view use
 
-Read this document with [DD-001](DD-001_Software_Unit_Design.md) for vehicle-policy unit semantics, [DD-002](DD-002_Battery_Protection_Unit_Design.md) for energy, regenerative acceptance and service semantics, and [DD-004](DD-004_Dynamic_Software_Architecture_Views.md) for documented interaction and state examples. The released ARCH-003 deployment diagram is the source allocation view; this document restates it at unit and instance resolution for detailed-design review only.
+Read this document with [DD-001](DD-001_Software_Unit_Design.md) for vehicle-policy unit semantics, [DD-002](DD-002_Battery_Protection_Unit_Design.md) for energy and regenerative acceptance, and [DD-004](DD-004_Dynamic_Software_Architecture_Views.md) for documented interaction and state examples. The released ARCH-003 deployment diagram is the source allocation view; this document restates it at unit and instance resolution for detailed-design review only.

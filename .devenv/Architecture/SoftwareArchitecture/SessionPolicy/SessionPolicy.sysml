@@ -16,12 +16,12 @@ package X2CitySoftwareContract_SessionPolicy {
         attribute authorityExpiryTimeMicroseconds:ExpiryTimeMicroseconds :>> X2CityContract_SessionPolicy::RidingAuthority::expiry;
     }
     port def RidingAuthorityOutputPort {
-        doc /* Publishes independently generated authority with decision sequence, host-boot monotonic decision time and independent expiry to DemandPolicy, TractionControl and service aggregation. A newer command or telemetry record cannot refresh this authority. */
+        doc /* Publishes independently generated authority with decision sequence, host-boot monotonic decision time and independent expiry to DemandPolicy and TractionControl. A newer command or observation cannot refresh this authority. */
         out item payload:RidingAuthority;
     }
     item def SessionReport:>ContextualSoftwareInformation;
     port def SessionReportOutputPort {
-        doc /* Publishes reportable session status and fault context to HmiAdapter and service aggregation. It explains session policy state and does not perform physical torque withdrawal or issue hardware commands. */
+        doc /* Publishes reportable session status and fault context to HmiAdapter. It explains session policy state and does not perform physical torque withdrawal or issue hardware commands. */
         out item payload:SessionReport;
     }
 }

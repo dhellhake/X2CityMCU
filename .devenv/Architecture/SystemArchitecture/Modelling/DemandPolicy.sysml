@@ -21,13 +21,6 @@ package X2CityComponent_DemandPolicy {
     private import X2CityContract_BatteryProtection::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_DemandPolicy::*;
-    private import X2CityContract_ServiceInformation::*;
-    item def DemandPolicyDiagnostics:>ServiceReportInformation;
-    port def DemandPolicyDiagnosticsOutputPort {
-        doc /* Carries DemandPolicy's read-only policy status and diagnostic observations to ServiceInformation. It supports service reporting only and cannot authorize, refresh or command traction. */
-        out item payload:DemandPolicyDiagnostics;
-    }
-    interface def IfA008DemandPolicyDiagnostics { end producer:DemandPolicyDiagnosticsOutputPort; end consumer:ServiceReportInputPort; flow producer.payload to consumer.payload; }
     part def DemandPolicy { // LE-DEMAND
         /* Arbitrates qualified accelerator position/rest and coded-brake inputs, traction-owned vehicle motion and actual-output feedback,
            active settings, current riding authority, and the battery envelope into a signed
@@ -40,7 +33,5 @@ package X2CityComponent_DemandPolicy {
         port batteryCapabilityEnvelopeIn:BatteryCapabilityEnvelopeInputPort;
         port actualTractionOutputIn:ActualTractionInputPort;
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort;
-        // Current policy-status/diagnostic information is read-only and goes only to service information.
-        port demandPolicyDiagnosticsOut:DemandPolicyDiagnosticsOutputPort;
     }
 }

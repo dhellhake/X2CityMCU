@@ -6,15 +6,13 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityComponent_Energy::*;
     private import X2CityComponent_Auxiliary::*;
     private import X2CityComponent_Compute::*;
-    private import X2CityComponent_Service::*;
     part def ElectricalPropulsionControlSystem { // LE-EPCS
-        /* Composes the vehicle riding, input, traction, energy, auxiliary, compute, and service logical components. */
+        /* Composes the vehicle riding, input, traction, energy, auxiliary and compute logical components. */
         part riding:RidingSupervisor;
         part input:Input;
         part traction:Traction;
         part energy:Energy;
         part auxiliary:Auxiliary;
         part compute:Compute;
-        part service:Service;
     }
 }

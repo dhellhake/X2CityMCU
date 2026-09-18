@@ -23,7 +23,7 @@ package X2CitySoftwareContract_AnalogAcquisition {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def AnalogSampleOutputPort {
-        doc /* Publishes completed regular DMA scans to the accelerator, brake, temperature, supply and phase interfaces, and to service aggregation. Each consumer applies its own channel binding and accepted calibration; the record is never a semantic sensor value. */
+        doc /* Publishes completed regular DMA scans to the accelerator, brake, temperature, supply and phase interfaces. Each consumer applies its own channel binding and accepted calibration; the record is never a semantic sensor value. */
         out item payload:AnalogSample;
     }
     item def FastInjectedEpoch:>ContextualSoftwareInformation {
@@ -41,7 +41,7 @@ package X2CitySoftwareContract_AnalogAcquisition {
         out item payload:FastInjectedEpoch;
     }
     port def AdcAcquisitionHealthOutputPort {
-        doc /* Publishes acquisition-path health evidence to Platform, SessionPolicy and service aggregation. The evidence qualifies capture freshness and integrity; it does not become a sensor measurement. */
+        doc /* Publishes acquisition-path health evidence to Platform and SessionPolicy. The evidence qualifies capture freshness and integrity; it does not become a sensor measurement. */
         out item payload:SensorHealthCondition;
     }
 }

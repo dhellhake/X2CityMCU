@@ -8,7 +8,7 @@ package X2CityDetailedUnit_SessionReport {
         in item payload:UnitInformationEnvelope;
     }
     port def SessionReportOutputPort {
-        doc /* Sends the selected Session report group to HMI and service consumers without granting authority or changing inhibition. */
+        doc /* Sends the selected Session report group to HMI without granting authority or changing inhibition. */
         out item payload:SessionReportRecord;
     }
     part def SessionReportPublisher {

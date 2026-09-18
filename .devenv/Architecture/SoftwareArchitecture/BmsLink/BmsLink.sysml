@@ -13,7 +13,7 @@ package X2CitySoftwareContract_BmsLink {
         attribute sourceQualificationContext:BmsSourceQualificationContext;
     }
     port def BmsObservationOutputPort {
-        doc /* Publishes accepted BMS observations with field and source qualification to BatteryProtection and service aggregation. Consumers use the attached qualification context before treating a value as battery evidence. */
+        doc /* Publishes accepted BMS observations with field and source qualification to BatteryProtection. Consumers use the attached qualification context before treating a value as battery evidence. */
         out item payload:BmsObservation;
     }
 }

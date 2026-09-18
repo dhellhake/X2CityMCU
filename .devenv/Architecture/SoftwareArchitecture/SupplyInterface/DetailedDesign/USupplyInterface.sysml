@@ -11,7 +11,7 @@ package X2CityDetailedUnit_SupplyInterface {
         out item payload:FastDcLinkVoltageRecord;
     }
     port def RegularSupplyOutputPort {
-        doc /* U-SUPPLY-REGULAR sends slower supply and rail diagnostics to policy and service consumers. */
+        doc /* U-SUPPLY-REGULAR sends slower supply and rail diagnostics to policy consumers. */
         out item payload:RegularSupply;
     }
     port def InjectedEpochInputPort {
