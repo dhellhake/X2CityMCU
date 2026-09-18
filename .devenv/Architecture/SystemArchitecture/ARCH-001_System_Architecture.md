@@ -1,6 +1,6 @@
 # ARCH-001 — System architecture and logical component decomposition
 
-**Draft vehicle baseline — 2026-09-16.** Full logical decomposition, interface contracts, allocation gates, function bindings and verification notes are retained for the vehicle and fitted pack.
+**Draft vehicle baseline — 2026-09-18.** Full logical decomposition, interface contracts, allocation gates, function bindings and verification notes are retained for the vehicle and fitted pack. This Draft adds the purpose-specific accelerator function; historical release records below remain unchanged.
 
 ## Release identity
 
@@ -16,7 +16,7 @@ The logical type catalogue decomposes the project equipment model. LE-EPCS is th
 
 Types are not physical instances. Component types in this model have vehicle-local state and hosting. The hardware model has exactly one removable pack instance: installation connects it to the vehicle and removal disconnects it; no duplicate battery containment is implied.
 
-The 19 existing LE identities and all approved requirement Type/Target bindings are preserved. The component boundaries and leaf allocations are approved within this architecture baseline, subject to their recorded engineering acceptance gates. A logical HW leaf can be realized by cooperating HW parts; a SW leaf may have several deployed instances of its component type. Supplied assemblies retain opaque vendor software and boundary acceptance rather than invented project units. Device schematics, code units and numerical parameters remain downstream.
+The 19 existing LE identities and all approved requirement Type/Target bindings are preserved. This Draft adds LE-ACCELERATOR with its signal-measurement and position-processing leaves. A logical HW leaf can be realized by cooperating HW parts; a SW leaf may have several deployed instances of its component type. These logical leaves describe responsibility only: later realization can distribute the intended hardware and software contributions without establishing a fixed component owner here. Supplied assemblies retain opaque vendor software and boundary acceptance rather than invented project units. Device schematics, code units and numerical parameters remain downstream.
 
 ## Logical composition
 
@@ -34,6 +34,9 @@ flowchart TB
     EPCS -->|contains| Aux["LE-AUX"]
     EPCS -->|contains| Compute["LE-COMPUTE"]
     EPCS -->|contains| Service["LE-SERVICE"]
+    Input -->|contains| Accelerator["LE-ACCELERATOR"]
+    Accelerator -->|contains| AcceleratorHw["LE-ACCELERATOR-HW: AcceleratorSignalMeasurement"]
+    Accelerator -->|contains| AcceleratorQual["LE-ACCELERATOR-QUAL: AcceleratorPositionProcessing"]
     Riding -->|contains| Set["LE-SET"]
     Riding -->|contains| Session["LE-SESSION"]
     Riding -->|contains| Demand["LE-DEMAND"]
@@ -49,10 +52,13 @@ flowchart TB
 | <a id="le-session"></a>LE-SESSION | [LE-RIDING](#le-riding) | SW | Riding Ready eligibility, current-session inhibition and fresh restart assessment | [SC-SESSION](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-session) |
 | <a id="le-demand"></a>LE-DEMAND | [LE-RIDING](#le-riding) | SW | Signed wheel-torque command policy and arbitration from active settings, authority, qualified facts and feedback; current policy diagnostics are service-only | [SC-DEMAND](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-demand) |
 | <a id="le-hmi"></a>LE-HMI | [LE-RIDING](#le-riding) | SW | VD18MT protocol interpretation and outgoing information | [SC-HMI](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-hmi) |
-| <a id="le-input"></a>LE-INPUT | [LE-EPCS](../../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Rider, motion, battery and temperature information qualification; electrical communication endpoints | Owned children below |
-| <a id="le-rider-devices"></a>LE-RIDER-DEVICES | [LE-INPUT](#le-input) | Supplied | Fixed VD18MT, accelerator and passive coded brake electrical network; opaque display firmware. Mechanical lever force remains LE-MECH. | [HC-RIDER](../ARCH-002_Hardware_Architecture.md#hc-rider), [SC-VD18MT](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-vd18mt) |
-| <a id="le-input-hw"></a>LE-INPUT-HW | [LE-INPUT](#le-input) | HW | Protected physical acquisition and host communication endpoints; battery and traction references cross the qualified interface boundary. | [HC-INPUT-FE](../ARCH-002_Hardware_Architecture.md#hc-input-fe), [HC-PACK-IF](../ARCH-002_Hardware_Architecture.md#hc-pack-if) |
-| <a id="le-input-qual"></a>LE-INPUT-QUAL | [LE-INPUT](#le-input) | SW | Local observation qualification, coherence, source status and self-tests; preserves BMS/traction producer provenance. | [SC-ANALOG-ACQ.V, SC-ACCELERATOR-IF.V, SC-BRAKE-IF.V, SC-TEMPERATURE-IF.V, SC-SUPPLY-IF.V, SC-MOTOR-PHASE-IF.V and SC-HALL-IF.V](../SoftwareArchitecture/ARCH-003_Software_Architecture.md) |
+| <a id="le-input"></a>LE-INPUT | [LE-EPCS](../../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Rider, battery and retained non-accelerator observation boundary; composes the accelerator function. Traction owns motion. | Owned children below |
+| <a id="le-rider-devices"></a>LE-RIDER-DEVICES | [LE-INPUT](#le-input) | Supplied | Fixed VD18MT, accelerator and passive coded brake electrical network; publishes the unqualified accelerator electrical signal. Opaque display firmware and mechanical lever force remain outside policy. | [HC-RIDER](../ARCH-002_Hardware_Architecture.md#hc-rider), [SC-VD18MT](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-vd18mt) |
+| <a id="le-input-hw"></a>LE-INPUT-HW | [LE-INPUT](#le-input) | HW | Retained protected non-accelerator acquisition and host communication endpoints; accelerator-specific electrical input is split to LE-ACCELERATOR-HW. | [HC-INPUT-FE](../ARCH-002_Hardware_Architecture.md#hc-input-fe), [HC-PACK-IF](../ARCH-002_Hardware_Architecture.md#hc-pack-if) |
+| <a id="le-input-qual"></a>LE-INPUT-QUAL | [LE-INPUT](#le-input) | SW | Retained non-accelerator observation qualification, including coded brake; preserves BMS/traction producer provenance. | [SC-BRAKE-IF.V, SC-TEMPERATURE-IF.V, SC-SUPPLY-IF.V, SC-MOTOR-PHASE-IF.V and SC-HALL-IF.V](../SoftwareArchitecture/ARCH-003_Software_Architecture.md) |
+| <a id="le-accelerator"></a>LE-ACCELERATOR | [LE-INPUT](#le-input) | Composite | End-to-end accelerator electrical signal to one qualified `AcceleratorPosition` (`Position` plus `Qualification`), including rest, source/fault state and measurement provenance. No torque mapping, authority or session latch. | Intended later contributions may include HC-RIDER/HC-INPUT-FE and SC-ACCELERATOR-IF.V; mixed realization binding is deferred. |
+| <a id="le-accelerator-hw"></a>LE-ACCELERATOR-HW (`AcceleratorSignalMeasurement`) | [LE-ACCELERATOR](#le-accelerator) | HW | Provides adequate accelerator signal measurement from the RiderDevices electrical signal. | Intended later hardware contributions are deferred; no circuit, endpoint or acquisition mechanism is selected. |
+| <a id="le-accelerator-qual"></a>LE-ACCELERATOR-QUAL (`AcceleratorPositionProcessing`) | [LE-ACCELERATOR](#le-accelerator) | SW | Obtains and handles measurement evidence, then publishes semantic position/rest and qualification. Initial unqualification and recognized fault stay distinct. | Intended later software acquisition, transfer and qualification contributions are deferred; algorithm and realization binding remain open. |
 | <a id="le-bms-link"></a>LE-BMS-LINK | [LE-INPUT](#le-input) | SW | UART information interpretation/qualification within LE-INPUT; applicable vehicle and service consumer configurations | [SC-BMS-LINK](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-bms-link) |
 | <a id="le-traction"></a>LE-TRACTION | [LE-EPCS](../../Requirements/REQ-001_Requirements.md#le-epcs) | Composite | Realize permitted signed torque with the installed motor; provide qualified applied-torque/motion information | Owned children below |
 | <a id="le-motor-ctrl"></a>LE-MOTOR-CTRL | [LE-TRACTION](#le-traction) | SW | Command acceptance, motor control and actual-traction-output observation with domain self-tests. | [SC-TRACTION-CTRL](../SoftwareArchitecture/ARCH-003_Software_Architecture.md#sc-traction-ctrl) |
@@ -90,13 +96,14 @@ This view shows component exchange through canonical IF-A contracts; containment
 
 ```mermaid
 flowchart LR
-    Input["LE-INPUT"] -->|"IF-A-001/002: observations and requests"| Riding["LE-RIDING"]
+    Accelerator["LE-ACCELERATOR"] -->|"IF-A-001: AcceleratorPosition"| Riding["LE-RIDING"]
+    Input["LE-INPUT"] -->|"IF-A-001/002: coded brake and requests"| Riding
     Riding -->|"IF-A-004: authority and signed demand"| Drive["LE-TRACTION"]
     Drive -->|"IF-A-003: traction observation"| Input
     Energy["LE-ENERGY"] -->|"IF-A-003: charge/discharge envelope"| Riding
     Energy <-->|"IF-A-010: physical energy"| Drive
     Riding -->|"IF-A-006: normal-light request"| Aux["LE-AUX"]
-    Input -->|"IF-A-001/006: qualified brake and light facts"| Aux
+    Input -->|"IF-A-001/006: coded-brake and light facts"| Aux
     Input -->|"IF-A-009/003: qualified BMS information"| Charge
     Energy -->|"IF-A-003: charge envelope"| Charge
     Charge -->|"IF-A-007/008: current charge diagnostics"| Service["LE-SERVICE"]
@@ -107,7 +114,7 @@ Information-port types carry their value plus validity, source age, qualificatio
 
 | IF-A family | Port type and endpoint boundary |
 |---|---|
-| IF-A-001/002 | Qualified accelerator/rest and coded-brake inputs go to setting/session/demand/light consumers; traction-owned qualified vehicle motion goes to setting/session/demand. HMI/Input requests feed LE-SET and current-startup receipt reaches LE-SESSION; LE-SET alone projects active settings to LE-DEMAND. Physical rest remains explicit. |
+| IF-A-001/002 | LE-ACCELERATOR sends one qualified `AcceleratorPosition` (`Position` plus `Qualification`) to setting/session/demand and service, with its Qualification projection to platform health. The retained LE-INPUT rider route carries coded brake to policy/light consumers. HMI/Input requests feed LE-SET and current-startup receipt reaches LE-SESSION; LE-SET alone projects active settings to LE-DEMAND. Physical rest remains explicit. |
 | IF-A-003/009 | Battery condition observation, capability envelope and vendor-UART ports: actual BMS/source to interpretation to battery protection to consumers; independent positive-discharge and negative-charge permissions, electrical endpoint and data validity remain distinct. |
 | IF-A-004/005 | Session authority to demand and traction; signed wheel-demand input; traction-owned qualified-vehicle-motion and actual-traction-output/braking feedback, with expiry and producer context. |
 | IF-A-006 | HMI information and lighting intent: selected reports/protocol fields and front/rear commands; physical lamp output is a separate result |
@@ -137,6 +144,9 @@ Unchanged requirements may be reclassified without invented parents. New childre
 | [REQ-SYS-LVL-001–004](../../Requirements/Abstract_Software_Requirements/Settings_and_Control_Policy.md#level-selection-and-application), [REQ-SYS-SPD-002/004/005/008](../../Requirements/Abstract_Software_Requirements/Settings_and_Control_Policy.md#speed-selection-and-application) → LE-SET | SC-SET maintains requested/pending/active level and normalized speed limit | Eight existing obligations and sources unchanged. Qualified requests and simultaneous standstill/rest, startup receipt and physical cutoff/profile application remain integration dependencies. |
 | [REQ-SYS-CTL-001](../../Requirements/Abstract_Software_Requirements/Settings_and_Control_Policy.md#req-sys-ctl-001) → LE-SESSION | SC-SESSION produces eligibility/inhibition state | Partial contribution to startup/fault parents; qualified inputs, actual self-tests, power/reset behavior and physical zero torque remain system work. |
 | [REQ-SYS-CTL-002](../../Requirements/Abstract_Software_Requirements/Settings_and_Control_Policy.md#req-sys-ctl-002) → LE-DEMAND | SC-DEMAND produces a signed wheel-torque command | Partial command-interface contribution to rider/limit parents; [Released calibration acceptance](../../Requirements/System_Requirements/Rider_Control.md#torque-profile-calibration-acceptance) defines normalized shape/endpoints and distinct dynamics/taper. Numeric calibration, timing and physical tracking remain open. |
+| [REQ-SYS-ACC-001](../../Requirements/System_Requirements/Interface_Qualification.md#req-sys-acc-001) → LE-ACCELERATOR | The parent end-to-end contract is covered by [REQ-SYS-ACC-002](../../Requirements/Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md#req-sys-acc-002) at LE-ACCELERATOR-QUAL and [REQ-SYS-ACC-003](../../Requirements/Abstract_Hardware_Requirements/Accelerator_Signal_Measurement.md#req-sys-acc-003) at LE-ACCELERATOR-HW. Intended hardware and software realization contributions remain prospective. | Position/rest/source/configuration/measurement-time and `Qualification` are one semantic record. Initial unqualification, recognized fault and health-only publication remain distinct. Electrical transfer, calibration, sample age/skew, response, diagnostic coverage and formal HW/SW realization binding remain open. |
+| [REQ-SYS-ACC-002](../../Requirements/Abstract_Software_Requirements/Detailed_Design_Interface_Allocations.md#req-sys-acc-002) → LE-ACCELERATOR-QUAL (`AcceleratorPositionProcessing`) | Software contribution: obtain and handle measurement evidence, including the relevant acquisition/transfer contribution, and publish the one `AcceleratorPosition` composite with its health and service projections. | This logical allocation selects neither a fixed software component nor an acquisition/transfer mechanism. Position/rest/source-health policy boundaries remain as stated by the parent contract. |
+| [REQ-SYS-ACC-003](../../Requirements/Abstract_Hardware_Requirements/Accelerator_Signal_Measurement.md#req-sys-acc-003) → LE-ACCELERATOR-HW (`AcceleratorSignalMeasurement`) | Hardware contribution: provide adequate accelerator signal measurement evidence from the electrical signal to the software leaf. | This logical allocation selects neither a physical circuit nor a conversion/buffering implementation. Its measurement-integrity status carries available validity information, not semantic position qualification, and creates no diagnostic-coverage commitment. |
 | [REQ-SYS-CTL-003](../../Requirements/Abstract_Software_Requirements/Settings_and_Control_Policy.md#req-sys-ctl-003) → LE-HMI | SC-HMI forms/consumes VD18MT protocol fields | Partial information-interface contribution to HMI parents; electrical transport, update bounds and visible display correspondence remain open. |
 | [REQ-VEH-BRK-001](../../Requirements/Abstract_Hardware_Requirements/Retained_Mechanical_Control.md#req-veh-brk-001), [REQ-VEH-MEC-001](../../Requirements/Abstract_Hardware_Requirements/Retained_Mechanical_Control.md#req-veh-mec-001) → LE-MECH | HC-MECH retains mechanical braking and steering independence | Existing obligations unchanged; inspect/test complete integration for independence and interference. This allocation does not qualify retained parts for 40 km/h, 130 kg or environmental/life duty. |
 | [REQ-SYS-CELL-001](../../Requirements/Abstract_Hardware_Requirements/Cell_Bank.md#req-sys-cell-001) → LE-CELLS | HC-CELLS realizes the fixed series/parallel bank | Partial physical contribution to REQ-SYS-BAT-002; selected BMS/UART and whole-pack acceptance remain System Requirements. |
@@ -153,7 +163,7 @@ Unchanged requirements may be reclassified without invented parents. New childre
 
 | Interface | Producer → consumer | Contract / source | Open acceptance and gate |
 |---|---|---|---|
-| IF-A-001: qualified rider-input/vehicle-motion data | LE-INPUT → LE-SET / LE-SESSION / LE-DEMAND / LE-LIGHT-POLICY; LE-TRACTION → LE-SET / LE-SESSION / LE-DEMAND | LE-INPUT owns qualified accelerator/rest and four-state brake actuation or unknown. LE-TRACTION separately owns qualified vehicle-motion direction/standstill used for setting application, Ready and demand. Value, validity and freshness remain distinct. [Input requirements](../../Requirements/System_Requirements/Interface_Qualification.md) | Endpoint ranges, tolerances, time coherence and diagnostic coverage: WS-OI-001/002/012; before dependent input/control requirements freeze. |
+| IF-A-001: accelerator, brake and vehicle-motion data | LE-ACCELERATOR → LE-SET / LE-SESSION / LE-DEMAND / LE-SERVICE-INFO; LE-ACCELERATOR → LE-PLATFORM (Qualification projection); LE-INPUT → LE-SET / LE-SESSION / LE-DEMAND / LE-LIGHT-POLICY (coded brake); LE-TRACTION → LE-SET / LE-SESSION / LE-DEMAND | LE-ACCELERATOR owns end-to-end qualified `AcceleratorPosition`: `Position` carries percent/rest/source/configuration/measurement-time provenance and `Qualification` carries source health. Initial unqualification is distinct from a recognized fault; health-only publication never refreshes measurement age. LE-INPUT retains four-state brake actuation or unknown. LE-TRACTION separately owns qualified vehicle motion. [REQ-SYS-ACC-001](../../Requirements/System_Requirements/Interface_Qualification.md#req-sys-acc-001) | Electrical endpoints, range/transfer, timing/coherence and diagnostic coverage remain gates; no threshold, calibration, hardware selection or runtime realization is added. |
 | IF-A-002: settings | LE-HMI / LE-INPUT → LE-SET / LE-SESSION; LE-SET → LE-DEMAND | Current-startup receipt and retained last-valid request remain LE-SET inputs. LE-DEMAND receives only the typed active setting, never pending/request state. LE-SET owns LVL-001–004 and SPD-002/004/005/008 | VD18MT encoding/transport, unrecognized frames and qualification timing: WS-OI-008/009/015. No fallback setting creates startup qualification. |
 | IF-A-003: power envelope/status | LE-ENERGY / LE-TRACTION ↔ LE-INPUT; LE-BAT-POLICY → LE-SESSION / LE-DEMAND | Qualified observations/configuration feed battery policy; its envelope keeps positive discharge and negative charge permissions, propulsion versus charge restriction, required-data qualification and recognized faults distinct. LE-SESSION owns fault/Ready retention, LE-DEMAND owns rider/re-entry arbitration | Limits, margins, source freshness and fault classification: WS-OI-005/018/019, OI-041/048/049/061. |
 | IF-A-004: eligibility and torque command | LE-SESSION → LE-DEMAND / LE-TRACTION; LE-DEMAND → LE-TRACTION | Current qualified authority informs both demand policy and command acceptance; LE-DEMAND produces the valid, unexpired signed rear-wheel command under INT-004. Positive means forward. Reject obsolete/restarted-context inputs and withdraw on lost authority. Physical response/protection remain separate | Command representation, complete arbitration, transfer/update/watchdog bounds and physical torque tolerance: WS-OI-003/007/010/015, OI-043/049. |
@@ -186,7 +196,7 @@ For every numerical or temporal contract, define its reference, valid range, unc
 
 | Logical owner | Coordinated functions / allocated contribution |
 |---|---|
-| LE-INPUT | F-001 rider-input and vehicle-motion acquisition and F-006 complete battery-source qualification; LE-BMS-LINK supplies only allocated UART interpretation. Physical measurement/transport remains mixed. |
+| LE-ACCELERATOR / LE-INPUT | LE-ACCELERATOR owns the accelerator contribution to F-001 from RiderDevices electrical signal through logical measurement to qualified position/rest. LE-INPUT retains coded-brake and other input responsibilities; LE-BMS-LINK supplies only allocated UART interpretation. Traction owns vehicle motion. Physical measurement/transport remains mixed. |
 | LE-SET / LE-SESSION / LE-DEMAND | F-002 settings / F-003 riding authority / F-004 signed demand and regen episodes, respectively; existing software leaves retained. |
 | LE-TRACTION | F-005 actual torque/observation and FSC-001 physical fault-output responsibility; command and physical protection contributors remain mixed. |
 | LE-ENERGY | F-007 capability, F-008 storage/distribution and F-009 energy protection. LE-BAT-POLICY provides capability policy; LE-CELLS and supplied LE-BMS retain their fixed roles. FSC-007/008 target this owner. |
@@ -208,7 +218,7 @@ Canonical record metadata gives the responsible target. The following contributo
 |---|---|
 | Vehicle mass, range, performance, life and environment | LE-ENERGY, LE-TRACTION, LE-MECH and LE-INTEGRATION; retain integrated acceptance at LE-VEH |
 | Battery handling, fitted/removed storage and regeneration | LE-ENERGY, LE-INTEGRATION and LE-SERVICE; physical acceptance and state continuity remain open. Preserve DEC-STO-002 normal-full storage entry and the same physical pack |
-| Input, Ready, fault and temperature behavior | LE-INPUT, LE-SESSION, LE-ENERGY and LE-TRACTION; detection, self-test coverage and physical inhibition are not closed by policy allocation |
+| Input, Ready, fault and temperature behavior | LE-ACCELERATOR, LE-INPUT, LE-SESSION, LE-ENERGY and LE-TRACTION; detection, self-test coverage and physical inhibition are not closed by policy allocation |
 | Rider torque, regeneration, speed and SOC behavior | LE-SET, LE-DEMAND, LE-TRACTION and LE-ENERGY; calibrated demand and physical envelopes/response still required |
 | HMI, lights and auxiliary continuity | LE-HMI, LE-INPUT, LE-LIGHT-POLICY, physical LE-AUX and LE-ENERGY; mode policy is allocated, while startup/reset physical output, lamps and protection remain open |
 | Energy/protection, connectivity independence and service | All affected contributors, including allocated LE-SERVICE-INFO; presentation does not establish diagnostic coverage, physical isolation or service acceptance. Derive fault-energy outcomes, responsibilities and coverage before corresponding commitments |
@@ -218,6 +228,8 @@ Canonical record metadata gives the responsible target. The following contributo
 ## Document consistency checks
 
 Document review on 2026-09-13 checked logical/physical containment, realization kinds, software hosts, configuration/reset boundaries and 17 vehicle functional bindings. Structural checks reconciled 33 vehicle logical components, 20 vehicle HW components, 11 vehicle project SW types plus two supplied firmware types and 11 vehicle instances; all 1,339 local links in the reviewed architecture/context set resolved. The 188 requirement records in 23 clusters and released FC/HARA/SG files remain unchanged. PD CON-051 alone gains the owner-selected placement. Markdown table/fence and Mermaid structure checks passed; no diagram rendering, runtime or physical acceptance is claimed. B retains the gates above.
+
+Current Draft review adds the logical accelerator function and its two responsibility leaves, and checks their canonical aliases, ports, flows and source-contract trace; it does not alter the released counts or claim runtime, compiler or physical acceptance.
 
 <a id="release-record"></a>
 ## Release record

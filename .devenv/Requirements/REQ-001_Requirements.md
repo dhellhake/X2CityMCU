@@ -136,16 +136,16 @@ The following shared coverage applies where relevant; row cases add distinguishi
 
 ## Requirement clusters
 
-The current working inventory includes the Draft interconnection/runtime refinement chain `REQ-SYS-HSI-009`, `REQ-SYS-TRQHW-002`, `REQ-SYS-INP-002`, `REQ-SYS-TRQIO-001`, `REQ-SYS-TRQEX-001`, `REQ-SYS-PHASE-IF-001`, `REQ-SYS-SUPPLY-IF-001`, `REQ-SYS-PLT-002`, `REQ-SYS-PLT-CAL-001` and their named Unit children. They refine released parent contracts and do not alter their bodies. The current working architecture allocates separate analog acquisition, signal-interface, Hall-position, phase, supply and platform-calibration owners; its status remains Draft pending the stated verification and acceptance gates. Historical R2.0 remains the unchanged 228-record snapshot (211 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); R1.9 remains 223 records (206 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); the historical R1.8 197-record release also remains unchanged. The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. Detailed-design approval does not close electrical, physical, timing, resource, retention, protection, diagnostic or verification gates.
+The current working inventory includes the Draft interconnection/runtime refinement chain `REQ-SYS-HSI-009`, `REQ-SYS-TRQHW-002`, `REQ-SYS-INP-002`, `REQ-SYS-ACC-001/002/003`, `REQ-SYS-TRQIO-001`, `REQ-SYS-TRQEX-001`, `REQ-SYS-PHASE-IF-001`, `REQ-SYS-SUPPLY-IF-001`, `REQ-SYS-PLT-002`, `REQ-SYS-PLT-CAL-001` and their named Unit children. They refine released parent contracts and do not alter their bodies. The current working architecture allocates separate regular/injected analog acquisition, accelerator electrical measurement and position processing, Hall-position, phase, supply and component-owned compiled-parameter responsibilities; its status remains Draft pending the stated verification and acceptance gates. Historical R2.0 remains the unchanged 228-record snapshot (211 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); R1.9 remains 223 records (206 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); the historical R1.8 197-record release also remains unchanged. The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. Detailed-design approval does not close electrical, physical, timing, resource, retention, protection, diagnostic or verification gates.
 
 **Draft successor clarification — 2026-09-18:** `REQ-SYS-PLT-CAL-001` retains its identifier for trace continuity, but the working architecture has no platform-calibration owner or calibration unit. It allocates immutable compiled parameter validation to SC-PLATFORM.V for static hardware binding and to each requiring software component. `UR-PLATFORM-CALIBRATION-001` is Withdrawn; the active successor obligations remain with the listed component-owned units. Current working counts include that disposition only; the historical release counts above remain unchanged.
 
 | Type | Folder | Records |
 |---|---|---:|
-| System Requirement | [System_Requirements](System_Requirements) | 177 |
-| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 28 |
-| Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 6 |
-| Unit Requirement | [Unit_Requirements](Unit_Requirements) | 28 |
+| System Requirement | [System_Requirements](System_Requirements) | 167 |
+| Abstract Software Requirement | [Abstract_Software_Requirements](Abstract_Software_Requirements) | 30 |
+| Abstract Hardware Requirement | [Abstract_Hardware_Requirements](Abstract_Hardware_Requirements) | 7 |
+| Unit Requirement | [Unit_Requirements](Unit_Requirements) | 32 |
 
 | System Requirement cluster | IDs / scope | Records |
 |---|---|---:|
@@ -159,7 +159,7 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Environment and storage](System_Requirements/Environment_and_Storage.md) | `REQ-VEH-ENV-*`, `REQ-SYS-STO-*` | 5 |
 | [Built battery and supplied BMS](System_Requirements/Battery_Integration.md) | `REQ-SYS-BAT-002`, `REQ-SYS-BMS-*` | 10 |
 | [Energy and protection](System_Requirements/Energy_and_Protection.md) | `REQ-SYS-ENE-*` | 4 |
-| [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*` | 4 |
+| [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*`, Draft `REQ-SYS-ACC-001` | 5 |
 | [System hardware/software interface](System_Requirements/System_Hardware_Software_Interface.md) | Approved in R1.8 `REQ-SYS-HSI-001`–`008`; Draft `REQ-SYS-HSI-009` traction interconnection | 9 |
 | [Service and durability](System_Requirements/Service_and_Durability.md) | `REQ-VEH-DUR-*`, `REQ-VEH-SVC-*`, `REQ-SYS-SVC-*` | 4 |
 | [Riding safety functions](System_Requirements/Riding_Safety_Functions.md) | Draft `REQ-SYS-FSC-001`, `REQ-VEH-FSC-002/003/004` | 4 |
@@ -172,6 +172,7 @@ The current working inventory includes the Draft interconnection/runtime refinem
 | [Retained mechanical control](Abstract_Hardware_Requirements/Retained_Mechanical_Control.md) | Abstract Hardware; approved steering/mechanical-braking independence plus R1.8-approved physical-integration refinement | 3 |
 | [Fixed cell bank](Abstract_Hardware_Requirements/Cell_Bank.md) | Abstract Hardware; fixed 14S5P composition | 1 |
 | [Traction-control hardware](Abstract_Hardware_Requirements/Traction_Control_Hardware.md) | Abstract Hardware; three low-side current channels, local DC-link observation and independent fault shutdown allocation | 2 |
+| [Accelerator signal measurement](Abstract_Hardware_Requirements/Accelerator_Signal_Measurement.md) | Abstract Hardware; accelerator electrical measurement integrity, allocated accuracy and response | 1 |
 | [BMS information](Abstract_Software_Requirements/BMS_Information.md) | Abstract Software; selected-unit UART read-data qualification and acceptance contract | 1 |
 | [Battery capability policy](Abstract_Software_Requirements/Battery_Capability_Policy.md) | Abstract Software; battery envelopes, operation-specific restrictions and fault information | 1 |
 | [Lighting policy](Abstract_Software_Requirements/Lighting_Policy.md) | Abstract Software; current-session normal request and front/rear logical mode arbitration | 1 |

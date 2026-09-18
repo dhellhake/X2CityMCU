@@ -4,14 +4,36 @@ package X2CitySystemArchitecture {
     private import X2CityContract_DemandPolicy::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_ServiceInformation::*;
+    private import X2CityContract_Input::*;
+    private import X2CityContract_AcceleratorSignalMeasurement::*;
+    private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityComponent_MotorControl::*;
+    private import X2CityComponent_AcceleratorPositionIdentification::*;
+    private import X2CityComponent_AcceleratorSignalMeasurement::*;
+    private import X2CityComponent_AcceleratorPositionProcessing::*;
 
     alias ValidityStatus for X2CitySharedContracts::ValidityStatus;
     alias SourceContext for X2CitySharedContracts::SourceContext;
     alias Expiry for X2CitySharedContracts::Expiry;
     alias QualifiedInformationRecord for X2CitySharedContracts::QualifiedInformationRecord;
 
-    item def QualifiedRiderInput:>QualifiedInformationRecord;
+    alias QualifiedBrakeInput for X2CityContract_Input::QualifiedBrakeInput;
+    alias BrakeStateOutputPort for X2CityContract_Input::BrakeStateOutputPort;
+    alias BrakeStateInputPort for X2CityContract_Input::BrakeStateInputPort;
+    alias AcceleratorElectricalSignal for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignal;
+    alias AcceleratorElectricalSignalOutputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignalOutputPort;
+    alias AcceleratorElectricalSignalInputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignalInputPort;
+    alias AcceleratorMeasurement for X2CityContract_AcceleratorSignalMeasurement::AcceleratorMeasurement;
+    alias AcceleratorMeasurementOutputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorMeasurementOutputPort;
+    alias AcceleratorMeasurementInputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorMeasurementInputPort;
+    alias AcceleratorPosition for X2CityContract_AcceleratorPositionProcessing::AcceleratorPosition;
+    alias AcceleratorPositionOutputPort for X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionOutputPort;
+    alias AcceleratorPositionInputPort for X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionInputPort;
+    alias AcceleratorHealthOutputPort for X2CityContract_AcceleratorPositionProcessing::AcceleratorHealthOutputPort;
+    alias AcceleratorHealthInputPort for X2CityContract_AcceleratorPositionProcessing::AcceleratorHealthInputPort;
+    alias AcceleratorSignalMeasurement for X2CityComponent_AcceleratorSignalMeasurement::AcceleratorSignalMeasurement;
+    alias AcceleratorPositionProcessing for X2CityComponent_AcceleratorPositionProcessing::AcceleratorPositionProcessing;
+    alias AcceleratorPositionIdentification for X2CityComponent_AcceleratorPositionIdentification::AcceleratorPositionIdentification;
     item def RiderSettingsRequest:>QualifiedInformationRecord;
     item def ActiveRidingSettings:>RiderSettingsRequest;
     item def BatteryConditionObservation:>QualifiedInformationRecord;
@@ -28,14 +50,6 @@ package X2CitySystemArchitecture {
     item def BmsTelemetry:>QualifiedInformationRecord;
     item def BmsReadRequest:>QualifiedInformationRecord;
 
-    port def RiderControlOutputPort {
-        doc /* Carries input-qualified accelerator/rest and coded-brake facts to SettingsPolicy, SessionPolicy, DemandPolicy and LightPolicy. These are rider control observations; Traction separately publishes vehicle speed, direction and standstill qualification. */
-        out item payload:QualifiedRiderInput;
-    }
-    port def RiderControlInputPort {
-        doc /* Carries input-qualified accelerator/rest and coded-brake facts to SettingsPolicy, SessionPolicy, DemandPolicy and LightPolicy. These are rider control observations; Traction separately publishes vehicle speed, direction and standstill qualification. */
-        in item payload:QualifiedRiderInput;
-    }
     port def RiderSettingsRequestOutputPort {
         doc /* Carries owner-qualified rider settings requests from HMI or Input to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
         out item payload:RiderSettingsRequest;
@@ -123,11 +137,6 @@ package X2CitySystemArchitecture {
         in item payload:BmsReadRequest;
     }
 
-    interface def IfA001QualifiedRiderInput {
-        end producer:RiderControlOutputPort;
-        end consumer:RiderControlInputPort;
-        flow producer.payload to consumer.payload;
-    }
     interface def IfA002RiderSettingsRequest {
         end producer:RiderSettingsRequestOutputPort;
         end consumer:RiderSettingsRequestInputPort;
@@ -212,7 +221,8 @@ package X2CitySystemArchitecture {
     }
 
     part def SettingsPolicy { // LE-SET
-        port qualifiedRiderInputIn:RiderControlInputPort;
+        port qualifiedBrakeInputIn:BrakeStateInputPort;
+        port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
@@ -221,7 +231,8 @@ package X2CitySystemArchitecture {
     }
 
     part def SessionPolicy { // LE-SESSION
-        port qualifiedRiderInputIn:RiderControlInputPort;
+        port qualifiedBrakeInputIn:BrakeStateInputPort;
+        port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
@@ -233,7 +244,8 @@ package X2CitySystemArchitecture {
     }
 
     part def DemandPolicy { // LE-DEMAND
-        port qualifiedRiderInputIn:RiderControlInputPort;
+        port qualifiedBrakeInputIn:BrakeStateInputPort;
+        port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port activeRidingSettingsIn:ActiveRidingSettingsInputPort;
         port ridingAuthorityIn:RidingAuthorityInputPort;
@@ -255,17 +267,24 @@ package X2CitySystemArchitecture {
         part riderDevices:RiderDevices;
         part inputHardware:InputHardware;
         part inputQualification:InputQualification;
+        part accelerator:AcceleratorPositionIdentification;
         part bmsLink:BmsLink;
-        port qualifiedRiderInputOut:RiderControlOutputPort;
+        port qualifiedBrakeInputOut:BrakeStateOutputPort;
+        port acceleratorPositionOut:AcceleratorPositionOutputPort;
+        port acceleratorHealthOut:AcceleratorHealthOutputPort;
         port riderSettingsRequestOut:RiderSettingsRequestOutputPort;
         port energyBatteryObservationIn:BatteryConditionObservationInputPort;
         port tractionBatteryObservationIn:BatteryConditionObservationInputPort;
         port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         port lightingContextOut:LightingContextOutputPort;
+        flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.payload to acceleratorPositionOut.payload;
+        flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.payload to acceleratorHealthOut.payload;
+        flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.payload to accelerator.electricalSignalIn.payload;
     }
 
     part def RiderDevices { // LE-RIDER-DEVICES
         port riderStatusInformationIn:RiderStatusInformationInputPort;
+        port acceleratorElectricalSignalOut:AcceleratorElectricalSignalOutputPort;
     }
 
     part def InputHardware; // LE-INPUT-HW
@@ -325,7 +344,7 @@ package X2CitySystemArchitecture {
     }
 
     part def LightPolicy { // LE-LIGHT-POLICY
-        port qualifiedRiderInputIn:RiderControlInputPort;
+        port qualifiedBrakeInputIn:BrakeStateInputPort;
         port actualTractionOutputIn:ActualTractionInputPort;
         port hmiLightingContextIn:LightingContextInputPort;
         port inputLightingContextIn:LightingContextInputPort;
@@ -347,6 +366,7 @@ package X2CitySystemArchitecture {
     part def ComputeHardware; // LE-COMPUTE-HW
     part def Platform { // LE-PLATFORM
         port serviceReportOut:ServiceReportOutputPort;
+        port acceleratorHealthIn:AcceleratorHealthInputPort;
     }
 
     part def Service { // LE-SERVICE
@@ -399,11 +419,15 @@ package X2CitySystemArchitecture {
     // occurrence; System flows retain their logical IF ownership and do not add a live bridge.
     ref part x2CityVehicle:ProjectVehicleModel;
 
-    // IF-A-001: LE-INPUT owns qualified accelerator/rest and coded-brake inputs; LE-TRACTION owns qualified vehicle motion.
-    flow ifA001ToSettings from x2CityVehicle.epcs.input.qualifiedRiderInputOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedRiderInputIn.payload;
-    flow ifA001ToSession from x2CityVehicle.epcs.input.qualifiedRiderInputOut.payload to x2CityVehicle.epcs.riding.session.qualifiedRiderInputIn.payload;
-    flow ifA001ToDemand from x2CityVehicle.epcs.input.qualifiedRiderInputOut.payload to x2CityVehicle.epcs.riding.demand.qualifiedRiderInputIn.payload;
-    flow ifA001ToLightPolicy from x2CityVehicle.epcs.input.qualifiedRiderInputOut.payload to x2CityVehicle.epcs.auxiliary.lightPolicy.qualifiedRiderInputIn.payload;
+    // IF-A-001: LE-ACCELERATOR owns qualified Position/Qualification; LE-INPUT's retained generic route carries coded brake only. LE-TRACTION owns qualified vehicle motion.
+    flow ifA001BrakeToSettings from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedBrakeInputIn.payload;
+    flow ifA001BrakeToSession from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.riding.session.qualifiedBrakeInputIn.payload;
+    flow ifA001BrakeToDemand from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.riding.demand.qualifiedBrakeInputIn.payload;
+    flow ifA001BrakeToLightPolicy from x2CityVehicle.epcs.input.qualifiedBrakeInputOut.payload to x2CityVehicle.epcs.auxiliary.lightPolicy.qualifiedBrakeInputIn.payload;
+    flow ifA001AcceleratorToSettings from x2CityVehicle.epcs.input.acceleratorPositionOut.payload to x2CityVehicle.epcs.riding.settings.acceleratorPositionIn.payload;
+    flow ifA001AcceleratorToSession from x2CityVehicle.epcs.input.acceleratorPositionOut.payload to x2CityVehicle.epcs.riding.session.acceleratorPositionIn.payload;
+    flow ifA001AcceleratorToDemand from x2CityVehicle.epcs.input.acceleratorPositionOut.payload to x2CityVehicle.epcs.riding.demand.acceleratorPositionIn.payload;
+    flow ifA001AcceleratorToPlatform from x2CityVehicle.epcs.input.acceleratorHealthOut.payload to x2CityVehicle.epcs.compute.platform.acceleratorHealthIn.payload;
     flow ifA001VehicleMotionToSettings from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedVehicleMotionIn.payload;
     flow ifA001VehicleMotionToSession from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.session.qualifiedVehicleMotionIn.payload;
 
@@ -446,6 +470,7 @@ package X2CitySystemArchitecture {
     flow ifA008DemandDiagnosticsToService from x2CityVehicle.epcs.riding.demand.demandPolicyDiagnosticsOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
     flow ifA008HmiToService from x2CityVehicle.epcs.riding.hmi.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
     flow ifA008InputQualificationToService from x2CityVehicle.epcs.input.inputQualification.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
+    flow ifA008AcceleratorToService from x2CityVehicle.epcs.input.accelerator.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
     flow ifA008BmsLinkToService from x2CityVehicle.epcs.input.bmsLink.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
     flow ifA008MotorControlToService from x2CityVehicle.epcs.traction.motorControl.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;
     flow ifA008BatteryProtectionToService from x2CityVehicle.epcs.energy.batteryProtection.serviceReportOut.payload to x2CityVehicle.epcs.service.serviceInformation.serviceReportIn.payload;

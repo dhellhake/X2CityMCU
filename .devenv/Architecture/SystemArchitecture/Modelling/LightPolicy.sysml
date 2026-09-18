@@ -20,9 +20,9 @@ package X2CityComponent_LightPolicy {
     private import X2CityContract_LightPolicy::*;
     private import X2CityContract_ServiceInformation::*;
     part def LightPolicy { // LE-LIGHT-POLICY
-        /* Evaluates qualified rider information, traction-owned actual output, and HMI/input light
+        /* Evaluates qualified coded-brake information, traction-owned actual output, and HMI/input light
            requests into a logical light intent. */
-        port qualifiedRiderInputIn:RiderControlInputPort;
+        port qualifiedBrakeInputIn:BrakeStateInputPort;
         port actualTractionOutputIn:ActualTractionInputPort;
         port hmiLightingContextIn:LightingContextInputPort;
         port inputLightingContextIn:LightingContextInputPort;
