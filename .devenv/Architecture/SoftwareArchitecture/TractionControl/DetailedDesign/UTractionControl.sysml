@@ -30,7 +30,7 @@ package X2CityDetailedUnit_TractionControl {
         in item payload:SensorHealthCondition;
     }
     port def AcceptedDemandInputPort {
-        doc /* Receives the signed accepted wheel request and rechecks effective expiry in the common host-boot monotonic microsecond domain before Nm-to-Iq realization. */
+        doc /* Receives the signed accepted wheel request and both battery amperage limits, then rechecks effective expiry before Nm-to-Iq realization. The electrical limits are applied according to actual energy transfer, never by assuming wheel-torque sign. */
         in item payload:AcceptedTractionCommandRecord;
     }
     port def PWMAndADCSamplingPlanOutputPort {
@@ -42,7 +42,8 @@ package X2CityDetailedUnit_TractionControl {
            complete electrical position, phase feedback and fast Vdc for FOC/current-control
            calculation. It independently rejects stale/foreign acceptance or an expired
            effectiveAcceptedExpiryTimeMicroseconds in the common host-boot monotonic domain before Nm-to-Iq
-           realization. It produces PWMAndADCSamplingPlan including compare and sampling-plan data; output
+           realization. It enforces the accepted discharge and regenerative-charge current bounds
+           using actual electrical transfer without selecting a current-control algorithm. It produces PWMAndADCSamplingPlan including compare and sampling-plan data; output
            register commit belongs to TractionOutputCommitter. */
         port executionTimeIn:ExecutionTimeInputPort; port electricalPositionIn:ElectricalPositionInputPort; port phaseFeedbackIn:PhaseFeedbackInputPort; port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort; port sensorHealthIn:SensorHealthInputPort; port acceptedDemandIn:AcceptedDemandInputPort; port pwmAndAdcSamplingPlanOut:PWMAndADCSamplingPlanOutputPort; }
 }

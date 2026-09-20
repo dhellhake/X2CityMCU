@@ -34,21 +34,21 @@ sequenceDiagram
     P->>BR: startup/reset context
     P->>B: startup/reset context
     P->>T: startup/reset context
-    P->>BP: retention candidate with validity/context
+    P->>BP: lowSocRetentionCandidateIn with validity/context
     A-->>S: full current-startup AcceleratorPosition (Position + Qualification)
     BR-->>S: qualified current-startup brake fact
     H-->>S: qualified current-startup level and speed receipt
-    B-->>BP: qualified BMS observations in current BMS context
-    BP-->>S: current envelope, restrictions and battery-fault information
+    B-->>BP: batteryMeasurementsIn: field-qualified BatteryMeasurements with host last-accepted update references
+    BP-->>S: batteryReadinessAndFaultOut and stateOfChargeOut
     T-->>S: qualified motion, self-test and output-observation facts
     Note over S: initially ineligible, evaluate the complete Ready guard
     alt all current guard facts hold
         S-->>D: current authority token
         S-->>T: current authority token
-        D->>D: form signed command from qualified current inputs and capability
-        D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds
+        D->>D: form signed command from qualified inputs and BatteryOperatingLimitsAssessment
+        D-->>T: requestedWheelTorqueNewtonMetres, both A bounds, authorityGeneration, commandExpiryTimeMicroseconds
         T->>T: accept current authority/command, require valid Hall/current/Vdc/configuration
-        T->>T: FOC with zero d-axis demand and qualified torque-current target
+        T->>T: FOC with zero d-axis demand, qualified torque-current target and actual-transfer current-bound enforcement
         T-->>S: qualified acceptance/output/energy observation
         T-->>L: qualified or unqualified active-braking/output observation
     else a guard fact is absent, invalid, expired, mismatched, or inhibited
@@ -56,7 +56,7 @@ sequenceDiagram
         T->>T: request zero of both signs, physical outcome remains separately observed
     end
     S-->>H: selected report
-    BP-->>H: usable charge/current information or presentation fallback input
+    BP-->>H: stateOfChargeOut and batteryCurrentOut, each with its own qualification
 ```
 
 `SC-TRACTION-CTRL.V` requesting zero does not prove zero physical torque or protection.
@@ -98,7 +98,7 @@ The exact pins, commanded-vector-selected ADC contexts, rearm order, cache polic
 
 The selected scheduler can run cyclic slow work; it does not make a software component a task or supply an intercom endpoint. `U-ANALOG-ACQ-REGULAR` owns DMA completed-record stability, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` publishes qualified electrical position. Named accelerator, brake, temperature, supply and motor-phase units consume regular scans under their own qualification contracts. A later static intercom transport may carry a project-declared route only after its route-specific context, age, capacity and loss policy are defined.
 
-Receiver validity and qualification remain separate from local age supervision. Reading cached data, a health-only update, an invalid sample, or republishing unchanged evidence does not refresh a local measurement timeout; a genuinely new qualified sample does. Retained settings and light requests follow their component contracts and may remain current through HMI loss. If a future intercom uses the existing FIFO, one pop returns the oldest item, overflow overwrites the oldest and reports a lost count; receipt time is not acquisition time, and capacity alone supplies no time bound. Consumers retain measurement timestamps and apply private input timeouts/transport scheduling bounds.
+Receiver validity and qualification remain separate from local age supervision. Reading cached data, a health-only update, an invalid sample, or republishing unchanged evidence does not refresh a local measurement timeout; a genuinely new qualified sample does. `BatteryMeasurements` preserves host last-accepted update references per BMS field, never a claimed BMS measurement time; BatteryProtection creates its operating-limits assessment reference and Demand evaluates its age using caller-supplied execution time. Retained settings and light requests follow their component contracts and may remain current through HMI loss. If a future intercom uses the existing FIFO, one pop returns the oldest item, overflow overwrites the oldest and reports a lost count; receipt time is not acquisition time, and capacity alone supplies no time bound. Consumers retain measurement timestamps and apply private input timeouts/transport scheduling bounds.
 
 ```mermaid
 sequenceDiagram
@@ -162,7 +162,7 @@ This does not require an edge at rest, treat an absent edge as a default fault, 
 
 ## Demand decision, withdrawal and post-stop regeneration rearm
 
-`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; an unavailable positive or negative capability branch constrains only that sign. It does not reuse a prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-DEMAND` build parameters, so this interaction claims no numerical response time.
+`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; unavailable `BatteryOperatingLimitsAssessment` withdraws dependent rider permission and sends zero current for its affected electrical branch. It does not reuse a prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-DEMAND` build parameters, so this interaction claims no numerical response time.
 
 ```mermaid
 sequenceDiagram
@@ -180,10 +180,10 @@ sequenceDiagram
         D->>D: keep regeneration disabled
     end
     D->>D: apply both-sign inhibits; then sign-specific limits and active profile
-    D-->>T: requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds
+    D-->>T: requestedWheelTorqueNewtonMetres, both independent A bounds, authorityGeneration, commandExpiryTimeMicroseconds
 ```
 
-For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm, regeneration recovery hold and the negative capability branch constrain negative only; lever and the positive branch constrain positive only; active-profile/ramp/taper results are then clamped within the remaining envelopes. A restriction recovery or capability increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies current branch limits and restriction generation; `SC-DEMAND` owns qualification of each reduction episode: regenerative-range exit or standstill qualifies it before or after clearance, while clearance/partial relaxation during continuous moving regenerative demand cannot increase the held negative ceiling. When qualification and current clearance both exist, recovery is automatic, including at standstill; each new reduction starts a new episode. Session fault restart remains `SC-SESSION` state; neither that nor restriction recovery re-arms post-stop regeneration.
+For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm and regeneration-recovery hold constrain rider-requested regeneration; lever and SOC positive-propulsion caps constrain positive rider torque; active-profile/ramp/taper results are then clamped within the remaining limits. A restriction recovery or limit increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies independent battery current limits and an assessment reference; `SC-DEMAND` owns qualification of each reduction episode and forwards both current bounds. `SC-TRACTION-CTRL` selects the applicable bound from actual electrical transfer, never wheel-torque sign. Session fault restart remains `SC-SESSION` state; neither that nor restriction recovery re-arms post-stop regeneration.
 
 ## Settings application, HMI loss and lighting feedback
 
@@ -213,7 +213,7 @@ sequenceDiagram
     A-->>D: AcceleratorPosition; use qualified Position
     B-->>D: qualified brake fact
     T-->>D: qualified vehicle-motion and actual-output observations
-    D-->>T: current signed demand when authority and capability permit
+    D-->>T: current signed demand and both battery current bounds when authority and operating limits permit
     T-->>L: active electrical-braking observation or unqualified state
     B-->>L: qualified lever state or unqualified state
     H-->>L: normal-light request
@@ -239,9 +239,9 @@ This state view is intentionally limited to `SC-BAT-POLICY.V` ownership of the r
 ```mermaid
 stateDiagram-v2
     [*] --> AwaitingQualifiedInputs: new vehicle/BMS context
-    AwaitingQualifiedInputs --> EvaluateEnvelope: qualified BMS, path/output, configuration and operation context
-    EvaluateEnvelope --> NormalOperation: no approved cutoff entry
-    EvaluateEnvelope --> Reached10Restriction: qualified entry to approved 10% cutoff
+    AwaitingQualifiedInputs --> EvaluateLimits: qualified BatteryMeasurements and compiled pack configuration
+    EvaluateLimits --> NormalOperation: no approved cutoff entry
+    EvaluateLimits --> Reached10Restriction: qualified entry to approved 10% cutoff
     NormalOperation --> AwaitingQualifiedInputs: required input unavailable, stale, invalid or foreign context
     NormalOperation --> Reached10Restriction: qualified cutoff entry
     Reached10Restriction --> Reached10Restriction: actual SOC not qualified above 20%
@@ -256,7 +256,7 @@ stateDiagram-v2
     end note
 ```
 
-`SC-BMS-LINK.V` publishes accepted observations only; rejected frames do not refresh them. `SC-BAT-POLICY.V` keeps regenerative acceptance and discharge envelopes distinct, withholds a dependent permission when a required contribution is unavailable, and reports normal restrictions separately from recognized battery faults. A newly available envelope cannot authorize torque or clear `SC-SESSION.V` inhibition.
+`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` only; rejected frames do not refresh their field update references. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge current limits distinct, publishes zero permitted current for an unavailable or forbidden branch, and reports normal restrictions separately from recognized battery faults. Newly available limits cannot authorize torque or clear `SC-SESSION.V` inhibition.
 
 ## Traceability and limits
 

@@ -20,29 +20,22 @@ package X2CityComponent_Input {
     private import X2CityComponent_RiderDevices::*;
     private import X2CityComponent_InputHardware::*;
     private import X2CityComponent_InputQualification::*;
-    private import X2CityComponent_BmsLink::*;
     private import X2CityComponent_AcceleratorPositionIdentification::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_Input::*;
     private import X2CityContract_SettingsPolicy::*;
-    private import X2CityContract_BatteryProtection::*;
     part def Input { // LE-INPUT
-        /* Composes rider devices, retained generic input hardware/qualification, the accelerator function,
-           and the BMS link. Traction owns vehicle motion and actual-output
-           feedback; LE-INPUT does not republish those observations. */
+        /* Composes rider devices, retained generic input hardware/qualification, and the accelerator function.
+           Battery read/qualification belongs to BatterySupervision; Traction owns vehicle motion and actual-output feedback. */
         part riderDevices:RiderDevices;
         part inputHardware:InputHardware;
         part inputQualification:InputQualification;
         part accelerator:AcceleratorPositionIdentification;
-        part bmsLink:BmsLink;
         port qualifiedBrakeInputOut:BrakeStateOutputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
         port acceleratorHealthOut:AcceleratorHealthOutputPort;
         port riderSettingsRequestOut:RiderSettingsRequestOutputPort;
-        port energyBatteryObservationIn:BatteryConditionObservationInputPort;
-        port tractionBatteryObservationIn:BatteryConditionObservationInputPort;
-        port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         flow qualifiedBrakeFromInputQualification from inputQualification.brakeLeverStateOut.payload to qualifiedBrakeInputOut.payload;
         flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
         flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;

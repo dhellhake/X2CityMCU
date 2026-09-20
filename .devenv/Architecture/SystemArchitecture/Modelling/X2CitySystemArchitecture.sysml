@@ -15,6 +15,10 @@ package X2CitySystemArchitecture {
     private import X2CityContract_EnergyPath::*;
     private import X2CityContract_LightPower::*;
     private import X2CityComponent_LightPower::*;
+    private import X2CityContract_BatteryControl::*;
+    private import X2CityComponent_BatteryControl::*;
+    private import X2CityComponent_BatteryAssembly::*;
+    private import X2CityComponent_BatterySupervision::*;
 
     alias ValidityStatus for X2CitySharedContracts::ValidityStatus;
     alias SourceContext for X2CitySharedContracts::SourceContext;
@@ -40,8 +44,6 @@ package X2CitySystemArchitecture {
     alias AcceleratorPositionIdentification for X2CityComponent_AcceleratorPositionIdentification::AcceleratorPositionIdentification;
     item def RiderSettingsRequest:>QualifiedInformationRecord;
     item def ActiveRidingSettings:>RiderSettingsRequest;
-    item def BatteryConditionObservation:>QualifiedInformationRecord;
-    item def BatteryCapabilityEnvelope:>QualifiedInformationRecord;
     alias RidingAuthority for X2CityContract_SessionPolicy::RidingAuthority;
     alias SignedWheelTorqueRequest for X2CityContract_DemandPolicy::SignedWheelTorqueRequest;
     alias ActualTractionOutput for X2CityContract_MotorControl::ActualTractionOutput;
@@ -56,8 +58,38 @@ package X2CitySystemArchitecture {
     alias LightingPower for X2CityContract_LightPower::LightingPower;
     alias FrontIllumination for X2CityContract_LightControl::FrontIllumination;
     alias RearIllumination for X2CityContract_LightControl::RearIllumination;
-    item def BmsTelemetry:>QualifiedInformationRecord;
-    item def BmsReadRequest:>QualifiedInformationRecord;
+    alias BatteryPower for X2CityContract_BatteryControl::BatteryPower;
+    alias BatteryPowerPort for X2CityContract_BatteryControl::BatteryPowerPort;
+    alias BmsReadRequest for X2CityContract_BatteryControl::BmsReadRequest;
+    alias BmsTelemetry for X2CityContract_BatteryControl::BmsTelemetry;
+    alias BmsReadRequestOutputPort for X2CityContract_BatteryControl::BmsReadRequestOutputPort;
+    alias BmsReadRequestInputPort for X2CityContract_BatteryControl::BmsReadRequestInputPort;
+    alias BmsTelemetryOutputPort for X2CityContract_BatteryControl::BmsTelemetryOutputPort;
+    alias BmsTelemetryInputPort for X2CityContract_BatteryControl::BmsTelemetryInputPort;
+    alias BatteryMeasurements for X2CityContract_BatteryControl::BatteryMeasurements;
+    alias BatteryMeasurementsOutputPort for X2CityContract_BatteryControl::BatteryMeasurementsOutputPort;
+    alias BatteryMeasurementsInputPort for X2CityContract_BatteryControl::BatteryMeasurementsInputPort;
+    alias IfA009BatteryMeasurements for X2CityContract_BatteryControl::IfA009BatteryMeasurements;
+    alias BatteryReadinessAndFault for X2CityContract_BatteryControl::BatteryReadinessAndFault;
+    alias BatteryReadinessAndFaultOutputPort for X2CityContract_BatteryControl::BatteryReadinessAndFaultOutputPort;
+    alias BatteryReadinessAndFaultInputPort for X2CityContract_BatteryControl::BatteryReadinessAndFaultInputPort;
+    alias BatteryOperatingLimits for X2CityContract_BatteryControl::BatteryOperatingLimits;
+    alias BatteryOperatingLimitsOutputPort for X2CityContract_BatteryControl::BatteryOperatingLimitsOutputPort;
+    alias BatteryOperatingLimitsInputPort for X2CityContract_BatteryControl::BatteryOperatingLimitsInputPort;
+    alias BatteryStateOfCharge for X2CityContract_BatteryControl::BatteryStateOfCharge;
+    alias BatteryStateOfChargeOutputPort for X2CityContract_BatteryControl::BatteryStateOfChargeOutputPort;
+    alias BatteryStateOfChargeInputPort for X2CityContract_BatteryControl::BatteryStateOfChargeInputPort;
+    alias BatteryCurrent for X2CityContract_BatteryControl::BatteryCurrent;
+    alias BatteryCurrentOutputPort for X2CityContract_BatteryControl::BatteryCurrentOutputPort;
+    alias BatteryCurrentInputPort for X2CityContract_BatteryControl::BatteryCurrentInputPort;
+    alias IfA003BatteryReadinessAndFault for X2CityContract_BatteryControl::IfA003BatteryReadinessAndFault;
+    alias IfA003BatteryOperatingLimits for X2CityContract_BatteryControl::IfA003BatteryOperatingLimits;
+    alias IfA003BatteryStateOfCharge for X2CityContract_BatteryControl::IfA003BatteryStateOfCharge;
+    alias IfA003BatteryCurrent for X2CityContract_BatteryControl::IfA003BatteryCurrent;
+    alias IfA010BatteryPower for X2CityContract_BatteryControl::IfA010BatteryPower;
+    alias BatteryControl for X2CityComponent_BatteryControl::BatteryControl;
+    alias BatteryAssembly for X2CityComponent_BatteryAssembly::BatteryAssembly;
+    alias BatterySupervision for X2CityComponent_BatterySupervision::BatterySupervision;
 
     port def RiderSettingsRequestOutputPort {
         doc /* Carries owner-qualified rider settings requests from HMI or Input to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
@@ -74,22 +106,6 @@ package X2CitySystemArchitecture {
     port def ActiveRidingSettingsInputPort {
         doc /* Carries SettingsPolicy's resolved active riding level and speed projection to DemandPolicy. Only applied active state crosses this contract; requested or pending values cannot drive demand. */
         in item payload:ActiveRidingSettings;
-    }
-    port def BatteryConditionObservationOutputPort {
-        doc /* Carries battery and traction condition observations assembled by Input from the BMS/energy and traction paths to BatteryProtection. These records remain qualified observations; they do not contain the resulting charge or discharge envelope. */
-        out item payload:BatteryConditionObservation;
-    }
-    port def BatteryConditionObservationInputPort {
-        doc /* Carries battery and traction condition observations assembled by Input from the BMS/energy and traction paths to BatteryProtection. These records remain qualified observations; they do not contain the resulting charge or discharge envelope. */
-        in item payload:BatteryConditionObservation;
-    }
-    port def BatteryCapabilityEnvelopeOutputPort {
-        doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
-        out item payload:BatteryCapabilityEnvelope;
-    }
-    port def BatteryCapabilityEnvelopeInputPort {
-        doc /* Carries BatteryProtection's separate positive-discharge and negative-charge capability envelope and protection status to SessionPolicy and DemandPolicy. Each policy applies the relevant qualified sign branch as a constraint on its decision. */
-        in item payload:BatteryCapabilityEnvelope;
     }
     alias RidingAuthorityOutputPort for X2CityContract_SessionPolicy::RidingAuthorityOutputPort;
     alias RidingAuthorityInputPort for X2CityContract_SessionPolicy::RidingAuthorityInputPort;
@@ -121,22 +137,6 @@ package X2CitySystemArchitecture {
         doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
         in item payload:RiderStatusInformation;
     }
-    port def BmsTelemetryOutputPort {
-        doc /* Carries battery data and protection-state observations from the supplied BMS assembly to BmsLink. BmsLink validates and qualifies this telemetry before using it as battery evidence; the path carries no software control decision. */
-        out item payload:BmsTelemetry;
-    }
-    port def BmsTelemetryInputPort {
-        doc /* Carries battery data and protection-state observations from the supplied BMS assembly to BmsLink. BmsLink validates and qualifies this telemetry before using it as battery evidence; the path carries no software control decision. */
-        in item payload:BmsTelemetry;
-    }
-    port def BmsReadRequestOutputPort {
-        doc /* Carries a read-only battery-information request from BmsLink to the supplied BMS assembly. The request selects observation retrieval and does not write or command the BMS protection function. */
-        out item payload:BmsReadRequest;
-    }
-    port def BmsReadRequestInputPort {
-        doc /* Carries a read-only battery-information request from BmsLink to the supplied BMS assembly. The request selects observation retrieval and does not write or command the BMS protection function. */
-        in item payload:BmsReadRequest;
-    }
 
     interface def IfA002RiderSettingsRequest {
         end producer:RiderSettingsRequestOutputPort;
@@ -146,16 +146,6 @@ package X2CitySystemArchitecture {
     interface def IfA002ActiveRidingSettings {
         end producer:ActiveRidingSettingsOutputPort;
         end consumer:ActiveRidingSettingsInputPort;
-        flow producer.payload to consumer.payload;
-    }
-    interface def IfA003BatteryConditionObservation {
-        end producer:BatteryConditionObservationOutputPort;
-        end consumer:BatteryConditionObservationInputPort;
-        flow producer.payload to consumer.payload;
-    }
-    interface def IfA003BatteryCapabilityEnvelope {
-        end producer:BatteryCapabilityEnvelopeOutputPort;
-        end consumer:BatteryCapabilityEnvelopeInputPort;
         flow producer.payload to consumer.payload;
     }
     interface def IfA004RidingAuthority {
@@ -183,16 +173,6 @@ package X2CitySystemArchitecture {
         end consumer:RiderStatusInformationInputPort;
         flow producer.payload to consumer.payload;
     }
-    interface def IfA009BmsReadRequest {
-        end producer:BmsReadRequestOutputPort;
-        end consumer:BmsReadRequestInputPort;
-        flow producer.payload to consumer.payload;
-    }
-    interface def IfA009BmsTelemetry {
-        end producer:BmsTelemetryOutputPort;
-        end consumer:BmsTelemetryInputPort;
-        flow producer.payload to consumer.payload;
-    }
     // ARCH-001; LE identifiers remain authoritative.
     part def RidingSupervisor { // LE-RIDING
         part settings:SettingsPolicy;
@@ -216,7 +196,8 @@ package X2CitySystemArchitecture {
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
-        port batteryCapabilityEnvelopeIn:BatteryCapabilityEnvelopeInputPort;
+        port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort { doc /* Receives BatteryControl startup assessment and separate recognized thermal/battery faults. */ }
+        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for low-charge selection. */ }
         port actualTractionOutputIn:ActualTractionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;
@@ -228,7 +209,7 @@ package X2CitySystemArchitecture {
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port activeRidingSettingsIn:ActiveRidingSettingsInputPort;
         port ridingAuthorityIn:RidingAuthorityInputPort;
-        port batteryCapabilityEnvelopeIn:BatteryCapabilityEnvelopeInputPort;
+        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge, regenerative-charge, and SOC positive wheel-torque limits. */ }
         port actualTractionOutputIn:ActualTractionInputPort;
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort;
     }
@@ -238,6 +219,8 @@ package X2CitySystemArchitecture {
         port normalLightRequestOut:NormalLightRequestOutputPort;
         port riderStatusInformationIn:RiderStatusInformationInputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;
+        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for rider presentation. */ }
+        port batteryCurrentIn:BatteryCurrentInputPort { doc /* Receives qualified signed pack current in amperes for rider presentation. */ }
     }
 
     part def Input { // LE-INPUT
@@ -245,14 +228,10 @@ package X2CitySystemArchitecture {
         part inputHardware:InputHardware;
         part inputQualification:InputQualification;
         part accelerator:AcceleratorPositionIdentification;
-        part bmsLink:BmsLink;
         port qualifiedBrakeInputOut:BrakeStateOutputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
         port acceleratorHealthOut:AcceleratorHealthOutputPort;
         port riderSettingsRequestOut:RiderSettingsRequestOutputPort;
-        port energyBatteryObservationIn:BatteryConditionObservationInputPort;
-        port tractionBatteryObservationIn:BatteryConditionObservationInputPort;
-        port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
         flow qualifiedBrakeFromInputQualification from inputQualification.brakeLeverStateOut.payload to qualifiedBrakeInputOut.payload;
         flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
         flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
@@ -269,17 +248,12 @@ package X2CitySystemArchitecture {
         port brakeLeverStateOut:BrakeStateOutputPort;
     }
 
-    part def BmsLink { // LE-BMS-LINK
-        port bmsTelemetryIn:BmsTelemetryInputPort;
-        port bmsReadRequestOut:BmsReadRequestOutputPort;
-    }
-
     part def Traction { // LE-TRACTION
         part motorControl:X2CityComponent_MotorControl::MotorControl;
         part tractionHardware:TractionHardware;
         port ridingAuthorityIn:RidingAuthorityInputPort;
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort;
-        port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
+        port tractionElectricalPower:TractionElectricalPowerPort { doc /* Physical bidirectional EnergyPath connection for propulsion and regenerative return. */ }
         port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
         port actualTractionOutputOut:ActualTractionOutputPort;
         port electricalBrakingStateOut:ElectricalBrakingStateOutputPort;
@@ -291,30 +265,10 @@ package X2CitySystemArchitecture {
     }
     part def TractionHardware; // LE-TRACTION-HW
 
-    part def Energy { // LE-ENERGY
-        part cells:Cells;
-        part bms:Bms;
-        part batteryProtection:BatteryProtection;
-        part energyPath:EnergyPath;
-        port batteryConditionObservationOut:BatteryConditionObservationOutputPort;
-        port vehicleElectricalPowerOut:VehicleElectricalPowerOutputPort { doc /* Delegates EnergyPath's distributed vehicle electrical energy to an EPCS vehicle load. */ }
-        flow vehicleElectricalPowerFromPath from energyPath.vehicleElectricalPowerOut.vehicleElectricalPower to vehicleElectricalPowerOut.vehicleElectricalPower;
-    }
-
-    part def Cells; // LE-CELLS
-
-    part def Bms { // LE-BMS, supplied assembly
-        port bmsTelemetryOut:BmsTelemetryOutputPort;
-        port bmsReadRequestIn:BmsReadRequestInputPort;
-    }
-
-    part def BatteryProtection { // LE-BAT-POLICY
-        port batteryConditionObservationIn:BatteryConditionObservationInputPort;
-        port batteryCapabilityEnvelopeOut:BatteryCapabilityEnvelopeOutputPort;
-    }
-
     part def EnergyPath { // LE-ENERGY-PATH
-        port vehicleElectricalPowerOut:VehicleElectricalPowerOutputPort { doc /* Supplies distributed vehicle electrical energy to Energy's vehicle-load boundary. */ }
+        port batteryPower:BatteryPowerPort { doc /* Physical bidirectional pack-energy connection to BatteryControl. */ }
+        port vehicleElectricalPowerOut:VehicleElectricalPowerOutputPort { doc /* Supplies general distributed vehicle electrical power to a vehicle load. */ }
+        port tractionElectricalPower:TractionElectricalPowerPort { doc /* Physical bidirectional traction-power branch. */ }
     }
 
 
@@ -346,11 +300,16 @@ package X2CitySystemArchitecture {
         part riding:RidingSupervisor;
         part input:Input;
         part traction:Traction;
-        part energy:Energy;
+        part batteryControl:BatteryControl { doc /* Removable BatteryAssembly and vehicle-host BatterySupervision composite. */ }
+        part energyPath:EnergyPath { doc /* General vehicle electrical-power distribution sibling. */ }
         part lightControl:LightControl;
         part compute:Compute;
+        interface batteryPowerToEnergyPath : IfA010BatteryPower
+            connect batteryControl.batteryPower to energyPath.batteryPower;
         interface vehicleElectricalPowerToLightControl : IfA010VehicleElectricalPower
-            connect energy.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
+            connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
+        interface tractionPowerToTraction : IfA010TractionElectricalPower
+            connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
     }
 
     // LE-VEH is an installed-vehicle scope view, not a parent of the whole EPCS.
@@ -386,12 +345,17 @@ package X2CitySystemArchitecture {
     flow ifA002InputToSession from x2CityVehicle.epcs.input.riderSettingsRequestOut.payload to x2CityVehicle.epcs.riding.session.inputRiderSettingsRequestIn.payload;
     flow ifA002ActiveRidingSettingsToDemand from x2CityVehicle.epcs.riding.settings.activeRidingSettingsOut.payload to x2CityVehicle.epcs.riding.demand.activeRidingSettingsIn.payload;
 
-    // IF-A-003: energy and traction observations, then the battery envelope/status.
-    flow ifA003EnergyToInput from x2CityVehicle.epcs.energy.batteryConditionObservationOut.payload to x2CityVehicle.epcs.input.energyBatteryObservationIn.payload;
-    flow ifA003TractionToInput from x2CityVehicle.epcs.traction.batteryConditionObservationOut.payload to x2CityVehicle.epcs.input.tractionBatteryObservationIn.payload;
-    flow ifA003InputToBatteryProtection from x2CityVehicle.epcs.input.batteryConditionObservationOut.payload to x2CityVehicle.epcs.energy.batteryProtection.batteryConditionObservationIn.payload;
-    flow ifA003ToSession from x2CityVehicle.epcs.energy.batteryProtection.batteryCapabilityEnvelopeOut.payload to x2CityVehicle.epcs.riding.session.batteryCapabilityEnvelopeIn.payload;
-    flow ifA003ToDemand from x2CityVehicle.epcs.energy.batteryProtection.batteryCapabilityEnvelopeOut.payload to x2CityVehicle.epcs.riding.demand.batteryCapabilityEnvelopeIn.payload;
+    // IF-A-003: BatteryControl directly provides policy and HMI evidence; Input and Traction do not assemble battery observations.
+    interface ifA003ReadinessToSession : IfA003BatteryReadinessAndFault
+        connect x2CityVehicle.epcs.batteryControl.batteryReadinessAndFaultOut to x2CityVehicle.epcs.riding.session.batteryReadinessAndFaultIn;
+    interface ifA003LimitsToDemand : IfA003BatteryOperatingLimits
+        connect x2CityVehicle.epcs.batteryControl.batteryOperatingLimitsOut to x2CityVehicle.epcs.riding.demand.batteryOperatingLimitsIn;
+    interface ifA003SocToSession : IfA003BatteryStateOfCharge
+        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.riding.session.stateOfChargeIn;
+    interface ifA003SocToHmi : IfA003BatteryStateOfCharge
+        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.riding.hmi.stateOfChargeIn;
+    interface ifA003CurrentToHmi : IfA003BatteryCurrent
+        connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.riding.hmi.batteryCurrentIn;
 
     // IF-A-004: authority informs demand and traction; demand alone provides the signed command.
     flow ifA004AuthorityToDemand from x2CityVehicle.epcs.riding.session.ridingAuthorityOut.payload to x2CityVehicle.epcs.riding.demand.ridingAuthorityIn.payload;
@@ -411,8 +375,4 @@ package X2CitySystemArchitecture {
     interface ifA006HmiToLightControl : IfA006NormalLightRequest
         connect x2CityVehicle.epcs.riding.hmi.normalLightRequestOut to x2CityVehicle.epcs.lightControl.runningLightStateIn;
 
-
-    // IF-A-009: the selected BMS read information endpoint.
-    flow ifA009BmsReadRequest from x2CityVehicle.epcs.input.bmsLink.bmsReadRequestOut.payload to x2CityVehicle.epcs.energy.bms.bmsReadRequestIn.payload;
-    flow ifA009BmsTelemetry from x2CityVehicle.epcs.energy.bms.bmsTelemetryOut.payload to x2CityVehicle.epcs.input.bmsLink.bmsTelemetryIn.payload;
 }

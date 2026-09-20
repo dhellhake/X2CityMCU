@@ -5,6 +5,7 @@ package X2CityDetailedUnit_DemandArbiter {
     private import X2CitySoftwareContract_BrakeInterface::*;
     private import X2CitySoftwareContract_SettingsPolicy::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
+    private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
     private import X2CitySoftwareContract_TractionControl::*;
     private import X2CitySoftwareContract_DemandPolicy::*;
@@ -26,9 +27,9 @@ package X2CityDetailedUnit_DemandArbiter {
         doc /* Receives Session authority with independent generation, decision and expiry timestamps; matching generation never prolongs authority expiry. */
         in item payload:RidingAuthority;
     }
-    port def DemandBatteryCapabilityInputPort {
-        doc /* Receives Battery Protection's independently qualified positive-propulsion and negative-regeneration ceilings, reasons and restriction generations. */
-        in item payload:BatteryCapabilityEnvelope;
+    port def DemandBatteryOperatingLimitsInputPort {
+        doc /* Receives independent discharge and regenerative-charge current limits and qualification, plus SOC positive torque/speed caps. Both amperage limits propagate alongside the wheel request; Traction selects by actual electrical transfer, never wheel-torque sign. */
+        in item payload:BatteryOperatingLimitsAssessment;
     }
     port def DemandMotionInputPort {
         doc /* Receives qualified vehicle speed, direction and standstill from U-TRACTION-MOTION for cutoffs, recovery and rearm guards. */
@@ -60,7 +61,7 @@ package X2CityDetailedUnit_DemandArbiter {
         port brakeIn:DemandBrakeInputPort;
         port activeSettingsIn:DemandActiveSettingsInputPort;
         port authorityIn:DemandAuthorityInputPort;
-        port batteryCapabilityIn:DemandBatteryCapabilityInputPort;
+        port batteryOperatingLimitsIn:DemandBatteryOperatingLimitsInputPort;
         port motionIn:DemandMotionInputPort;
         port actualOutputIn:DemandActualOutputInputPort;
         port platformContextIn:DemandPlatformContextInputPort;

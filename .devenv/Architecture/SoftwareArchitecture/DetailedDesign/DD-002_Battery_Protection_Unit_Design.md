@@ -2,11 +2,11 @@
 
 **Draft vehicle baseline — 2026-09-16.** Full BMS transaction/decode/publication, battery evaluation/restriction, reset invariants and acceptance vectors are retained in their owning component folders.
 
-**Draft — 2026-09-13.** This split detailed design preserves the complete vehicle unit contracts for `SC-BMS-LINK.V` and `SC-BAT-POLICY.V`. It derives Draft Unit Requirements only from the four approved Abstract Software Requirements listed in [Battery Unit Requirements](../../../Requirements/Unit_Requirements/Battery_Unit_Requirements.md). It neither changes the 197 canonical records nor selects electrical interfaces, hosts, numeric limits, physical protection, vendor internals, BMS writes, an immutable pack identity, or diagnostic coverage.
+**Draft — 2026-09-13.** This split detailed design preserves the complete vehicle unit contracts for `SC-BMS-LINK.V` and `SC-BAT-POLICY.V`. It derives the two battery Abstract Software obligations now co-located in [BatteryControl](../../SystemArchitecture/Modelling/BatteryControl/README.md). Historical release identities and record counts remain historical; this successor neither selects electrical interfaces, hosts, numeric limits, physical protection, vendor internals, BMS writes, an immutable pack identity, or diagnostic coverage.
 
 ## Design-wide execution and data rules
 
-Every received publication has `{producer, producerContext, receiptOrder, value, validity, freshness, qualification}`. A consumer first rejects a foreign/old context, then checks validity and applicable age/qualification before using its value. `Unknown`, `Invalid`, `Stale`, and `Qualified` are different states; a presentation fallback is never a qualified value. The platform supplies ordering and a new local context after reset, but no deadline or scheduler is selected here.
+Each typed battery record carries its stated semantic values, producer/reset context and field-specific qualification. Its producer does not invent a generic freshness/order field or a remote measurement time. The caller supplies `ExecutionTime`; each consumer evaluates applicable age, expiry and ordering locally from its own contract. `Unknown`, `Invalid`, `Stale`, and `Qualified` are different states; a presentation fallback is never qualified data.
 
 The vehicle component instances `SC-BMS-LINK.V` and `SC-BAT-POLICY.V` execute on `HC-CONTROLLER` with independent producer/reset contexts. `SC-BAT-POLICY.V` alone owns the `reached10%` operating restriction. Retention means a platform-provided candidate plus its validity/context; it is never retained fault history.
 

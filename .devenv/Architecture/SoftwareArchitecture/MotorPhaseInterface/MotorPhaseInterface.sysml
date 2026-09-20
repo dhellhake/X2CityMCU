@@ -48,7 +48,7 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def PhaseVoltageDiagnosticOutputPort {
-        doc /* Publishes separately qualified phase-voltage diagnostic observations to BatteryProtection. This slow diagnostic output is not used as fast FOC feedback. */
+        doc /* Publishes separately qualified phase-voltage diagnostic observations to SessionPolicy. This slow diagnostic output is not used as fast FOC feedback or battery supervision evidence. */
         out item payload:PhaseVoltageDiagnostic;
     }
     port def MotorPhaseHealthOutputPort {

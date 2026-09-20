@@ -1,5 +1,6 @@
 package X2CitySoftwareArchitecture {
     public import X2CitySharedSoftwareTypes::*;
+    public import X2CityContract_BatteryControl::*;
     public import X2CitySoftwareComponent_SettingsPolicy::*;
     public import X2CitySoftwareContract_SettingsPolicy::*;
     public import X2CitySoftwareComponent_SessionPolicy::*;
@@ -114,31 +115,30 @@ package X2CitySoftwareArchitecture {
     flow rV05QualifiedMotionSession from tractionControlVehicle.qualifiedMotionOut.payload to sessionVehicle.qualifiedMotionIn.payload;
 
     // SW-I-003/004/005/006: vehicle policy, dedicated demand inputs, signed command and observations.
-    flow rV06 from batteryProtectionVehicle.batteryCapabilityEnvelopeOut.payload to sessionVehicle.ridingReadinessIn.payload;
+    flow rV06BatteryReadiness from batteryProtectionVehicle.batteryReadinessAndFaultOut.readinessAndFault to sessionVehicle.batteryReadinessAndFaultIn.readinessAndFault;
+    flow rV06StateOfChargeSession from batteryProtectionVehicle.stateOfChargeOut.stateOfCharge to sessionVehicle.stateOfChargeIn.stateOfCharge;
     flow rV07 from tractionControlVehicle.tractionObservationOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV08 from platformVehicle.platformContextOut.payload to sessionVehicle.startupContextIn.payload;
     flow rV09Authority from sessionVehicle.ridingAuthorityOut.payload to demandVehicle.ridingAuthorityIn.payload;
     flow rV10Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to demandVehicle.acceleratorPositionIn.payload;
     flow rV10Brake from brakeInterfaceVehicle.brakeStateOut.payload to demandVehicle.brakeStateIn.payload;
     flow rV11ActiveSettings from setVehicle.activeRidingSettingsOut.payload to demandVehicle.activeRidingSettingsIn.payload;
-    flow rV12BatteryCapability from batteryProtectionVehicle.batteryCapabilityEnvelopeOut.payload to demandVehicle.batteryCapabilityIn.payload;
+    flow rV12BatteryOperatingLimits from batteryProtectionVehicle.batteryOperatingLimitsOut.operatingLimits to demandVehicle.batteryOperatingLimitsIn.payload;
     flow rV13QualifiedMotion from tractionControlVehicle.qualifiedMotionOut.payload to demandVehicle.qualifiedMotionIn.payload;
     flow rV13ActualOutput from tractionControlVehicle.appliedTractionStateOut.payload to demandVehicle.actualTractionOutputIn.payload;
     flow rV14 from demandVehicle.wheelTorqueRequestOut.payload to tractionControlVehicle.wheelTorqueRequestIn.payload;
     flow rV15 from sessionVehicle.ridingAuthorityOut.payload to tractionControlVehicle.ridingAuthorityIn.payload;
-    flow rV16 from bmsLinkVehicle.bmsObservationOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
-    flow rV17Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
-    flow rV17Supply from supplyInterfaceVehicle.supplyVoltageOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
-    flow rV17PhaseDiagnostic from motorPhaseInterfaceVehicle.phaseVoltageDiagnosticOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
-    flow rV18 from tractionControlVehicle.tractionObservationOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
-    flow rV19 from platformVehicle.retentionCandidateOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
+    interface rV16BatteryMeasurements : IfA009BatteryMeasurements
+        connect bmsLinkVehicle.batteryMeasurementsOut to batteryProtectionVehicle.batteryMeasurementsIn;
+    flow rV19LowSocRetention from platformVehicle.retentionCandidateOut.payload to batteryProtectionVehicle.lowSocRetentionCandidateIn.payload;
     // LightModeSelection receives the three concrete System-contract facts. InputQualification
     // owns the mechanical-lever qualification; Traction owns actual electrical-braking state.
     flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeStateOut.payload to lightPolicyVehicle.brakeLeverStateIn.payload;
     flow rV21NormalLightRequest from hmiVehicle.hmiLightRequestOut.payload to lightPolicyVehicle.runningLightStateIn.payload;
     flow rV22ElectricalBrakingState from tractionControlVehicle.electricalBrakingStateOut.payload to lightPolicyVehicle.electricalBrakingStateIn.payload;
     flow rV23 from sessionVehicle.sessionReportOut.payload to hmiVehicle.hmiReportIn.payload;
-    flow rV24 from batteryProtectionVehicle.batteryCapabilityEnvelopeOut.payload to hmiVehicle.hmiReportIn.payload;
+    flow rV24StateOfCharge from batteryProtectionVehicle.stateOfChargeOut.stateOfCharge to hmiVehicle.stateOfChargeIn.stateOfCharge;
+    flow rV24BatteryCurrent from batteryProtectionVehicle.batteryCurrentOut.batteryCurrent to hmiVehicle.batteryCurrentIn.batteryCurrent;
 
     // R-V25/R-V26 are opaque software boundary information exchanges.
     flow rV25 from lightPolicyVehicle.lightModesOut.payload to vehicleBoundary.lightModes.payload;

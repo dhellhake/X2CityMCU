@@ -1,6 +1,6 @@
 # Light control requirements
 
-**Type:** System Requirement. **Target:** `LE-LIGHT-CONTROL`. **Status:** Draft. The end-to-end logical function comprises [LightModeSelection](Decomposition/LightModeSelection_Requirements.md) (`LE-LIGHT-POLICY`) and [LightActuation](Decomposition/LightActuation_Requirements.md) (`LE-LAMP-HW`). LightPower (`LE-LIGHT-POWER`) is owned within LightActuation; vehicle electrical energy remains an external distributed boundary through Energy/EnergyPath. Electrical protection remains governed by [AUX-001](../../../../Requirements/System_Requirements/HMI_and_Auxiliary_Continuity.md#req-veh-aux-001).
+**Type:** System Requirement. **Target:** `LE-LIGHT-CONTROL`. **Status:** Draft. The end-to-end logical function comprises [LightModeSelection](Decomposition/LightModeSelection_Requirements.md) (`LE-LIGHT-POLICY`) and [LightActuation](Decomposition/LightActuation_Requirements.md) (`LE-LAMP-HW`). LightPower (`LE-LIGHT-POWER`) is owned within LightActuation; vehicle electrical energy remains an external distributed boundary through LE-ENERGY-PATH. Electrical protection remains governed by [AUX-001](../../../../Requirements/System_Requirements/HMI_and_Auxiliary_Continuity.md#req-veh-aux-001).
 
 | ID | Requirement | Derived from | Sources / governing contracts | Planned verification |
 | --- | --- | --- | --- | --- |

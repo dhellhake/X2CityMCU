@@ -61,7 +61,7 @@ package X2CityDetailedDesign {
     part def EnergyUnits {
         part bmsTransaction:BmsTransaction;
         part bmsDecode:BmsResponseDecoder;
-        part bmsPublish:BmsObservationPublisher;
+        part bmsPublish:BatteryMeasurementsPublisher;
         part batteryEvaluate:BatteryCapabilityEvaluator;
         part batteryRestriction:BatteryCapabilityRestrictor;
     }
@@ -246,24 +246,22 @@ package X2CityDetailedDesign {
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.brakeLeverStateIn.payload;
     flow vPlatformContextToSession from vehicle.platform.context.contextOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vBatteryRestrictionToSession from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
+    flow vBatteryReadinessToSession from vehicle.energy.batteryRestriction.readinessAndFaultOut.payload to vehicle.riding.sessionEligibility.batteryReadinessAndFaultIn.payload;
+    flow vBatterySocToSession from vehicle.energy.batteryRestriction.stateOfChargeOut.payload to vehicle.riding.sessionEligibility.stateOfChargeIn.payload;
     flow vTractionObservationToSession from vehicle.traction.tractionObservationOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vAppliedTractionStateToDemand from vehicle.traction.appliedTractionStateOut.payload to vehicle.riding.demandArbiter.actualOutputIn.payload;
     flow vTractionMotionToDemand from vehicle.traction.qualifiedMotionOut.payload to vehicle.riding.demandArbiter.motionIn.payload;
     flow vElectricalBrakingStateToLight from vehicle.traction.electricalBrakingStateOut.payload to vehicle.riding.lightMode.electricalBrakingStateIn.payload;
     flow vSessionReportToHmi from vehicle.riding.sessionReport.reportOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
-    flow vBatteryToHmi from vehicle.energy.batteryRestriction.presentationOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
+    flow vBatterySocToHmi from vehicle.energy.batteryRestriction.stateOfChargeOut.payload to vehicle.riding.hmiAdapter.stateOfChargeIn.payload;
+    flow vBatteryCurrentToHmi from vehicle.energy.batteryRestriction.batteryCurrentOut.payload to vehicle.riding.hmiAdapter.batteryCurrentIn.payload;
 
     flow vBmsTransactionToDecode from vehicle.energy.bmsTransaction.acceptedPayloadOut.payload to vehicle.energy.bmsDecode.acceptedPayloadIn.payload;
     flow vBmsDecodeToPublish from vehicle.energy.bmsDecode.decodedOut.payload to vehicle.energy.bmsPublish.decodedIn.payload;
-    flow vBmsPublishToBatteryEvaluate from vehicle.energy.bmsPublish.observationOut.payload to vehicle.energy.batteryEvaluate.observationsAndContextIn.payload;
-    flow vTemperatureToBatteryEvaluate from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.energy.batteryEvaluate.observationsAndContextIn.payload;
-    flow vSupplyRegularToBatteryEvaluate from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.energy.batteryEvaluate.observationsAndContextIn.payload;
-    flow vPhaseDiagnosticToBatteryEvaluate from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.energy.batteryEvaluate.observationsAndContextIn.payload;
-    flow vTractionObservationToBatteryEvaluate from vehicle.traction.tractionObservationOut.payload to vehicle.energy.batteryEvaluate.observationsAndContextIn.payload;
+    flow vBmsPublishToBatteryEvaluate from vehicle.energy.bmsPublish.batteryMeasurementsOut.payload to vehicle.energy.batteryEvaluate.batteryMeasurementsIn.payload;
     flow vBatteryEvaluateToRestriction from vehicle.energy.batteryEvaluate.candidateOut.payload to vehicle.energy.batteryRestriction.candidateIn.payload;
     flow vRetentionToBatteryRestriction from vehicle.platform.retention.candidateOut.payload to vehicle.energy.batteryRestriction.retentionCandidateIn.payload;
-    flow vBatteryRestrictionToDemand from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.demandArbiter.batteryCapabilityIn.payload;
+    flow vBatteryOperatingLimitsToDemand from vehicle.energy.batteryRestriction.operatingLimitsOut.payload to vehicle.riding.demandArbiter.batteryOperatingLimitsIn.payload;
     flow vPlatformContextToDemand from vehicle.platform.context.contextOut.payload to vehicle.riding.demandArbiter.platformContextIn.payload;
     flow vPlatformHealthToDemand from vehicle.platform.health.healthOut.payload to vehicle.riding.demandArbiter.platformHealthIn.payload;
 

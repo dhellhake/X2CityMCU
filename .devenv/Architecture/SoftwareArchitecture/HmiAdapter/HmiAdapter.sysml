@@ -1,5 +1,6 @@
 package X2CitySoftwareContract_HmiAdapter {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_BatteryControl::*;
     private import X2CityContract_LightControl::*;
     item def HmiTransportExchange:>ContextualSoftwareInformation;
     port def HmiTransportExchangePort {
@@ -26,6 +27,7 @@ package X2CitySoftwareComponent_HmiAdapter {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_HmiAdapter::*;
     private import X2CitySoftwareContract_Platform::*;
+    private import X2CityContract_BatteryControl::*;
     part def HmiAdapter {
         /* Interprets the supplied VD18MT byte exchange into qualified settings/light information
            and consumes session/battery reports for outgoing information. It owns protocol parsing
@@ -35,6 +37,8 @@ package X2CitySoftwareComponent_HmiAdapter {
         port hmiSettingsRequestOut:HmiSettingsRequestOutputPort;
         port hmiLightRequestOut:HmiLightRequestOutputPort;
         port hmiReportIn:HmiReportInputPort;
+        port stateOfChargeIn:BatteryStateOfChargeInputPort;
+        port batteryCurrentIn:BatteryCurrentInputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
     }

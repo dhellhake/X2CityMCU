@@ -27,7 +27,9 @@ package X2CitySoftwareContract_TractionControl {
         in item payload:RidingAuthority :>> X2CityContract_SessionPolicy::RidingAuthorityInputPort::payload;
     }
     port def WheelTorqueRequestInputPort :> X2CityContract_DemandPolicy::WheelTorqueCommandInputPort {
-        doc /* Receives DemandPolicy's requested signed wheel-torque command with authority linkage and independent expiry. TractionControl validates both command and authority before fast actuation. */
+        doc /* Receives DemandPolicy's requested signed wheel-torque command with authority linkage,
+           expiry, and independently dimensioned battery charge/discharge-current bounds. Traction
+           uses the amperage bounds as electrical limits; they are not wheel-torque values. */
         in item payload:WheelTorqueRequest :>> X2CityContract_DemandPolicy::WheelTorqueCommandInputPort::payload;
     }
     port def HallElectricalPositionInputPort {
@@ -73,7 +75,7 @@ package X2CitySoftwareContract_TractionControl {
     }
     item def TractionObservation:>ContextualSoftwareInformation;
     port def TractionObservationOutputPort {
-        doc /* Publishes the traction observation envelope to SessionPolicy and BatteryProtection. It provides current traction facts for operational policy, not a command or actuation channel. */
+        doc /* Publishes the traction observation envelope to SessionPolicy. It provides current traction facts for session policy, not a command or actuation channel. */
         out item payload:TractionObservation;
     }
     item def ElectricalBrakingStateRecord:>ContextualSoftwareInformation, ElectricalBrakingState {

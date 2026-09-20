@@ -17,18 +17,19 @@ package X2CityComponent_SessionPolicy {
     private import X2CityContract_Input::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_SettingsPolicy::*;
-    private import X2CityContract_BatteryProtection::*;
+    private import X2CityContract_BatteryControl::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_HmiAdapter::*;
     private import X2CityContract_SessionPolicy::*;
     part def SessionPolicy { // LE-SESSION
-        /* Evaluates qualified accelerator position/rest, coded brake, vehicle motion, settings, battery capability, and observed outputs into riding authority and rider information while leaving traction actuation to Traction. */
+        /* Evaluates qualified accelerator position/rest, coded brake, vehicle motion, settings, BatteryControl readiness/fault evidence and actual SOC, and observed outputs into riding authority and rider information while leaving traction actuation to Traction. */
         port qualifiedBrakeInputIn:BrakeStateInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
-        port batteryCapabilityEnvelopeIn:BatteryCapabilityEnvelopeInputPort;
+        port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort { doc /* Receives BatteryControl startup assessment and separate recognized battery fault categories. */ }
+        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for low-charge selection. */ }
         port actualTractionOutputIn:ActualTractionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
         port riderStatusInformationOut:RiderStatusInformationOutputPort;

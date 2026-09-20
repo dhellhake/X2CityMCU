@@ -1,6 +1,6 @@
 # LightControl
 
-`LE-LIGHT-CONTROL` composes software [LightModeSelection](Decomposition/LightModeSelection_Requirements.md) (`LE-LIGHT-POLICY`) and logical hardware [LightActuation](Decomposition/LightActuation_Requirements.md) (`LE-LAMP-HW`). `LightPower` (`LE-LIGHT-POWER`) is contained within LightActuation and owns its lighting supply. [Canonical system requirements](LightControl_Requirements.md) remain the end-to-end contract; vehicle electrical power is an external boundary supplied through Energy/EnergyPath.
+`LE-LIGHT-CONTROL` composes software [LightModeSelection](Decomposition/LightModeSelection_Requirements.md) (`LE-LIGHT-POLICY`) and logical hardware [LightActuation](Decomposition/LightActuation_Requirements.md) (`LE-LAMP-HW`). `LightPower` (`LE-LIGHT-POWER`) is contained within LightActuation and owns its lighting supply. [Canonical system requirements](LightControl_Requirements.md) remain the end-to-end contract; vehicle electrical power is an external boundary supplied through LE-ENERGY-PATH.
 
 ```mermaid
 flowchart TD
@@ -18,8 +18,8 @@ EnergyPath → Energy → LightControl → LightActuation → LightPower; LightP
 | `brakeLeverStateIn` | Qualified mechanical lever state from InputQualification | LightModeSelection |
 | `electricalBrakingStateIn` | Actual motor-braking state from Traction | LightModeSelection |
 | `lightModesOut` / `lightModesIn` | Front On/Off and rear Off/Dim/Full intent | LightModeSelection → LightActuation |
-| `vehicleElectricalPowerIn` | Distributed vehicle electrical energy at the LightControl boundary | Energy / EnergyPath → LightControl |
-| `vehicleElectricalPowerOut` | Electrical energy delegated by Energy/EnergyPath toward lighting supply | Energy / EnergyPath |
+| `vehicleElectricalPowerIn` | Distributed vehicle electrical energy at the LightControl boundary | LE-ENERGY-PATH → LightControl |
+| `vehicleElectricalPowerOut` | Electrical energy delegated by LE-ENERGY-PATH toward lighting supply | LE-ENERGY-PATH |
 | `lightingPowerOut` | Lighting power provided by LightPower to the owned actuation path | LightPower → LightActuation |
 | `frontIlluminationOut` / `rearIlluminationOut` | Physical illumination results | LightActuation |
 

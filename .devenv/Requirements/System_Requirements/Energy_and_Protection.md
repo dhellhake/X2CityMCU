@@ -1,10 +1,10 @@
 # Energy and protection
 
-**Type:** System Requirement. **Targets:** `REQ-SYS-ENE-001–003` → [LE-ENERGY](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-energy); `REQ-SYS-ENE-004` → [LE-EPCS](../REQ-001_Requirements.md#le-epcs).
+**Type:** System Requirement. **Targets:** `REQ-SYS-ENE-001–003` → [LE-EPCS](../../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#le-epcs); `REQ-SYS-ENE-004` → [LE-EPCS](../REQ-001_Requirements.md#le-epcs).
 
-Part of **REQ-001-R1.6**. [Model, status and cluster index](../REQ-001_Requirements.md) · [Shared verification](../REQ-001_Requirements.md#reading-and-verification-rules) · [Common interpretation](../REQ-001_Requirements.md#common-interpretation-and-upstream-scope).
+Part of **REQ-001-R1.6**. The shown LE-EPCS targets are Draft successor bindings; approved normative bodies and historical release bindings remain unchanged. [Model, status and cluster index](../REQ-001_Requirements.md) · [Shared verification](../REQ-001_Requirements.md#reading-and-verification-rules) · [Common interpretation](../REQ-001_Requirements.md#common-interpretation-and-upstream-scope).
 
-Apply [battery integration](Battery_Integration.md) to the fixed 14S5P 35E bank and selected BMS. [BAT-001](../../Battery/BAT-001_Selected_Pack_and_BMS.md) derives voltage/current and BMS-only storage references; qualify actual configured protection, UART return paths, trip/recovery and generated-energy effects. The BMS is not a selected current regulator or proof of complete independent protection.
+Apply [battery integration](../../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_Integration.md) to the fixed 14S5P 35E bank and selected BMS. [BAT-001](../../Battery/BAT-001_Selected_Pack_and_BMS.md) derives voltage/current and BMS-only storage references; qualify actual configured protection, UART return paths, trip/recovery and generated-energy effects. The BMS is not a selected current regulator or proof of complete independent protection.
 
 These rows retain the PD all-load, fault, auxiliary and energy-handling boundaries. They establish obligations and planned acceptance only; they do not establish qualified limits, realized protection or passed tests. The 10% positive-propulsion cutoff is separate from all-load protection. Zero commanded torque does not imply zero passive or generated physical energy.
 
@@ -19,7 +19,7 @@ These rows retain the PD all-load, fault, auxiliary and energy-handling boundari
 
 ## Energy-state configuration and protection acceptance
 
-This table organizes acceptance of the existing energy obligations; it creates no additional requirement, protection topology or universal fault-detection claim. Measurements establish the observed response of the selected assembly under derived cases. They do not make an unobserved condition detectable or establish that zero commanded torque eliminates stored, passive or wheel-generated energy. The 10% SOC positive-propulsion cutoff remains an operating restriction under [Battery SOC](Battery_SOC.md), separate from the all-load and energy-path protection required by `REQ-SYS-ENE-001`–`003`.
+This table organizes acceptance of the existing energy obligations; it creates no additional requirement, protection topology or universal fault-detection claim. Measurements establish the observed response of the selected assembly under derived cases. They do not make an unobserved condition detectable or establish that zero commanded torque eliminates stored, passive or wheel-generated energy. The 10% SOC positive-propulsion cutoff remains an operating restriction under [Battery SOC](../../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_SOC.md), separate from the all-load and energy-path protection required by `REQ-SYS-ENE-001`–`003`.
 
 | Configuration / acceptance case | Applicable obligations | Necessary observations and acceptance focus | Implementing responsibility still to resolve |
 | --- | --- | --- | --- |
@@ -33,7 +33,7 @@ Protection-analysis scope for deriving acceptance of the existing requirements c
 
 ## Scenario classification and response trace
 
-This approved crosswalk routes the vehicle PD scenarios and misuse cases to existing obligations. A physical fault may exist without being detectable; scenario membership alone is not a diagnosis or a new electronic safeguard. Required information that is unqualified cannot grant dependent permission. Recognized faults use their operating domain's response; the [riding catalogue](Power_Startup_and_Faults.md#startup-and-runtime-fault-scope) and [battery matrix](Battery_Integration.md#battery-event-and-recovery-matrix) remain canonical. Hazard analysis must still derive physical protection, limits, diagnostic coverage and residual risk under OI-049.
+This approved crosswalk routes the vehicle PD scenarios and misuse cases to existing obligations. A physical fault may exist without being detectable; scenario membership alone is not a diagnosis or a new electronic safeguard. Required information that is unqualified cannot grant dependent permission. Recognized faults use their operating domain's response; the [riding catalogue](Power_Startup_and_Faults.md#startup-and-runtime-fault-scope) and [battery matrix](../../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_Integration.md#battery-event-and-recovery-matrix) remain canonical. Hazard analysis must still derive physical protection, limits, diagnostic coverage and residual risk under OI-049.
 
 | PD scenarios | Classification and existing response | Governing requirements / remaining evidence gate |
 |---|---|---|
@@ -46,6 +46,6 @@ This approved crosswalk routes the vehicle PD scenarios and misuse cases to exis
 | FM-009/019/021 | Overload, excluded riding activities and public-road use exceed scope; no automatic diagnosis or new recovery logic follows. Insufficient designed payload is a design nonconformance. | VEH-MAS-001, VEH-MEC-001/002; PD CON-028/029/031/034/055; OI-010/012/040/052/062 |
 | FM-013–015/023 | Excess duty, external wheel spin, near stall or unsuitable riding speed can create electrical/thermal stress. Apply normal speed/capability limits and recognized-fault response; zero command does not eliminate generated energy. | SPD/REG, TMP-001/002, ENE-002/003, BMS-005/009; OI-011/018/025/043/048/049/052–054 |
 | FM-017/018/024 | Misconnection, incomplete assembly and contaminated/damaged contacts require the handling inspection/recovery basis. Apply qualified accessible-interface protection; universal detection/interlocking is not specified. | [BAT-003](Battery_Handling.md#req-sys-bat-003), BMS-004/005/009, ENE-002/003, SVC-001/002; OI-041/045/046/049/061/062; WS-OI-011/018 |
-| FM-025 | SOC-policy bypass and invalid range credit are nonconformances. Display clamping cannot waive actual-SOC limits; forbidden regenerative transfer invokes the riding fault domain. | [Battery SOC](Battery_SOC.md), BMS-001/005/007, VEH-RNG-001; OI-041/049/059/061 |
+| FM-025 | SOC-policy bypass and invalid range credit are nonconformances. Display clamping cannot waive actual-SOC limits; forbidden regenerative transfer invokes the riding fault domain. | [Battery SOC](../../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_SOC.md), BMS-001/005/007, VEH-RNG-001; OI-041/049/059/061 |
 
 This completes disposition of the named scenarios, not a claim that every hazard/failure combination is identified or controlled. The cited requirement and interface gates retain their timing, physical-response and evidence obligations.

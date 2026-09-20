@@ -4,6 +4,7 @@ package X2CitySoftwareContract_DemandPolicy {
     private import X2CitySoftwareContract_AcceleratorInterface::*;
     private import X2CitySoftwareContract_BrakeInterface::*;
     private import X2CitySoftwareContract_SettingsPolicy::*;
+    private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
     attribute def NormalizedResponseCurve {
         attribute inputBreakpoints:Real[1..*];
@@ -37,7 +38,7 @@ package X2CitySoftwareContract_DemandPolicy {
         attribute acceleratorMaximumAgeMicroseconds:Integer;
         attribute brakeMaximumAgeMicroseconds:Integer;
         attribute activeSettingsMaximumAgeMicroseconds:Integer;
-        attribute batteryCapabilityMaximumAgeMicroseconds:Integer;
+        attribute batteryOperatingLimitsMaximumAgeMicroseconds:Integer;
         attribute motionMaximumAgeMicroseconds:Integer;
         attribute actualOutputMaximumAgeMicroseconds:Integer;
         attribute authorityMaximumAgeMicroseconds:Integer;
@@ -100,9 +101,13 @@ package X2CitySoftwareContract_DemandPolicy {
         doc /* Receives SessionPolicy authority generation, decision time and expiry in the common host-boot monotonic microsecond domain. DemandPolicy checks authority independently from command age and never obtains authority through diagnostics. */
         in item payload:RidingAuthority;
     }
-    port def BatteryCapabilityInputPort {
-        doc /* Receives BatteryProtection's separate positive propulsion and negative regeneration capability branches. DemandPolicy applies the relevant sign branch and its own qualification evidence rather than using aggregate envelope validity for both signs. */
-        in item payload:BatteryCapabilityEnvelope;
+    port def BatteryOperatingLimitsInputPort {
+        doc /* Receives independently qualified discharge and regenerative-charge permissions,
+           current limits, restriction reasons/recovery, and SOC positive-propulsion torque/speed
+           caps. Demand applies SOC torque/speed constraints to its rider request and carries both
+           amperage limits downstream; Traction selects the applicable limit from actual electrical
+           energy transfer, so wheel-torque sign is never equated with battery-current direction. */
+        in item payload:BatteryOperatingLimitsAssessment;
     }
     port def QualifiedMotionInputPort {
         doc /* Receives qualified physical vehicle motion from TractionControl for speed cutoffs, standstill, rollback and post-stop guards. Electrical Hall direction or command absence cannot substitute for this observation. */
@@ -114,6 +119,9 @@ package X2CitySoftwareContract_DemandPolicy {
     }
     item def WheelTorqueRequest:>ContextualSoftwareInformation, X2CityContract_DemandPolicy::SignedWheelTorqueRequest {
         attribute requestedWheelTorqueNewtonMetres:Real;
+        // Inherits maximumDischargeCurrentAmperes and maximumRegenerativeChargeCurrentAmperes
+        // from SignedWheelTorqueRequest. Each is zero when its independently qualified electrical
+        // branch is forbidden, unavailable or stale; neither is derived from wheel-torque sign.
         attribute authorityGeneration:AuthorityGeneration;
         attribute decisionSequence:Integer;
         attribute decisionTimeMicroseconds:Integer;
@@ -140,7 +148,7 @@ package X2CitySoftwareComponent_DemandPolicy {
         port brakeStateIn:BrakeStateInputPort;
         port activeRidingSettingsIn:ActiveRidingSettingsInputPort;
         port ridingAuthorityIn:RidingAuthorityInputPort;
-        port batteryCapabilityIn:BatteryCapabilityInputPort;
+        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port actualTractionOutputIn:ActualTractionOutputInputPort;
         port wheelTorqueRequestOut:WheelTorqueRequestOutputPort;
@@ -151,5 +159,8 @@ package X2CitySoftwareComponent_DemandPolicy {
         attribute compiledCalibrationId:String;
         attribute compiledDemandPolicyCalibration:DemandPolicyCalibration;
         attribute compiledCalibrationValid:Boolean; // Build/startup validation failure withholds demand command publication.
+        // Demand records the received policy assessment against its caller-provided execution
+        // reference to apply the existing capability-age bound. This is not BMS measurement age.
+        attribute lastBatteryOperatingLimitsReceiptTimeMicroseconds:Integer;
     }
 }

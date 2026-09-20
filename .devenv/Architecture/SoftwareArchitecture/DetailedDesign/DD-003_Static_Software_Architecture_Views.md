@@ -63,7 +63,7 @@ contracts; unit model files are linked for review of the corresponding ports.
 
 | MotorControl / SC-TRACTION-CTRL boundary | Canonical port / route | Existing DD owner and port | Requirement/interface trace |
 |---|---|---|---|
-| `SC-TRACTION-CTRL.tractionObservationOut` | `P-TR-OBS-O`; `SW-I-005` | [`U-TRACTION-ACCEPT.observationOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → Session, Battery and Light consumers | `REQ-SYS-HSI-008`, `REQ-SYS-HSI-009` |
+| `SC-TRACTION-CTRL.tractionObservationOut` | `P-TR-OBS-O`; `SW-I-005` | [`U-TRACTION-ACCEPT.observationOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → Session consumer | `REQ-SYS-HSI-008`, `REQ-SYS-HSI-009` |
 | `ridingAuthorityIn` | `P-TR-AUTH-I`; `SW-I-004` / `R-V15` | [`U-TRACTION-ACCEPT.authorityIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
 | `wheelTorqueRequestIn` | `P-TR-COMMAND-I`; `SW-I-004` / `R-V14` | [`U-TRACTION-ACCEPT.commandIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
 | `hallElectricalPositionIn` | `P-TR-HALL-I`; `R-V27` | [`U-TRACTION-CONTROL.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-MOTION.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-TRQPOS-001`, `REQ-SYS-TRQCTL-001` |
@@ -262,12 +262,12 @@ flowchart LR
     BRK[U-BRAKE-QUALIFY\nBrakeState] -->|P-DEM-BRAKE-I| D
     SET[U-SET-STATE\nActiveRidingSettings] -->|P-DEM-ACTIVE-SETTINGS-I| D
     SES["U-SESSION-ELIGIBILITY<br/>RidingAuthority"] -->|P-DEM-AUTHORITY-I| D
-    BAT["U-BAT-POLICY-RESTRICTION<br/>BatteryCapabilityEnvelope"] -->|P-DEM-BATTERY-CAPABILITY-I| D
+    BAT["U-BAT-POLICY-RESTRICTION<br/>BatteryOperatingLimitsAssessment"] -->|P-DEM-BATTERY-OPERATING-LIMITS-I| D
     MOT[U-TRACTION-MOTION\nQualifiedMotion] -->|P-DEM-MOTION-I| D
     OUT[U-TRACTION-ACTUAL-OUTPUT\nActualTractionOutput estimate] -->|P-DEM-ACTUAL-OUTPUT-I| D
     PLT[U-PLATFORM-CONTEXT / HEALTH\ncurrent generation] --> D
     CAL[SC-DEMAND build\nimmutable DemandPolicyCalibration] -.->|owner-local attribute| D
-    D -->|"P-DEM-COMMAND-O<br/>requestedWheelTorqueNewtonMetres, authorityGeneration, commandExpiryTimeMicroseconds"| TA[U-TRACTION-ACCEPT]
+    D -->|"P-DEM-COMMAND-O<br/>wheel torque + both A bounds, authorityGeneration, commandExpiryTimeMicroseconds"| TA[U-TRACTION-ACCEPT]
     TA -->|accepted signed request\neffectiveAcceptedExpiryTimeMicroseconds| TC[U-TRACTION-CONTROL]
 ```
 
@@ -276,9 +276,9 @@ flowchart LR
 | Decision input/output | Consumer acceptance and ownership |
 |---|---|
 | Active settings | Only the active level/speed setting is used. Pending values, receipt order and setting activation remain `SC-SET` ownership. |
-| Authority and command | `authorityExpiryTimeMicroseconds` and `commandExpiryTimeMicroseconds` carry independent decision sequences in the shared host monotonic domain. Acceptance emits `effectiveAcceptedExpiryTimeMicroseconds`; Demand cannot refresh authority by issuing a command. |
+| Authority and command | `authorityExpiryTimeMicroseconds` and `commandExpiryTimeMicroseconds` carry independent decision sequences in the shared host monotonic domain. The command also carries independent discharge and regenerative-charge amperage bounds; acceptance emits `effectiveAcceptedExpiryTimeMicroseconds` and Traction applies the bound matching actual electrical transfer. Demand cannot refresh authority by issuing a command. |
 | Motion and actual output | Demand requires current qualified motion for speed/standstill decisions and current qualified actual positive applied torque plus forward travel to re-arm regeneration after stop. Hand-push travel cannot satisfy the latter proof. |
-| Capability | `BatteryCapabilityEnvelope` supplies independently qualified positive/negative ceilings, reasons and restriction generations. Demand clamps signs independently, owns regeneration-recovery episode qualification, and does not own protection. |
+| Battery operating limits | `BatteryOperatingLimitsAssessment` supplies independently qualified discharge and regenerative-charge current limits, SOC positive torque/speed caps, reasons and a host-local assessment reference. Demand checks freshness from caller time and may tighten or hold a regenerative-charge allowance for its owned recovery episode; it never enlarges either battery current bound. Traction acceptance preserves those effective limits and applies them by actual electrical transfer. |
 | Calibration | `SC-DEMAND` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. |
 
 ## Static local-interface view
@@ -309,9 +309,10 @@ flowchart LR
         HMI -->|SW-I-002 data| SET
         HMI -->|SW-I-002 data| SES
         SET -->|SW-I-002 active-settings data| DEM
-        BMS -->|SW-I-003 data| BAT
-        BAT -->|SW-I-003 data| SES
-        BAT -->|SW-I-003 data| DEM
+        BMS -->|SW-I-003 BatteryMeasurements| BAT
+        BAT -->|SW-I-003 batteryReadinessAndFaultOut + stateOfChargeOut| SES
+        BAT -->|SW-I-003 batteryOperatingLimitsOut| DEM
+        BAT -->|SW-I-006 stateOfChargeOut + batteryCurrentOut| HMI
         SES -->|SW-I-004 control token| TR
         SES -->|SW-I-004 authority data| DEM
         DEM -->|SW-I-004 control data| TR

@@ -10,7 +10,7 @@ package X2CityDetailedUnit_TractionAccept {
         in item payload:RidingAuthority;
     }
     port def TractionCommandInputPort {
-        doc /* Receives Demand's signed wheel request with its decision sequence and command expiry; a current command cannot extend authority. */
+        doc /* Receives Demand's signed wheel request with decision sequence, expiry, and both battery current limits. A current command cannot extend authority; the current limits remain amperes and are forwarded unchanged. */
         in item payload:WheelTorqueRequest;
     }
     port def TractionActualOutputInputPort {
@@ -26,12 +26,12 @@ package X2CityDetailedUnit_TractionAccept {
         attribute effectiveAcceptedExpiryTimeMicroseconds:Integer;
     }
     port def AcceptedTractionCommandOutputPort {
-        doc /* Sends the accepted signed request to U-TRACTION-CONTROL with effectiveAcceptedExpiryTimeMicroseconds equal to the qualified minimum of authority expiry and command expiry. A failed local timeout independently rejects or withdraws the accepted record. */
+        doc /* Sends the accepted signed request and both electrical current limits to U-TRACTION-CONTROL with effectiveAcceptedExpiryTimeMicroseconds equal to the qualified minimum of authority and command expiry. A failed local timeout independently rejects or withdraws the accepted record. */
         out item payload:AcceptedTractionCommandRecord;
     }
     item def TractionObservationRecord :> UnitInformationEnvelope, TractionObservation;
     port def TractionObservationOutputPort {
-        doc /* Sends the generic qualified traction observation summary to Session, Battery and Light consumers; it cannot replace Demand's typed actual-output route. */
+        doc /* Sends the generic qualified traction observation summary to Session and Light consumers; it cannot replace Demand's typed actual-output route. */
         out item payload:TractionObservationRecord;
     }
     part def TractionCommandAcceptor {
@@ -43,8 +43,9 @@ package X2CityDetailedUnit_TractionAccept {
             produces both-sign withdrawal. The separately produced qualified actual-output observation
            remains published across startup, disarmed and withdrawal states; requested torque,
            PWM/register state and acceptance never substitute for actual applied wheel torque or
-           powered-forward-travel evidence. It independently publishes a
-           generic qualified traction-observation summary for Session/Battery/Light
+           powered-forward-travel evidence. The accepted record retains both battery amperage
+           limits unchanged for downstream actual-electrical-transfer enforcement. It independently publishes a
+           generic qualified traction-observation summary for Session/Light
            consumers; that summary cannot replace the typed actual-output route to Demand. */
         port executionTimeIn:ExecutionTimeInputPort;
         port authorityIn:TractionAuthorityInputPort;

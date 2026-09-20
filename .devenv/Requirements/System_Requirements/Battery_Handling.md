@@ -4,7 +4,7 @@
 
 Part of **REQ-001-R1.6**. [Model, status and cluster index](../REQ-001_Requirements.md) · [Shared verification](../REQ-001_Requirements.md#reading-and-verification-rules) · [Common interpretation](../REQ-001_Requirements.md#common-interpretation-and-upstream-scope). These rules apply to every row; relocation preserves its approval/status and qualifications.
 
-The built 14S5P 35E pack and selected JBD BMS/UART are fixed by [DEC-BAT-002](../DEC-001_Decisions_and_Open_Issues.md#dec-bat-002). [Battery integration](Battery_Integration.md) adds qualified cell charge-acceptance limits, balancing/configuration and UART protection obligations needed for riding and regeneration.
+The built 14S5P 35E pack and selected JBD BMS/UART are fixed by [DEC-BAT-002](../DEC-001_Decisions_and_Open_Issues.md#dec-bat-002). [Battery integration](../../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_Integration.md) adds qualified cell charge-acceptance limits, balancing/configuration and UART protection obligations needed for riding and regeneration.
 
 ## Normal battery handling
 

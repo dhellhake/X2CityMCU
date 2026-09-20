@@ -1,5 +1,6 @@
 package X2CitySoftwareContract_SessionPolicy {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_BatteryControl::*;
     port def RidingReadinessInputPort {
         doc /* Receives heterogeneous non-accelerator current-context facts used to determine Ready eligibility, including rider inputs, settings, health and battery/traction observations. Accelerator composites use the dedicated acceleratorPositionIn port. */
         in item payload:ContextualSoftwareInformation;
@@ -31,12 +32,15 @@ package X2CitySoftwareComponent_SessionPolicy {
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorPositionInputPort;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_Platform::*;
+    private import X2CityContract_BatteryControl::*;
     part def SessionPolicy {
         /* Forms Ready eligibility, retains current riding-session inhibition, and selects the
            reportable fault/session status. It issues authority generation and expiry for consumers;
            physical torque withdrawal and input self-test execution remain allocated elsewhere. */
         port executionTimeIn:ExecutionTimeInputPort;
         port ridingReadinessIn:RidingReadinessInputPort;
+        port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort;
+        port stateOfChargeIn:BatteryStateOfChargeInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;

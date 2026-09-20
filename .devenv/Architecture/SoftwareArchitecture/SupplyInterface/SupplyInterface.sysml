@@ -42,7 +42,7 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def SupplyVoltageOutputPort {
-        doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy and BatteryProtection. The record retains the selected rail identity and source provenance. */
+        doc /* Publishes qualified regular board, logic, auxiliary or fitted-rail voltage observations to SessionPolicy. The record retains the selected rail identity and source provenance. */
         out item payload:SupplyVoltage;
     }
     port def SupplyHealthOutputPort {
