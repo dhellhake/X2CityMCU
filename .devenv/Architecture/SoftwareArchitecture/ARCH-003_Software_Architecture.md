@@ -19,7 +19,7 @@ ARCH-003 is the canonical software architecture document. It contains the static
 | LE-HMI | <a id="sc-hmi"></a>SC-HMI | VD18MT protocol interpretation and outgoing information. |
 | LE-BMS-LINK | <a id="sc-bms-link"></a>SC-BMS-LINK | Selected BMS UART response interpretation and qualification. |
 | LE-BAT-POLICY | <a id="sc-bat-policy"></a>SC-BAT-POLICY | Battery capability, restriction and battery-fault information policy. |
-| LE-LIGHT-POLICY | <a id="sc-light-policy"></a>SC-LIGHT-POLICY | Normal-light retention and front/rear mode arbitration. |
+| LE-LIGHT-POLICY (`LightModeSelection`, within LE-LIGHT-CONTROL) | <a id="sc-light-policy"></a>SC-LIGHT-POLICY | Normal-light retention and Front Off/On plus Rear Off/Dim/Full selection from qualified mechanical-lever and actual electrical-braking inputs. |
 | LE-INPUT, within LE-INPUT | SC-ANALOG-ACQ, SC-ACCELERATOR-IF, SC-BRAKE-IF, SC-TEMPERATURE-IF, SC-SUPPLY-IF, SC-MOTOR-PHASE-IF and SC-HALL-IF | The seven existing acquisition/sensor-specific components own their respective raw-record access and semantic qualification. AcceleratorInterface publishes one composite position/qualification record; the other sensor-specific health ports remain separate. |
 | LE-MOTOR-CTRL, within LE-TRACTION | <a id="sc-traction-ctrl"></a>SC-TRACTION-CTRL | Authority-context command acceptance, configuration-qualified electrical rotor-sector/direction/edge-time interpretation, selected Hall-sensored FOC execution and qualified output/energy observation. |
 | LE-PLATFORM | <a id="sc-platform"></a>SC-PLATFORM | Local execution, reset-context, persistence and platform-health services. |
@@ -73,7 +73,7 @@ flowchart LR
 | SC-TRACTION-CTRL | Authority-context command plus physical observations → physical-stage command, qualified physical-motion and actual-output evidence | It publishes vehicle speed/direction/standstill separately from actual applied wheel torque/active electrical braking. Its `U-TRACTION-ACQUISITION` owns direct JEOS/JDR epoch publication, `U-TRACTION-CONTROL` produces next compare/context data including `CCR4`, and `U-TRACTION-OUTPUT` alone stages/commits CCR1..4/JSQR. It executes the MCD-001 Hall-sensored FOC contract only with valid current/voltage/configuration evidence; then rejects absent, invalid, expired or context-mismatched authority/commands and commands both torque signs to zero within the derived bound (REQ-SYS-INT-004). A commanded zero is not physical protection or proof of zero torque. |
 | SC-BMS-LINK | Qualified UART transport → selected-unit battery observations | Owns protocol interpretation only, not UART electrical safety, measurement accuracy or BMS protection. |
 | SC-BAT-POLICY | Qualified battery/output/path observations plus configuration/context → distinct charge/discharge envelopes, restrictions and battery-fault information | `.V` owns the reached-10%-cutoff restriction state described below. It does not own hardware protection or the SC-SESSION fault latch. |
-| SC-HMI / SC-LIGHT-POLICY | HMI messages/reports and rider-light request; qualified lever/output states → HMI fields and front/rear logical light intent | Light policy owns normal request retention and mode arbitration, not lamp electrical output or visibility. |
+| SC-HMI / SC-LIGHT-POLICY | HMI messages/reports and qualified normal-light request; separately qualified mechanical brake-lever and actual electrical-braking states → HMI fields and selected Front Off/On plus Rear Off/Dim/Full modes | Light policy owns normal request retention and mode selection, not lamp electrical output or visibility. |
 | SC-PLATFORM | Reset, scheduling, persistence and local health events → context/retention services and self-test contribution | Owns project startup/peripheral/IRQ bindings, execution priority/scheduling selection and platform service state; each consumer owns interpretation of a lost/reset context. Generic register drivers remain resource access only. |
 
 ### Retained restriction and reset state
@@ -93,8 +93,8 @@ The caller samples the shared monotonic host clock immediately before each compo
 | <a id="sw-i-002"></a>SW-I-002 | SC-HMI + SC-ACCELERATOR-IF → SET; SC-SET active projection → DEMAND | Data publication | IF-A-002 current-startup settings receipt and decoded request; only already-applied active level/speed settings reach demand. |
 | <a id="sw-i-003"></a>SW-I-003 | BMS-LINK / sensor-specific interfaces / TRACTION-CTRL → BAT-POLICY; BAT-POLICY → SESSION and DEMAND | Data publication | IF-A-003/009 observations and capability/fault/restriction outputs; charge and discharge permissions remain separate. |
 | <a id="sw-i-004"></a>SW-I-004 | SESSION → TRACTION-CTRL; DEMAND → TRACTION-CTRL | Control token plus data | IF-A-004 authority context/expiry and signed command/context/expiry. A consumer-side acceptance operation is local and must fail closed. |
-| <a id="sw-i-005"></a>SW-I-005 | TRACTION-CTRL → SESSION, DEMAND, LIGHT-POLICY | Data publication | IF-A-005 actual applied-output/active-braking evidence and qualified physical motion. |
-| <a id="sw-i-006"></a>SW-I-006 | SESSION/BAT-POLICY → HMI; HMI/BRAKE-IF/TRACTION-CTRL → LIGHT-POLICY | Data publication | IF-A-006 reports and light inputs; LIGHT-POLICY emits lamp intent to physical LE-AUX. |
+| <a id="sw-i-005"></a>SW-I-005 | TRACTION-CTRL → SESSION, DEMAND, LIGHT-POLICY | Data publication | IF-A-005 actual applied-output and the separately projected, qualified actual electrical-braking state; qualified physical motion remains distinct. |
+| <a id="sw-i-006"></a>SW-I-006 | SESSION/BAT-POLICY → HMI; HMI/BRAKE-IF/TRACTION-CTRL → LIGHT-POLICY | Data publication | IF-A-006 reports, `runningLightStateIn`, `brakeLeverStateIn` and `electricalBrakingStateIn`; LIGHT-POLICY emits selected LightModes to physical LE-LIGHT-CONTROL/LightActuation. |
 | <a id="sw-i-009"></a>SW-I-009 | PLATFORM → all local components | Event and local service call | Startup, reset-context invalidation, retention restore result, watchdog/platform-health and scheduling-service events. |
 
 Calls request a bounded local service and return completion/availability only; they do not transfer permission by themselves.  Data publications are sampled with explicit age/context checks at the consumer.  Events record a discrete reset, withdrawal, detected fault or physical transition; consumers must not reconstruct an event from a static value alone.
@@ -167,9 +167,10 @@ The port registry names each vehicle instance explicitly; the `.V` suffix keeps 
 | `P-TR-OUTPUT-I/O` | `SC-TRACTION-CTRL.V` | required/provided external boundary | Staged PWM/ADC context and output-stage state, timestamp, source and configuration provenance | `U-TRACTION-ACTUAL-OUTPUT` combines this physical-stage evidence with qualified current/position/motion and its immutable compiled estimator parameters to publish wheel-torque estimate; the boundary is not a demand command. `U-TRACTION-OUTPUT` alone commits literal `CCR1..4`/JSQR. |
 | `P-TR-QUALIFIED-MOTION-O` | `SC-TRACTION-CTRL.V` | provided | Physical vehicle speed, direction and standstill with independent qualification | It is a validated interpretation of existing Hall/capture-health and calibration evidence; static or absent edges alone are unavailable, not standstill. Its criteria, timing and diagnostic coverage remain WS-OI-001/006 validation gates. |
 | `P-TR-ACTUAL-OUTPUT-O` | `SC-TRACTION-CTRL.V` | provided | Actual applied wheel-torque estimate/evidence, active electrical-braking, output availability and powered-forward travel | It is not a demand command. Positive applied torque and powered-forward travel are independently qualified. |
-| `P-TR-OBS-O` | `SC-TRACTION-CTRL.V` | provided | Aggregate output/energy/fault availability observation for Session, Battery and Light consumers | It reports observation, never proof that a command achieved physical torque or zero output. |
-| `P-LGT-INPUT-I` | `SC-LIGHT-POLICY.V` | required | HMI request, qualified/unknown brake, traction braking/output and session/light context | Unknown brake or actual-braking state remains distinct from a valid lever state. |
-| `P-LGT-INTENT-O` | `SC-LIGHT-POLICY.V` | provided external intent | Front/rear logical lamp intent to physical `LE-AUX` | Policy owns mode arbitration, not lamp electrical output, conservative startup behaviour or visibility. |
+| `P-TR-OBS-O` | `SC-TRACTION-CTRL.V` | provided | Aggregate output/energy/fault availability observation for Session and Battery consumers | It reports observation, never proof that a command achieved physical torque or zero output. |
+| `P-TR-ELECTRICAL-BRAKING-O` | `SC-TRACTION-CTRL.V` | provided | Traction-owned actual active electrical-braking state, projected with current qualification and observation timing | A requested negative torque is not this state. |
+| `P-LGT-NORMAL-REQUEST-I`, `P-LGT-BRAKE-LEVER-I`, `P-LGT-ELECTRICAL-BRAKING-I` | `SC-LIGHT-POLICY.V` | required | Separately typed normal request, qualified mechanical brake-lever actuation, and actual electrical-braking state | Unknown brake or actual-braking state remains distinct from a valid lever state. |
+| `P-LGT-MODES-O` | `SC-LIGHT-POLICY.V` | provided external intent | Selected Front Off/On and Rear Off/Dim/Full modes to `LE-LIGHT-CONTROL` LightActuation | Policy owns mode selection, not lamp electrical output, conservative startup behaviour or visibility. |
 | `P-PLT-ACCELERATOR-QUALIFICATION-I` (`acceleratorQualificationIn`) | `SC-PLATFORM.V` | required | Concrete `AcceleratorPositionQualification` projection | Platform receives only the accelerator `Qualification` projection through its dedicated typed input; other sensor health inputs remain separate. |
 
 The registry contains **vehicle-scoped port contracts**, expressed by **the retained distinct `P-*` names**. The `.V` scopes identify the vehicle-local instances. This is not a count of physically instantiated endpoints, MCU pins or deployed API objects. Multiple consumer attachments to one output port are intentional fanout; a port's data owner remains its producer and each consumer owns acceptance/use.
@@ -202,12 +203,12 @@ Route IDs are used in every figure. Delivery labels describe the selected archit
 | `R-V17` | named temperature/supply/phase sensor-interface outputs -> `SC-BAT-POLICY.V.P-BAT-FACTS-I` | SW-I-003 | Scheduled direct/owned snapshots; each interface owner retains its record | Relevant temperature/configuration facts must be current. |
 | `R-V18` | `SC-TRACTION-CTRL.V.P-TR-OBS-O` -> `SC-BAT-POLICY.V.P-BAT-FACTS-I` | SW-I-003 | Scheduled direct/owned snapshot; traction owns observation | Output/path facts remain observations, not physical protection proof. |
 | `R-V19` | `SC-PLATFORM.V.P-PLT-RETENTION-O` -> `SC-BAT-POLICY.V.P-BAT-FACTS-I` | SW-I-009, SOC-006 | Service/result; platform owns retention candidate | Only valid restored `reached10%` state is considered; no battery fault history is restored. |
-| `R-V20` | `SC-BRAKE-IF.V.P-BRAKE-STATE-O` -> `SC-LIGHT-POLICY.V.P-LGT-INPUT-I` | SW-I-001/006 | Scheduled direct/owned snapshot; brake interface owns record | Unknown brake input invokes existing conservative physical-boundary rule, not an inferred lever state. |
-| `R-V21` | `SC-HMI.V.P-HMI-LIGHT-O` -> `SC-LIGHT-POLICY.V.P-LGT-INPUT-I` | SW-I-006 | Scheduled direct/owned snapshot; HMI owns request | Valid normal-light request retains across HMI link loss under the existing rule. |
-| `R-V22` | `SC-TRACTION-CTRL.V.P-TR-OBS-O` -> `SC-LIGHT-POLICY.V.P-LGT-INPUT-I` | SW-I-005/006 | Scheduled direct/owned snapshot; traction owns observation | Qualified active braking and unqualified actual-braking state remain distinct. |
+| `R-V20` | `SC-BRAKE-IF.V.P-BRAKE-STATE-O` -> `SC-LIGHT-POLICY.V.P-LGT-BRAKE-LEVER-I` | SW-I-001/006 | Scheduled direct/owned snapshot; InputQualification owns mechanical-lever record | Unknown input invokes existing conservative physical-boundary rule, not an inferred lever state. |
+| `R-V21` | `SC-HMI.V.P-HMI-LIGHT-O` -> `SC-LIGHT-POLICY.V.P-LGT-NORMAL-REQUEST-I` | SW-I-006 | Scheduled direct/owned snapshot; HMI owns request | Valid normal-light request retains across HMI link loss under the existing rule. |
+| `R-V22` | `SC-TRACTION-CTRL.V.P-TR-ELECTRICAL-BRAKING-O` -> `SC-LIGHT-POLICY.V.P-LGT-ELECTRICAL-BRAKING-I` | SW-I-005/006 | Scheduled direct/owned projection; Traction owns actual-braking state | Qualified active braking and unqualified actual-braking state remain distinct. |
 | `R-V23` | `SC-SESSION.V.P-SES-REPORT-O` -> `SC-HMI.V.P-HMI-REPORT-I` | SW-I-006, IF-A-006 | Scheduled direct/owned snapshot; session owns report | HMI transmission does not prove display receipt. |
 | `R-V24` | `SC-BAT-POLICY.V.P-BAT-ENVELOPE-O` -> `SC-HMI.V.P-HMI-REPORT-I` | SW-I-006, IF-A-006 | Scheduled direct/owned snapshot; battery policy owns envelope | Presentation fallback is not a qualified battery fact. |
-| `R-V25` | `SC-LIGHT-POLICY.V.P-LGT-INTENT-O` -> physical `LE-AUX` | SW-I-006, IF-A-006 | Local output intent; light policy owns intent | Intent does not prove lamp output or visibility. |
+| `R-V25` | `SC-LIGHT-POLICY.V.P-LGT-MODES-O` -> `LE-LIGHT-CONTROL` LightActuation | SW-I-006, IF-A-006 | Local selected-mode intent; light policy owns selection | Intent does not prove lamp output or visibility. |
 | `R-V26` | physical traction/energy boundary -> `SC-TRACTION-CTRL.V.P-TR-OUTPUT-I/O` | HSI-004/009 | Direct hardware acquisition/output binding | Hardware break/external inhibit withdraw physical permit independently. |
 | `R-V27` | `SC-HALL-IF.V.P-HALL-POSITION-O` -> `SC-TRACTION-CTRL.V.P-TR-HALL-I`; `SC-HALL-IF.V.P-HALL-HEALTH-O` -> `SC-TRACTION-CTRL.V.P-TR-MOTION-HEALTH-I` | HSI-009, traction HSI | Direct read-only position/health publication; Hall interface owns records | The three traction consumers reject overrun, incoherent, stale or foreign-context position; motion consumes Hall-only health separately from the broader FOC health fan-in. |
 | `R-V41-ACCELERATOR` | `SC-ACCELERATOR-IF.V.P-ACCEL-POSITION-O.Qualification` -> `SC-PLATFORM.V.P-PLT-ACCELERATOR-QUALIFICATION-I` (`acceleratorQualificationIn`) | SW-I-009, IF-A-001 | Scheduled direct/owned typed qualification projection | Platform receives the `Qualification` health/diagnostic reason/severity/protection request projection. This update may be published without a new ADC sample; it does not make `Position` valid. |
@@ -263,8 +264,10 @@ flowchart LR
         BEO[P-BAT-ENVELOPE-O]
     end
     subgraph LGT[SC-LIGHT-POLICY.V]
-        LII[P-LGT-INPUT-I]
-        LIO[P-LGT-INTENT-O]
+        LNR[P-LGT-NORMAL-REQUEST-I]
+        LBI[P-LGT-BRAKE-LEVER-I]
+        LEBI[P-LGT-ELECTRICAL-BRAKING-I]
+        LMO[P-LGT-MODES-O]
     end
     VD[supplied SC-VD18MT] -->|R-X01 UART frames| HTR
     AIP[P-ACCEL-POSITION-O\nSC-ACCELERATOR-IF.V] -->|R-V01 AcceleratorPosition| SAP
@@ -278,10 +281,10 @@ flowchart LR
     BTO -->|R-V16 battery observations| BFI
     BEO -->|R-V06 envelope| SEDI
     BEO -->|R-V12 sign-separated capability| DBC
-    HLI -->|R-V21 light request| LII
+    HLI -->|R-V21 normal request| LNR
     SERO -->|R-V23 report snapshot| HRI
     BEO -->|R-V24 battery report| HRI
-    LIO -->|R-V25 lamp intent| AUX[physical LE-AUX]
+    LMO -->|R-V25 selected modes| AUX[LE-LIGHT-CONTROL LightActuation]
 ```
 
 #### Vehicle input, traction and platform ports
@@ -328,7 +331,8 @@ flowchart LR
     TMO -->|R-V05 qualified standstill| SEMI2[P-SES-MOTION-I on SC-SESSION.V]
     TAO -->|R-V13 actual output| DAO2[P-DEM-ACTUAL-OUTPUT-I on SC-DEMAND.V]
     TOB -->|R-V18 output observations| BFI2
-    TOB -->|R-V22 braking observation| LII2[P-LGT-INPUT-I on SC-LIGHT-POLICY.V]
+    BSO -->|R-V20 brake lever state| LBI2[P-LGT-BRAKE-LEVER-I on SC-LIGHT-POLICY.V]
+    TAO -->|R-V22 actual electrical braking| LEBI2[P-LGT-ELECTRICAL-BRAKING-I on SC-LIGHT-POLICY.V]
 ```
 
 #### Vehicle platform ports
@@ -353,7 +357,7 @@ The material below explains lifecycle and execution constraints that apply to th
 
 **Vehicle startup.** SC-PLATFORM.V creates a new context and marks prior observations unusable. Each software component uses its owner-local immutable calibration parameters compiled into the installed firmware. A parameter change requires a software rebuild, deployment and restart; it is never a runtime message, service activation or context rollover. SC-ANALOG-ACQ.V, the named sensor interfaces, SC-BMS-LINK.V and SC-TRACTION-CTRL.V execute their allocated self-tests/qualification, including applicable parameter checks, without granting torque; SC-SET.V receives current-startup settings; SC-BAT-POLICY.V restores/qualifies `reached10%` and produces the current envelope. Each producer reports pass/fail/incomplete with its context to SC-SESSION.V. SC-SESSION.V alone evaluates the simultaneous Ready guard and issues SW-I-004 authority. SC-DEMAND.V may then publish a context-matched command only with its individually usable dependencies and its compiled demand profile, which SC-TRACTION-CTRL.V must separately accept. Torque remains commanded to zero until both current authority and a valid command are accepted, and returns to zero when either expires or becomes invalid; physical zero/output protection remains the traction and energy realization responsibility.
 
-**Lever and output sequence.** SC-BRAKE-IF.V publishes the fixed coded-brake semantic state. SC-DEMAND.V inhibits positive demand for a valid actuated lever while retaining permitted accelerator-requested regeneration; a brake never requests regeneration. It applies the active speed limit and 40 km/h cutoff to both signs, holds Level 0 non-regenerative, and uses qualified physical motion plus actual powered-forward positive-torque evidence for the post-stop regeneration guard. SC-LIGHT-POLICY.V requests rear Full for valid actuation, qualified active electrical braking, or either unqualified brake/actual-braking state. Physical LE-AUX provides the required powered-start/reset behavior before the policy is executing; a software intent is neither lamp output nor visibility evidence.
+**Lever and output sequence.** SC-BRAKE-IF.V publishes the qualified mechanical coded-brake-lever semantic state. SC-DEMAND.V inhibits positive demand for a valid actuated lever while retaining permitted accelerator-requested regeneration; a brake never requests regeneration. It applies the active speed limit and 40 km/h cutoff to both signs, holds Level 0 non-regenerative, and uses qualified physical motion plus actual powered-forward positive-torque evidence for the post-stop regeneration guard. SC-TRACTION-CTRL.V separately projects its qualified actual electrical-braking state, preserving its observation time. SC-LIGHT-POLICY.V requests rear Full for valid lever actuation, qualified active electrical braking, or either unqualified state. LE-LIGHT-CONTROL LightActuation provides the required powered-start/reset behavior before the policy is executing; selected modes are neither lamp output nor visibility evidence.
 
 **Settings sequence.** SC-HMI.V and SC-ACCELERATOR-IF.V publish current-startup receipt/rest evidence to SC-SET.V. SC-SET.V maintains requested/pending/active identity; absence or uninterpretable initial receipt cannot be replaced by a retained setting for Ready. Only its active projection reaches SC-DEMAND.V: a pending setting cannot alter its torque mapping, regeneration profile or speed cutoff. After Ready, VD18MT link loss alone retains valid active/pending settings and the normal-light request; it does not withdraw driving authority or freeze the rider command. Qualified live accelerator/brake inputs continue to govern demand, with normal command renewal and all other authority/limit checks.
 

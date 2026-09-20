@@ -87,6 +87,10 @@ package X2CityDetailedDesign {
     part vehicle:VehicleDetailedDesign;
     bind X2CitySystemArchitecture::x2CityVehicle = vehicle;
     bind X2CitySoftwareArchitecture::tractionControlVehicle = vehicle.epcs.traction.motorControl;
+    // The detailed LightModePolicy realizes the owning SC-LIGHT-POLICY.V publication. Identifying
+    // these payloads leaves the existing software-architecture R-V25 route as the sole publisher
+    // to the vehicle boundary; this detailed composition creates no parallel boundary route.
+    bind X2CitySoftwareArchitecture::lightPolicyVehicle.lightModesOut.payload = vehicle.riding.lightMode.lightModesOut.payload;
 
     // Direct callers provide a freshly sampled host-boot monotonic reference to each detailed
     // unit invocation. Fast IRQ/direct chains remain direct on this same domain; no cyclic
@@ -231,7 +235,7 @@ package X2CityDetailedDesign {
     flow vSetToDemand from vehicle.riding.setState.activeSettingsOut.payload to vehicle.riding.demandArbiter.activeSettingsIn.payload;
     flow vDemandToTractionAccept from vehicle.riding.demandArbiter.commandOut.payload to vehicle.traction.wheelTorqueRequestIn.payload;
     flow vSessionAuthorityToTractionAccept from vehicle.riding.sessionEligibility.authorityOut.payload to vehicle.traction.ridingAuthorityIn.payload;
-    flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
+    flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.runningLightStateIn.payload;
     flow vAcceleratorToSet from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.setState.acceleratorPositionIn.payload;
     flow vAcceleratorToSession from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.sessionEligibility.acceleratorPositionIn.payload;
     flow vBrakeToSession from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
@@ -240,13 +244,13 @@ package X2CityDetailedDesign {
     flow vBrakeToDemand from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.demandArbiter.brakeIn.payload;
     flow vSupplyRegularToSession from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
+    flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.brakeLeverStateIn.payload;
     flow vPlatformContextToSession from vehicle.platform.context.contextOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBatteryRestrictionToSession from vehicle.energy.batteryRestriction.envelopeOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTractionObservationToSession from vehicle.traction.tractionObservationOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vAppliedTractionStateToDemand from vehicle.traction.appliedTractionStateOut.payload to vehicle.riding.demandArbiter.actualOutputIn.payload;
     flow vTractionMotionToDemand from vehicle.traction.qualifiedMotionOut.payload to vehicle.riding.demandArbiter.motionIn.payload;
-    flow vTractionObservationToLight from vehicle.traction.tractionObservationOut.payload to vehicle.riding.lightMode.lightingContextIn.payload;
+    flow vElectricalBrakingStateToLight from vehicle.traction.electricalBrakingStateOut.payload to vehicle.riding.lightMode.electricalBrakingStateIn.payload;
     flow vSessionReportToHmi from vehicle.riding.sessionReport.reportOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
     flow vBatteryToHmi from vehicle.energy.batteryRestriction.presentationOut.payload to vehicle.riding.hmiAdapter.reportIn.payload;
 

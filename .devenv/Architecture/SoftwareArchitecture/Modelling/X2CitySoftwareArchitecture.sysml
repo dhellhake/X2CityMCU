@@ -40,10 +40,10 @@ package X2CitySoftwareArchitecture {
     // These are typed information endpoints at the software scope boundary, not hardware parts,
     // sensor/ADC producers, pin models, or selected implementation APIs.
     part def VehicleSoftwareBoundary {
-        /* Defines the vehicle host's software-scope exchange boundary for light intent, traction
+        /* Defines the vehicle host's software-scope exchange boundary for selected light modes, traction
            information/actuation observation, and raw acquisition. It is a typed integration edge,
            not a hardware assembly or an acquisition producer. */
-        port lightIntent:~LightIntentOutputPort;
+        port lightModes:~LightModesOutputPort;
         port tractionInformationIo:~TractionOutputStageExchangePort;
         port analogRawAcquisition:~RawAdcAcquisitionInputPort;
         port hallCapture:~HallCaptureInputPort;
@@ -132,14 +132,16 @@ package X2CitySoftwareArchitecture {
     flow rV17PhaseDiagnostic from motorPhaseInterfaceVehicle.phaseVoltageDiagnosticOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
     flow rV18 from tractionControlVehicle.tractionObservationOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
     flow rV19 from platformVehicle.retentionCandidateOut.payload to batteryProtectionVehicle.batteryObservationsAndContextIn.payload;
-    flow rV20 from brakeInterfaceVehicle.brakeStateOut.payload to lightPolicyVehicle.lightPolicyInputIn.payload;
-    flow rV21 from hmiVehicle.hmiLightRequestOut.payload to lightPolicyVehicle.lightPolicyInputIn.payload;
-    flow rV22 from tractionControlVehicle.tractionObservationOut.payload to lightPolicyVehicle.lightPolicyInputIn.payload;
+    // LightModeSelection receives the three concrete System-contract facts. InputQualification
+    // owns the mechanical-lever qualification; Traction owns actual electrical-braking state.
+    flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeStateOut.payload to lightPolicyVehicle.brakeLeverStateIn.payload;
+    flow rV21NormalLightRequest from hmiVehicle.hmiLightRequestOut.payload to lightPolicyVehicle.runningLightStateIn.payload;
+    flow rV22ElectricalBrakingState from tractionControlVehicle.electricalBrakingStateOut.payload to lightPolicyVehicle.electricalBrakingStateIn.payload;
     flow rV23 from sessionVehicle.sessionReportOut.payload to hmiVehicle.hmiReportIn.payload;
     flow rV24 from batteryProtectionVehicle.batteryCapabilityEnvelopeOut.payload to hmiVehicle.hmiReportIn.payload;
 
     // R-V25/R-V26 are opaque software boundary information exchanges.
-    flow rV25 from lightPolicyVehicle.lightIntentOut.payload to vehicleBoundary.lightIntent.payload;
+    flow rV25 from lightPolicyVehicle.lightModesOut.payload to vehicleBoundary.lightModes.payload;
     flow rV26Acquisition from vehicleBoundary.tractionInformationIo.payload to tractionControlVehicle.tractionOutputStageExchange.payload;
     flow rV26ActuationObservation from tractionControlVehicle.tractionOutputStageExchange.payload to vehicleBoundary.tractionInformationIo.payload;
 

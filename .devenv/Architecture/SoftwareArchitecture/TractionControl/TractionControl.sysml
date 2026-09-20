@@ -73,8 +73,16 @@ package X2CitySoftwareContract_TractionControl {
     }
     item def TractionObservation:>ContextualSoftwareInformation;
     port def TractionObservationOutputPort {
-        doc /* Publishes the traction observation envelope to SessionPolicy, BatteryProtection and LightPolicy. It provides current traction facts for operational policy, not a command or actuation channel. */
+        doc /* Publishes the traction observation envelope to SessionPolicy and BatteryProtection. It provides current traction facts for operational policy, not a command or actuation channel. */
         out item payload:TractionObservation;
+    }
+    item def ElectricalBrakingStateRecord:>ContextualSoftwareInformation, ElectricalBrakingState {
+        attribute actualOutputObservationTimeMicroseconds:Integer;
+        attribute actualOutputObservationGeneration:ContextGeneration;
+    }
+    port def ElectricalBrakingStateOutputPort :> X2CityContract_MotorControl::ElectricalBrakingStateOutputPort {
+        doc /* Publishes Traction-owned actual active motor electrical-braking state, projected from qualified applied-output evidence with its current qualification and observation time. A requested negative torque is not this state. */
+        out item payload:ElectricalBrakingStateRecord :>> X2CityContract_MotorControl::ElectricalBrakingStateOutputPort::payload;
     }
 }
 
@@ -108,6 +116,7 @@ package X2CitySoftwareComponent_TractionControl {
         port qualifiedMotionOut:QualifiedMotionOutputPort :>> MotorControl::qualifiedVehicleMotionOut;
         port appliedTractionStateOut:AppliedTractionStateOutputPort :>> MotorControl::actualTractionOutputOut;
         port tractionObservationOut:TractionObservationOutputPort;
+        port electricalBrakingStateOut:ElectricalBrakingStateOutputPort :>> MotorControl::electricalBrakingStateOut;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
         // Fixed build-time estimation and motion parameters. The ID is read-only provenance and

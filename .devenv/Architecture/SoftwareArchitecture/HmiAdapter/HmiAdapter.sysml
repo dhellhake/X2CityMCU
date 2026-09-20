@@ -1,5 +1,6 @@
 package X2CitySoftwareContract_HmiAdapter {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_LightControl::*;
     item def HmiTransportExchange:>ContextualSoftwareInformation;
     port def HmiTransportExchangePort {
         doc /* Exchanges opaque VD18MT transport information with the supplied display endpoint in both directions. HmiAdapter owns protocol parsing and link-loss interpretation; the supplied display firmware remains outside this contract. */
@@ -10,9 +11,9 @@ package X2CitySoftwareContract_HmiAdapter {
         doc /* Publishes the HMI settings information parsed and qualified by HmiAdapter to SettingsPolicy. The record is a settings request/context handoff, not an already active demand selection. */
         out item payload:HmiSettingsRequest;
     }
-    item def HmiLightRequest:>ContextualSoftwareInformation;
+    item def HmiLightRequest:>ContextualSoftwareInformation, NormalLightRequest;
     port def HmiLightRequestOutputPort {
-        doc /* Publishes parsed and qualified HMI light requests to LightPolicy. HmiAdapter does not select physical lamp drive modes at this boundary. */
+        doc /* Publishes the parsed, qualified normal-light request to LightModeSelection. HmiAdapter does not select physical lamp drive modes at this boundary. */
         out item payload:HmiLightRequest;
     }
     port def HmiReportInputPort {

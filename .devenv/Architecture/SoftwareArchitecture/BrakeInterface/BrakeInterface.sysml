@@ -2,6 +2,7 @@ package X2CitySoftwareContract_BrakeInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
+    private import X2CityContract_Input::*;
     attribute def BrakeCalibration {
         attribute sourceId:String;
         attribute engineeringUnit:String; // ohm.
@@ -14,7 +15,7 @@ package X2CitySoftwareContract_BrakeInterface {
         doc /* Receives completed regular ADC scans from AnalogAcquisition. BrakeInterface consumes only the configured source rank with accepted calibration and converts it to a coded brake state; the input remains raw acquisition evidence. */
         in item payload:AnalogSample;
     }
-    item def BrakeState:>ContextualSoftwareInformation {
+    item def BrakeState:>ContextualSoftwareInformation, QualifiedBrakeInput {
         attribute brakeState:String; // enum: released, applied, implausible, unavailable.
         attribute sourceResistanceOhms:Real;
         attribute sourceAdcRank:Integer;
@@ -23,7 +24,7 @@ package X2CitySoftwareContract_BrakeInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def BrakeStateOutputPort {
-        doc /* Publishes qualified released, applied, implausible or unavailable brake state with source resistance and acquisition provenance to SettingsPolicy, SessionPolicy, DemandPolicy and LightPolicy. Demand uses this state to block positive demand only. */
+        doc /* Publishes qualified released, applied, implausible or unavailable mechanical brake-lever state with source resistance and acquisition provenance to SettingsPolicy, SessionPolicy, DemandPolicy and LightModeSelection. Demand uses this state to block positive demand only. */
         out item payload:BrakeState;
     }
     port def BrakeHealthOutputPort {

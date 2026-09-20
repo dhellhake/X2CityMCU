@@ -1,0 +1,12 @@
+# Light actuation requirements
+
+**Type:** Abstract Hardware Requirement. **Target:** `LE-LAMP-HW`. **Status:** Draft. This logical hardware composite contains LightPower (`LE-LIGHT-POWER`) and owns the lighting supply responsibility alongside physical actuation. This logical allocation selects neither a device nor a peripheral.
+
+| ID | Allocation | Derived from | Planned verification / acceptance |
+| --- | --- | --- | --- |
+| <a id="req-sys-lgthw-001"></a>`REQ-SYS-LGTHW-001` **Draft** | `LE-LAMP-HW` shall realize selected and available front On/Off and rear Off/Dim/Full logical modes as the corresponding physical illumination states, including the required rear Dim/Full distinction. | [LGT-001](../LightControl_Requirements.md#req-veh-lgt-001), [LGT-003](../LightControl_Requirements.md#req-veh-lgt-003), [FSC-012](../LightControl_Requirements.md#req-veh-fsc-012) | `T-HW`, `T-SYS`: exercise every mode and distinguish physical Dim from Full. |
+| <a id="req-sys-lgthw-002"></a>`REQ-SYS-LGTHW-002` **Draft** | While powered and protection permits, before software can establish usable qualified mode selection after power-on or reset, `LE-LAMP-HW` shall provide front Off and rear Full. | [LGT-002](../LightControl_Requirements.md#req-veh-lgt-002), [LGT-005](../LightControl_Requirements.md#req-veh-lgt-005), [LGT-009](../LightControl_Requirements.md#req-veh-lgt-009), [FSC-012](../LightControl_Requirements.md#req-veh-fsc-012) | `T-HW`, `T-SYS`: start and reset before software execution; verify front Off and rear Full. |
+| <a id="req-sys-lgthw-003"></a>`REQ-SYS-LGTHW-003` **Draft** | `LE-LAMP-HW` shall retain compatibility with the released VCC/GND two-terminal rear-lamp interface. | [LGT-003](../LightControl_Requirements.md#req-veh-lgt-003), [FSC-012](../LightControl_Requirements.md#req-veh-fsc-012); `DEC-LGT-001`, `CON-009`. | `I`, `T-HW`: inspect and exercise the released interface through each rear mode. |
+| <a id="req-sys-lgthw-004"></a>`REQ-SYS-LGTHW-004` **Draft** | During powered faults, `LE-LAMP-HW` shall maintain requested illumination wherever supply, electrical protection, and affected lamp function permit. | [AUX-001](../../../../../Requirements/System_Requirements/HMI_and_Auxiliary_Continuity.md#req-veh-aux-001), [FSC-012](../LightControl_Requirements.md#req-veh-fsc-012) | `T-HW`, `T-SYS`: exercise powered faults, protection withdrawal, and restoration without claiming protection bypass. |
+
+No PWM method, supply topology, protection threshold, brightness value, or startup timing is defined.

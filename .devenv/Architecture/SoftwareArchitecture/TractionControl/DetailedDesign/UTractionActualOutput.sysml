@@ -37,6 +37,10 @@ package X2CityDetailedUnit_TractionActualOutput {
         doc /* Publishes the qualified applied-wheel-torque estimate, active electrical-braking state and powered-forward evidence to Traction Accept and Demand. */
         out item payload:ActualTractionOutput;
     }
+    port def ElectricalBrakingStateOutputPort {
+        doc /* Projects the estimator's qualified actual electrical-braking state with the same actual-output observation time and generation; a requested negative torque is excluded. */
+        out item payload:ElectricalBrakingStateRecord;
+    }
     part def ActualTractionOutputEstimator {
         /* Publishes an explicitly qualified applied-wheel-torque estimate only from a current
            post-stage output observation, same-operation current/position evidence, qualified
@@ -55,5 +59,17 @@ package X2CityDetailedUnit_TractionActualOutput {
         port platformContextIn:PlatformContextInputPort;
         port platformHealthIn:PlatformHealthInputPort;
         port appliedTractionStateOut:AppliedTractionStateOutputPort;
+        port electricalBrakingStateOut:ElectricalBrakingStateOutputPort;
+        // This is a projection of the same qualified actual-output result, not a second estimate.
+        // Preserve its qualification/provenance and original observation identity verbatim.
+        flow electricalBrakingPresentProjection from appliedTractionStateOut.payload.activeElectricalBraking to electricalBrakingStateOut.payload.actualElectricalBrakingPresent;
+        flow electricalBrakingValidityProjection from appliedTractionStateOut.payload.validity to electricalBrakingStateOut.payload.validity;
+        flow electricalBrakingQualificationProjection from appliedTractionStateOut.payload.qualification to electricalBrakingStateOut.payload.qualification;
+        flow electricalBrakingHealthProjection from appliedTractionStateOut.payload.health to electricalBrakingStateOut.payload.health;
+        flow electricalBrakingProducerProjection from appliedTractionStateOut.payload.producerContext to electricalBrakingStateOut.payload.producerContext;
+        flow electricalBrakingConfigurationProjection from appliedTractionStateOut.payload.configurationContext to electricalBrakingStateOut.payload.configurationContext;
+        flow electricalBrakingGenerationProjection from appliedTractionStateOut.payload.currentGeneration to electricalBrakingStateOut.payload.currentGeneration;
+        flow electricalBrakingObservationTimeProjection from appliedTractionStateOut.payload.actualOutputObservationTimeMicroseconds to electricalBrakingStateOut.payload.actualOutputObservationTimeMicroseconds;
+        flow electricalBrakingObservationGenerationProjection from appliedTractionStateOut.payload.actualOutputObservationGeneration to electricalBrakingStateOut.payload.actualOutputObservationGeneration;
     }
 }

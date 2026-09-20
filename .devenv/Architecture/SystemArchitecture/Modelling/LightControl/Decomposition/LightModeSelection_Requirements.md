@@ -1,0 +1,14 @@
+# Light mode selection requirements
+
+**Type:** Abstract Software Requirement. **Target:** `LE-LIGHT-POLICY`. **Status:** Draft.  It consumes `runningLightStateIn`, `brakeLeverStateIn` (qualified mechanical lever state from InputQualification), and `electricalBrakingStateIn` (actual motor braking from Traction).
+
+Unqualified includes initial, invalid, unavailable, and stale information. A valid normal-light request changes without a standstill or pedal-rest guard; communication recovery alone does not change the retained request until a valid new request arrives.
+
+| ID | Allocation | Derived from | Planned verification / acceptance |
+| --- | --- | --- | --- |
+| <a id="req-sys-lgtpol-001"></a>`REQ-SYS-LGTPOL-001` **Draft successor** | `LE-LIGHT-POLICY` shall retain the current-session normal-light request from valid `runningLightStateIn`, initially Off, through communication loss. | [LGT-001](../LightControl_Requirements.md#req-veh-lgt-001), [LGT-002](../LightControl_Requirements.md#req-veh-lgt-002) | `T-SW`: test initial Off, valid On/Off, loss, recovery without command, and next session. |
+| <a id="req-sys-lgtpol-002"></a>`REQ-SYS-LGTPOL-002` **Draft** | `LE-LIGHT-POLICY` shall produce Front On/Off from the retained normal-light request independently of rear brake priority. | [LGT-001](../LightControl_Requirements.md#req-veh-lgt-001), [LGT-005](../LightControl_Requirements.md#req-veh-lgt-005) | `T-SW`: vary rear Full triggers while retaining each front state. |
+| <a id="req-sys-lgtpol-003"></a>`REQ-SYS-LGTPOL-003` **Draft** | `LE-LIGHT-POLICY` shall select rear Full when either qualified lever is actuated, `electricalBrakingStateIn` is qualified active, or either required input is unqualified. | [LGT-004](../LightControl_Requirements.md#req-veh-lgt-004), [LGT-005](../LightControl_Requirements.md#req-veh-lgt-005), [LGT-006](../LightControl_Requirements.md#req-veh-lgt-006), [LGT-009](../LightControl_Requirements.md#req-veh-lgt-009) | `T-SW`, `T-FI`: cover each trigger, startup unknowns, and command changes during Full. |
+| <a id="req-sys-lgtpol-004"></a>`REQ-SYS-LGTPOL-004` **Draft** | Only when both levers are qualified released and electrical braking is qualified absent, `LE-LIGHT-POLICY` shall select rear Dim for retained normal On and rear Off for retained normal Off, regardless of a retained related fault state. | [LGT-003](../LightControl_Requirements.md#req-veh-lgt-003), [LGT-007](../LightControl_Requirements.md#req-veh-lgt-007), [LGT-008](../LightControl_Requirements.md#req-veh-lgt-008), [LGT-009](../LightControl_Requirements.md#req-veh-lgt-009) | `T-SW`, `T-FI`: restore qualifying released/absent states in either order with a retained fault. |
+
+`electricalBrakingStateIn` represents actual motor braking; it is not inferred solely from negative torque, charging current, or a request.  Fault-report and torque-inhibition latches do not freeze mode selection.

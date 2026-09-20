@@ -1,9 +1,10 @@
 package X2CityDetailedUnit_HmiAdapter {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CitySoftwareContract_HmiAdapter::*;
     // Owner: SC-HMI.V; DD-001; UR-HMI-001; SW-I-002/006. Supplied VD18MT remains opaque.
     item def HmiSettingsRecord :> UnitInformationEnvelope;
-    item def HmiLightRecord :> UnitInformationEnvelope;
+    item def HmiLightRecord :> UnitInformationEnvelope, HmiLightRequest;
     item def HmiReportRecord :> UnitInformationEnvelope;
     port def HmiSettingsOutputPort {
         doc /* Publishes qualified VD18MT setting receipts to U-SET-STATE, preserving receipt provenance so retained active settings are not mistaken for new requests. */

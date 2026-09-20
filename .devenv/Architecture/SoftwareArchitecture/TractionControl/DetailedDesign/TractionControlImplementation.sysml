@@ -32,6 +32,7 @@ package X2CityDetailedComponent_TractionControlImplementation {
         port tractionOutputStageExchange:X2CitySoftwareContract_TractionControl::TractionOutputStageExchangePort :>> TractionControl::tractionOutputStageExchange;
         port qualifiedMotionOut:X2CitySoftwareContract_TractionControl::QualifiedMotionOutputPort :>> TractionControl::qualifiedMotionOut;
         port appliedTractionStateOut:X2CitySoftwareContract_TractionControl::AppliedTractionStateOutputPort :>> TractionControl::appliedTractionStateOut;
+        port electricalBrakingStateOut:X2CitySoftwareContract_TractionControl::ElectricalBrakingStateOutputPort :>> TractionControl::electricalBrakingStateOut;
         port tractionObservationOut:DetailedTractionObservationOutputPort :>> TractionControl::tractionObservationOut;
         port platformContextIn:~X2CitySoftwareContract_Platform::PlatformContextOutputPort :>> TractionControl::platformContextIn;
         port platformHealthIn:~X2CitySoftwareContract_Platform::PlatformHealthOutputPort :>> TractionControl::platformHealthIn;
@@ -77,6 +78,7 @@ package X2CityDetailedComponent_TractionControlImplementation {
         flow outputObservationToBoundary from output.outputObservationOut.payload to tractionOutputStageExchange.payload;
         flow qualifiedMotionToBoundary from motion.qualifiedMotionOut.payload to qualifiedMotionOut.payload;
         flow actualOutputToAccept from actualOutput.appliedTractionStateOut.payload to accept.actualOutputIn.payload;
+        flow actualOutputToElectricalBrakingState from actualOutput.electricalBrakingStateOut.payload to electricalBrakingStateOut.payload;
         flow qualifiedMotionToActualOutput from motion.qualifiedMotionOut.payload to actualOutput.qualifiedMotionIn.payload;
         flow appliedOutputToBoundary from accept.appliedTractionStateOut.payload to appliedTractionStateOut.payload;
         flow observationToBoundary from accept.observationOut.payload to tractionObservationOut.payload;
