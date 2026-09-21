@@ -24,10 +24,14 @@ package X2CityComponent_SessionPolicy {
     part def SessionPolicy { // LE-SESSION
         /* Evaluates qualified accelerator position/rest, coded brake, vehicle motion, settings, BatteryControl readiness/fault evidence and actual SOC, and observed outputs into riding authority and rider information while leaving traction actuation to Traction. */
         port qualifiedBrakeInputIn:BrakeStateInputPort;
+        port brakeHealthIn:BrakeHealthInputPort;
+        port qualifiedTemperatureIn:QualifiedTemperatureInputPort { doc /* Receives qualified motor/traction-board temperature observations; Session owns their operating policy. */ }
+        port temperatureHealthIn:TemperatureHealthInputPort;
+        port regularSupplyVoltageIn:RegularSupplyVoltageInputPort { doc /* Receives qualified regular GVDD observation; Session owns its operating policy. */ }
+        port supplyHealthIn:SupplyHealthInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
-        port inputRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort { doc /* Receives BatteryControl startup assessment and separate recognized battery fault categories. */ }
         port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for low-charge selection. */ }
         port actualTractionOutputIn:ActualTractionInputPort;

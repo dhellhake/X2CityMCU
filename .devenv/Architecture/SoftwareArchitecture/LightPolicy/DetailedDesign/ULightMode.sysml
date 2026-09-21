@@ -13,7 +13,7 @@ package X2CityDetailedUnit_LightMode {
         in item payload:HmiLightRequest;
     }
     port def BrakeLeverStateUnitInputPort {
-        doc /* Receives InputQualification's qualified mechanical brake-lever state; it is not a braking-force measurement. */
+        doc /* Receives BrakeInterface's qualified mechanical brake-lever state; it is not a braking-force measurement. */
         in item payload:BrakeState;
     }
     port def ElectricalBrakingStateUnitInputPort {

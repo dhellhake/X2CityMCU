@@ -13,7 +13,8 @@ package X2CityDetailedDesign {
     public import X2CityDetailedUnit_AnalogAcquisition::*;
     public import X2CityDetailedUnit_HallInterface::*;
     public import X2CityDetailedUnit_MotorPhaseInterface::*;
-    public import X2CityDetailedUnit_RiderTemperatureInterfaces::*;
+    public import X2CityDetailedUnit_MotorPositionEstimator::*;
+    public import X2CityDetailedUnit_RegularSensorQualification::*;
     public import X2CityDetailedUnit_SupplyInterface::*;
     public import X2CityDetailedUnit_TractionAccept::*;
     public import X2CityDetailedUnit_TractionActualOutput::*;
@@ -46,9 +47,13 @@ package X2CityDetailedDesign {
         part brakeQualify:BrakeQualifier;
         part temperatureQualify:TemperatureQualifier;
         part hallCapture:HallCaptureProcessor;
-        part hallPosition:ElectricalPositionEstimator;
+        part hallPosition:HallObservationProcessor;
         part motorPhaseFast:FastPhaseCurrentProcessor;
         part motorPhaseDiag:PhaseVoltageDiagnosticProcessor;
+        // This source-bound unit publishes unavailable until its direct-sensing or calibrated
+        // PWM/bridge evidence boundary is qualified; regular diagnostics are not connected here.
+        part motorPhaseObserverVoltage:ObserverAppliedVoltageProcessor;
+        part motorPositionEstimator:ElectricalMotorPositionEstimator;
         part supplyFast:FastSupplyVoltageProcessor;
         part supplyRegular:RegularSupplyVoltageProcessor;
     }
@@ -83,10 +88,26 @@ package X2CityDetailedDesign {
         // References the one software-architecture runtime boundary rather than creating an
         // application clock producer in the detailed design.
         ref part callingExecutionContext:CallingExecutionContextBoundary = X2CitySoftwareArchitecture::callingExecutionContext;
+        // Explicit source boundary for observer voltage. Its source remains a qualified HSI
+        // gate, not an implemented ADC/PWM reconstruction claim.
+        ref part vehicleBoundary:VehicleSoftwareBoundary = X2CitySoftwareArchitecture::vehicleBoundary;
     }
     part vehicle:VehicleDetailedDesign;
     bind X2CitySystemArchitecture::x2CityVehicle = vehicle;
     bind X2CitySoftwareArchitecture::tractionControlVehicle = vehicle.epcs.traction.motorControl;
+    // The selected System Traction occurrence inherits MotorPositionEstimation.  Bind its
+    // logical position/current/health publications to the detailed units that produce the
+    // same feedback, so this refinement introduces no second estimator or current source.
+    bind vehicle.epcs.traction.motorPositionEstimation.motorPositionOut.motorPosition = vehicle.sensors.motorPositionEstimator.motorPositionOut.payload;
+    bind vehicle.epcs.traction.motorPositionEstimation.phaseCurrentOut.phaseCurrentMeasurements = vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload;
+    bind vehicle.epcs.traction.motorPositionEstimation.motorPositionHealthOut.health = vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload;
+    // These bindings identify the SoftwareComponent publications with their detailed-unit
+    // realizations.  The estimator health output is the exact Qualification projection of its
+    // position output, rather than another health occurrence.
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload = vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload;
+    bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.motorPositionOut.payload = vehicle.sensors.motorPositionEstimator.motorPositionOut.payload;
+    bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.motorPositionHealthOut.payload = vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload;
+    bind vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload = vehicle.sensors.motorPositionEstimator.motorPositionOut.payload.Qualification;
     // The detailed LightModePolicy realizes the owning SC-LIGHT-POLICY.V publication. Identifying
     // these payloads leaves the existing software-architecture R-V25 route as the sole publisher
     // to the vehicle boundary; this detailed composition creates no parallel boundary route.
@@ -110,6 +131,8 @@ package X2CityDetailedDesign {
     flow vExecutionTimeToHallPosition from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.hallPosition.executionTimeIn.payload;
     flow vExecutionTimeToMotorPhaseFast from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.motorPhaseFast.executionTimeIn.payload;
     flow vExecutionTimeToMotorPhaseDiagnostic from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.motorPhaseDiag.executionTimeIn.payload;
+    flow vExecutionTimeToMotorPhaseObserverVoltage from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.motorPhaseObserverVoltage.executionTimeIn.payload;
+    flow vExecutionTimeToMotorPositionEstimator from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.motorPositionEstimator.executionTimeIn.payload;
     flow vExecutionTimeToSupplyFast from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.supplyFast.executionTimeIn.payload;
     flow vExecutionTimeToSupplyRegular from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.supplyRegular.executionTimeIn.payload;
     flow vExecutionTimeToPlatformContext from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.context.executionTimeIn.payload;
@@ -158,8 +181,13 @@ package X2CityDetailedDesign {
     bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCurrentPhaseCalibration = vehicle.sensors.motorPhaseDiag.compiledCurrentPhaseCalibration;
     bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationId = vehicle.sensors.motorPhaseFast.compiledCalibrationId;
     bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationId = vehicle.sensors.motorPhaseDiag.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationId = vehicle.sensors.motorPhaseObserverVoltage.compiledCalibrationId;
     bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.motorPhaseFast.compiledCalibrationValid;
     bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.motorPhaseDiag.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.motorPhaseObserverVoltage.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.compiledMotorPositionEstimatorCalibration = vehicle.sensors.motorPositionEstimator.compiledMotorPositionEstimatorCalibration;
+    bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.compiledCalibrationId = vehicle.sensors.motorPositionEstimator.compiledCalibrationId;
+    bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.compiledCalibrationValid = vehicle.sensors.motorPositionEstimator.compiledCalibrationValid;
     bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledSupplyCalibration = vehicle.sensors.supplyFast.compiledSupplyCalibration;
     bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledSupplyCalibration = vehicle.sensors.supplyRegular.compiledSupplyCalibration;
     bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationId = vehicle.sensors.supplyFast.compiledCalibrationId;
@@ -180,7 +208,15 @@ package X2CityDetailedDesign {
     flow vFastEpochToMotorPhase from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.sensors.motorPhaseFast.injectedEpochIn.payload;
     flow vFastEpochToSupply from vehicle.sensors.analogFast.injectedEpochOut.payload to vehicle.sensors.supplyFast.injectedEpochIn.payload;
     flow vHallCaptureToPosition from vehicle.sensors.hallCapture.hallCaptureOut.payload to vehicle.sensors.hallPosition.hallCaptureIn.payload;
-    flow vHallPositionToTraction from vehicle.sensors.hallPosition.electricalPositionOut.payload to vehicle.traction.hallElectricalPositionIn.payload;
+    flow vHallObservationToMotorPositionEstimator from vehicle.sensors.hallPosition.hallObservationOut.payload to vehicle.sensors.motorPositionEstimator.hallObservationIn.payload;
+    flow vMotorPhaseFastToMotorPositionEstimator from vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload to vehicle.sensors.motorPositionEstimator.phaseCurrentEpochIn.payload;
+    // No regular-DMA path feeds observer voltage. This explicit physical/HSI boundary remains
+    // unavailable until direct sensing or calibrated PWM/bridge reconstruction is qualified.
+    flow vAppliedVoltageBoundaryToObserverVoltage from vehicle.vehicleBoundary.appliedPhaseVoltageEvidence.payload to vehicle.sensors.motorPhaseObserverVoltage.appliedPhaseVoltageEvidenceIn.payload;
+    flow vObserverVoltageToMotorPositionEstimator from vehicle.sensors.motorPhaseObserverVoltage.qualifiedAppliedPhaseVoltageOut.payload to vehicle.sensors.motorPositionEstimator.qualifiedAppliedPhaseVoltageIn.payload;
+    flow vMotorPositionToTraction from vehicle.sensors.motorPositionEstimator.motorPositionOut.payload to vehicle.traction.motorPositionIn.payload;
+    flow vPlatformContextToMotorPositionEstimator from vehicle.platform.context.contextOut.payload to vehicle.sensors.motorPositionEstimator.platformContextIn.payload;
+    flow vPlatformHealthToMotorPositionEstimator from vehicle.platform.health.healthOut.payload to vehicle.sensors.motorPositionEstimator.platformHealthIn.payload;
     flow vPlatformContextToTractionMotion from vehicle.platform.context.contextOut.payload to vehicle.traction.platformContextIn.payload;
     flow vPlatformHealthToTractionMotion from vehicle.platform.health.healthOut.payload to vehicle.traction.platformHealthIn.payload;
     flow vHallCaptureHealthToTractionMotion from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.traction.motionHealthIn.payload;
@@ -200,6 +236,10 @@ package X2CityDetailedDesign {
     flow vHallPositionHealthToPlatform from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vMotorPhaseFastHealthToPlatform from vehicle.sensors.motorPhaseFast.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vMotorPhaseDiagHealthToPlatform from vehicle.sensors.motorPhaseDiag.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
+    // An unavailable/unobservable observer-voltage source is a qualified unavailable branch,
+    // not a fault. This conveys only recognized source/qualification health.
+    flow vMotorPhaseObserverVoltageHealthToPlatform from vehicle.sensors.motorPhaseObserverVoltage.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
+    flow vMotorPositionEstimatorHealthToPlatform from vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vSupplyFastHealthToPlatform from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vSupplyRegularHealthToPlatform from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
 
@@ -211,17 +251,23 @@ package X2CityDetailedDesign {
     flow vHallPositionHealthToSession from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vMotorPhaseFastHealthToSession from vehicle.sensors.motorPhaseFast.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vMotorPhaseDiagHealthToSession from vehicle.sensors.motorPhaseDiag.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
+    flow vMotorPhaseObserverVoltageHealthToSession from vehicle.sensors.motorPhaseObserverVoltage.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
+    flow vMotorPositionEstimatorHealthToSession from vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vSupplyFastHealthToSession from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vSupplyRegularHealthToSession from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPlatformHealthToSession from vehicle.platform.health.healthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
 
-    // Seven safety-relevant direct health inputs independently inhibit traction control.
-    flow vSupplyRegularHealthToTraction from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
+    // Nine safety-relevant direct health inputs independently inhibit traction control. Observer
+    // voltage availability is branch-independent: only recognized failure contributes; weak
+    // back-EMF/unavailable assistance with accepted Hall position is not a fault.
+    flow vSupplyRegularHealthToTraction from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.traction.supplyHealthIn.qualification;
     flow vHallCaptureHealthToTraction from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vHallPositionHealthToTraction from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vMotorPhaseFastHealthToTraction from vehicle.sensors.motorPhaseFast.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vMotorPhaseDiagHealthToTraction from vehicle.sensors.motorPhaseDiag.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
-    flow vSupplyFastHealthToTraction from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
+    flow vMotorPhaseObserverVoltageHealthToTraction from vehicle.sensors.motorPhaseObserverVoltage.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
+    flow vMotorPositionEstimatorHealthToTraction from vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
+    flow vSupplyFastHealthToTraction from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.traction.supplyHealthIn.qualification;
     flow vTemperatureHealthToTraction from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
 
     // Riding, energy and platform routes retained from the complete vehicle design.

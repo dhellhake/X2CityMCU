@@ -71,15 +71,21 @@ sequenceDiagram
     participant P as U-MOTOR-PHASE-FAST
     participant V as U-SUPPLY-FAST
     participant H as U-HALL-POSITION
+    participant W as U-MOTOR-PHASE-OBSERVER-VOLTAGE
+    participant E as U-MOTOR-POSITION-ESTIMATOR
     participant C as U-TRACTION-CONTROL
     participant O as U-TRACTION-OUTPUT
     T8->>A: one configured half-carrier trigger
     A-->>Q: direct JEOS IRQ with both JEOS, four JDR values and identified raw ADC epoch
     Q->>Q: snapshot/publish immutable InjectedEpoch and reject partial, stale, first, wrong-context or invalid-window record
-    alt raw epoch, authority, phase/Vdc/electrical-position and configuration are current
-        Q->>P: direct same-IRQ raw epoch
+    Q->>P: direct same-IRQ raw epoch when available
+    H-->>E: current qualified Hall observation or unavailable
+    P-->>E: current qualified phase feedback or unavailable
+    W-->>E: qualified applied voltage or unavailable
+    E->>E: form final MotorPosition without requiring authority or observer availability
+    alt raw epoch, authority, phase/Vdc/final position and configuration are current
         Q->>V: direct same-IRQ raw epoch
-        H-->>C: current qualified electrical position or unavailable
+        E-->>C: current final MotorPosition or unavailable
         P-->>C: current qualified phase feedback
         V-->>C: current qualified fast Vdc
         C->>C: reconstruct/PI/limit using this epoch only
@@ -94,9 +100,38 @@ sequenceDiagram
 
 The exact pins, commanded-vector-selected ADC contexts, rearm order, cache policy, PWM timing and external gate path are in the [allocated traction HSI](../../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md). This direct path is outside the 1-ms scheduler and current intercom; [the runtime contract](../Runtime_Integration_Contract.md) assigns its vector/binding, data ownership and no-blocking rule. Timer break and permit observations are not physical-output proof.
 
+## Position startup and disarmed qualification
+
+`U-MOTOR-POSITION-ESTIMATOR` is also invoked through a bounded direct or scheduled
+qualification call while disarmed and before Ready. Its caller supplies fresh
+`ExecutionTime`; this path requires current Hall observation only. Phase current and
+applied-voltage assistance may be unavailable, and authority, PWM and qualified
+standstill are not prerequisites for the invocation or static-sector estimate.
+
+```mermaid
+sequenceDiagram
+    participant CE as CallingExecutionContextBoundary
+    participant H as U-HALL-POSITION
+    participant E as U-MOTOR-POSITION-ESTIMATOR
+    participant T as SC-TRACTION-CTRL.V
+    CE->>E: invocation(executionTimeIn), disarmed/startup
+    H-->>E: current qualified static Hall sector/bounds or unavailable
+    E->>E: apply local age/context/map validation
+    alt accepted static Hall sector
+        E-->>T: bounded final MotorPosition; signed speed unavailable
+    else Hall unavailable or invalid
+        E-->>T: unavailable position and current Qualification health
+    end
+```
+
+This path does not create sensorless fallback, forced alignment, a startup torque
+request or standstill proof. Weak observer observability is unavailable assistance,
+not a fault, when the Hall-only position remains accepted.
+
+
 ## Scheduled qualification and deferred transport
 
-The selected scheduler can run cyclic slow work; it does not make a software component a task or supply an intercom endpoint. `U-ANALOG-ACQ-REGULAR` owns DMA completed-record stability, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` publishes qualified electrical position. Named accelerator, brake, temperature, supply and motor-phase units consume regular scans under their own qualification contracts. A later static intercom transport may carry a project-declared route only after its route-specific context, age, capacity and loss policy are defined.
+The selected scheduler can run cyclic slow work; it does not make a software component a task or supply an intercom endpoint. `U-ANALOG-ACQ-REGULAR` owns DMA completed-record stability, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` publishes qualified Hall observation. `U-MOTOR-POSITION-ESTIMATOR` owns the final electrical position. Named accelerator, brake, temperature, supply and motor-phase units consume regular scans under their own qualification contracts. A later static intercom transport may carry a project-declared route only after its route-specific context, age, capacity and loss policy are defined.
 
 Receiver validity and qualification remain separate from local age supervision. Reading cached data, a health-only update, an invalid sample, or republishing unchanged evidence does not refresh a local measurement timeout; a genuinely new qualified sample does. `BatteryMeasurements` preserves host last-accepted update references per BMS field, never a claimed BMS measurement time; BatteryProtection creates its operating-limits assessment reference and Demand evaluates its age using caller-supplied execution time. Retained settings and light requests follow their component contracts and may remain current through HMI loss. If a future intercom uses the existing FIFO, one pop returns the oldest item, overflow overwrites the oldest and reports a lost count; receipt time is not acquisition time, and capacity alone supplies no time bound. Consumers retain measurement timestamps and apply private input timeouts/transport scheduling bounds.
 
@@ -141,6 +176,7 @@ sequenceDiagram
     participant FE as HC-INPUT-FE / host adapter
     participant I as SC-HALL-IF.V / U-HALL-CAPTURE
     participant P as U-HALL-POSITION
+    participant M as SC-MOTOR-POSITION-ESTIMATOR.V
     participant T as SC-TRACTION-CTRL.V
     Note over E,FE: planned external 5-V Hall Vcc, fixed EVM 3.3-V Hall pull-ups
     E-->>FE: Hall outputs, host/adapter reference and continuity qualified separately
@@ -148,13 +184,17 @@ sequenceDiagram
     I->>I: retain capture buffer and qualify sampled state and edge evidence separately
     alt map/alignment and required evidence qualified
         I-->>P: current qualified state/edge evidence
-        P->>P: publish electrical sector/direction/edge time
-        P-->>T: qualified rotor observation
+        P->>P: publish Hall code/sector bounds/direction/edge time
+        P-->>M: qualified Hall observation
+        M->>M: bounded static/interpolated angle; assist only when observable
+        M-->>T: final MotorPosition
     else static state at genuine rest
         I-->>P: current qualified static state
-        P-->>T: sector only when map/alignment qualified
+        P-->>M: sector bounds only when map/alignment qualified
+        M-->>T: bounded static angle only when accepted
     else stale, invalid, or map unavailable
-        P-->>T: unavailable, no inferred sector/speed
+        P-->>M: unavailable
+        M-->>T: unavailable, no inferred angle/speed
     end
 ```
 

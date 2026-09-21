@@ -24,9 +24,10 @@ package X2CityDetailedComponent_TractionControlImplementation {
            sole PWM/ADC plan committer. */
         port ridingAuthorityIn:X2CitySoftwareContract_TractionControl::RidingAuthorityInputPort :>> TractionControl::ridingAuthorityIn;
         port wheelTorqueRequestIn:X2CitySoftwareContract_TractionControl::WheelTorqueRequestInputPort :>> TractionControl::wheelTorqueRequestIn;
-        port hallElectricalPositionIn:X2CitySoftwareContract_TractionControl::HallElectricalPositionInputPort :>> TractionControl::hallElectricalPositionIn;
+        port motorPositionIn:X2CitySoftwareContract_TractionControl::MotorPositionInputPort :>> TractionControl::motorPositionIn;
         port phaseCurrentEpochIn:X2CitySoftwareContract_TractionControl::PhaseCurrentEpochInputPort :>> TractionControl::phaseCurrentEpochIn;
         port fastDcLinkVoltageIn:X2CitySoftwareContract_TractionControl::FastDcLinkVoltageInputPort :>> TractionControl::fastDcLinkVoltageIn;
+        port supplyHealthIn:X2CitySoftwareContract_TractionControl::SupplyHealthInputPort :>> TractionControl::supplyHealthIn;
         port sensorHealthIn:X2CitySoftwareContract_TractionControl::TractionSensorHealthInputPort :>> TractionControl::sensorHealthIn;
         port motionHealthIn:X2CitySoftwareContract_TractionControl::MotionHealthInputPort :>> TractionControl::motionHealthIn;
         port tractionOutputStageExchange:X2CitySoftwareContract_TractionControl::TractionOutputStageExchangePort :>> TractionControl::tractionOutputStageExchange;
@@ -64,9 +65,9 @@ package X2CityDetailedComponent_TractionControlImplementation {
         flow executionTimeToControl from executionTimeIn.payload to control.executionTimeIn.payload;
         flow executionTimeToOutput from executionTimeIn.payload to output.executionTimeIn.payload;
         flow commandToAccept from wheelTorqueRequestIn.payload to accept.commandIn.payload;
-        flow hallToControl from hallElectricalPositionIn.payload to control.electricalPositionIn.payload;
-        flow hallToMotion from hallElectricalPositionIn.payload to motion.electricalPositionIn.payload;
-        flow hallToActualOutput from hallElectricalPositionIn.payload to actualOutput.electricalPositionIn.payload;
+        flow motorPositionToControl from motorPositionIn.payload to control.motorPositionIn.payload;
+        flow motorPositionToMotion from motorPositionIn.payload to motion.motorPositionIn.payload;
+        flow motorPositionToActualOutput from motorPositionIn.payload to actualOutput.motorPositionIn.payload;
         flow phaseToControl from phaseCurrentEpochIn.payload to control.phaseFeedbackIn.payload;
         flow phaseToActualOutput from phaseCurrentEpochIn.payload to actualOutput.phaseFeedbackIn.payload;
         flow fastDcLinkToControl from fastDcLinkVoltageIn.payload to control.fastDcLinkVoltageIn.payload;

@@ -2,12 +2,12 @@ package X2CityDetailedUnit_TemperatureInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_TemperatureInterface::*;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::SensorHealthOutputPort;
+    private import X2CityDetailedUnit_RegularSensorQualification::AnalogSampleInputPort;
+    private import X2CityDetailedUnit_RegularSensorQualification::SensorHealthOutputPort;
 
     item def TemperatureRecord :> QualifiedTemperature;
     port def TemperatureOutputPort {
-        doc /* U-TEMPERATURE-QUALIFY sends the qualified vehicle temperature observation to its thermal and battery-policy consumers. */
+        doc /* U-TEMPERATURE-QUALIFY sends qualified traction-board and motor temperature observations to its assigned policy consumers. Battery temperature remains a BmsLink observation. */
         out item payload:TemperatureRecord;
     }
     part def TemperatureQualifier {

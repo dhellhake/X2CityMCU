@@ -430,6 +430,8 @@ The owner selected the unmodified **DRV8300DRGE-EVM** as `HC-TRACTION-POWER` and
 
 Hall map/alignment, current/power direction, physical output, protection and 40-km/h headroom remain qualification gates. The reported 9.5 rpm/V implies about 55 V no-load at 40 km/h versus 50.4 V nominal pack voltage; 58.8 V is not normal 80%-SOC operation. Failure requires controlled change, not target reduction.
 
+**Draft motor-position refinement — 2026-09-21.** `LE-MOTOR-POSITION` is a Traction child alongside `LE-MOTOR-CTRL`. It requires Hall evidence for every available electrical angle, permits a static accepted Hall sector at startup without an edge, and uses only bounded interpolation. A qualified current/applied-winding-voltage model may refine or check that Hall-based estimate when observable; it never substitutes for Hall, supplies no sensorless fallback and does not make poor low-speed observability a fault. Enabling/disabling assistance and Hall-edge correction must preserve the later-established continuity and angle-error bounds. It selects no forced alignment, stationary holding, ADC/DMA/pin route or numerical motor value. Recognized required-signal contradiction/loss reaches the existing fault-response path; fault policy remains unchanged.
+
 <a id="dec-runtime-001"></a>
 ### DEC-RUNTIME-001 — Vehicle runtime realization boundary
 

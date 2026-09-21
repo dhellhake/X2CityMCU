@@ -2,7 +2,7 @@ package X2CityDetailedUnit_AcceleratorInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
-    private import X2CityDetailedUnit_RiderTemperatureInterfaces::AnalogSampleInputPort;
+    private import X2CityDetailedUnit_RegularSensorQualification::AnalogSampleInputPort;
 
     item def AcceleratorPositionRecord :> AcceleratorPosition;
     port def AcceleratorPositionOutputPort {

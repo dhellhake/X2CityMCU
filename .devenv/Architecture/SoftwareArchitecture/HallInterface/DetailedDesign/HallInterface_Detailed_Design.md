@@ -7,4 +7,4 @@ Invocation timing follows the canonical caller supplied `ExecutionTime` contract
 
 ## Input, traction and platform derivation gates
 
-`U-HALL-CAPTURE` owns current sampled-state/edge evidence and capture health, and `U-HALL-POSITION` publishes electrical position only with accepted map/alignment. These units invalidate their own result on producer/reset/configuration/health failure and preserve no prior value as a substitute.
+`U-HALL-CAPTURE` owns current sampled-state/edge evidence and capture health, and `U-HALL-POSITION` publishes qualified Hall code, sector bounds and accepted transition evidence only with accepted map/alignment. It does not own final electrical angle or signed speed; `U-MOTOR-POSITION-ESTIMATOR` does. These units invalidate their own result on producer/reset/configuration/health failure and preserve no prior value as a substitute.

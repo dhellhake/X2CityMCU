@@ -1,21 +1,20 @@
 package X2CityDetailedUnit_TractionControl {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedSharedContracts::*;
-    private import X2CityDetailedUnit_HallInterface::*;
+    private import X2CityContract_MotorPositionProcessing::*;
     private import X2CityDetailedUnit_MotorPhaseInterface::*;
     private import X2CityDetailedUnit_SupplyInterface::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_DemandPolicy::*;
     private import X2CityDetailedUnit_TractionAccept::*;
-    private import X2CitySoftwareContract_HallInterface::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
     // Owner: SC-TRACTION-CTRL.V; DD-001/DD-003 and Runtime Integration Contract; UR-TRACTION-CONTROL-001.
     // Produces command data only; it never writes a literal compare register.
     item def PWMAndADCSamplingPlan :> UnitInformationEnvelope;
-    port def ElectricalPositionInputPort {
-        doc /* Receives current Hall-derived electrical position for bounded FOC angle use. */
-        in item payload:HallElectricalPosition;
+    port def MotorPositionInputPort {
+        doc /* Receives MotorPositionEstimator's final electrical position for bounded FOC angle use. */
+        in item payload:MotorPosition;
     }
     port def PhaseFeedbackInputPort {
         doc /* Receives same-epoch qualified phase-current feedback for current regulation. */
@@ -45,5 +44,5 @@ package X2CityDetailedUnit_TractionControl {
            realization. It enforces the accepted discharge and regenerative-charge current bounds
            using actual electrical transfer without selecting a current-control algorithm. It produces PWMAndADCSamplingPlan including compare and sampling-plan data; output
            register commit belongs to TractionOutputCommitter. */
-        port executionTimeIn:ExecutionTimeInputPort; port electricalPositionIn:ElectricalPositionInputPort; port phaseFeedbackIn:PhaseFeedbackInputPort; port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort; port sensorHealthIn:SensorHealthInputPort; port acceptedDemandIn:AcceptedDemandInputPort; port pwmAndAdcSamplingPlanOut:PWMAndADCSamplingPlanOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port motorPositionIn:MotorPositionInputPort; port phaseFeedbackIn:PhaseFeedbackInputPort; port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort; port sensorHealthIn:SensorHealthInputPort; port acceptedDemandIn:AcceptedDemandInputPort; port pwmAndAdcSamplingPlanOut:PWMAndADCSamplingPlanOutputPort; }
 }

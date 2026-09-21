@@ -3,12 +3,13 @@ package X2CityDetailedUnit_TractionMotion {
     private import X2CitySoftwareContract_TractionControl::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityDetailedUnit_PlatformContext::*;
-    private import X2CityDetailedUnit_HallInterface::*;
-    private import X2CitySoftwareContract_HallInterface::*;
+    private import X2CityContract_MotorPositionProcessing::*;
     // Owner: SC-TRACTION-CTRL.V. This is the actual producer route for vehicle-motion facts.
-    port def ElectricalPositionInputPort {
-        doc /* Receives current Hall capture/position interpretation as the evidence input for speed, direction and standstill qualification. */
-        in item payload:HallElectricalPosition;
+    port def MotorPositionInputPort {
+        doc /* Receives final electrical position plus retained Hall observation/transition evidence.
+           It separately qualifies vehicle speed/direction/standstill; static or absent edges do
+           not establish standstill. */
+        in item payload:MotorPosition;
     }
     port def MotionHealthInputPort {
         doc /* Receives Hall capture and position health; a capture fault, static state or absent edge alone cannot qualify standstill. */
@@ -33,7 +34,7 @@ package X2CityDetailedUnit_TractionMotion {
            bounded-observability/standstill criterion. Static Hall state, an absent edge alone,
            command and PWM state produce unavailable, not standstill. */
         port executionTimeIn:ExecutionTimeInputPort;
-        port electricalPositionIn:ElectricalPositionInputPort;
+        port motorPositionIn:MotorPositionInputPort;
         attribute compiledCalibrationId:String;
         attribute compiledMotionEstimationCalibration:MotionEstimationCalibration;
         attribute compiledCalibrationValid:Boolean;

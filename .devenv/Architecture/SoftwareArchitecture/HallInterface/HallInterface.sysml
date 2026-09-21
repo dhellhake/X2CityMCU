@@ -20,17 +20,26 @@ package X2CitySoftwareContract_HallInterface {
         doc /* Receives captured Hall channel state, channel identity, common-domain capture time and sequence from the vehicle capture boundary. HallInterface validates transitions and capture integrity before deriving electrical position. */
         in item payload:HallCapture;
     }
-    item def HallElectricalPosition:>ContextualSoftwareInformation {
-        attribute electricalAngleDegrees:Real;
+    item def HallObservation:>ContextualSoftwareInformation {
+        // This is an observation, not the final electrical-angle estimate.  The bounded sector
+        // is usable at rest after map/alignment acceptance; signed speed remains separately
+        // qualified by MotorPositionEstimator.
+        attribute hallCode:Integer;
         attribute electricalSector:Integer;
-        attribute rotationDirection:String; // enum: forward, reverse, stationary, unavailable.
-        attribute captureTimeMicroseconds:Integer;
-        attribute captureSequence:Integer;
+        attribute sectorLowerElectricalDegrees:Real;
+        attribute sectorUpperElectricalDegrees:Real;
+        attribute transitionDirection:String; // enum: forward, reverse, unavailable.
+        attribute transitionTimeMicroseconds:Integer;
+        attribute transitionSequence:Integer;
+        attribute acceptedTransition:Boolean;
+        attribute observationTimeMicroseconds:Integer;
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
-    port def HallElectricalPositionOutputPort {
-        doc /* Publishes complete qualified electrical angle, sector and direction with capture and calibration provenance to TractionControl. This is electrical position evidence, not qualified physical vehicle motion. */
-        out item payload:HallElectricalPosition;
+    port def HallObservationOutputPort {
+        doc /* Publishes qualified Hall code/sector/bounds and accepted transition evidence to
+           MotorPositionEstimator. It does not publish a final electrical angle or infer speed,
+           vehicle motion or standstill. */
+        out item payload:HallObservation;
     }
     port def HallHealthOutputPort {
         doc /* Publishes Hall capture and position-estimation health evidence to Platform, SessionPolicy and TractionControl. Overrun, incoherence, age, context or calibration failure is represented through the health qualification. */
@@ -42,15 +51,15 @@ package X2CitySoftwareComponent_HallInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_HallInterface::*;
     private import X2CitySoftwareContract_Platform::*;
-    // SC-HALL-IF.V; complete Hall electrical-position interface.
+    // SC-HALL-IF.V; qualified Hall-observation interface.
     part def HallInterface {
-        /* Owns capture integrity, rings and bounded access; transition acceptance, direction,
-           calibration map/alignment and complete qualified electrical position estimation. It
-           publishes unavailable on overrun, incoherence, age, context or calibration failure;
-           traction performs no partial Hall-to-position conversion. */
+        /* Owns capture integrity, rings and bounded access; transition acceptance, direction
+           and map/alignment-qualified Hall observation. It publishes unavailable on overrun,
+           incoherence, age, context or calibration failure. MotorPositionEstimator alone owns
+           final electrical angle and signed-speed estimation. */
         port executionTimeIn:ExecutionTimeInputPort;
         port hallCaptureIn:HallCaptureInputPort;
-        port hallElectricalPositionOut:HallElectricalPositionOutputPort;
+        port hallObservationOut:HallObservationOutputPort;
         port hallHealthOut:HallHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;

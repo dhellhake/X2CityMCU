@@ -4,18 +4,17 @@ package X2CityDetailedUnit_TractionActualOutput {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityDetailedUnit_TractionControl::*;
     private import X2CityDetailedUnit_MotorPhaseInterface::*;
-    private import X2CityDetailedUnit_HallInterface::*;
+    private import X2CityContract_MotorPositionProcessing::*;
     private import X2CityDetailedUnit_PlatformContext::*;
-    private import X2CitySoftwareContract_HallInterface::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     // Owner: SC-TRACTION-CTRL.V. It estimates/publishes, and never commands, actual output.
     port def PhaseFeedbackInputPort {
         doc /* Receives same-operation qualified phase-current feedback used by the wheel-torque estimator. */
         in item payload:PhaseCurrentEpoch;
     }
-    port def ElectricalPositionInputPort {
-        doc /* Receives map-qualified electrical position associated with the current phase evidence for estimation. */
-        in item payload:HallElectricalPosition;
+    port def MotorPositionInputPort {
+        doc /* Receives the final qualified electrical position associated with the current phase evidence for estimation. */
+        in item payload:MotorPosition;
     }
     port def QualifiedMotionInputPort {
         doc /* Receives qualified vehicle speed and direction used to establish powered-forward travel; it is not inferred from a torque command. */
@@ -50,7 +49,7 @@ package X2CityDetailedUnit_TractionActualOutput {
            actual torque/braking/travel. */
         port executionTimeIn:ExecutionTimeInputPort;
         port phaseFeedbackIn:PhaseFeedbackInputPort;
-        port electricalPositionIn:ElectricalPositionInputPort;
+        port motorPositionIn:MotorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port outputStageEvidenceIn:OutputStageEvidenceInputPort;
         attribute compiledCalibrationId:String;

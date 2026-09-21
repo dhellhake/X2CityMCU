@@ -11,7 +11,7 @@ package X2CitySoftwareContract_LightPolicy {
         in item payload:HmiLightRequest;
     }
     port def BrakeLeverStateInputPort {
-        doc /* Receives the qualified mechanical brake-lever actuation state from InputQualification. */
+        doc /* Receives BrakeInterface's qualified mechanical brake-lever state. */
         in item payload:BrakeState;
     }
     port def ElectricalBrakingStateInputPort {

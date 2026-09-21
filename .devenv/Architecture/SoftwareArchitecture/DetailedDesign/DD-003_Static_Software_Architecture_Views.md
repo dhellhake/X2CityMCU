@@ -66,7 +66,7 @@ contracts; unit model files are linked for review of the corresponding ports.
 | `SC-TRACTION-CTRL.tractionObservationOut` | `P-TR-OBS-O`; `SW-I-005` | [`U-TRACTION-ACCEPT.observationOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → Session consumer | `REQ-SYS-HSI-008`, `REQ-SYS-HSI-009` |
 | `ridingAuthorityIn` | `P-TR-AUTH-I`; `SW-I-004` / `R-V15` | [`U-TRACTION-ACCEPT.authorityIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
 | `wheelTorqueRequestIn` | `P-TR-COMMAND-I`; `SW-I-004` / `R-V14` | [`U-TRACTION-ACCEPT.commandIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
-| `hallElectricalPositionIn` | `P-TR-HALL-I`; `R-V27` | [`U-TRACTION-CONTROL.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-MOTION.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.electricalPositionIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-TRQPOS-001`, `REQ-SYS-TRQCTL-001` |
+| `motorPositionIn` | `P-TR-MOTOR-POSITION-I`; `R-V30` | [`U-TRACTION-CONTROL.motorPositionIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-MOTION.motorPositionIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.motorPositionIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-MPP-001/002/003/004`, `REQ-SYS-TRQCTL-001` |
 | `phaseCurrentEpochIn` | HSI-009 fast feedback boundary | [`U-TRACTION-CONTROL.phaseFeedbackIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-ACTUAL-OUTPUT.phaseFeedbackIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-HSI-009`, `REQ-SYS-TRQCTL-001` |
 | `fastDcLinkVoltageIn` | HSI-009 fast supply boundary | [`U-TRACTION-CONTROL.fastDcLinkVoltageIn`](../TractionControl/DetailedDesign/UTractionControl.sysml) | `REQ-SYS-HSI-009`, `REQ-SYS-TRQCTL-001` |
 | `sensorHealthIn` | HSI-009 health qualification | [`U-TRACTION-CONTROL.sensorHealthIn`](../TractionControl/DetailedDesign/UTractionControl.sysml) | `REQ-SYS-HSI-009`, `UR-TRACTION-CONTROL-001` |
@@ -81,7 +81,9 @@ contracts; unit model files are linked for review of the corresponding ports.
 Demand without gating or refreshing it and publishes the legacy observation
 envelope. `U-TRACTION-MOTION` keeps its Hall capture/position-specific health
 qualification, while `U-TRACTION-CONTROL.sensorHealthIn` remains the broader FOC
-health fan-in. `U-TRACTION-CONTROL` produces the sampling plan, while
+health fan-in, including MotorPositionEstimator and observer-voltage recognized
+health. Observer-voltage unavailability or weak back-EMF does not itself create a
+health fault when the Hall-only estimate remains accepted. `U-TRACTION-CONTROL` produces the sampling plan, while
 `U-TRACTION-OUTPUT` remains the sole literal stage/commit owner. This mapping
 records ownership and traceability; it does not change any requirement body or
 select a new execution mechanism.
@@ -95,7 +97,7 @@ The pilot retains the shared qualification context ancestry: software
 `ContextualSoftwareInformation` refines the logical qualified-information record,
 and detailed `UnitInformationEnvelope` refines that software context. Traction
 unit sensor inputs accept the software schema types; producer wrappers
-`HallElectricalPositionRecord`, `PhaseCurrentFeedbackRecord` and
+`MotorPositionRecord`, `HallObservationRecord`, `PhaseCurrentFeedbackRecord` and
 `FastDcLinkVoltageRecord` remain detailed subtypes. The DD observation boundary
 `TractionObservationRecord` refines `TractionObservation` while retaining
 `UnitInformationEnvelope`. Software `ExpiryTimeMicroseconds` is an `Integer`
@@ -127,6 +129,8 @@ flowchart TB
         PHASE -->|contains| UMPD[U-MOTOR-PHASE-DIAG]
         HALL[SC-HALL-IF] -->|contains| UHC[U-HALL-CAPTURE]
         HALL -->|contains| UHP[U-HALL-POSITION]
+        PHASE -->|contains| UMPOV[U-MOTOR-PHASE-OBSERVER-VOLTAGE]
+        MPP[SC-MOTOR-POSITION-ESTIMATOR] -->|contains| UMPE[U-MOTOR-POSITION-ESTIMATOR]
         TRACTION[SC-TRACTION-CTRL] -.->|specialized by| TRDD[TractionControlImplementation]
         TRDD -->|contains| UTA[U-TRACTION-ACCEPT]
         TRDD -->|contains| UTAO[U-TRACTION-ACTUAL-OUTPUT]
@@ -140,7 +144,7 @@ flowchart TB
     end
 ```
 
-### Hall evidence and traction interpretation
+### Hall evidence, final position and traction interpretation
 
 ```mermaid
 flowchart LR
@@ -149,8 +153,9 @@ flowchart LR
     E -->|fixed 3.3-V R9/R10/R11 pull-ups and J2 13/15/17| FE[HC-INPUT-FE / host adapter]
     FE -->|conditioned acquired state/edges, open host realization| HIF[SC-HALL-IF.V]
     HIF -->|capture buffer and valid state/edge evidence| P[U-HALL-POSITION]
-    P -->|qualified electrical sector/direction/edge time| T[SC-TRACTION-CTRL.V]
-    P -.->|unavailable without map/alignment| T
+    P -->|qualified Hall sector bounds/direction/edge time| M[U-MOTOR-POSITION-ESTIMATOR]
+    M -->|sole final MotorPosition| T[SC-TRACTION-CTRL.V]
+    P -.->|unavailable without map/alignment| M
     T -.->|separate qualified conversion required| S[mechanical/vehicle speed]
 ```
 
@@ -169,9 +174,9 @@ flowchart LR
 
 The EVM owns its bridge, shunts, dividers, Hall pull-ups and board-temperature sensor. The selected WeAct `HC-CONTROLLER` plus `HC-INPUT-FE`/host adapter owns the still-unallocated interface and acquisition; `HC-ENERGY-DIST` and the external protection assembly own the additional energy/protection realization. The EVM's J2 `FAULT` is only a host-driven LED indication and is deliberately not drawn as a protection path. All paths remain draft integration contracts rather than acceptance evidence.
 
-`U-ANALOG-ACQ-*`, the named sensor-interface units, `U-TRACTION-ACCEPT`, `U-TRACTION-MOTION`, `U-TRACTION-ACTUAL-OUTPUT` and `U-PLATFORM-*` refine approved ASW allocations. `U-HALL-CAPTURE` and `U-HALL-POSITION` own Hall buffer/capture integrity and qualified electrical position; `U-TRACTION-CONTROL` consumes that position with qualified phase feedback and fast Vdc for selected FOC. `U-TRACTION-OUTPUT` owns compare-latch/inhibit sequencing under Draft HSI-009; the [traction HSI](../../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md) owns the concrete platform contract. None proves physical output behaviour.
+`U-ANALOG-ACQ-*`, the named sensor-interface units, `U-MOTOR-POSITION-ESTIMATOR`, `U-TRACTION-ACCEPT`, `U-TRACTION-MOTION`, `U-TRACTION-ACTUAL-OUTPUT` and `U-PLATFORM-*` refine approved ASW allocations. `U-HALL-CAPTURE` and `U-HALL-POSITION` own Hall buffer/capture integrity and qualified observation; `U-MOTOR-POSITION-ESTIMATOR` owns the sole final electrical position. `U-TRACTION-CONTROL` consumes that result with the existing qualified phase feedback and fast Vdc for selected FOC. `U-TRACTION-OUTPUT` owns compare-latch/inhibit sequencing under Draft HSI-009; the [traction HSI](../../DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md) owns the concrete platform contract. None proves physical output behaviour.
 
-The implementation contract makes the ownership exact: `U-PLATFORM-CONTEXT` orchestrates startup/context invalidation and `U-PLATFORM-BINDING` starts selected resources and dispatches ADC1/ADC2 JEOS to `U-ANALOG-ACQ-FAST`, which snapshots raw JDR data into `InjectedEpoch`. `U-MOTOR-PHASE-FAST` and `U-SUPPLY-FAST` convert the raw epoch into qualified phase feedback and fast Vdc; `U-HALL-CAPTURE`/`U-HALL-POSITION` provide electrical position. `U-TRACTION-CONTROL` consumes those qualified records and emits compare/context data, including the next sampling-plan `CCR4`; `U-TRACTION-OUTPUT` alone stages/commits literal TIM8 `CCR1..4` and JSQR. `U-ANALOG-ACQ-REGULAR` owns regular-DMA completed-record publication, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` its interpretation. The direct fast chain is neither a CortexOs scheduled task nor current intercom usage; the qualified [runtime contract](../Runtime_Integration_Contract.md) owns remaining project/generic-driver and future-intercom detail.
+The implementation contract makes the ownership exact: `U-PLATFORM-CONTEXT` orchestrates startup/context invalidation and `U-PLATFORM-BINDING` starts selected resources and dispatches ADC1/ADC2 JEOS to `U-ANALOG-ACQ-FAST`, which snapshots raw JDR data into `InjectedEpoch`. `U-MOTOR-PHASE-FAST` and `U-SUPPLY-FAST` convert the raw epoch into qualified phase feedback and fast Vdc; `U-HALL-CAPTURE`/`U-HALL-POSITION` provide Hall observation and `U-MOTOR-POSITION-ESTIMATOR` produces final position. Its applied-voltage branch is supplied only by the explicit source-qualified boundary; it remains unavailable pending HSI qualification and regular diagnostics cannot feed it. `U-TRACTION-CONTROL` consumes final position, current and Vdc and emits compare/context data, including the next sampling-plan `CCR4`; `U-TRACTION-OUTPUT` alone stages/commits literal TIM8 `CCR1..4` and JSQR.
 
 ### Vehicle runtime realization boundary
 
@@ -190,7 +195,8 @@ flowchart LR
     end
     subgraph F[Direct fast traction chain]
         JEOS[U-ANALOG-ACQ-FAST\nB-FAST-ANALOG-JEOS / InjectedEpoch]
-        QUAL[U-MOTOR-PHASE-FAST + U-SUPPLY-FAST + U-HALL-POSITION\nqualified phase/Vdc/electrical position]
+        QUAL[U-MOTOR-PHASE-FAST + U-SUPPLY-FAST + U-HALL-POSITION\nqualified phase/Vdc/Hall observation]
+        MPE[U-MOTOR-POSITION-ESTIMATOR\nsole final MotorPosition]
         FOC["U-TRACTION-CONTROL<br/>PWMAndADCSamplingPlan: CCR1..3, CCR4, ADC context"]
         OUT[U-TRACTION-OUTPUT\nsole CCR1..4 + JSQR / UDIS commit lease]
     end
@@ -200,7 +206,9 @@ flowchart LR
     CALL -->|fresh executionTimeIn per invocation| SLOW
     CALL -->|fresh executionTimeIn per direct fast invocation| JEOS
     JEOS == direct raw epoch ==> QUAL
-    QUAL == direct, no queue ==> FOC
+    QUAL == Hall observation + current, direct ==> MPE
+    MPE == final position, direct ==> FOC
+    QUAL == current + Vdc, direct ==> FOC
     BOOT --> DISP
     DISP --> JEOS
     FUT -. generic operations .-> BOOT

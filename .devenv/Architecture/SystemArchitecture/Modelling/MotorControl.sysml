@@ -40,13 +40,20 @@ package X2CityComponent_MotorControl {
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_DemandPolicy::*;
+    private import X2CityContract_MotorPositionProcessing::*;
+    private import X2CityContract_Input::*;
     part def MotorControl { // LE-MOTOR-CTRL
         /* Provides the logical motor-control boundary. It accepts independent riding authority
            and signed torque demand, then publishes qualified physical-motion and actual-output
            observations. Demand evaluation remains in DemandPolicy. This is an architectural boundary only: it selects neither software
-           units, calibration, hardware nor an execution mechanism. */
+           units, calibration, hardware nor an execution mechanism. Electrical rotor position and
+           explicit phase measurements are supplied by the sibling MotorPositionEstimation function. */
         port ridingAuthorityIn:RidingAuthorityInputPort;
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort;
+        port motorPositionIn:MotorPositionInputPort { doc /* Receives the qualified electrical rotor Position/Qualification composite. */ }
+        port phaseCurrentIn:PhaseCurrentMeasurementsInputPort { doc /* Receives qualified semantic phase-current feedback. */ }
+        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort { doc /* Receives qualified local PVDD on the dedicated fast control route. */ }
+        port supplyHealthIn:SupplyHealthInputPort { doc /* Receives PVDD/GVDD qualification without selecting a Session response. */ }
         port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
         port actualTractionOutputOut:ActualTractionOutputPort;
         port electricalBrakingStateOut:ElectricalBrakingStateOutputPort { doc /* Projects qualified actual electrical-braking state from the output-stage observation. */ }

@@ -6,5 +6,6 @@ package X2CityComponent_RiderDevices {
         /* Represents rider-facing devices that present rider information and the unqualified accelerator electrical signal. Device implementation is outside the logical policy model. */
         port riderStatusInformationIn:RiderStatusInformationInputPort;
         port acceleratorElectricalSignalOut:AcceleratorElectricalSignalOutputPort;
+        port codedBrakeElectricalSignalOut:CodedBrakeElectricalSignalOutputPort { doc /* Presents the passive coded-brake network's unqualified electrical signal. */ }
     }
 }

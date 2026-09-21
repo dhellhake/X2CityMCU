@@ -3,7 +3,7 @@ package X2CitySoftwareContract_TractionControl {
     private import X2CityContract_MotorControl::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_DemandPolicy::*;
-    private import X2CitySoftwareContract_HallInterface::*;
+    private import X2CityContract_MotorPositionProcessing::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
     private import X2CitySoftwareContract_Platform::*;
@@ -32,17 +32,24 @@ package X2CitySoftwareContract_TractionControl {
            uses the amperage bounds as electrical limits; they are not wheel-torque values. */
         in item payload:WheelTorqueRequest :>> X2CityContract_DemandPolicy::WheelTorqueCommandInputPort::payload;
     }
-    port def HallElectricalPositionInputPort {
-        doc /* Receives complete qualified electrical Hall position from HallInterface for FOC phase alignment and direction. It is electrical position evidence, not a substitute for qualified physical vehicle motion. */
-        in item payload:HallElectricalPosition;
+    port def MotorPositionInputPort :> X2CityContract_MotorPositionProcessing::MotorPositionInputPort {
+        doc /* Receives the one final qualified electrical position from MotorPositionEstimator
+           for FOC and downstream observation. Hall observations are not a second final-angle
+           path. Position availability and signed-speed availability remain independent. */
+        in item payload:MotorPosition :>> X2CityContract_MotorPositionProcessing::MotorPositionInputPort::motorPosition;
     }
-    port def PhaseCurrentEpochInputPort {
+    port def PhaseCurrentEpochInputPort :> X2CityContract_MotorPositionProcessing::PhaseCurrentMeasurementsInputPort {
         doc /* Receives the qualified same-aperture phase-current epoch from MotorPhaseInterface for fast FOC feedback. The current record already carries calibration, rank plausibility and timing qualification. */
-        in item payload:PhaseCurrentEpoch;
+        in item payload:PhaseCurrentEpoch :>> X2CityContract_MotorPositionProcessing::PhaseCurrentMeasurementsInputPort::phaseCurrentMeasurements;
     }
-    port def FastDcLinkVoltageInputPort {
+    port def FastDcLinkVoltageInputPort :> X2CityContract_Input::FastDcLinkVoltageInputPort {
         doc /* Receives qualified fast DC-link voltage from SupplyInterface for fast control scaling and protection. The value is produced from the dedicated injected acquisition path and its fixed compiled configuration provenance. */
-        in item payload:FastDcLinkVoltage;
+        in item payload:FastDcLinkVoltage :>> X2CityContract_Input::FastDcLinkVoltageInputPort::payload;
+    }
+    port def SupplyHealthInputPort :> X2CityContract_Input::SupplyHealthInputPort {
+        doc /* Receives System-qualified PVDD/GVDD supply health and forwards that projection
+               into the existing aggregate sensor-health input. */
+        in item qualification:SupplyHealthCondition :>> X2CityContract_Input::SupplyHealthInputPort::qualification;
     }
     port def TractionSensorHealthInputPort {
         doc /* Receives qualified source-health evidence from sensor interfaces to gate traction control. Platform's independent FastSafetyState is published separately and is not recreated from this input. */
@@ -105,9 +112,10 @@ package X2CitySoftwareComponent_TractionControl {
         port executionTimeIn:ExecutionTimeInputPort;
         port ridingAuthorityIn:RidingAuthorityInputPort :>> MotorControl::ridingAuthorityIn;
         port wheelTorqueRequestIn:WheelTorqueRequestInputPort :>> MotorControl::wheelTorqueCommandIn;
-        port hallElectricalPositionIn:HallElectricalPositionInputPort;
-        port phaseCurrentEpochIn:PhaseCurrentEpochInputPort;
-        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort;
+        port motorPositionIn:MotorPositionInputPort :>> MotorControl::motorPositionIn;
+        port phaseCurrentEpochIn:PhaseCurrentEpochInputPort :>> MotorControl::phaseCurrentIn;
+        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort :>> MotorControl::fastDcLinkVoltageIn;
+        port supplyHealthIn:SupplyHealthInputPort :>> MotorControl::supplyHealthIn;
         port sensorHealthIn:TractionSensorHealthInputPort;
         port motionHealthIn:MotionHealthInputPort;
         port tractionOutputStageExchange:TractionOutputStageExchangePort;
@@ -124,6 +132,9 @@ package X2CitySoftwareComponent_TractionControl {
         // Fixed build-time estimation and motion parameters. The ID is read-only provenance and
         // does not select or activate calibration at runtime.
         attribute compiledCalibrationId:String;
+        // Preserve the existing detailed sensorHealthIn/control binding for the logical
+        // supply-health projection; this adds no new control unit or route.
+        flow supplyHealthToSensorHealth from supplyHealthIn.qualification to sensorHealthIn.payload;
         attribute compiledActualOutputEstimationCalibration:ActualOutputEstimationCalibration;
         attribute compiledMotionEstimationCalibration:MotionEstimationCalibration;
         attribute compiledCalibrationValid:Boolean; // Build/startup validation failure withholds dependent estimate/motion results.

@@ -24,7 +24,7 @@ package X2CityDetailedUnit_SupplyInterface {
     }
     port def SensorHealthOutputPort {
         doc /* Publishes fast Vdc and regular supply conversion health so consumers can reject the affected electrical observation. */
-        out item payload:SensorHealthCondition;
+        out item payload:SupplyHealthCondition;
     }
     part def FastSupplyVoltageProcessor { attribute compiledCalibrationId:String; attribute compiledSupplyCalibration:SupplyCalibration; attribute compiledCalibrationValid:Boolean; port executionTimeIn:ExecutionTimeInputPort; port injectedEpochIn:InjectedEpochInputPort; port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort; port sensorHealthOut:SensorHealthOutputPort; }
     part def RegularSupplyVoltageProcessor { attribute compiledCalibrationId:String; attribute compiledSupplyCalibration:SupplyCalibration; attribute compiledCalibrationValid:Boolean; port executionTimeIn:ExecutionTimeInputPort; port analogSampleIn:AnalogSampleInputPort; port regularSupplyOut:RegularSupplyOutputPort; port sensorHealthOut:SensorHealthOutputPort; }

@@ -29,6 +29,8 @@ package X2CitySoftwareArchitecture {
     public import X2CitySoftwareContract_MotorPhaseInterface::*;
     public import X2CitySoftwareComponent_HallInterface::*;
     public import X2CitySoftwareContract_HallInterface::*;
+    public import X2CitySoftwareComponent_MotorPositionEstimator::*;
+    public import X2CitySoftwareContract_MotorPositionEstimator::*;
     public import X2CitySoftwareComponent_TractionControl::*;
     public import X2CitySoftwareContract_TractionControl::*;
     public import X2CitySoftwareComponent_Platform::*;
@@ -48,6 +50,7 @@ package X2CitySoftwareArchitecture {
         port tractionInformationIo:~TractionOutputStageExchangePort;
         port analogRawAcquisition:~RawAdcAcquisitionInputPort;
         port hallCapture:~HallCaptureInputPort;
+        port appliedPhaseVoltageEvidence:~AppliedPhaseVoltageEvidenceInputPort;
     }
     part def CallingExecutionContextBoundary {
         doc /* Runtime boundary representing the caller's execution context. Immediately before
@@ -72,6 +75,7 @@ package X2CitySoftwareArchitecture {
     part supplyInterfaceVehicle:SupplyInterface;
     part motorPhaseInterfaceVehicle:MotorPhaseInterface;
     part hallInterfaceVehicle:HallInterface;
+    part motorPositionEstimatorVehicle:MotorPositionEstimator;
     ref part tractionControlVehicle:TractionControl;
     part platformVehicle:Platform;
 
@@ -97,6 +101,7 @@ package X2CitySoftwareArchitecture {
     flow executionTimeToSupplyInterface from callingExecutionContext.executionTimeOut.payload to supplyInterfaceVehicle.executionTimeIn.payload;
     flow executionTimeToMotorPhaseInterface from callingExecutionContext.executionTimeOut.payload to motorPhaseInterfaceVehicle.executionTimeIn.payload;
     flow executionTimeToHallInterface from callingExecutionContext.executionTimeOut.payload to hallInterfaceVehicle.executionTimeIn.payload;
+    flow executionTimeToMotorPositionEstimator from callingExecutionContext.executionTimeOut.payload to motorPositionEstimatorVehicle.executionTimeIn.payload;
     flow executionTimeToTractionControl from callingExecutionContext.executionTimeOut.payload to tractionControlVehicle.executionTimeIn.payload;
     flow executionTimeToPlatform from callingExecutionContext.executionTimeOut.payload to platformVehicle.executionTimeIn.payload;
 
@@ -131,8 +136,8 @@ package X2CitySoftwareArchitecture {
     interface rV16BatteryMeasurements : IfA009BatteryMeasurements
         connect bmsLinkVehicle.batteryMeasurementsOut to batteryProtectionVehicle.batteryMeasurementsIn;
     flow rV19LowSocRetention from platformVehicle.retentionCandidateOut.payload to batteryProtectionVehicle.lowSocRetentionCandidateIn.payload;
-    // LightModeSelection receives the three concrete System-contract facts. InputQualification
-    // owns the mechanical-lever qualification; Traction owns actual electrical-braking state.
+    // LightModeSelection receives the three concrete System-contract facts. BrakeInterface
+    // owns mechanical-lever qualification; Traction owns actual electrical-braking state.
     flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeStateOut.payload to lightPolicyVehicle.brakeLeverStateIn.payload;
     flow rV21NormalLightRequest from hmiVehicle.hmiLightRequestOut.payload to lightPolicyVehicle.runningLightStateIn.payload;
     flow rV22ElectricalBrakingState from tractionControlVehicle.electricalBrakingStateOut.payload to lightPolicyVehicle.electricalBrakingStateIn.payload;
@@ -145,13 +150,21 @@ package X2CitySoftwareArchitecture {
     flow rV26Acquisition from vehicleBoundary.tractionInformationIo.payload to tractionControlVehicle.tractionOutputStageExchange.payload;
     flow rV26ActuationObservation from tractionControlVehicle.tractionOutputStageExchange.payload to vehicleBoundary.tractionInformationIo.payload;
 
-    // R-V27 is complete qualified electrical position; it is not vehicle-speed qualification.
-    flow rV27 from hallInterfaceVehicle.hallElectricalPositionOut.payload to tractionControlVehicle.hallElectricalPositionIn.payload;
-    // R-V27 / P-TR-MOTION-HEALTH-I: Hall-only health preserves the existing motion
+    // R-V27 carries qualified Hall observation, including sector bounds and transition evidence,
+    // to the sole final-angle owner. It is not vehicle-speed qualification.
+    flow rV27HallObservation from hallInterfaceVehicle.hallObservationOut.payload to motorPositionEstimatorVehicle.hallObservationIn.payload;
+    // Hall-only health preserves the existing motion
     // qualification input separately from the broader FOC sensor-health gate.
     flow rV27MotionHealth from hallInterfaceVehicle.hallHealthOut.payload to tractionControlVehicle.motionHealthIn.payload;
     flow rV28Phase from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to tractionControlVehicle.phaseCurrentEpochIn.payload;
+    flow rV28PhaseToPositionEstimator from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to motorPositionEstimatorVehicle.phaseCurrentEpochIn.payload;
     flow rV28Supply from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to tractionControlVehicle.fastDcLinkVoltageIn.payload;
+    // R-V29 is a distinct source-qualified observer-voltage chain. Regular phase diagnostics
+    // have no route to it and it remains unavailable until the open HSI source is qualified.
+    flow rV29AppliedVoltageBoundary from vehicleBoundary.appliedPhaseVoltageEvidence.payload to motorPhaseInterfaceVehicle.appliedPhaseVoltageEvidenceIn.payload;
+    flow rV29AppliedVoltageToPositionEstimator from motorPhaseInterfaceVehicle.qualifiedAppliedPhaseVoltageOut.payload to motorPositionEstimatorVehicle.qualifiedAppliedPhaseVoltageIn.payload;
+    // R-V30 is the only final electrical-angle route to TractionControl.
+    flow rV30MotorPosition from motorPositionEstimatorVehicle.motorPositionOut.payload to tractionControlVehicle.motorPositionIn.payload;
 
     // R-V41..R-V44 carry one-way qualified sensor evidence. The accelerator composite carries
     // its SensorHealthCondition-compatible Qualification member with Position, avoiding a second
@@ -163,19 +176,22 @@ package X2CitySoftwareArchitecture {
     flow rV41AcceleratorHealthPlatform from acceleratorInterfaceVehicle.acceleratorPositionOut.payload.Qualification to platformVehicle.acceleratorQualificationIn.payload;
     flow rV41BrakeHealthPlatform from brakeInterfaceVehicle.brakeHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41TemperatureHealthPlatform from temperatureInterfaceVehicle.temperatureHealthOut.payload to platformVehicle.sensorHealthIn.payload;
-    flow rV41SupplyHealthPlatform from supplyInterfaceVehicle.supplyHealthOut.payload to platformVehicle.sensorHealthIn.payload;
+    flow rV41SupplyHealthPlatform from supplyInterfaceVehicle.supplyHealthOut.qualification to platformVehicle.sensorHealthIn.payload;
     flow rV41PhaseHealthPlatform from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41HallHealthPlatform from hallInterfaceVehicle.hallHealthOut.payload to platformVehicle.sensorHealthIn.payload;
+    flow rV41MotorPositionHealthPlatform from motorPositionEstimatorVehicle.motorPositionHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV42AnalogHealthSession from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42BrakeHealthSession from brakeInterfaceVehicle.brakeHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42TemperatureHealthSession from temperatureInterfaceVehicle.temperatureHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
-    flow rV42SupplyHealthSession from supplyInterfaceVehicle.supplyHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
+    flow rV42SupplyHealthSession from supplyInterfaceVehicle.supplyHealthOut.qualification to sessionVehicle.ridingReadinessIn.payload;
     flow rV42PhaseHealthSession from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42HallHealthSession from hallInterfaceVehicle.hallHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
+    flow rV42MotorPositionHealthSession from motorPositionEstimatorVehicle.motorPositionHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV43TemperatureHealthTraction from temperatureInterfaceVehicle.temperatureHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
-    flow rV43SupplyHealthTraction from supplyInterfaceVehicle.supplyHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
+    flow rV43SupplyHealthTraction from supplyInterfaceVehicle.supplyHealthOut.qualification to tractionControlVehicle.supplyHealthIn.qualification;
     flow rV43PhaseHealthTraction from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
     flow rV43HallHealthTraction from hallInterfaceVehicle.hallHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
+    flow rV43MotorPositionHealthTraction from motorPositionEstimatorVehicle.motorPositionHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
 
     // SW-I-009 / R-V31: exact vehicle-local context and health event family.
     flow rV31ContextSet from platformVehicle.platformContextOut.payload to setVehicle.platformContextIn.payload;
@@ -206,6 +222,8 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthPhase from platformVehicle.platformHealthOut.payload to motorPhaseInterfaceVehicle.platformHealthIn.payload;
     flow rV31ContextHall from platformVehicle.platformContextOut.payload to hallInterfaceVehicle.platformContextIn.payload;
     flow rV31HealthHall from platformVehicle.platformHealthOut.payload to hallInterfaceVehicle.platformHealthIn.payload;
+    flow rV31ContextMotorPositionEstimator from platformVehicle.platformContextOut.payload to motorPositionEstimatorVehicle.platformContextIn.payload;
+    flow rV31HealthMotorPositionEstimator from platformVehicle.platformHealthOut.payload to motorPositionEstimatorVehicle.platformHealthIn.payload;
     flow rV31ContextTraction from platformVehicle.platformContextOut.payload to tractionControlVehicle.platformContextIn.payload;
     flow rV31HealthTraction from platformVehicle.platformHealthOut.payload to tractionControlVehicle.platformHealthIn.payload;
     flow rV31ContextPlatform from platformVehicle.platformContextOut.payload to platformVehicle.platformContextIn.payload;
@@ -224,8 +242,9 @@ package X2CitySoftwareArchitecture {
     flow rX03VehicleAnalog from vehicleBoundary.analogRawAcquisition.payload to analogAcquisitionVehicle.rawAdcAcquisitionIn.payload;
     flow rX03VehicleHall from vehicleBoundary.hallCapture.payload to hallInterfaceVehicle.hallCaptureIn.payload;
 
-    // The JEOS-to-output fast chain is Detailed Design-only: U-TRACTION-ACQUISITION directly
-    // hands its FastEpoch to U-TRACTION-CONTROL, then U-TRACTION-OUTPUT receives PWMAndADCSamplingPlan.
+    // The JEOS-to-output fast chain is Detailed Design-only: U-ANALOG-ACQ-FAST publishes the
+    // injected epoch to the phase/supply contributors; TractionControl consumes their typed
+    // evidence and U-TRACTION-OUTPUT receives PWMAndADCSamplingPlan.
     // R-V33..R-V38 below are direct owner-record handoffs: Analog regular scans are consumed by
     // semantic interfaces; Analog fast epochs go only to MotorPhase and Supply. No raw ADC route
     // reaches FOC. No public SC fast ports are created by this architecture.
