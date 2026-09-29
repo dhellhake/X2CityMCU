@@ -7,6 +7,7 @@ package X2CitySoftwareContract_TractionControl {
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
     private import X2CitySoftwareContract_Platform::*;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionRecord;
     attribute def ActualOutputEstimationCalibration {
         attribute estimatorId:String;
         attribute motorTorqueConstantNewtonMetresPerAmpere:Real;
@@ -34,9 +35,10 @@ package X2CitySoftwareContract_TractionControl {
     }
     port def MotorPositionInputPort :> X2CityContract_MotorPositionProcessing::MotorPositionInputPort {
         doc /* Receives the one final qualified electrical position from MotorPositionEstimator
-           for FOC and downstream observation. Hall observations are not a second final-angle
-           path. Position availability and signed-speed availability remain independent. */
-        in item payload:MotorPosition :>> X2CityContract_MotorPositionProcessing::MotorPositionInputPort::motorPosition;
+           for FOC and downstream observation, retaining the software Qualification refinement
+           for local gating. Hall observations are not a second final-angle path. Position
+           availability and signed-speed availability remain independent. */
+        in item payload:MotorPositionRecord :>> X2CityContract_MotorPositionProcessing::MotorPositionInputPort::motorPosition;
     }
     port def PhaseCurrentEpochInputPort :> X2CityContract_MotorPositionProcessing::PhaseCurrentMeasurementsInputPort {
         doc /* Receives the qualified same-aperture phase-current epoch from MotorPhaseInterface for fast FOC feedback. The current record already carries calibration, rank plausibility and timing qualification. */

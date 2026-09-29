@@ -23,11 +23,11 @@ package X2CityContract_MotorControl {
         in item payload:ElectricalBrakingState;
     }
     port def QualifiedVehicleMotionOutputPort {
-        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
+        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from AcceleratorPositionIdentification and MechanicalBrakeDetection facts. */
         out item payload:QualifiedVehicleMotion;
     }
     port def QualifiedVehicleMotionInputPort {
-        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from Input's accelerator/rest and coded-brake facts. */
+        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from AcceleratorPositionIdentification and MechanicalBrakeDetection facts. */
         in item payload:QualifiedVehicleMotion;
     }
     interface def IfA005ActualTractionOutput { end producer:ActualTractionOutputPort; end consumer:ActualTractionInputPort; flow producer.payload to consumer.payload; }

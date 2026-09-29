@@ -3,6 +3,7 @@ package X2CityDetailedUnit_PlatformHealth {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorQualificationInputPort;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     // Owner: SC-PLATFORM.V; DD-001; Draft REQ-SYS-PLT-002; SW-I-009.
     item def PlatformHealthRecord :> PlatformHealth;
     port def PlatformHealthOutputPort {
@@ -17,5 +18,5 @@ package X2CityDetailedUnit_PlatformHealth {
         /* Receives normalized sensor health without returning it as a sensor cause, then publishes
            platform health/dispatch/resource events. Session consumers retain fault
            recognition and reporting policy; this unit creates no feedback route to a sensor. */
-        port executionTimeIn:ExecutionTimeInputPort; port sensorHealthIn:SensorHealthInputPort; port acceleratorQualificationIn:AcceleratorQualificationInputPort; port healthOut:PlatformHealthOutputPort; }
+        port executionTimeIn:ExecutionTimeInputPort; port sensorHealthIn:SensorHealthInputPort; port acceleratorQualificationIn:AcceleratorQualificationInputPort; port motorPositionIn:MotorPositionInputPort; port brakeQualificationIn:BrakeQualificationInputPort; port healthOut:PlatformHealthOutputPort; }
 }

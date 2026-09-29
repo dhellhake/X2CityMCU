@@ -81,9 +81,10 @@ contracts; unit model files are linked for review of the corresponding ports.
 Demand without gating or refreshing it and publishes the legacy observation
 envelope. `U-TRACTION-MOTION` keeps its Hall capture/position-specific health
 qualification, while `U-TRACTION-CONTROL.sensorHealthIn` remains the broader FOC
-health fan-in, including MotorPositionEstimator and observer-voltage recognized
-health. Observer-voltage unavailability or weak back-EMF does not itself create a
-health fault when the Hall-only estimate remains accepted. `U-TRACTION-CONTROL` produces the sampling plan, while
+health fan-in for the other sensor families. `MotorPositionRecord` reaches traction
+once and carries its own Qualification for local gating; it does not enter that
+generic fan-in. Observer-voltage unavailability or weak back-EMF does not itself
+create a health fault when the Hall-only estimate remains accepted. `U-TRACTION-CONTROL` produces the sampling plan, while
 `U-TRACTION-OUTPUT` remains the sole literal stage/commit owner. This mapping
 records ownership and traceability; it does not change any requirement body or
 select a new execution mechanism.
@@ -154,7 +155,9 @@ flowchart LR
     FE -->|conditioned acquired state/edges, open host realization| HIF[SC-HALL-IF.V]
     HIF -->|capture buffer and valid state/edge evidence| P[U-HALL-POSITION]
     P -->|qualified Hall sector bounds/direction/edge time| M[U-MOTOR-POSITION-ESTIMATOR]
-    M -->|sole final MotorPosition| T[SC-TRACTION-CTRL.V]
+    M -->|one MotorPositionRecord| T[SC-TRACTION-CTRL.V]
+    M -->|same record| SES[SC-SESSION.V]
+    M -->|same record| PL[SC-PLATFORM.V]
     P -.->|unavailable without map/alignment| M
     T -.->|separate qualified conversion required| S[mechanical/vehicle speed]
 ```
@@ -267,7 +270,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPosition: Position + Qualification] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
-    BRK[U-BRAKE-QUALIFY\nBrakeState] -->|P-DEM-BRAKE-I| D
+    BRK[U-BRAKE-QUALIFY\nBrakeLeverState: State + Qualification] -->|P-DEM-BRAKE-I| D
     SET[U-SET-STATE\nActiveRidingSettings] -->|P-DEM-ACTIVE-SETTINGS-I| D
     SES["U-SESSION-ELIGIBILITY<br/>RidingAuthority"] -->|P-DEM-AUTHORITY-I| D
     BAT["U-BAT-POLICY-RESTRICTION<br/>BatteryOperatingLimitsAssessment"] -->|P-DEM-BATTERY-OPERATING-LIMITS-I| D

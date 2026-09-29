@@ -82,10 +82,10 @@ sequenceDiagram
     H-->>E: current qualified Hall observation or unavailable
     P-->>E: current qualified phase feedback or unavailable
     W-->>E: qualified applied voltage or unavailable
-    E->>E: form final MotorPosition without requiring authority or observer availability
+    E->>E: form final MotorPositionRecord(Position, Qualification) without requiring authority or observer availability
     alt raw epoch, authority, phase/Vdc/final position and configuration are current
         Q->>V: direct same-IRQ raw epoch
-        E-->>C: current final MotorPosition or unavailable
+        E-->>C: current final MotorPositionRecord; local gating uses Qualification
         P-->>C: current qualified phase feedback
         V-->>C: current qualified fast Vdc
         C->>C: reconstruct/PI/limit using this epoch only
@@ -118,9 +118,9 @@ sequenceDiagram
     H-->>E: current qualified static Hall sector/bounds or unavailable
     E->>E: apply local age/context/map validation
     alt accepted static Hall sector
-        E-->>T: bounded final MotorPosition; signed speed unavailable
+        E-->>T: bounded final MotorPositionRecord; signed speed unavailable
     else Hall unavailable or invalid
-        E-->>T: unavailable position and current Qualification health
+        E-->>T: unavailable Position with current Qualification in the same record
     end
 ```
 
@@ -187,14 +187,14 @@ sequenceDiagram
         P->>P: publish Hall code/sector bounds/direction/edge time
         P-->>M: qualified Hall observation
         M->>M: bounded static/interpolated angle; assist only when observable
-        M-->>T: final MotorPosition
+        M-->>T: final MotorPositionRecord
     else static state at genuine rest
         I-->>P: current qualified static state
         P-->>M: sector bounds only when map/alignment qualified
-        M-->>T: bounded static angle only when accepted
+        M-->>T: bounded static Position only when accepted, with Qualification
     else stale, invalid, or map unavailable
         P-->>M: unavailable
-        M-->>T: unavailable, no inferred angle/speed
+        M-->>T: unavailable Position with Qualification, no inferred angle/speed
     end
 ```
 

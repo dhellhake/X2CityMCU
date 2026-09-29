@@ -1,32 +1,36 @@
 package X2CitySoftwareContract_BrakeInterface {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
-    private import X2CitySoftwareContract_Platform::*;
-    private import X2CityContract_Input::*;
-    attribute def BrakeCalibration {
+    private import X2CityContract_BrakeStateIdentification::*;
+    attribute def BrakeCalibration :> BrakeStateCalibration {
+        // Static source binding/refinement data. The inherited calibration contains the four
+        // immutable resistance acceptance bands; this type never replaces them with an ID.
         attribute sourceId:String;
-        attribute engineeringUnit:String; // ohm.
-        attribute validatedFourStateClassificationId:String;
         attribute adcRank:Integer;
     }
+    item def SoftwareBrakeQualification :> BrakeQualification {
+        // `sourceContext` and validity are inherited from the logical qualification. These
+        // software fields preserve fault ordering and reset/configuration rejection without
+        // adding a third member to the State/Qualification composite.
+        attribute recognizedFaultTimeMicroseconds:Integer;
+        attribute recognizedFaultReason:String;
+        attribute configurationContextId:String;
+        attribute currentGeneration:ContextGeneration;
+    }
+    item def SoftwareBrakeLeverState :> BrakeLeverState {
+        item Qualification:SoftwareBrakeQualification :>> BrakeLeverState::Qualification;
+    }
     port def AnalogSampleInputPort {
-        doc /* Receives completed regular ADC scans from AnalogAcquisition. BrakeInterface consumes only the configured source rank with accepted calibration and converts it to a coded brake state; the input remains raw acquisition evidence. */
+        doc /* Receives completed regular ADC scans from AnalogAcquisition. BrakeInterface consumes only its compiled source/rank binding and derives resistance using the approved physical-transfer calibration; it selects no circuit, excitation, linear transfer coefficient or threshold. */
         in item payload:AnalogSample;
     }
-    item def BrakeState:>ContextualSoftwareInformation, QualifiedBrakeInput {
-        attribute sourceResistanceOhms:Real;
-        attribute sourceAdcRank:Integer;
-        attribute sourceAdcSequence:Integer;
-        attribute sampleTimeMicroseconds:Integer;
-        attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
+    port def BrakeLeverStateOutputPort :> X2CityContract_BrakeStateIdentification::BrakeLeverStateOutputPort {
+        doc /* Publishes exactly the System `BrakeLeverState` composite: `State` has the four-valued lever combination and actual measurement time; `Qualification` distinguishes startup-pending from a recognized measurement fault. Consumers derive any-actuation from a qualified combination and do not receive a separate Boolean projection. */
+        out item brakeLeverState:SoftwareBrakeLeverState :>> X2CityContract_BrakeStateIdentification::BrakeLeverStateOutputPort::brakeLeverState;
     }
-    port def BrakeStateOutputPort {
-        doc /* Publishes the qualified `Neither`, `Left`, `Right` or `Both` mechanical brake-lever identity with source resistance and acquisition provenance to SettingsPolicy, SessionPolicy, DemandPolicy and LightModeSelection. The inherited qualification represents unknown, unavailable, stale or implausible information; it is never substituted by `Neither`. The inherited brakeLeverActuated projection is true exactly for Left, Right or Both. Demand uses it to block positive demand only. */
-        out item payload:BrakeState;
-    }
-    port def BrakeHealthOutputPort {
-        doc /* Publishes the brake conversion-health projection to Platform and SessionPolicy. BrakeState carries the logical BrakeQualification and four-state identity; this implementation health record retains conversion diagnostics and freshness rather than commanding physical brake actuation. */
-        out item payload:SensorHealthCondition;
+    port def BrakeHealthOutputPort :> X2CityContract_BrakeStateIdentification::BrakeHealthOutputPort {
+        doc /* Publishes only the exact `BrakeQualification` projection to Platform. Qualification-only updates can report a new pending/fault condition without refreshing `State.measurementTimeMicroseconds`. */
+        out item qualification:SoftwareBrakeQualification :>> X2CityContract_BrakeStateIdentification::BrakeHealthOutputPort::qualification;
     }
 }
 
@@ -38,15 +42,17 @@ package X2CitySoftwareComponent_BrakeInterface {
     part def BrakeInterface {
         /* Interprets only the current completed regular scan with an accepted, validated
            four-state classification as coded brake identity and qualification. It owns no DMA
-           storage, light arbitration, demand decision or physical brake proof. */
+           storage, light arbitration, demand decision, physical-brake proof or Settings dependency. */
         port executionTimeIn:ExecutionTimeInputPort;
         port analogSampleIn:AnalogSampleInputPort;
-        port brakeStateOut:BrakeStateOutputPort;
+        port brakeLeverStateOut:BrakeLeverStateOutputPort;
         port brakeHealthOut:BrakeHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
         attribute compiledCalibrationId:String;
         attribute compiledCalibration:BrakeCalibration;
         attribute compiledCalibrationValid:Boolean; // Startup check failure withholds usable brake conversion.
+        // This is a projection, never a separately owned health state.
+        flow brakeQualificationProjection from brakeLeverStateOut.brakeLeverState.Qualification to brakeHealthOut.qualification;
     }
 }

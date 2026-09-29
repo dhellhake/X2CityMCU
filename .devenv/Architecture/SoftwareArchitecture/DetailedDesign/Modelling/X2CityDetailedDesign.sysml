@@ -95,19 +95,15 @@ package X2CityDetailedDesign {
     part vehicle:VehicleDetailedDesign;
     bind X2CitySystemArchitecture::x2CityVehicle = vehicle;
     bind X2CitySoftwareArchitecture::tractionControlVehicle = vehicle.epcs.traction.motorControl;
-    // The selected System Traction occurrence inherits MotorPositionEstimation.  Bind its
-    // logical position/current/health publications to the detailed units that produce the
-    // same feedback, so this refinement introduces no second estimator or current source.
+    // The selected System Traction occurrence inherits MotorPositionEstimation. Bind its
+    // logical position/current publications to the detailed units that produce the same
+    // feedback, so this refinement introduces no second estimator or current source.
     bind vehicle.epcs.traction.motorPositionEstimation.motorPositionOut.motorPosition = vehicle.sensors.motorPositionEstimator.motorPositionOut.payload;
     bind vehicle.epcs.traction.motorPositionEstimation.phaseCurrentOut.phaseCurrentMeasurements = vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload;
-    bind vehicle.epcs.traction.motorPositionEstimation.motorPositionHealthOut.health = vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload;
-    // These bindings identify the SoftwareComponent publications with their detailed-unit
-    // realizations.  The estimator health output is the exact Qualification projection of its
-    // position output, rather than another health occurrence.
+    // This binding identifies the SoftwareComponent publication with its detailed-unit
+    // realization. There is no separate estimator-health projection or publication.
     bind X2CitySoftwareArchitecture::motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload = vehicle.sensors.motorPhaseFast.phaseFeedbackOut.payload;
     bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.motorPositionOut.payload = vehicle.sensors.motorPositionEstimator.motorPositionOut.payload;
-    bind X2CitySoftwareArchitecture::motorPositionEstimatorVehicle.motorPositionHealthOut.payload = vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload;
-    bind vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload = vehicle.sensors.motorPositionEstimator.motorPositionOut.payload.Qualification;
     // The detailed LightModePolicy realizes the owning SC-LIGHT-POLICY.V publication. Identifying
     // these payloads leaves the existing software-architecture R-V25 route as the sole publisher
     // to the vehicle boundary; this detailed composition creates no parallel boundary route.
@@ -215,6 +211,8 @@ package X2CityDetailedDesign {
     flow vAppliedVoltageBoundaryToObserverVoltage from vehicle.vehicleBoundary.appliedPhaseVoltageEvidence.payload to vehicle.sensors.motorPhaseObserverVoltage.appliedPhaseVoltageEvidenceIn.payload;
     flow vObserverVoltageToMotorPositionEstimator from vehicle.sensors.motorPhaseObserverVoltage.qualifiedAppliedPhaseVoltageOut.payload to vehicle.sensors.motorPositionEstimator.qualifiedAppliedPhaseVoltageIn.payload;
     flow vMotorPositionToTraction from vehicle.sensors.motorPositionEstimator.motorPositionOut.payload to vehicle.traction.motorPositionIn.payload;
+    flow vMotorPositionToSession from vehicle.sensors.motorPositionEstimator.motorPositionOut.payload to vehicle.riding.sessionEligibility.motorPositionIn.payload;
+    flow vMotorPositionToPlatform from vehicle.sensors.motorPositionEstimator.motorPositionOut.payload to vehicle.platform.health.motorPositionIn.payload;
     flow vPlatformContextToMotorPositionEstimator from vehicle.platform.context.contextOut.payload to vehicle.sensors.motorPositionEstimator.platformContextIn.payload;
     flow vPlatformHealthToMotorPositionEstimator from vehicle.platform.health.healthOut.payload to vehicle.sensors.motorPositionEstimator.platformHealthIn.payload;
     flow vPlatformContextToTractionMotion from vehicle.platform.context.contextOut.payload to vehicle.traction.platformContextIn.payload;
@@ -230,7 +228,7 @@ package X2CityDetailedDesign {
     flow vAnalogRegularHealthToPlatform from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vAnalogFastHealthToPlatform from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vAcceleratorHealthToPlatform from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload.Qualification to vehicle.platform.health.acceleratorQualificationIn.payload;
-    flow vBrakeHealthToPlatform from vehicle.sensors.brakeQualify.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
+    flow vBrakeHealthToPlatform from vehicle.sensors.brakeQualify.brakeHealthOut.qualification to vehicle.platform.health.brakeQualificationIn.qualification;
     flow vTemperatureHealthToPlatform from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vHallCaptureHealthToPlatform from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vHallPositionHealthToPlatform from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
@@ -239,20 +237,17 @@ package X2CityDetailedDesign {
     // An unavailable/unobservable observer-voltage source is a qualified unavailable branch,
     // not a fault. This conveys only recognized source/qualification health.
     flow vMotorPhaseObserverVoltageHealthToPlatform from vehicle.sensors.motorPhaseObserverVoltage.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
-    flow vMotorPositionEstimatorHealthToPlatform from vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vSupplyFastHealthToPlatform from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
     flow vSupplyRegularHealthToPlatform from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.platform.health.sensorHealthIn.payload;
 
     flow vAnalogRegularHealthToSession from vehicle.sensors.analogRegular.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vAnalogFastHealthToSession from vehicle.sensors.analogFast.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vBrakeHealthToSession from vehicle.sensors.brakeQualify.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vTemperatureHealthToSession from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vHallCaptureHealthToSession from vehicle.sensors.hallCapture.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vHallPositionHealthToSession from vehicle.sensors.hallPosition.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vMotorPhaseFastHealthToSession from vehicle.sensors.motorPhaseFast.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vMotorPhaseDiagHealthToSession from vehicle.sensors.motorPhaseDiag.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vMotorPhaseObserverVoltageHealthToSession from vehicle.sensors.motorPhaseObserverVoltage.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vMotorPositionEstimatorHealthToSession from vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vSupplyFastHealthToSession from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vSupplyRegularHealthToSession from vehicle.sensors.supplyRegular.sensorHealthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPlatformHealthToSession from vehicle.platform.health.healthOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
@@ -266,7 +261,6 @@ package X2CityDetailedDesign {
     flow vMotorPhaseFastHealthToTraction from vehicle.sensors.motorPhaseFast.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vMotorPhaseDiagHealthToTraction from vehicle.sensors.motorPhaseDiag.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vMotorPhaseObserverVoltageHealthToTraction from vehicle.sensors.motorPhaseObserverVoltage.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
-    flow vMotorPositionEstimatorHealthToTraction from vehicle.sensors.motorPositionEstimator.motorPositionHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
     flow vSupplyFastHealthToTraction from vehicle.sensors.supplyFast.sensorHealthOut.payload to vehicle.traction.supplyHealthIn.qualification;
     flow vTemperatureHealthToTraction from vehicle.sensors.temperatureQualify.sensorHealthOut.payload to vehicle.traction.sensorHealthIn.payload;
 
@@ -284,13 +278,13 @@ package X2CityDetailedDesign {
     flow vHmiLightToLight from vehicle.riding.hmiAdapter.lightOut.payload to vehicle.riding.lightMode.runningLightStateIn.payload;
     flow vAcceleratorToSet from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.setState.acceleratorPositionIn.payload;
     flow vAcceleratorToSession from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.sessionEligibility.acceleratorPositionIn.payload;
-    flow vBrakeToSession from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
+    flow vBrakeToSession from vehicle.sensors.brakeQualify.brakeLeverStateOut.brakeLeverState to vehicle.riding.sessionEligibility.brakeLeverStateIn.brakeLeverState;
     flow vTemperatureToSession from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vAcceleratorToDemand from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.demandArbiter.acceleratorIn.payload;
-    flow vBrakeToDemand from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.demandArbiter.brakeIn.payload;
+    flow vBrakeToDemand from vehicle.sensors.brakeQualify.brakeLeverStateOut.brakeLeverState to vehicle.riding.demandArbiter.brakeLeverStateIn.brakeLeverState;
     flow vSupplyRegularToSession from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
-    flow vBrakeToLight from vehicle.sensors.brakeQualify.stateOut.payload to vehicle.riding.lightMode.brakeLeverStateIn.payload;
+    flow vBrakeToLight from vehicle.sensors.brakeQualify.brakeLeverStateOut.brakeLeverState to vehicle.riding.lightMode.brakeLeverStateIn.brakeLeverState;
     flow vPlatformContextToSession from vehicle.platform.context.contextOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBatteryReadinessToSession from vehicle.energy.batteryRestriction.readinessAndFaultOut.payload to vehicle.riding.sessionEligibility.batteryReadinessAndFaultIn.payload;
     flow vBatterySocToSession from vehicle.energy.batteryRestriction.stateOfChargeOut.payload to vehicle.riding.sessionEligibility.stateOfChargeIn.payload;

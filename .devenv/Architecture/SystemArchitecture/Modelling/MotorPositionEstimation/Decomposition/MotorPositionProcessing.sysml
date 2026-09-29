@@ -31,15 +31,12 @@ package X2CityContract_MotorPositionProcessing {
         attribute reconstructedCurrentAmperes:Real;
         attribute measurementTimeMicroseconds:Integer;
     }
-    port def MotorPositionOutputPort { doc /* Publishes the paired electrical Position and Qualification record to MotorControl. */ out item motorPosition:MotorPosition; }
-    port def MotorPositionInputPort { doc /* Receives the paired electrical Position and Qualification record. */ in item motorPosition:MotorPosition; }
+    port def MotorPositionOutputPort { doc /* Publishes the paired electrical Position and Qualification record to control and fault supervision. A recognized required-signal fault still publishes the composite with unavailable Position members; it never invents a usable value. */ out item motorPosition:MotorPosition; }
+    port def MotorPositionInputPort { doc /* Receives the paired electrical Position and Qualification record for control or fault supervision. */ in item motorPosition:MotorPosition; }
     port def PhaseCurrentMeasurementsOutputPort { doc /* Publishes qualified semantic phase-current feedback to MotorControl. */ out item phaseCurrentMeasurements:PhaseCurrentMeasurements; }
     port def PhaseCurrentMeasurementsInputPort { doc /* Receives qualified semantic phase-current feedback. */ in item phaseCurrentMeasurements:PhaseCurrentMeasurements; }
-    port def MotorPositionHealthOutputPort { doc /* Publishes the exact Position Qualification projection to existing fault supervision. */ out item health:MotorPositionQualification; }
-    port def MotorPositionHealthInputPort { doc /* Receives Position Qualification without manufacturing an angle result. */ in item health:MotorPositionQualification; }
     interface def IfA005MotorPosition { end producer:MotorPositionOutputPort; end consumer:MotorPositionInputPort; flow producer.motorPosition to consumer.motorPosition; }
     interface def IfA005PhaseCurrentMeasurements { end producer:PhaseCurrentMeasurementsOutputPort; end consumer:PhaseCurrentMeasurementsInputPort; flow producer.phaseCurrentMeasurements to consumer.phaseCurrentMeasurements; }
-    interface def IfA005MotorPositionHealth { end producer:MotorPositionHealthOutputPort; end consumer:MotorPositionHealthInputPort; flow producer.health to consumer.health; }
     attribute def MotorPositionEstimatorCalibration {
         doc /* Immutable compiled calibration/model set; numerical limits and acceptance values are established later. */
         attribute hallMapId:String;
@@ -59,7 +56,5 @@ package X2CityComponent_MotorPositionProcessing {
         port motorSignalMeasurementsIn:MotorSignalMeasurementsInputPort;
         port motorPositionOut:MotorPositionOutputPort;
         port phaseCurrentOut:PhaseCurrentMeasurementsOutputPort;
-        port motorPositionHealthOut:MotorPositionHealthOutputPort;
-        flow healthProjectionFromPosition from motorPositionOut.motorPosition.Qualification to motorPositionHealthOut.health;
     }
 }

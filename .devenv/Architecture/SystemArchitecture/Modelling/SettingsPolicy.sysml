@@ -25,14 +25,12 @@ package X2CityContract_SettingsPolicy {
 
 package X2CityComponent_SettingsPolicy {
     private import X2CitySharedContracts::*;
-    private import X2CityContract_Input::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_SettingsPolicy::*;
     part def SettingsPolicy { // LE-SET
-        /* Evaluates qualified accelerator position/rest, coded brake, traction-owned motion, and settings from HMI.
+        /* Evaluates qualified accelerator position/rest, traction-owned motion, and settings from HMI.
            It retains requested and pending state, and publishes the active settings projection. */
-        port qualifiedBrakeInputIn:BrakeStateInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;

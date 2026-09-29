@@ -3,8 +3,10 @@ package X2CityDetailedUnit_SessionEligibility {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorPositionInputPort;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     private import X2CitySoftwareContract_TractionControl::*;
     private import X2CityContract_BatteryControl::*;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     // Owner: SC-SESSION; DD-001; UR-SESSION-001; SW-I-004.
     item def SessionEligibilityRecord :> RidingAuthority;
     item def SessionEligibilityObservationRecord :> UnitInformationEnvelope;
@@ -26,11 +28,14 @@ package X2CityDetailedUnit_SessionEligibility {
     }
     port def BatteryReadinessAndFaultInputPort { doc /* Receives the typed startup assessment and separate recognized battery/thermal fault evidence for Ready and existing earliest-fault selection. */ in item payload:BatteryReadinessAndFault; }
     port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for Session's existing low-charge selection; it is not the supplied BMS SOC candidate. */ in item payload:BatteryStateOfCharge; }
+    port def BrakeLeverStateInputPort :> X2CitySoftwareContract_SessionPolicy::BrakeLeverStateInputPort { doc /* Receives the exact `BrakeLeverState` composite once, including its software Qualification refinement for source/reason/event-time/context checks. */ in item brakeLeverState:SoftwareBrakeLeverState :>> X2CitySoftwareContract_SessionPolicy::BrakeLeverStateInputPort::brakeLeverState; }
     part def SessionEligibilityEvaluator {
         /* Evaluates current Ready prerequisites and riding-session inhibition to publish authority only when all required facts are current and qualified. Direct sensor-health conditions retain producer source/reason for the existing first-recognized-fault policy, while the independent PlatformHealthRecord retains platform fault/readiness input; this unit owns neither physical proof nor sensor aggregation. */
         port executionTimeIn:ExecutionTimeInputPort;
         port prerequisitesIn:SessionEligibilityInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
+        port brakeLeverStateIn:BrakeLeverStateInputPort;
+        port motorPositionIn:MotorPositionInputPort;
         // A typed current physical-motion result gates Ready; absence is not standstill.
         port motionIn:QualifiedMotionInputPort;
         port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort;

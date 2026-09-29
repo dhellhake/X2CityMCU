@@ -10,6 +10,7 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityContract_EnergyPath::*;
     private import X2CityContract_MotorPositionProcessing::*;
     private import X2CityContract_Input::*;
+    private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityComponent_Compute::*;
     part def ElectricalPropulsionControlSystem { // LE-EPCS
         /* Composes vehicle riding, input, traction, the battery composite, separate power distribution, lighting, and compute logical components. */
@@ -26,22 +27,20 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
         interface tractionPowerToTraction : IfA010TractionElectricalPower
             connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
-        interface motorPositionHealthToPlatform : IfA005MotorPositionHealth
-            connect traction.motorPositionHealthOut to compute.platform.motorPositionHealthIn;
+        interface motorPositionToPlatform : IfA005MotorPosition
+            connect traction.motorPositionOut to compute.platform.motorPositionIn;
+        interface motorPositionToSession : IfA005MotorPosition
+            connect traction.motorPositionOut to riding.session.motorPositionIn;
         interface tractionTemperatureToInputHardware : IfA007TemperatureElectricalSignal
             connect traction.tractionHardware.temperatureElectricalSignalOut to input.inputHardware.temperatureElectricalSignalIn;
         interface tractionSupplyToInputHardware : IfA007SupplyElectricalSignal
             connect traction.tractionHardware.supplyElectricalSignalOut to input.inputHardware.supplyElectricalSignalIn;
-        interface brakeToSettings : IfA001QualifiedBrakeInput
-            connect input.qualifiedBrakeInputOut to riding.settings.qualifiedBrakeInputIn;
-        interface brakeToSession : IfA001QualifiedBrakeInput
-            connect input.qualifiedBrakeInputOut to riding.session.qualifiedBrakeInputIn;
-        interface brakeToDemand : IfA001QualifiedBrakeInput
-            connect input.qualifiedBrakeInputOut to riding.demand.qualifiedBrakeInputIn;
-        interface brakeToLightControl : IfA001QualifiedBrakeInput
-            connect input.qualifiedBrakeInputOut to lightControl.brakeLeverStateIn;
-        interface brakeHealthToSession : IfA008BrakeHealth
-            connect input.brakeHealthOut to riding.session.brakeHealthIn;
+        interface brakeToSession : IfA001BrakeLeverState
+            connect input.brakeLeverStateOut to riding.session.brakeLeverStateIn;
+        interface brakeToDemand : IfA001BrakeLeverState
+            connect input.brakeLeverStateOut to riding.demand.brakeLeverStateIn;
+        interface brakeToLightControl : IfA001BrakeLeverState
+            connect input.brakeLeverStateOut to lightControl.brakeLeverStateIn;
         interface brakeHealthToPlatform : IfA008BrakeHealth
             connect input.brakeHealthOut to compute.platform.brakeHealthIn;
         interface temperatureToSession : IfA008QualifiedTemperature

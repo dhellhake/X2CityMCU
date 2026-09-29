@@ -5,7 +5,9 @@
 The model contains only vehicle V instances. `SharedSoftwareTypes.sysml` holds common context/qualification records. `DetailedDesign/Modelling` holds shared detailed contracts and the detailed-design composition root; component `DetailedDesign` folders hold their owned unit models and Markdown design. Supplied BMS and VD18MT components remain opaque and therefore have no vendor-internal detailed design.
 
 `MotorPositionEstimator` jointly realizes `LE-MOTOR-POSITION-PROC` with HallInterface
-and MotorPhaseInterface. HallInterface publishes observations; the estimator owns the
-one final `MotorPosition` route to TractionControl. The observer-voltage branch is a
+and MotorPhaseInterface. HallInterface publishes observations; the estimator owns one
+final `MotorPositionRecord(Position, Qualification)` publication to TractionControl,
+SessionPolicy and Platform. Qualification remains delivered even if Position is
+unavailable. The observer-voltage branch is a
 separate explicit HSI boundary and remains unavailable until qualified; it is never
 fed from the regular phase-voltage diagnostic path.

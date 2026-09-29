@@ -8,17 +8,17 @@ Hall evidence is always required. A static accepted Hall sector is permitted at 
 flowchart LR
     THW["LE-TRACTION-HW"] -->|raw Hall / phase / bridge observation| MSM["LE-MOTOR-SIGNAL\nMotorSignalMeasurement"]
     MSM -->|physical measurement evidence| MPP["LE-MOTOR-POSITION-PROC\nMotorPositionProcessing"]
-    MPP -->|MotorPosition| MC["LE-MOTOR-CTRL"]
+    MPP -->|MotorPosition composite| MC["LE-MOTOR-CTRL"]
+    MPP -->|same MotorPosition composite| PL["LE-PLATFORM"]
+    MPP -->|same MotorPosition composite| SP["LE-SESSION"]
     MPP -->|phase current| MC
-    MPP -->|Qualification projection| FS["Existing fault supervision"]
 ```
 
 | Exchange | Producer → consumer | Required content / owner |
 |---|---|---|
 | `hallSignalsIn`, `motorPhaseElectricalIn` | `LE-TRACTION-HW` → `MotorSignalMeasurement` | Raw physical Hall electrical levels, phase current and bridge-voltage observation; no ADC/DMA/pin allocation. `REQ-SYS-MSM-001`–002. |
 | `motorSignalMeasurementsOut` | `MotorSignalMeasurement` → `MotorPositionProcessing` | Physical evidence and integrity for subsequent timestamped software acquisition and semantic conversion. |
-| `motorPositionOut` | `MotorPositionProcessing` → `LE-MOTOR-CTRL` | `MotorPosition` (`Position` + `Qualification`) with angle, separately valid signed speed, reference time, accepted uncertainty and limited Hall evidence. `REQ-SYS-MPE-001`–004. |
+| `motorPositionOut` | `MotorPositionProcessing` → `LE-MOTOR-CTRL`, `LE-PLATFORM`, and `LE-SESSION` | The same complete `MotorPosition` (`Position` + `Qualification`) to all consumers, with angle, separately valid signed speed, reference time, accepted uncertainty and limited Hall evidence. Publication continues when angle is unavailable or only `Qualification` changes; qualification-only updates retain the actual position evidence reference time. Existing Session fault response owns inhibition and retention. `REQ-SYS-MPE-001`–004. |
 | `phaseCurrentOut` | `MotorPositionProcessing` → `LE-MOTOR-CTRL` | Qualified semantic phase-current feedback, jointly realized by the existing MotorPhaseInterface conversion path. Applied-winding voltage stays internal observer evidence; fast DC-link voltage remains a separate existing control route. `REQ-SYS-MPE-005`. |
-| `motorPositionHealthOut` | `MotorPositionProcessing` → existing fault supervision | Exact `MotorPosition.Qualification` projection; existing Session fault response owns inhibition and retention. `REQ-SYS-MPE-004`. |
 
 The caller supplies a fresh monotonic `ExecutionTime` for each software invocation; acquisition evidence retains its actual measurement/capture time. The software leaf owns this conversion and uses immutable compiled calibration. See [parent requirements](MotorPositionEstimation_Requirements.md), [signal measurement](Decomposition/MotorSignalMeasurement_Requirements.md), and [position processing](Decomposition/MotorPositionProcessing_Requirements.md).

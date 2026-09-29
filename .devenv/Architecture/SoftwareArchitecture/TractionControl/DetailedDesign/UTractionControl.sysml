@@ -9,12 +9,13 @@ package X2CityDetailedUnit_TractionControl {
     private import X2CityDetailedUnit_TractionAccept::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionRecord;
     // Owner: SC-TRACTION-CTRL.V; DD-001/DD-003 and Runtime Integration Contract; UR-TRACTION-CONTROL-001.
     // Produces command data only; it never writes a literal compare register.
     item def PWMAndADCSamplingPlan :> UnitInformationEnvelope;
     port def MotorPositionInputPort {
-        doc /* Receives MotorPositionEstimator's final electrical position for bounded FOC angle use. */
-        in item payload:MotorPosition;
+        doc /* Receives MotorPositionEstimator's final Position/Qualification composite for bounded FOC angle use. Local gating retains the software Qualification's source, event and context metadata. */
+        in item payload:MotorPositionRecord;
     }
     port def PhaseFeedbackInputPort {
         doc /* Receives same-epoch qualified phase-current feedback for current regulation. */

@@ -12,8 +12,11 @@ qualified applied-winding-voltage record. It can assist the Hall-based estimate 
 when the motor model and voltage evidence are observable. Low back-EMF or an
 unavailable observer-voltage source with otherwise acceptable Hall error produces a
 Hall-only estimate, not a false fault. A contradiction, lost mandatory Hall evidence
-or recognized required-source failure makes the affected position unavailable and
-publishes health for the established common fault policy.
+or recognized required-source failure makes the affected Position unavailable. The
+unit still publishes the current `SoftwareMotorPositionQualification` inside its one
+`MotorPositionRecord` to TractionControl, SessionPolicy and Platform, preserving
+source/reason/event-time/configuration/reset context for the established fault policy.
+A qualification-only publication never refreshes the Position reference time.
 
 The caller supplies one fixed `ExecutionTime` immediately before the bounded
 invocation. The unit evaluates its own contributor age and timeout rules against that

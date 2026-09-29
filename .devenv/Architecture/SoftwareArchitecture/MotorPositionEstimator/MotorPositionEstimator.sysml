@@ -10,12 +10,16 @@ package X2CitySoftwareContract_MotorPositionEstimator {
         attribute interpolationErrorBoundElectricalDegrees:Real;
         attribute buildValidated:Boolean;
     }
-    item def MotorPositionHealthRecord :> MotorPositionQualification, SensorHealthCondition;
+    item def SoftwareMotorPositionQualification :> MotorPositionQualification, SensorHealthCondition {
+        // The System qualification carries angle usability. SensorHealthCondition adds the
+        // current source, reason, recognition/event time and reset/configuration context used
+        // by local consumer gates and the established fault-latching/report policy.
+    }
     item def MotorPositionRecord :> MotorPosition {
-        // This is the canonical Position/Qualification composite. The identical Qualification
-        // occurrence is also published through motorPositionHealthOut; no base-to-subtype cast
-        // or separately invented health value is used.
-        item Qualification:MotorPositionHealthRecord :>> MotorPosition::Qualification;
+        // This is the canonical Position/Qualification composite. Qualification remains present
+        // when Position is unavailable, and a qualification-only change does not refresh the
+        // Position measurement/reference time.
+        item Qualification:SoftwareMotorPositionQualification :>> MotorPosition::Qualification;
     }
     port def HallObservationInputPort {
         doc /* Receives the qualified Hall code, sector bounds and accepted transition evidence.
@@ -33,15 +37,15 @@ package X2CitySoftwareContract_MotorPositionEstimator {
         in item payload:QualifiedAppliedPhaseVoltage;
     }
     port def MotorPositionOutputPort {
-        doc /* The sole final electrical-position output. Position and Qualification stay paired;
-           angle availability, observer contribution and signed-speed availability are independent. */
+        doc /* The sole final electrical-position composite. Position and Qualification stay
+           paired for TractionControl, SessionPolicy and Platform; angle availability, observer
+           contribution and signed-speed availability are independent. */
         out item payload:MotorPositionRecord;
     }
-    port def MotorPositionHealthOutputPort {
-        doc /* Publishes position-estimation health compatible with the existing SensorHealth
-           fan-in. It distinguishes recognized required-source failures from weak observer
-           observability, which is not a fault by itself. */
-        out item payload:MotorPositionHealthRecord;
+    port def MotorPositionInputPort :> X2CityContract_MotorPositionProcessing::MotorPositionInputPort {
+        doc /* Receives the estimator's complete typed record. Consumers gate their local use
+           from Qualification and still process current fault evidence when Position is unusable. */
+        in item payload:MotorPositionRecord :>> X2CityContract_MotorPositionProcessing::MotorPositionInputPort::motorPosition;
     }
 }
 
@@ -62,12 +66,10 @@ package X2CitySoftwareComponent_MotorPositionEstimator {
         port phaseCurrentEpochIn:PhaseCurrentEpochInputPort;
         port qualifiedAppliedPhaseVoltageIn:QualifiedAppliedPhaseVoltageInputPort;
         port motorPositionOut:MotorPositionOutputPort;
-        port motorPositionHealthOut:MotorPositionHealthOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
         attribute compiledCalibrationId:String;
         attribute compiledMotorPositionEstimatorCalibration:MotorPositionEstimatorSoftwareCalibration;
         attribute compiledCalibrationValid:Boolean;
-        flow qualificationProjectionToHealth from motorPositionOut.payload.Qualification to motorPositionHealthOut.payload;
     }
 }

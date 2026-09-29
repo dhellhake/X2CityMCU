@@ -1,5 +1,6 @@
 package X2CitySoftwareContract_Platform {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeQualification;
     item def PlatformContext:>ContextualSoftwareInformation;
     port def PlatformContextOutputPort {
         doc /* Publishes the current execution, reset and context generation information to software components that require a coherent local operating context. Consumers use it to qualify observations and reject records from another context. */
@@ -33,11 +34,17 @@ package X2CitySoftwareContract_Platform {
         doc /* Receives normalized health evidence from AnalogAcquisition and semantic sensor interfaces. Platform consumes producer source, severity, timestamp and fixed configuration provenance to update its separate fast-safety state. */
         in item payload:SensorHealthCondition;
     }
+    port def BrakeQualificationInputPort :> X2CityContract_BrakeStateIdentification::BrakeHealthInputPort {
+        doc /* Receives the exact BrakeQualification projection with its software source/reason/event-time/context refinement. */
+        in item qualification:SoftwareBrakeQualification :>> X2CityContract_BrakeStateIdentification::BrakeHealthInputPort::qualification;
+    }
 }
 
 package X2CitySoftwareComponent_Platform {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorQualificationInputPort;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeQualification;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     private import X2CitySoftwareContract_Platform::*;
     part def Platform {
         /* Establishes local execution/reset context, retained-state access, and platform-health
@@ -53,6 +60,11 @@ package X2CitySoftwareComponent_Platform {
         port platformHealthOut:PlatformHealthOutputPort;
         port sensorHealthIn:SensorHealthInputPort;
         port acceleratorQualificationIn:AcceleratorQualificationInputPort;
+        // Current estimator qualification reaches Platform only inside the complete record;
+        // it is not added to the generic SensorHealthCondition fan-in.
+        port motorPositionIn:MotorPositionInputPort;
+        // Exact brake Qualification projection/refinement; BrakeLeverState itself remains with its policy consumers.
+        port brakeQualificationIn:BrakeQualificationInputPort;
         // A platform instance also consumes its own generation/health service events.
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;

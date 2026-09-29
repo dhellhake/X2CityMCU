@@ -1,6 +1,11 @@
 package X2CitySoftwareContract_SessionPolicy {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityContract_BatteryControl::*;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
+    port def BrakeLeverStateInputPort :> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort {
+        doc /* Receives the exact current `BrakeLeverState` composite. Session evaluates its State and Qualification together using caller-supplied ExecutionTime; it does not receive a separate brake-health route. */
+        in item brakeLeverState:SoftwareBrakeLeverState :>> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort::brakeLeverState;
+    }
     port def RidingReadinessInputPort {
         doc /* Receives heterogeneous non-accelerator current-context facts used to determine Ready eligibility, including rider inputs, settings, health and battery/traction observations. Accelerator composites use the dedicated acceleratorPositionIn port. */
         in item payload:ContextualSoftwareInformation;
@@ -30,6 +35,7 @@ package X2CitySoftwareContract_SessionPolicy {
 package X2CitySoftwareComponent_SessionPolicy {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorPositionInputPort;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityContract_BatteryControl::*;
@@ -42,6 +48,9 @@ package X2CitySoftwareComponent_SessionPolicy {
         port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort;
         port stateOfChargeIn:BatteryStateOfChargeInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
+        port brakeLeverStateIn:BrakeLeverStateInputPort;
+        // The complete estimator record delivers fault evidence without adding a Ready guard.
+        port motorPositionIn:MotorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
         port sessionReportOut:SessionReportOutputPort;

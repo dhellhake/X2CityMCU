@@ -5,6 +5,7 @@ package X2CityDetailedUnit_TractionActualOutput {
     private import X2CityDetailedUnit_TractionControl::*;
     private import X2CityDetailedUnit_MotorPhaseInterface::*;
     private import X2CityContract_MotorPositionProcessing::*;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionRecord;
     private import X2CityDetailedUnit_PlatformContext::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     // Owner: SC-TRACTION-CTRL.V. It estimates/publishes, and never commands, actual output.
@@ -14,7 +15,7 @@ package X2CityDetailedUnit_TractionActualOutput {
     }
     port def MotorPositionInputPort {
         doc /* Receives the final qualified electrical position associated with the current phase evidence for estimation. */
-        in item payload:MotorPosition;
+        in item payload:MotorPositionRecord;
     }
     port def QualifiedMotionInputPort {
         doc /* Receives qualified vehicle speed and direction used to establish powered-forward travel; it is not inferred from a torque command. */

@@ -109,7 +109,7 @@ package X2CitySoftwareArchitecture {
     flow rV01 from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to setVehicle.acceleratorPositionIn.payload;
     flow rV02 from hmiVehicle.hmiSettingsRequestOut.payload to setVehicle.settingsRequestIn.payload;
     flow rV03Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to sessionVehicle.acceleratorPositionIn.payload;
-    flow rV03Brake from brakeInterfaceVehicle.brakeStateOut.payload to sessionVehicle.ridingReadinessIn.payload;
+    flow rV03Brake from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to sessionVehicle.brakeLeverStateIn.brakeLeverState;
     flow rV03Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV03Supply from supplyInterfaceVehicle.supplyVoltageOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV04 from hmiVehicle.hmiSettingsRequestOut.payload to sessionVehicle.ridingReadinessIn.payload;
@@ -126,7 +126,7 @@ package X2CitySoftwareArchitecture {
     flow rV08 from platformVehicle.platformContextOut.payload to sessionVehicle.startupContextIn.payload;
     flow rV09Authority from sessionVehicle.ridingAuthorityOut.payload to demandVehicle.ridingAuthorityIn.payload;
     flow rV10Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to demandVehicle.acceleratorPositionIn.payload;
-    flow rV10Brake from brakeInterfaceVehicle.brakeStateOut.payload to demandVehicle.brakeStateIn.payload;
+    flow rV10Brake from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to demandVehicle.brakeLeverStateIn.brakeLeverState;
     flow rV11ActiveSettings from setVehicle.activeRidingSettingsOut.payload to demandVehicle.activeRidingSettingsIn.payload;
     flow rV12BatteryOperatingLimits from batteryProtectionVehicle.batteryOperatingLimitsOut.operatingLimits to demandVehicle.batteryOperatingLimitsIn.payload;
     flow rV13QualifiedMotion from tractionControlVehicle.qualifiedMotionOut.payload to demandVehicle.qualifiedMotionIn.payload;
@@ -138,7 +138,7 @@ package X2CitySoftwareArchitecture {
     flow rV19LowSocRetention from platformVehicle.retentionCandidateOut.payload to batteryProtectionVehicle.lowSocRetentionCandidateIn.payload;
     // LightModeSelection receives the three concrete System-contract facts. BrakeInterface
     // owns mechanical-lever qualification; Traction owns actual electrical-braking state.
-    flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeStateOut.payload to lightPolicyVehicle.brakeLeverStateIn.payload;
+    flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to lightPolicyVehicle.brakeLeverStateIn.brakeLeverState;
     flow rV21NormalLightRequest from hmiVehicle.hmiLightRequestOut.payload to lightPolicyVehicle.runningLightStateIn.payload;
     flow rV22ElectricalBrakingState from tractionControlVehicle.electricalBrakingStateOut.payload to lightPolicyVehicle.electricalBrakingStateIn.payload;
     flow rV23 from sessionVehicle.sessionReportOut.payload to hmiVehicle.hmiReportIn.payload;
@@ -163,8 +163,12 @@ package X2CitySoftwareArchitecture {
     // have no route to it and it remains unavailable until the open HSI source is qualified.
     flow rV29AppliedVoltageBoundary from vehicleBoundary.appliedPhaseVoltageEvidence.payload to motorPhaseInterfaceVehicle.appliedPhaseVoltageEvidenceIn.payload;
     flow rV29AppliedVoltageToPositionEstimator from motorPhaseInterfaceVehicle.qualifiedAppliedPhaseVoltageOut.payload to motorPositionEstimatorVehicle.qualifiedAppliedPhaseVoltageIn.payload;
-    // R-V30 is the only final electrical-angle route to TractionControl.
+    // R-V30 delivers the one complete estimator record to each defined consumer. Qualification
+    // remains delivered even when the Position member is unavailable; health-only updates retain
+    // Position reference time and never travel through generic health fan-ins.
     flow rV30MotorPosition from motorPositionEstimatorVehicle.motorPositionOut.payload to tractionControlVehicle.motorPositionIn.payload;
+    flow rV30MotorPositionSession from motorPositionEstimatorVehicle.motorPositionOut.payload to sessionVehicle.motorPositionIn.payload;
+    flow rV30MotorPositionPlatform from motorPositionEstimatorVehicle.motorPositionOut.payload to platformVehicle.motorPositionIn.payload;
 
     // R-V41..R-V44 carry one-way qualified sensor evidence. The accelerator composite carries
     // its SensorHealthCondition-compatible Qualification member with Position, avoiding a second
@@ -174,24 +178,20 @@ package X2CitySoftwareArchitecture {
     // route back into sensorHealthIn, so a platform result cannot become a sensor root cause.
     flow rV41AnalogHealthPlatform from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41AcceleratorHealthPlatform from acceleratorInterfaceVehicle.acceleratorPositionOut.payload.Qualification to platformVehicle.acceleratorQualificationIn.payload;
-    flow rV41BrakeHealthPlatform from brakeInterfaceVehicle.brakeHealthOut.payload to platformVehicle.sensorHealthIn.payload;
+    flow rV41BrakeHealthPlatform from brakeInterfaceVehicle.brakeHealthOut.qualification to platformVehicle.brakeQualificationIn.qualification;
     flow rV41TemperatureHealthPlatform from temperatureInterfaceVehicle.temperatureHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41SupplyHealthPlatform from supplyInterfaceVehicle.supplyHealthOut.qualification to platformVehicle.sensorHealthIn.payload;
     flow rV41PhaseHealthPlatform from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV41HallHealthPlatform from hallInterfaceVehicle.hallHealthOut.payload to platformVehicle.sensorHealthIn.payload;
-    flow rV41MotorPositionHealthPlatform from motorPositionEstimatorVehicle.motorPositionHealthOut.payload to platformVehicle.sensorHealthIn.payload;
     flow rV42AnalogHealthSession from analogAcquisitionVehicle.adcAcquisitionHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
-    flow rV42BrakeHealthSession from brakeInterfaceVehicle.brakeHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42TemperatureHealthSession from temperatureInterfaceVehicle.temperatureHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42SupplyHealthSession from supplyInterfaceVehicle.supplyHealthOut.qualification to sessionVehicle.ridingReadinessIn.payload;
     flow rV42PhaseHealthSession from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV42HallHealthSession from hallInterfaceVehicle.hallHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
-    flow rV42MotorPositionHealthSession from motorPositionEstimatorVehicle.motorPositionHealthOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV43TemperatureHealthTraction from temperatureInterfaceVehicle.temperatureHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
     flow rV43SupplyHealthTraction from supplyInterfaceVehicle.supplyHealthOut.qualification to tractionControlVehicle.supplyHealthIn.qualification;
     flow rV43PhaseHealthTraction from motorPhaseInterfaceVehicle.motorPhaseHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
     flow rV43HallHealthTraction from hallInterfaceVehicle.hallHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
-    flow rV43MotorPositionHealthTraction from motorPositionEstimatorVehicle.motorPositionHealthOut.payload to tractionControlVehicle.sensorHealthIn.payload;
 
     // SW-I-009 / R-V31: exact vehicle-local context and health event family.
     flow rV31ContextSet from platformVehicle.platformContextOut.payload to setVehicle.platformContextIn.payload;

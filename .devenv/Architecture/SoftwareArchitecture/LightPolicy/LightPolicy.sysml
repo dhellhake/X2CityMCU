@@ -1,18 +1,17 @@
 package X2CitySoftwareContract_LightPolicy {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityContract_LightControl::*;
-    private import X2CityContract_Input::*;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     private import X2CityContract_MotorControl::*;
     private import X2CitySoftwareContract_HmiAdapter::*;
-    private import X2CitySoftwareContract_BrakeInterface::*;
     private import X2CitySoftwareContract_TractionControl::*;
     port def NormalLightRequestInputPort {
         doc /* Receives the qualified current-session normal-light request. */
         in item payload:HmiLightRequest;
     }
-    port def BrakeLeverStateInputPort {
-        doc /* Receives BrakeInterface's qualified mechanical brake-lever state. */
-        in item payload:BrakeState;
+    port def BrakeLeverStateInputPort :> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort {
+        doc /* Receives BrakeInterface's exact `BrakeLeverState` State/Qualification composite. */
+        in item brakeLeverState:SoftwareBrakeLeverState :>> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort::brakeLeverState;
     }
     port def ElectricalBrakingStateInputPort {
         doc /* Receives actual active motor electrical-braking state from Traction; a torque request is not this state. */

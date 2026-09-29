@@ -7,8 +7,8 @@ package X2CityDetailedUnit_RegularSensorQualification {
     alias AcceleratorPositionRecord for X2CityDetailedUnit_AcceleratorInterface::AcceleratorPositionRecord;
     alias AcceleratorPositionOutputPort for X2CityDetailedUnit_AcceleratorInterface::AcceleratorPositionOutputPort;
     alias AcceleratorQualifier for X2CityDetailedUnit_AcceleratorInterface::AcceleratorQualifier;
-    alias BrakeStateRecord for X2CityDetailedUnit_BrakeInterface::BrakeStateRecord;
-    alias BrakeStateOutputPort for X2CityDetailedUnit_BrakeInterface::BrakeStateOutputPort;
+    alias BrakeLeverStateOutputPort for X2CityDetailedUnit_BrakeInterface::BrakeLeverStateOutputPort;
+    alias BrakeHealthOutputPort for X2CityDetailedUnit_BrakeInterface::BrakeHealthOutputPort;
     alias BrakeQualifier for X2CityDetailedUnit_BrakeInterface::BrakeQualifier;
     alias TemperatureRecord for X2CityDetailedUnit_TemperatureInterface::TemperatureRecord;
     alias TemperatureOutputPort for X2CityDetailedUnit_TemperatureInterface::TemperatureOutputPort;
@@ -19,7 +19,7 @@ package X2CityDetailedUnit_RegularSensorQualification {
         in item payload:AnalogSampleRecord;
     }
     port def SensorHealthOutputPort {
-        doc /* Brake and temperature qualifiers publish conversion, plausibility and source health so dependent policy can withhold affected observations. */
+        doc /* Temperature qualifiers publish conversion, plausibility and source health so dependent policy can withhold affected observations. Brake uses its exact BrakeQualification projection instead. */
         out item payload:SensorHealthCondition;
     }
 }

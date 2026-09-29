@@ -2,7 +2,7 @@ package X2CitySoftwareContract_DemandPolicy {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
-    private import X2CitySoftwareContract_BrakeInterface::*;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     private import X2CitySoftwareContract_SettingsPolicy::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
@@ -89,9 +89,9 @@ package X2CitySoftwareContract_DemandPolicy {
         doc /* Receives AcceleratorInterface's composite. DemandPolicy uses Position as rider input only when the contained Qualification supports its source, age and calibration context, and processes the contained health even when Position is unavailable. */
         in item payload:AcceleratorPosition;
     }
-    port def BrakeStateInputPort {
-        doc /* Receives the qualified coded brake state from BrakeInterface. A valid applied state constrains positive demand, while an invalid or unavailable brake observation is a common invalid contributor that withdraws both positive and regenerative demand. */
-        in item payload:BrakeState;
+    port def BrakeLeverStateInputPort :> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort {
+        doc /* Receives the exact `BrakeLeverState` composite from BrakeInterface. Demand derives any-actuation from a qualified Left, Right or Both combination; a pending, faulted, invalid or stale composite withdraws demand under its local age policy. */
+        in item brakeLeverState:SoftwareBrakeLeverState :>> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort::brakeLeverState;
     }
     port def ActiveRidingSettingsInputPort {
         doc /* Receives only the already active riding level and speed limit from SettingsPolicy. Pending or merely requested settings cannot enter torque-demand calculation through this port. */
@@ -145,7 +145,7 @@ package X2CitySoftwareComponent_DemandPolicy {
            Demand never owns actual torque, ADC/FOC/hardware or authority issuance. */
         port executionTimeIn:ExecutionTimeInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
-        port brakeStateIn:BrakeStateInputPort;
+        port brakeLeverStateIn:BrakeLeverStateInputPort;
         port activeRidingSettingsIn:ActiveRidingSettingsInputPort;
         port ridingAuthorityIn:RidingAuthorityInputPort;
         port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort;

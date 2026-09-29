@@ -1,6 +1,6 @@
 # Light mode selection requirements
 
-**Type:** Abstract Software Requirement. **Target:** `LE-LIGHT-POLICY`. **Status:** Draft.  It consumes `runningLightStateIn`, `brakeLeverStateIn` (qualified mechanical lever state from InputQualification), and `electricalBrakingStateIn` (actual motor braking from Traction).
+**Type:** Abstract Software Requirement. **Target:** `LE-LIGHT-POLICY`. **Status:** Draft.  It consumes `runningLightStateIn`, `brakeLeverStateIn` (the full qualified mechanical lever-state composite from MechanicalBrakeDetection), and `electricalBrakingStateIn` (actual motor braking from Traction).
 
 Unqualified includes initial, invalid, unavailable, and stale information. A valid normal-light request changes without a standstill or pedal-rest guard; communication recovery alone does not change the retained request until a valid new request arrives.
 

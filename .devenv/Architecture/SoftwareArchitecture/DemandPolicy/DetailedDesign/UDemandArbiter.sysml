@@ -2,7 +2,7 @@ package X2CityDetailedUnit_DemandArbiter {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
-    private import X2CitySoftwareContract_BrakeInterface::*;
+    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     private import X2CitySoftwareContract_SettingsPolicy::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
     private import X2CityContract_BatteryControl::*;
@@ -15,9 +15,9 @@ package X2CityDetailedUnit_DemandArbiter {
         doc /* Receives U-ACCELERATOR-QUALIFY's composite. It uses Position as the active-profile request source only when contained Qualification supports it, and retains the health evidence when Position is unavailable. */
         in item payload:AcceleratorPosition;
     }
-    port def DemandBrakeInputPort {
-        doc /* Receives the qualified brake/lever state from U-BRAKE-QUALIFY; lever action blocks only the positive branch. */
-        in item payload:BrakeState;
+    port def DemandBrakeLeverStateInputPort :> X2CitySoftwareContract_DemandPolicy::BrakeLeverStateInputPort {
+        doc /* Receives U-BRAKE-QUALIFY's exact State/Qualification composite; qualified Left, Right or Both blocks only the positive branch. */
+        in item brakeLeverState:SoftwareBrakeLeverState :>> X2CitySoftwareContract_DemandPolicy::BrakeLeverStateInputPort::brakeLeverState;
     }
     port def DemandActiveSettingsInputPort {
         doc /* Receives U-SET-STATE's active level 0–5 and active normalized speed limit; pending settings cannot enter this port. */
@@ -58,7 +58,7 @@ package X2CityDetailedUnit_DemandArbiter {
            motion, actual applied torque, powered-forward travel or post-stop regen rearm. */
         port executionTimeIn:ExecutionTimeInputPort;
         port acceleratorIn:DemandAcceleratorInputPort;
-        port brakeIn:DemandBrakeInputPort;
+        port brakeLeverStateIn:DemandBrakeLeverStateInputPort;
         port activeSettingsIn:DemandActiveSettingsInputPort;
         port authorityIn:DemandAuthorityInputPort;
         port batteryOperatingLimitsIn:DemandBatteryOperatingLimitsInputPort;

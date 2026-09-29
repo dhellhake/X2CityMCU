@@ -19,7 +19,7 @@ package X2CityContract_DemandPolicy {
 
 package X2CityComponent_DemandPolicy {
     private import X2CitySharedContracts::*;
-    private import X2CityContract_Input::*;
+    private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_SettingsPolicy::*;
     private import X2CityContract_SessionPolicy::*;
@@ -27,10 +27,10 @@ package X2CityComponent_DemandPolicy {
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_DemandPolicy::*;
     part def DemandPolicy { // LE-DEMAND
-        /* Arbitrates qualified accelerator position/rest and coded-brake inputs, traction-owned vehicle motion and actual-output feedback,
+        /* Arbitrates qualified accelerator position/rest and mechanical-brake state, traction-owned vehicle motion and actual-output feedback,
            active settings, current riding authority, and independently qualified BatteryControl operating limits into a signed
            wheel-torque command. It has no traction actuation authority. */
-        port qualifiedBrakeInputIn:BrakeStateInputPort;
+        port brakeLeverStateIn:BrakeLeverStateInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
         port activeRidingSettingsIn:ActiveRidingSettingsInputPort;

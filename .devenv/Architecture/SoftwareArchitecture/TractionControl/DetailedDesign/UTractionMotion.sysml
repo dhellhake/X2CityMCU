@@ -4,12 +4,13 @@ package X2CityDetailedUnit_TractionMotion {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityDetailedUnit_PlatformContext::*;
     private import X2CityContract_MotorPositionProcessing::*;
+    private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionRecord;
     // Owner: SC-TRACTION-CTRL.V. This is the actual producer route for vehicle-motion facts.
     port def MotorPositionInputPort {
         doc /* Receives final electrical position plus retained Hall observation/transition evidence.
            It separately qualifies vehicle speed/direction/standstill; static or absent edges do
            not establish standstill. */
-        in item payload:MotorPosition;
+        in item payload:MotorPositionRecord;
     }
     port def MotionHealthInputPort {
         doc /* Receives Hall capture and position health; a capture fault, static state or absent edge alone cannot qualify standstill. */

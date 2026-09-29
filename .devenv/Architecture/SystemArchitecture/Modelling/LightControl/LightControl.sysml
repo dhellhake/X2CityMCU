@@ -60,7 +60,7 @@ package X2CityComponent_LightControl {
     private import X2CityComponent_LightModeSelection::*;
     private import X2CityComponent_LightActuation::*;
     private import X2CityContract_EnergyPath::*;
-    private import X2CityContract_Input::*;
+    private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityContract_MotorControl::*;
 
     part def LightControl { // LE-LIGHT-CONTROL
@@ -68,13 +68,13 @@ package X2CityComponent_LightControl {
         part lightModeSelection:LightModeSelection;
         part lightActuation:LightActuation;
         port runningLightStateIn:NormalLightRequestInputPort;
-        port brakeLeverStateIn:BrakeStateInputPort { doc /* Receives InputQualification's qualified mechanical brake-lever state; it is not brake-force evidence. */ }
+        port brakeLeverStateIn:BrakeLeverStateInputPort { doc /* Receives the qualified mechanical brake State/Qualification composite; it is not brake-force evidence. */ }
         port electricalBrakingStateIn:ElectricalBrakingStateInputPort { doc /* Receives Traction's qualified actual electrical-braking present/absent projection. */ }
         port vehicleElectricalPowerIn:VehicleElectricalPowerInputPort { doc /* Receives distributed vehicle electrical energy from Energy for the contained actuation path. */ }
         port frontIlluminationOut:FrontIlluminationOutputPort;
         port rearIlluminationOut:RearIlluminationOutputPort;
         flow normalRequestToSelection from runningLightStateIn.normalLightRequest to lightModeSelection.runningLightStateIn.normalLightRequest;
-        flow brakeLeverToSelection from brakeLeverStateIn.payload to lightModeSelection.brakeLeverStateIn.payload;
+        flow brakeLeverToSelection from brakeLeverStateIn.brakeLeverState to lightModeSelection.brakeLeverStateIn.brakeLeverState;
         flow electricalBrakingToSelection from electricalBrakingStateIn.payload to lightModeSelection.electricalBrakingStateIn.payload;
         interface selectedModesToActuation : IfA006LightModes
             connect lightModeSelection.lightModesOut to lightActuation.lightModesIn;

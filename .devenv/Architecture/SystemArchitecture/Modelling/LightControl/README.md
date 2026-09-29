@@ -15,7 +15,7 @@ EnergyPath → Energy → LightControl → LightActuation → LightPower; LightP
 | Port | Meaning | Owner |
 | --- | --- | --- |
 | `runningLightStateIn` | Qualified HMI normal-light request; its retained request is internal selection state | LightModeSelection |
-| `brakeLeverStateIn` | Qualified mechanical lever state from InputQualification | LightModeSelection |
+| `brakeLeverStateIn` | Qualified mechanical lever State/Qualification composite from MechanicalBrakeDetection | LightModeSelection |
 | `electricalBrakingStateIn` | Actual motor-braking state from Traction | LightModeSelection |
 | `lightModesOut` / `lightModesIn` | Front On/Off and rear Off/Dim/Full intent | LightModeSelection → LightActuation |
 | `vehicleElectricalPowerIn` | Distributed vehicle electrical energy at the LightControl boundary | LE-ENERGY-PATH → LightControl |
