@@ -3,11 +3,11 @@ package X2CitySoftwareContract_LightPolicy {
     private import X2CityContract_LightControl::*;
     private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     private import X2CityContract_MotorControl::*;
-    private import X2CitySoftwareContract_HmiAdapter::*;
+    private import X2CitySoftwareContract_HmiAdapter::HmiNormalLightRequest;
     private import X2CitySoftwareContract_TractionControl::*;
-    port def NormalLightRequestInputPort {
+    port def NormalLightRequestInputPort :> X2CityContract_LightControl::NormalLightRequestInputPort {
         doc /* Receives the qualified current-session normal-light request. */
-        in item payload:HmiLightRequest;
+        in item normalLightRequest:HmiNormalLightRequest :>> X2CityContract_LightControl::NormalLightRequestInputPort::normalLightRequest;
     }
     port def BrakeLeverStateInputPort :> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort {
         doc /* Receives BrakeInterface's exact `BrakeLeverState` State/Qualification composite. */

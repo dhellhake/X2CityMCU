@@ -18,9 +18,9 @@ The DRV8300DRGE-EVM and WeAct STM32H723VGT6 are selected vehicle traction-board 
 |---|---|---|---|
 | `U-SET-STATE` | [SC-SET](../SettingsPolicy/DetailedDesign/SettingsPolicy_Detailed_Design.md) | requested/pending/active settings, SW-I-001/002 | UR-SET-001 |
 | `U-SESSION-ELIGIBILITY` | [SC-SESSION](../SessionPolicy/DetailedDesign/SessionPolicy_Detailed_Design.md) | Ready authority and current-session inhibition, SW-I-004 | UR-SESSION-001 |
-| `U-SESSION-REPORT` | [SC-SESSION](../SessionPolicy/DetailedDesign/SessionPolicy_Detailed_Design.md) | report-group selection | UR-SESSION-002 |
+| `U-SESSION-REPORT` | [SC-SESSION](../SessionPolicy/DetailedDesign/SessionPolicy_Detailed_Design.md) | selected qualified fault/no-error indication | UR-SESSION-002 |
 | `U-DEMAND-ARBITER` | [SC-DEMAND](../DemandPolicy/DetailedDesign/DemandPolicy_Detailed_Design.md) | signed wheel-demand arbitration, SW-I-001–005 | UR-DEMAND-001 |
-| `U-HMI-ADAPTER` | [SC-HMI](../HmiAdapter/DetailedDesign/HmiAdapter_Detailed_Design.md) | VD18MT receipt and outgoing report formation, SW-I-002/006 | UR-HMI-001 |
+| `U-HMI-ADAPTER` | [SC-HMI](../HmiAdapter/DetailedDesign/HmiAdapter_Detailed_Design.md) | VD18MT receipt plus selected-fault, battery and qualified-motion encoding, SW-I-002/005/006 | UR-HMI-001 |
 | `U-LIGHT-MODE` | [SC-LIGHT-POLICY](../LightPolicy/DetailedDesign/LightPolicy_Detailed_Design.md) | retained normal request and front/rear mode, SW-I-005/006 | UR-LIGHT-001 |
 | `U-ANALOG-ACQ-REGULAR` | [SC-ANALOG-ACQ.V](../AnalogAcquisition/DetailedDesign/AnalogAcquisition_Detailed_Design.md) | completed regular acquisition | REQ-SYS-INP-002 — LE-PLATFORM / SC-ANALOG-ACQ |
 | `U-ACCELERATOR-QUALIFY` | [SC-ACCELERATOR-IF.V](../AcceleratorInterface/DetailedDesign/AcceleratorInterface_Detailed_Design.md) | accelerator position processing | REQ-SYS-ACC-002/010–013/017–018/020–021 |

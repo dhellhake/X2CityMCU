@@ -38,6 +38,8 @@ Continue all load-dependent performance/range models at the required 130 kg. Com
 
 The VD18MT power button switches operation on/off. The same switch-off action works while moving and at standstill; movement need not delay shutdown. Both commanded torque signs cease; abrupt withdrawal is permitted. Mechanical braking remains independent. Shutdown completion, residual/generated energy and handling conditions remain WS-OI-007 / WS-OI-011.
 
+Owner correction, 2026-10-02: the VD18MT on action asserts its switched pin-5 wire; vehicle hardware scales/conditions that voltage to an MCU-safe level to wake the selected STM32H723VGT6 from a selected deep-sleep mode. This confirms the on/wake path only. Mode, eligible wake input, circuit and electrical bounds remain open for derivation; wake does not establish Ready or drive permission. The established switch-off requirements remain in force; clarification of pin-5 deassertion response and the MCU sleep-entry mechanism is pending and is not inferred from this correction.
+
 <a id="dec-sta-001"></a>
 ### DEC-STA-001 — Common Ready-entry guard
 

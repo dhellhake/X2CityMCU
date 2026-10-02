@@ -38,7 +38,6 @@ package X2CitySoftwareArchitecture {
     public import X2CitySoftwareComponent_SuppliedBms::*;
     public import X2CitySoftwareContract_SuppliedBms::*;
     public import X2CitySoftwareComponent_SuppliedVd18mt::*;
-    public import X2CitySoftwareContract_SuppliedVd18mt::*;
 
     // These are typed information endpoints at the software scope boundary, not hardware parts,
     // sensor/ADC producers, pin models, or selected implementation APIs.
@@ -107,12 +106,12 @@ package X2CitySoftwareArchitecture {
 
     // SW-I-001/002: qualified rider/settings information and setting/session consumers.
     flow rV01 from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to setVehicle.acceleratorPositionIn.payload;
-    flow rV02 from hmiVehicle.hmiSettingsRequestOut.payload to setVehicle.settingsRequestIn.payload;
+    flow rV02 from hmiVehicle.ridingSettingsOut.payload to setVehicle.ridingSettingsIn.payload;
     flow rV03Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to sessionVehicle.acceleratorPositionIn.payload;
     flow rV03Brake from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to sessionVehicle.brakeLeverStateIn.brakeLeverState;
     flow rV03Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV03Supply from supplyInterfaceVehicle.supplyVoltageOut.payload to sessionVehicle.ridingReadinessIn.payload;
-    flow rV04 from hmiVehicle.hmiSettingsRequestOut.payload to sessionVehicle.ridingReadinessIn.payload;
+    flow rV04 from hmiVehicle.ridingSettingsOut.payload to sessionVehicle.ridingSettingsIn.payload;
     flow rV05 from setVehicle.ridingSettingsStateOut.payload to sessionVehicle.ridingReadinessIn.payload;
     // Qualified physical motion is required for the explicit setting-application and Ready
     // standstill guards; neither guard reconstructs standstill from demand or Hall edge absence.
@@ -139,11 +138,18 @@ package X2CitySoftwareArchitecture {
     // LightModeSelection receives the three concrete System-contract facts. BrakeInterface
     // owns mechanical-lever qualification; Traction owns actual electrical-braking state.
     flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to lightPolicyVehicle.brakeLeverStateIn.brakeLeverState;
-    flow rV21NormalLightRequest from hmiVehicle.hmiLightRequestOut.payload to lightPolicyVehicle.runningLightStateIn.payload;
+    flow rV21NormalLightRequest from hmiVehicle.runningLightStateOut.normalLightRequest to lightPolicyVehicle.runningLightStateIn.normalLightRequest;
     flow rV22ElectricalBrakingState from tractionControlVehicle.electricalBrakingStateOut.payload to lightPolicyVehicle.electricalBrakingStateIn.payload;
-    flow rV23 from sessionVehicle.sessionReportOut.payload to hmiVehicle.hmiReportIn.payload;
+    flow rV23SelectedFault from sessionVehicle.selectedFaultOut.selectedFaultIndication to hmiVehicle.selectedFaultIn.selectedFaultIndication;
     flow rV24StateOfCharge from batteryProtectionVehicle.stateOfChargeOut.stateOfCharge to hmiVehicle.stateOfChargeIn.stateOfCharge;
     flow rV24BatteryCurrent from batteryProtectionVehicle.batteryCurrentOut.batteryCurrent to hmiVehicle.batteryCurrentIn.batteryCurrent;
+    flow rV24VehicleMotion from tractionControlVehicle.qualifiedMotionOut.payload to hmiVehicle.vehicleMotionIn.payload;
+
+    // R-X01 realizes the logical LE-HMI-ELECTRICAL data boundary only. The separate fixed
+    // VD18MT pin-5 wake path is conditioned in HMI electrical hardware before Compute Hardware;
+    // a concrete UART driver/peripheral is a realization decision, not an SC-HMI protocol port.
+    flow rX01ReceivedData from suppliedVd18mtVehicle.uartReceivedDataOut.receivedData to hmiVehicle.uartReceivedDataIn.receivedData;
+    flow rX01TransmittedData from hmiVehicle.uartTransmittedDataOut.transmittedData to suppliedVd18mtVehicle.uartTransmittedDataIn.transmittedData;
 
     // R-V25/R-V26 are opaque software boundary information exchanges.
     flow rV25 from lightPolicyVehicle.lightModesOut.payload to vehicleBoundary.lightModes.payload;
@@ -228,10 +234,6 @@ package X2CitySoftwareArchitecture {
     flow rV31HealthTraction from platformVehicle.platformHealthOut.payload to tractionControlVehicle.platformHealthIn.payload;
     flow rV31ContextPlatform from platformVehicle.platformContextOut.payload to platformVehicle.platformContextIn.payload;
     flow rV31HealthPlatform from platformVehicle.platformHealthOut.payload to platformVehicle.platformHealthIn.payload;
-
-    // R-X01: opaque supplied VD18MT transport, both byte/report directions.
-    flow rX01Receive from suppliedVd18mtVehicle.hmiTransportIo.payload to hmiVehicle.hmiTransportExchange.payload;
-    flow rX01Transmit from hmiVehicle.hmiTransportExchange.payload to suppliedVd18mtVehicle.hmiTransportIo.payload;
 
     // R-X02: opaque supplied BMS endpoint in the vehicle configuration.
     flow rX02VehicleReceive from suppliedBmsVehicle.bmsTransportIo.payload to bmsLinkVehicle.bmsTransportExchange.payload;

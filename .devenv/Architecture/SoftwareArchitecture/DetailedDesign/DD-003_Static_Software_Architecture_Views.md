@@ -323,16 +323,17 @@ flowchart LR
         BMS -->|SW-I-003 BatteryMeasurements| BAT
         BAT -->|SW-I-003 batteryReadinessAndFaultOut + stateOfChargeOut| SES
         BAT -->|SW-I-003 batteryOperatingLimitsOut| DEM
-        BAT -->|SW-I-006 stateOfChargeOut + batteryCurrentOut| HMI
+        BAT -->|SW-I-006 qualified actual SOC + signed current| HMI
         SES -->|SW-I-004 control token| TR
         SES -->|SW-I-004 authority data| DEM
         DEM -->|SW-I-004 control data| TR
         TR -->|SW-I-005 data| SES
         TR -->|SW-I-005 qualified motion data| SET
         TR -->|SW-I-005 qualified motion/actual-output data| DEM
-        TR -->|SW-I-005 data| LGT
-        SES -->|SW-I-006 data| HMI
-        BAT -->|SW-I-006 data| HMI
+        TR -->|SW-I-005 actual electrical braking| LGT
+        TR -->|SW-I-005 qualified motion for display speed/period| HMI
+        SES -->|SW-I-006 selected fault/no-error| HMI
+        HMI -->|SW-I-006 qualified normal-light request| LGT
         PLV -->|SW-I-009 event/service| ACC
         PLV -->|SW-I-009 event/service| BRK
         PLV -->|SW-I-009 event/service| SES

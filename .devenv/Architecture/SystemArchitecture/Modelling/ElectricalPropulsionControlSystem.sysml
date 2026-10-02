@@ -1,6 +1,9 @@
 package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CitySharedContracts::*;
     private import X2CityComponent_RidingSupervisor::*;
+    private import X2CityComponent_HmiControl::*;
+    private import X2CityComponent_HmiElectricalInterface::*;
+    private import X2CityContract_HmiElectricalInterface::*;
     private import X2CityComponent_Input::*;
     private import X2CityComponent_Traction::*;
     private import X2CityComponent_BatteryControl::*;
@@ -12,9 +15,11 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityContract_Input::*;
     private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityComponent_Compute::*;
+    private import X2CityContract_ComputeHardware::*;
     part def ElectricalPropulsionControlSystem { // LE-EPCS
-        /* Composes vehicle riding, input, traction, the battery composite, separate power distribution, lighting, and compute logical components. */
+        /* Composes riding policy, sibling rider interaction, input, traction, battery, energy, lighting and compute components. */
         part riding:RidingSupervisor;
+        part hmiControl:HMIControl;
         part input:Input;
         part traction:Traction;
         part batteryControl:BatteryControl { doc /* Removable pack and vehicle-host battery supervision composite. */ }
@@ -25,6 +30,12 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect batteryControl.batteryPower to energyPath.batteryPower;
         interface vehicleElectricalPowerToLightControl : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
+        interface vehicleElectricalPowerToHmi : IfA010VehicleElectricalPower
+            connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
+        interface vd18mtDeviceConnection : IfA006HmiDeviceConnection
+            connect hmiControl.vd18mtConnection to input.riderDevices.vd18mtConnection;
+        interface controllerWakeToCompute : IfA006ControllerWake
+            connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
         interface tractionPowerToTraction : IfA010TractionElectricalPower
             connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
         interface motorPositionToPlatform : IfA005MotorPosition

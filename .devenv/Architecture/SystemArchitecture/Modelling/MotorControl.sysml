@@ -5,7 +5,12 @@ package X2CityContract_MotorControl {
         doc /* Traction-owned projection of actual electrical braking at the output boundary. Present includes recuperative braking, rollback retardation, and constant-speed descent control; it does not require net battery charging or a particular requested torque sign. */
         attribute actualElectricalBrakingPresent:Boolean;
     }
-    item def QualifiedVehicleMotion:>QualifiedInformationRecord;
+    item def QualifiedVehicleMotion:>QualifiedInformationRecord {
+        doc /* Traction-owned vehicle motion evidence. Speed is the sole System producer for HMI presentation as well as SettingsPolicy, SessionPolicy and DemandPolicy. */
+        attribute vehicleSpeedKilometresPerHour:Real;
+        attribute travelDirection:String;
+        attribute standstill:Boolean;
+    }
     port def ActualTractionOutputPort {
         doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy and DemandPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command; MotorControl's electrical-braking projection provides LightControl's dedicated input. */
         out item payload:ActualTractionOutput;
@@ -23,11 +28,11 @@ package X2CityContract_MotorControl {
         in item payload:ElectricalBrakingState;
     }
     port def QualifiedVehicleMotionOutputPort {
-        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from AcceleratorPositionIdentification and MechanicalBrakeDetection facts. */
+        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy, DemandPolicy and HmiInformationProcessing. This physical-motion qualification is separate from accelerator/brake facts and HMI protocol encoding. */
         out item payload:QualifiedVehicleMotion;
     }
     port def QualifiedVehicleMotionInputPort {
-        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy and DemandPolicy. This physical-motion qualification is separate from AcceleratorPositionIdentification and MechanicalBrakeDetection facts. */
+        doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy, DemandPolicy or HmiInformationProcessing. This physical-motion qualification is separate from accelerator/brake facts and HMI protocol encoding. */
         in item payload:QualifiedVehicleMotion;
     }
     interface def IfA005ActualTractionOutput { end producer:ActualTractionOutputPort; end consumer:ActualTractionInputPort; flow producer.payload to consumer.payload; }

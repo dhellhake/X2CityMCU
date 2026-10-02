@@ -55,8 +55,9 @@ sequenceDiagram
         S-->>T: no usable authority
         T->>T: request zero of both signs, physical outcome remains separately observed
     end
-    S-->>H: selected report
+    S-->>H: selected qualified fault/no-error indication
     BP-->>H: stateOfChargeOut and batteryCurrentOut, each with its own qualification
+    T-->>H: qualified physical motion for speed/period encoding
 ```
 
 `SC-TRACTION-CTRL.V` requesting zero does not prove zero physical torque or protection.
@@ -227,7 +228,7 @@ For simultaneous events, demand applies this order within the coherent decision 
 
 ## Settings application, HMI loss and lighting feedback
 
-The following interaction separates current VD18MT receipt from retained settings and current rider/traction evidence.  Loss after a valid receipt retains valid active/pending settings and the normal-light request; it neither freezes torque nor creates authority.  Missing current-startup receipt still blocks Ready.
+The following interaction separates a current qualified VD18MT level/speed receipt from retained settings and current rider/traction evidence. Loss after a valid receipt retains valid active/pending settings and the normal-light request; it neither freezes torque nor creates authority. Missing current-startup receipt still blocks Ready. VD18MT electrical activity, initialization and switched power-lock are not software setting receipts or on/off commands.
 
 ```mermaid
 sequenceDiagram
@@ -240,8 +241,8 @@ sequenceDiagram
     participant T as SC-TRACTION-CTRL.V
     participant L as SC-LIGHT-POLICY.V
 
-    VD->>H: settings and normal-light request
-    H-->>SET: current qualified decoded request
+    VD->>H: received data carrying settings and normal-light request
+    H-->>SET: current qualified decoded level/speed request
     A-->>SET: AcceleratorPosition; use qualified Position.acceleratorAtRest
     T-->>SET: qualified standstill fact
     alt interpretable setting and both application facts hold
@@ -256,7 +257,7 @@ sequenceDiagram
     D-->>T: current signed demand and both battery current bounds when authority and operating limits permit
     T-->>L: active electrical-braking observation or unqualified state
     B-->>L: qualified lever state or unqualified state
-    H-->>L: normal-light request
+    H-->>L: qualified normal-light request
     L->>L: front follows normal request, rear mode follows canonical policy
     Note over VD,H: endpoint loss after valid receipt
     H-->>SET: no new qualified receipt
@@ -268,7 +269,7 @@ sequenceDiagram
     D-->>T: do not reuse a frozen demand
 ```
 
-A retained active-setting publication after link loss is current state, not a new receipt: it retains the source receipt provenance and cannot refresh it. HMI absence alone does not expire a valid active selection; physical sample age, qualification and source time likewise cannot be refreshed by republishing.
+A retained active-setting publication after link loss is current state, not a new receipt: it retains the source receipt provenance and cannot refresh it. HMI absence alone does not expire a valid active selection; physical sample age, qualification and source time likewise cannot be refreshed by republishing. Session retains fault selection independently, LightPolicy retains the normal request independently, and SC-HMI only encodes those records with qualified battery and motion data; a transmitted update never establishes display receipt.
 
 The rear logical mode can be Full for an actuated lever, active electrical braking, or either unqualified fact; it is otherwise Dim for normal request On and Off for Off.  This is logical intent, not lamp output or visible-light evidence.
 

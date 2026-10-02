@@ -23,4 +23,4 @@ EnergyPath → Energy → LightControl → LightActuation → LightPower; LightP
 | `lightingPowerOut` | Lighting power provided by LightPower to the owned actuation path | LightPower → LightActuation |
 | `frontIlluminationOut` / `rearIlluminationOut` | Physical illumination results | LightActuation |
 
-Actual electrical braking includes rollback retardation and constant-speed descent motor braking; it is not merely negative torque or battery charging. Physical continuity remains conditional on protection under [AUX-001](../../../../Requirements/System_Requirements/HMI_and_Auxiliary_Continuity.md#req-veh-aux-001).
+Actual electrical braking includes rollback retardation and constant-speed descent motor braking; it is not merely negative torque or battery charging. Physical continuity remains conditional on protection under [AUX-001](../../../../Requirements/System_Requirements/Auxiliary_Continuity.md#req-veh-aux-001).

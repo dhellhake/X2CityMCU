@@ -116,10 +116,10 @@ package X2CityContract_BatteryControl {
     port def BatteryReadinessAndFaultInputPort { doc /* Receives startup assessment and separate recognized thermal/battery fault evidence at SessionPolicy. */ in item readinessAndFault:BatteryReadinessAndFault; }
     port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified discharge, regenerative-charge, and SOC-positive-propulsion limits to DemandPolicy. */ out item operatingLimits:BatteryOperatingLimits; }
     port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge, regenerative-charge, and SOC-positive-propulsion limits at DemandPolicy. */ in item operatingLimits:BatteryOperatingLimits; }
-    port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HmiAdapter or SessionPolicy. */ out item stateOfCharge:BatteryStateOfCharge; }
-    port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HmiAdapter or SessionPolicy. */ in item stateOfCharge:BatteryStateOfCharge; }
-    port def BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current to HmiAdapter. */ out item batteryCurrent:BatteryCurrent; }
-    port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at HmiAdapter. */ in item batteryCurrent:BatteryCurrent; }
+    port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl or SessionPolicy. */ out item stateOfCharge:BatteryStateOfCharge; }
+    port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl or SessionPolicy. */ in item stateOfCharge:BatteryStateOfCharge; }
+    port def BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current to HMIControl. */ out item batteryCurrent:BatteryCurrent; }
+    port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at HMIControl. */ in item batteryCurrent:BatteryCurrent; }
 
     interface def IfA003BatteryReadinessAndFault { end producer:BatteryReadinessAndFaultOutputPort; end consumer:BatteryReadinessAndFaultInputPort; flow producer.readinessAndFault to consumer.readinessAndFault; }
     interface def IfA003BatteryOperatingLimits { end producer:BatteryOperatingLimitsOutputPort; end consumer:BatteryOperatingLimitsInputPort; flow producer.operatingLimits to consumer.operatingLimits; }

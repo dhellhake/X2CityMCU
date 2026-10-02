@@ -1,8 +1,10 @@
 package X2CitySoftwareContract_SettingsPolicy {
     private import X2CitySharedSoftwareTypes::*;
-    port def SettingsRequestInputPort {
-        doc /* Receives owner-tagged HMI settings requests through the common contextual base type. Accelerator composites use the dedicated acceleratorPositionIn port. */
-        in item payload:ContextualSoftwareInformation;
+    private import X2CitySoftwareContract_HmiAdapter::HmiRiderSettingsRequest;
+    private import X2CityContract_SettingsPolicy::*;
+    port def RidingSettingsRequestInputPort :> X2CityContract_SettingsPolicy::RiderSettingsRequestInputPort {
+        doc /* Receives HMI's qualified rider level/speed request with its exact receipt qualification. Accelerator composites use their dedicated port. */
+        in item payload:HmiRiderSettingsRequest :>> X2CityContract_SettingsPolicy::RiderSettingsRequestInputPort::payload;
     }
     // The application guard consumes a real qualified physical-motion record. It must not infer
     // standstill from command absence, electrical Hall edge absence, or a retained setting.
@@ -44,7 +46,7 @@ package X2CitySoftwareComponent_SettingsPolicy {
            applied state for session and demand policy. It preserves owner and qualification context
            across requests without selecting a concrete HMI or actuator implementation. */
         port executionTimeIn:ExecutionTimeInputPort;
-        port settingsRequestIn:SettingsRequestInputPort;
+        port ridingSettingsIn:RidingSettingsRequestInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedMotionIn:QualifiedMotionInputPort;
         port ridingSettingsStateOut:RidingSettingsStateOutputPort;

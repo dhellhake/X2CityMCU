@@ -5,12 +5,12 @@ package X2CityDetailedUnit_LightMode {
     private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     private import X2CitySoftwareContract_LightPolicy::BrakeLeverStateInputPort;
     private import X2CityContract_MotorControl::*;
-    private import X2CitySoftwareContract_HmiAdapter::*;
+    private import X2CitySoftwareContract_HmiAdapter::HmiNormalLightRequest;
     private import X2CitySoftwareContract_TractionControl::*;
     // Owner: SC-LIGHT-POLICY.V; DD-001; UR-LIGHT-001; SW-I-005/006.
-    port def NormalLightRequestUnitInputPort {
+    port def NormalLightRequestUnitInputPort :> X2CityContract_LightControl::NormalLightRequestInputPort {
         doc /* Receives HMI's qualified normal-light request with current source and reset context. */
-        in item payload:HmiLightRequest;
+        in item normalLightRequest:HmiNormalLightRequest :>> X2CityContract_LightControl::NormalLightRequestInputPort::normalLightRequest;
     }
     port def BrakeLeverStateUnitInputPort :> BrakeLeverStateInputPort {
         doc /* Receives BrakeInterface's exact `BrakeLeverState` composite; it is not a braking-force measurement. */

@@ -1,6 +1,7 @@
 package X2CitySystemArchitecture {
     private import X2CitySharedContracts::*;
     private import X2CityContract_SessionPolicy::*;
+    private import X2CityContract_SettingsPolicy::*;
     private import X2CityContract_DemandPolicy::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_Input::*;
@@ -27,6 +28,10 @@ package X2CitySystemArchitecture {
     private import X2CityComponent_BatteryControl::*;
     private import X2CityComponent_BatteryAssembly::*;
     private import X2CityComponent_BatterySupervision::*;
+    private import X2CityContract_HmiControl::*;
+    private import X2CityContract_HmiElectricalInterface::*;
+    private import X2CityComponent_HmiControl::*;
+    private import X2CityContract_ComputeHardware::*;
 
     alias ValidityStatus for X2CitySharedContracts::ValidityStatus;
     alias SourceContext for X2CitySharedContracts::SourceContext;
@@ -79,14 +84,14 @@ package X2CitySystemArchitecture {
     alias HallSignalsOutputPort for X2CityContract_MotorSignalMeasurement::HallSignalsOutputPort;
     alias MotorPhaseElectricalOutputPort for X2CityContract_MotorSignalMeasurement::MotorPhaseElectricalOutputPort;
     alias MotorPositionEstimation for X2CityComponent_MotorPositionEstimation::MotorPositionEstimation;
-    item def RiderSettingsRequest:>QualifiedInformationRecord;
-    item def ActiveRidingSettings:>RiderSettingsRequest;
+    alias RiderSettingsRequest for X2CityContract_SettingsPolicy::RiderSettingsRequest;
+    alias ActiveRidingSettings for X2CityContract_SettingsPolicy::ActiveRidingSettings;
     alias RidingAuthority for X2CityContract_SessionPolicy::RidingAuthority;
     alias SignedWheelTorqueRequest for X2CityContract_DemandPolicy::SignedWheelTorqueRequest;
     alias ActualTractionOutput for X2CityContract_MotorControl::ActualTractionOutput;
     alias ElectricalBrakingState for X2CityContract_MotorControl::ElectricalBrakingState;
     alias QualifiedVehicleMotion for X2CityContract_MotorControl::QualifiedVehicleMotion;
-    item def RiderStatusInformation:>QualifiedInformationRecord;
+    alias SelectedFaultIndication for X2CityContract_SessionPolicy::SelectedFaultIndication;
     alias NormalLightRequest for X2CityContract_LightControl::NormalLightRequest;
     alias FrontLightMode for X2CityContract_LightControl::FrontLightMode;
     alias RearLightMode for X2CityContract_LightControl::RearLightMode;
@@ -128,24 +133,13 @@ package X2CitySystemArchitecture {
     alias BatteryAssembly for X2CityComponent_BatteryAssembly::BatteryAssembly;
     alias BatterySupervision for X2CityComponent_BatterySupervision::BatterySupervision;
 
-    port def RiderSettingsRequestOutputPort {
-        doc /* Carries owner-qualified rider settings requests from HMI or Input to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
-        out item payload:RiderSettingsRequest;
-    }
-    port def RiderSettingsRequestInputPort {
-        doc /* Carries owner-qualified rider settings requests from HMI or Input to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
-        in item payload:RiderSettingsRequest;
-    }
-    port def ActiveRidingSettingsOutputPort {
-        doc /* Carries SettingsPolicy's resolved active riding level and speed projection to DemandPolicy. Only applied active state crosses this contract; requested or pending values cannot drive demand. */
-        out item payload:ActiveRidingSettings;
-    }
-    port def ActiveRidingSettingsInputPort {
-        doc /* Carries SettingsPolicy's resolved active riding level and speed projection to DemandPolicy. Only applied active state crosses this contract; requested or pending values cannot drive demand. */
-        in item payload:ActiveRidingSettings;
-    }
+    alias RiderSettingsRequestOutputPort for X2CityContract_SettingsPolicy::RiderSettingsRequestOutputPort;
+    alias RiderSettingsRequestInputPort for X2CityContract_SettingsPolicy::RiderSettingsRequestInputPort;
+    alias ActiveRidingSettingsOutputPort for X2CityContract_SettingsPolicy::ActiveRidingSettingsOutputPort;
+    alias ActiveRidingSettingsInputPort for X2CityContract_SettingsPolicy::ActiveRidingSettingsInputPort;
     alias RidingAuthorityOutputPort for X2CityContract_SessionPolicy::RidingAuthorityOutputPort;
     alias RidingAuthorityInputPort for X2CityContract_SessionPolicy::RidingAuthorityInputPort;
+    alias SelectedFaultIndicationOutputPort for X2CityContract_SessionPolicy::SelectedFaultIndicationOutputPort;
     alias WheelTorqueCommandOutputPort for X2CityContract_DemandPolicy::WheelTorqueCommandOutputPort;
     alias WheelTorqueCommandInputPort for X2CityContract_DemandPolicy::WheelTorqueCommandInputPort;
     alias ActualTractionOutputPort for X2CityContract_MotorControl::ActualTractionOutputPort;
@@ -166,14 +160,16 @@ package X2CitySystemArchitecture {
     alias RearIlluminationOutputPort for X2CityContract_LightControl::RearIlluminationOutputPort;
     alias LightControl for X2CityComponent_LightControl::LightControl;
     alias LightPower for X2CityComponent_LightPower::LightPower;
-    port def RiderStatusInformationOutputPort {
-        doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
-        out item payload:RiderStatusInformation;
-    }
-    port def RiderStatusInformationInputPort {
-        doc /* Carries rider-facing session and status information through HmiAdapter to presentation devices. It supports display/device interaction and remains informational, without adding riding control authority. */
-        in item payload:RiderStatusInformation;
-    }
+    alias HMIControl for X2CityComponent_HmiControl::HMIControl;
+    alias HmiDisplayRequestData for X2CityContract_HmiElectricalInterface::HmiDisplayRequestData;
+    alias HmiControllerReportData for X2CityContract_HmiElectricalInterface::HmiControllerReportData;
+    alias HmiDevicePort for X2CityContract_HmiElectricalInterface::HmiDevicePort;
+    alias HmiPowerLockSignal for X2CityContract_HmiElectricalInterface::HmiPowerLockSignal;
+    alias IfA006HmiDeviceConnection for X2CityContract_HmiElectricalInterface::IfA006HmiDeviceConnection;
+    alias ControllerWakeSignal for X2CityContract_ComputeHardware::ControllerWakeSignal;
+    alias ControllerWakeOutputPort for X2CityContract_ComputeHardware::ControllerWakeOutputPort;
+    alias ControllerWakeInputPort for X2CityContract_ComputeHardware::ControllerWakeInputPort;
+    alias IfA006ControllerWake for X2CityContract_ComputeHardware::IfA006ControllerWake;
 
     interface def IfA002RiderSettingsRequest {
         end producer:RiderSettingsRequestOutputPort;
@@ -205,17 +201,11 @@ package X2CitySystemArchitecture {
         end consumer:QualifiedVehicleMotionInputPort;
         flow producer.payload to consumer.payload;
     }
-    interface def IfA006RiderStatusInformation {
-        end producer:RiderStatusInformationOutputPort;
-        end consumer:RiderStatusInformationInputPort;
-        flow producer.payload to consumer.payload;
-    }
     // ARCH-001; LE identifiers remain authoritative.
     part def RidingSupervisor { // LE-RIDING
         part settings:SettingsPolicy;
         part session:SessionPolicy;
         part demand:DemandPolicy;
-        part hmi:HmiAdapter;
     }
 
     part def SettingsPolicy { // LE-SET
@@ -239,7 +229,7 @@ package X2CitySystemArchitecture {
         port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for low-charge selection. */ }
         port actualTractionOutputIn:ActualTractionInputPort;
         port ridingAuthorityOut:RidingAuthorityOutputPort;
-        port riderStatusInformationOut:RiderStatusInformationOutputPort;
+        port selectedFaultIndicationOut:SelectedFaultIndicationOutputPort;
     }
 
     part def DemandPolicy { // LE-DEMAND
@@ -251,15 +241,6 @@ package X2CitySystemArchitecture {
         port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge, regenerative-charge, and SOC positive wheel-torque limits. */ }
         port actualTractionOutputIn:ActualTractionInputPort;
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort;
-    }
-
-    part def HmiAdapter { // LE-HMI
-        port riderSettingsRequestOut:RiderSettingsRequestOutputPort;
-        port normalLightRequestOut:NormalLightRequestOutputPort;
-        port riderStatusInformationIn:RiderStatusInformationInputPort;
-        port riderStatusInformationOut:RiderStatusInformationOutputPort;
-        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for rider presentation. */ }
-        port batteryCurrentIn:BatteryCurrentInputPort { doc /* Receives qualified signed pack current in amperes for rider presentation. */ }
     }
 
     part def Input { // LE-INPUT
@@ -296,7 +277,7 @@ package X2CitySystemArchitecture {
     }
 
     part def RiderDevices { // LE-RIDER-DEVICES
-        port riderStatusInformationIn:RiderStatusInformationInputPort;
+        port vd18mtConnection:~HmiDevicePort;
         port acceleratorElectricalSignalOut:AcceleratorElectricalSignalOutputPort;
         port brakeElectricalSignalOut:BrakeElectricalSignalOutputPort;
     }
@@ -364,9 +345,13 @@ package X2CitySystemArchitecture {
     part def Compute { // LE-COMPUTE
         part computeHardware:ComputeHardware;
         part platform:Platform;
+        port controllerWakeIn:ControllerWakeInputPort { doc /* Receives conditioned HMI hardware wake and delegates it to the compute hardware while the CPU is asleep. */ }
+        flow controllerWakeToHardware from controllerWakeIn.controllerWake to computeHardware.controllerWakeIn.controllerWake;
     }
 
-    part def ComputeHardware; // LE-COMPUTE-HW
+    part def ComputeHardware { // LE-COMPUTE-HW
+        port controllerWakeIn:ControllerWakeInputPort { doc /* Receives conditioned hardware wake while the CPU is asleep; no UART or software task is required to deliver this signal. */ }
+    }
     part def Platform { // LE-PLATFORM
         port acceleratorHealthIn:AcceleratorHealthInputPort;
         port motorPositionIn:MotorPositionInputPort { doc /* Receives the estimator's full Position/Qualification composite for the existing platform fault-supervision path. */ }
@@ -389,6 +374,7 @@ package X2CitySystemArchitecture {
 
     part def ElectricalPropulsionControlSystem { // LE-EPCS
         part riding:RidingSupervisor;
+        part hmiControl:HMIControl;
         part input:Input;
         part traction:Traction;
         part batteryControl:BatteryControl { doc /* Removable BatteryAssembly and vehicle-host BatterySupervision composite. */ }
@@ -399,6 +385,12 @@ package X2CitySystemArchitecture {
             connect batteryControl.batteryPower to energyPath.batteryPower;
         interface vehicleElectricalPowerToLightControl : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
+        interface vehicleElectricalPowerToHmi : IfA010VehicleElectricalPower
+            connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
+        interface vd18mtDeviceConnection : IfA006HmiDeviceConnection
+            connect hmiControl.vd18mtConnection to input.riderDevices.vd18mtConnection;
+        interface controllerWakeToCompute : IfA006ControllerWake
+            connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
         interface tractionPowerToTraction : IfA010TractionElectricalPower
             connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
         interface motorPositionToPlatform : X2CityContract_MotorPositionProcessing::IfA005MotorPosition
@@ -457,9 +449,11 @@ package X2CitySystemArchitecture {
     flow ifA001VehicleMotionToSettings from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedVehicleMotionIn.payload;
     flow ifA001VehicleMotionToSession from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.session.qualifiedVehicleMotionIn.payload;
 
-    // IF-A-002: HMI requests feed LE-SET and startup receipt reaches LE-SESSION; demand receives only active settings.
-    flow ifA002HmiToSettings from x2CityVehicle.epcs.riding.hmi.riderSettingsRequestOut.payload to x2CityVehicle.epcs.riding.settings.hmiRiderSettingsRequestIn.payload;
-    flow ifA002HmiToSession from x2CityVehicle.epcs.riding.hmi.riderSettingsRequestOut.payload to x2CityVehicle.epcs.riding.session.hmiRiderSettingsRequestIn.payload;
+    // IF-A-002: HMIControl requests feed LE-SET and startup receipt reaches LE-SESSION; demand receives only active settings.
+    interface ifA002HmiToSettings : X2CityContract_SettingsPolicy::IfA002RiderSettingsRequest
+        connect x2CityVehicle.epcs.hmiControl.ridingSettingsOut to x2CityVehicle.epcs.riding.settings.hmiRiderSettingsRequestIn;
+    interface ifA002HmiToSession : X2CityContract_SettingsPolicy::IfA002RiderSettingsRequest
+        connect x2CityVehicle.epcs.hmiControl.ridingSettingsOut to x2CityVehicle.epcs.riding.session.hmiRiderSettingsRequestIn;
     flow ifA002ActiveRidingSettingsToDemand from x2CityVehicle.epcs.riding.settings.activeRidingSettingsOut.payload to x2CityVehicle.epcs.riding.demand.activeRidingSettingsIn.payload;
 
     // IF-A-003: BatteryControl directly provides policy and HMI evidence; Input and Traction do not assemble battery observations.
@@ -470,9 +464,9 @@ package X2CitySystemArchitecture {
     interface ifA003SocToSession : IfA003BatteryStateOfCharge
         connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.riding.session.stateOfChargeIn;
     interface ifA003SocToHmi : IfA003BatteryStateOfCharge
-        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.riding.hmi.stateOfChargeIn;
+        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.hmiControl.stateOfChargeIn;
     interface ifA003CurrentToHmi : IfA003BatteryCurrent
-        connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.riding.hmi.batteryCurrentIn;
+        connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.hmiControl.batteryCurrentIn;
 
     // IF-A-004: authority informs demand and traction; demand alone provides the signed command.
     flow ifA004AuthorityToDemand from x2CityVehicle.epcs.riding.session.ridingAuthorityOut.payload to x2CityVehicle.epcs.riding.demand.ridingAuthorityIn.payload;
@@ -482,14 +476,15 @@ package X2CitySystemArchitecture {
     // IF-A-005: LE-TRACTION owns qualified vehicle motion and actual-output feedback.
     flow ifA005TractionToSession from x2CityVehicle.epcs.traction.actualTractionOutputOut.payload to x2CityVehicle.epcs.riding.session.actualTractionOutputIn.payload;
     flow ifA005VehicleMotionToDemand from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.demand.qualifiedVehicleMotionIn.payload;
+    interface ifA005VehicleMotionToHmi : IfA005QualifiedVehicleMotion
+        connect x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut to x2CityVehicle.epcs.hmiControl.vehicleMotionIn;
     flow ifA005TractionToDemand from x2CityVehicle.epcs.traction.actualTractionOutputOut.payload to x2CityVehicle.epcs.riding.demand.actualTractionOutputIn.payload;
     interface ifA005ElectricalBrakingToLightControl : IfA005ElectricalBrakingState
         connect x2CityVehicle.epcs.traction.electricalBrakingStateOut to x2CityVehicle.epcs.lightControl.electricalBrakingStateIn;
 
-    // IF-A-006: rider presentation and HMI's accepted normal-light request.
-    flow ifA006SessionToHmi from x2CityVehicle.epcs.riding.session.riderStatusInformationOut.payload to x2CityVehicle.epcs.riding.hmi.riderStatusInformationIn.payload;
-    flow ifA006HmiToRiderDevices from x2CityVehicle.epcs.riding.hmi.riderStatusInformationOut.payload to x2CityVehicle.epcs.input.riderDevices.riderStatusInformationIn.payload;
+    // IF-A-006: selected Session fault indication and HMI's accepted normal-light request.
+    interface ifA006SelectedFaultToHmi : X2CityContract_SessionPolicy::IfA006SelectedFaultIndication
+        connect x2CityVehicle.epcs.riding.session.selectedFaultIndicationOut to x2CityVehicle.epcs.hmiControl.selectedFaultIn;
     interface ifA006HmiToLightControl : IfA006NormalLightRequest
-        connect x2CityVehicle.epcs.riding.hmi.normalLightRequestOut to x2CityVehicle.epcs.lightControl.runningLightStateIn;
-
+        connect x2CityVehicle.epcs.hmiControl.runningLightStateOut to x2CityVehicle.epcs.lightControl.runningLightStateIn;
 }

@@ -1,6 +1,10 @@
 package X2CityContract_SettingsPolicy {
     private import X2CitySharedContracts::*;
-    item def RiderSettingsRequest:>QualifiedInformationRecord;
+    item def RiderSettingsRequest:>QualifiedInformationRecord {
+        doc /* Qualified VD18MT receipt of the concrete requested riding level and requested speed limit. Vehicle control uses its fixed 16-inch basis independently of configurable VD18MT display wheel-size encoding; this request is not active policy. */
+        attribute requestedRidingLevel:Integer;
+        attribute requestedSpeedLimitKilometresPerHour:Real;
+    }
     port def RiderSettingsRequestOutputPort {
         doc /* Carries HMI-qualified rider settings requests to SettingsPolicy and SessionPolicy. The request is raw policy input and is not proof of pending or active state; DemandPolicy consumes the separate active projection. */
         out item payload:RiderSettingsRequest;
@@ -11,7 +15,11 @@ package X2CityContract_SettingsPolicy {
     }
     interface def IfA002RiderSettingsRequest { end producer:RiderSettingsRequestOutputPort; end consumer:RiderSettingsRequestInputPort; flow producer.payload to consumer.payload; }
     // Only this projection is consumable by demand policy; request and pending state remain here.
-    item def ActiveRidingSettings:>RiderSettingsRequest;
+    item def ActiveRidingSettings:>QualifiedInformationRecord {
+        doc /* SettingsPolicy's already-applied level and speed limit. It is deliberately distinct from a VD18MT request and contains no requested or pending state. */
+        attribute activeLevel:String;
+        attribute activeSpeedLimitKilometresPerHour:Real;
+    }
     port def ActiveRidingSettingsOutputPort {
         doc /* Carries SettingsPolicy's resolved active riding level and speed projection to DemandPolicy. Only applied active state crosses this contract; requested or pending values cannot drive demand. */
         out item payload:ActiveRidingSettings;

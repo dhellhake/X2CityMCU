@@ -1,17 +1,11 @@
-package X2CitySoftwareContract_SuppliedVd18mt {
-    private import X2CitySharedSoftwareTypes::*;
-    private import X2CitySoftwareContract_HmiAdapter::*;
-}
-
 package X2CitySoftwareComponent_SuppliedVd18mt {
-    private import X2CitySharedSoftwareTypes::*;
-    private import X2CitySoftwareContract_SuppliedVd18mt::*;
-    private import X2CitySoftwareContract_HmiAdapter::*;
+    private import X2CityContract_HmiControl::*;
     part def SuppliedVd18mt {
-        /* Represents the supplied VD18MT display assembly and its opaque firmware as an external
-           transport role. The project-facing responsibility is limited to the UART byte/framing
-           boundary consumed and produced by HmiAdapter. */
-        // R-X01 opaque UART framing/byte endpoint; supplied firmware remains absent.
-        port hmiTransportIo:~HmiTransportExchangePort;
+        /* External endpoint representing the fixed five-pin VD18MT assembly and opaque vendor
+           firmware. It exchanges received/transmitted UART data through LE-HMI-ELECTRICAL only;
+           it has no project-owned firmware decomposition, no software on/off command, and no
+           power-lock acknowledgement. */
+        port uartReceivedDataOut:HmiUartReceivedDataOutputPort;
+        port uartTransmittedDataIn:HmiUartTransmittedDataInputPort;
     }
 }

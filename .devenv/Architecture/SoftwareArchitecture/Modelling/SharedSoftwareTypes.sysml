@@ -47,9 +47,9 @@ package X2CitySharedSoftwareTypes {
     // record; validated Hall/capture interpretation criteria are required before qualification.
     item def QualifiedMotion:>ContextualSoftwareInformation, QualifiedVehicleMotion {
         attribute motionObservationTimeMicroseconds:Integer;
-        attribute vehicleSpeedKilometresPerHour:Real;
-        attribute travelDirection:String; // enum: forward, reverse, stationary, unavailable.
-        attribute standstill:Boolean;
+        attribute vehicleSpeedKilometresPerHour:Real :>> QualifiedVehicleMotion::vehicleSpeedKilometresPerHour;
+        attribute travelDirection:String :>> QualifiedVehicleMotion::travelDirection; // enum: forward, reverse, stationary, unavailable.
+        attribute standstill:Boolean :>> QualifiedVehicleMotion::standstill;
         attribute motionQualificationBasis:String;
     }
     item def ActualTractionOutput:>ContextualSoftwareInformation, X2CityContract_MotorControl::ActualTractionOutput {

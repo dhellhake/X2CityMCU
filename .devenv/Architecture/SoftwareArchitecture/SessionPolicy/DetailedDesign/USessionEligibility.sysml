@@ -2,10 +2,12 @@ package X2CityDetailedUnit_SessionEligibility {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_SessionPolicy::*;
+    private import X2CitySoftwareContract_HmiAdapter::HmiRiderSettingsRequest;
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorPositionInputPort;
     private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     private import X2CitySoftwareContract_TractionControl::*;
     private import X2CityContract_BatteryControl::*;
+    private import X2CityContract_SettingsPolicy::*;
     private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     // Owner: SC-SESSION; DD-001; UR-SESSION-001; SW-I-004.
     item def SessionEligibilityRecord :> RidingAuthority;
@@ -13,6 +15,10 @@ package X2CityDetailedUnit_SessionEligibility {
     port def SessionEligibilityInputPort {
         doc /* Receives non-accelerator source-specific Ready prerequisites, sensor health and inhibition evidence used to issue or withdraw Session authority. Accelerator composites use acceleratorPositionIn. */
         in item payload:ContextualSoftwareInformation;
+    }
+    port def RiderSettingsRequestInputPort :> X2CityContract_SettingsPolicy::RiderSettingsRequestInputPort {
+        doc /* Receives HMI's concrete qualified level/speed receipt for the current-startup Ready guard. It is not a retained active setting or initialization state. */
+        in item payload:HmiRiderSettingsRequest :>> X2CityContract_SettingsPolicy::RiderSettingsRequestInputPort::payload;
     }
     port def SessionEligibilityOutputPort {
         doc /* Publishes the authority record with its generation and expiry for Demand and Traction; it does not prove physical safety. */
@@ -33,6 +39,7 @@ package X2CityDetailedUnit_SessionEligibility {
         /* Evaluates current Ready prerequisites and riding-session inhibition to publish authority only when all required facts are current and qualified. Direct sensor-health conditions retain producer source/reason for the existing first-recognized-fault policy, while the independent PlatformHealthRecord retains platform fault/readiness input; this unit owns neither physical proof nor sensor aggregation. */
         port executionTimeIn:ExecutionTimeInputPort;
         port prerequisitesIn:SessionEligibilityInputPort;
+        port ridingSettingsIn:RiderSettingsRequestInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port brakeLeverStateIn:BrakeLeverStateInputPort;
         port motorPositionIn:MotorPositionInputPort;
