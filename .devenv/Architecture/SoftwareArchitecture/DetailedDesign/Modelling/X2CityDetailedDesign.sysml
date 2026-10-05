@@ -70,8 +70,11 @@ package X2CityDetailedDesign {
         part batteryEvaluate:BatteryCapabilityEvaluator;
         part batteryRestriction:BatteryCapabilityRestrictor;
     }
+    part def SelectedTractionControl :> X2CityComponent_TractionControl::TractionControl {
+        part motorControl:MotorControlRealizationImplementation :>> X2CityComponent_TractionControl::TractionControl::motorControl;
+    }
     part def SelectedTraction :> X2CitySystemArchitecture::Traction {
-        part motorControl:TractionControlImplementation :>> X2CitySystemArchitecture::Traction::motorControl;
+        part tractionControl:SelectedTractionControl :>> X2CitySystemArchitecture::Traction::tractionControl;
     }
     part def SelectedEpcs :> X2CitySystemArchitecture::ElectricalPropulsionControlSystem {
         part traction:SelectedTraction :>> X2CitySystemArchitecture::ElectricalPropulsionControlSystem::traction;
@@ -82,7 +85,7 @@ package X2CityDetailedDesign {
         part sensors:SensorInterfaceUnits;
         // Alias the one selected System→Software→Detailed motor-control occurrence; this
         // detailed view owns no parallel TractionUnits or MotorControl instance.
-        ref part traction:TractionControlImplementation = epcs.traction.motorControl;
+        ref part traction:TractionControlImplementation = epcs.traction.tractionControl.motorControl.controlCore;
         part platform:PlatformUnits;
         part energy:EnergyUnits;
         // References the one software-architecture runtime boundary rather than creating an
@@ -94,7 +97,17 @@ package X2CityDetailedDesign {
     }
     part vehicle:VehicleDetailedDesign;
     bind X2CitySystemArchitecture::x2CityVehicle = vehicle;
-    bind X2CitySoftwareArchitecture::tractionControlVehicle = vehicle.epcs.traction.motorControl;
+    bind X2CitySoftwareArchitecture::tractionControlVehicle = vehicle.traction;
+    bind X2CitySoftwareArchitecture::motorControlRealizationVehicle = vehicle.epcs.traction.tractionControl.motorControl;
+    bind vehicle.epcs.traction.tractionControl.motorControl.analogAcquisition = X2CitySoftwareArchitecture::analogAcquisitionVehicle;
+    bind vehicle.epcs.traction.tractionControl.motorControl.temperatureInterface = X2CitySoftwareArchitecture::temperatureInterfaceVehicle;
+    bind vehicle.epcs.traction.tractionControl.motorControl.supplyInterface = X2CitySoftwareArchitecture::supplyInterfaceVehicle;
+    // Identify the software boundary representation with the selected logical command/evidence
+    // features. This makes each feature one source across views; it does not claim that the
+    // unresolved physical observation/protection mechanisms have been selected or qualified.
+    bind vehicle.vehicleBoundary.tractionInformationIo.evidence.tractionStageEvidence = vehicle.epcs.traction.tractionControl.motorControl.tractionStageEvidenceIn.payload;
+    bind vehicle.vehicleBoundary.tractionInformationIo.evidence.tractionHardwareProtectionEvidence = vehicle.epcs.traction.tractionControl.motorControl.tractionHardwareProtectionEvidenceIn.payload;
+    bind vehicle.vehicleBoundary.tractionInformationIo.phaseExcitationCommand = vehicle.epcs.traction.tractionControl.motorControl.phaseExcitationCommandOut.payload;
     // The selected System Traction occurrence inherits MotorPositionEstimation. Bind its
     // logical position/current publications to the detailed units that produce the same
     // feedback, so this refinement introduces no second estimator or current source.
@@ -200,6 +213,7 @@ package X2CityDetailedDesign {
     bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationId = vehicle.sensors.supplyRegular.compiledCalibrationId;
     bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.supplyFast.compiledCalibrationValid;
     bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.compiledCalibrationValid = vehicle.sensors.supplyRegular.compiledCalibrationValid;
+    bind X2CitySoftwareArchitecture::supplyInterfaceVehicle.supplyVoltageOut.payload = vehicle.sensors.supplyRegular.regularSupplyOut.payload;
     bind X2CitySoftwareArchitecture::demandVehicle.compiledDemandPolicyCalibration = vehicle.riding.demandArbiter.compiledDemandPolicyCalibration;
     bind X2CitySoftwareArchitecture::demandVehicle.compiledCalibrationId = vehicle.riding.demandArbiter.compiledCalibrationId;
     bind X2CitySoftwareArchitecture::demandVehicle.compiledCalibrationValid = vehicle.riding.demandArbiter.compiledCalibrationValid;
@@ -292,7 +306,6 @@ package X2CityDetailedDesign {
     flow vTemperatureToSession from vehicle.sensors.temperatureQualify.temperatureOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vAcceleratorToDemand from vehicle.sensors.acceleratorQualify.acceleratorPositionOut.payload to vehicle.riding.demandArbiter.acceleratorIn.payload;
     flow vBrakeToDemand from vehicle.sensors.brakeQualify.brakeLeverStateOut.brakeLeverState to vehicle.riding.demandArbiter.brakeLeverStateIn.brakeLeverState;
-    flow vSupplyRegularToSession from vehicle.sensors.supplyRegular.regularSupplyOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vPhaseDiagnosticToSession from vehicle.sensors.motorPhaseDiag.phaseVoltageDiagnosticOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;
     flow vBrakeToLight from vehicle.sensors.brakeQualify.brakeLeverStateOut.brakeLeverState to vehicle.riding.lightMode.brakeLeverStateIn.brakeLeverState;
     flow vPlatformContextToSession from vehicle.platform.context.contextOut.payload to vehicle.riding.sessionEligibility.prerequisitesIn.payload;

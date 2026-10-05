@@ -11,43 +11,40 @@ The detailed behaviour, qualification, reset, retention and physical-acceptance 
 ## Draft MotorControl specialization pilot
 
 This draft controlled pilot follows one architecture chain only: the system logical leaf
-`LE-MOTOR-CTRL` is modeled by `MotorControl`, `SC-TRACTION-CTRL` specializes that
-canonical logical boundary as the software view, and
-`TractionControlImplementation` specializes the software view for detailed design.
-The implementation owns the five existing traction units shown below; those units
-remain unit parts and are not new component types, runtime components or tasks.
+`LE-MOTOR-CTRL` is modeled by `MotorControl`; `MotorControlRealization` specializes
+that boundary, contains the sole `SC-TRACTION-CTRL` core and references its existing
+sensor contributors; and `TractionControlImplementation` implements that core for
+detailed design. The implementation owns the five existing traction units shown below;
+those units remain unit parts and are not new component types, runtime components or tasks.
 
 The logical and software views select one detailed-design implementation occurrence.
 SysML `:>>` feature redefinitions carry the same occurrence selection through the
 chain; they do not create a second MotorControl or TractionControl instance. The
 selected containing context is defined by the detailed-design model. See the
-[system MotorControl model](../../SystemArchitecture/Modelling/MotorControl.sysml),
+[system MotorControl model](../../SystemArchitecture/Modelling/TractionControl/Decomposition/MotorControl.sysml),
 [software TractionControl model](../TractionControl/TractionControl.sysml),
 the [TractionControlImplementation model](../TractionControl/DetailedDesign/TractionControlImplementation.sysml),
 and [detailed-design container model](Modelling/X2CityDetailedDesign.sysml).
 
-The selected container path is `vehicle.epcs.traction.motorControl`. The detailed
-model specializes `Traction` as `SelectedTraction` and redefines `motorControl` to
-the implementation, then specializes `ElectricalPropulsionControlSystem` as
-`SelectedEpcs` and redefines `traction`, and specializes `ProjectVehicleModel` as
-`VehicleDetailedDesign` and redefines `epcs`. The existing `vehicle.traction` path
-is retained as a reference alias to the selected traction occurrence. The system
-`x2CityVehicle` and software `tractionControlVehicle` views remain unbound
-references; bind statements inside the detailed-design model select the same
-occurrence for this pilot.
+The selected logical container path is `vehicle.epcs.traction.tractionControl.motorControl`. The detailed
+model specializes System `TractionControl` and redefines `motorControl` to the realization wrapper, then specializes
+`Traction`, `ElectricalPropulsionControlSystem` and `ProjectVehicleModel`. The wrapper contains the sole core
+implementation and references the existing sensor components. The existing `vehicle.traction` path is a reference
+alias to that core; bind statements select the same occurrence chain for this pilot.
 
 ```mermaid
 flowchart TB
-    SYS["MotorControl\nLE-MOTOR-CTRL"] -->|is specialized by| SW["TractionControl\nSC-TRACTION-CTRL"]
-    SW -->|is specialized by| DD["TractionControlImplementation\nDD type"]
-    subgraph OCC["vehicle.epcs.traction.motorControl\none selected detailed-design occurrence (:>>)\ncontaining the existing traction unit parts"]
+    SYS["MotorControl\nLE-MOTOR-CTRL"] -->|is specialized by| WRAP["MotorControlRealization\nallocation wrapper"]
+    WRAP -->|contains one core| SW["TractionControl\nSC-TRACTION-CTRL"]
+    SW -->|is implemented by| DD["TractionControlImplementation\nDD type"]
+    subgraph OCC["vehicle.epcs.traction.tractionControl.motorControl\none selected realization wrapper (:>>)\nreferencing the sole core with existing traction unit parts"]
         A["U-TRACTION-ACCEPT"]
         AO["U-TRACTION-ACTUAL-OUTPUT"]
         M["U-TRACTION-MOTION"]
         C["U-TRACTION-CONTROL"]
         O["U-TRACTION-OUTPUT"]
     end
-    DD -->|owns| OCC
+    DD -->|implements core in| OCC
     ALIAS["vehicle.traction\nreference alias"] -.->|same occurrence| OCC
 ```
 
@@ -68,10 +65,11 @@ contracts; unit model files are linked for review of the corresponding ports.
 | `wheelTorqueRequestIn` | `P-TR-COMMAND-I`; `SW-I-004` / `R-V14` | [`U-TRACTION-ACCEPT.commandIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-004`, `REQ-SYS-TRQACC-001` |
 | `motorPositionIn` | `P-TR-MOTOR-POSITION-I`; `R-V30` | [`U-TRACTION-CONTROL.motorPositionIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-MOTION.motorPositionIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.motorPositionIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-MPP-001/002/003/004`, `REQ-SYS-TRQCTL-001` |
 | `phaseCurrentEpochIn` | HSI-009 fast feedback boundary | [`U-TRACTION-CONTROL.phaseFeedbackIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-ACTUAL-OUTPUT.phaseFeedbackIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-HSI-009`, `REQ-SYS-TRQCTL-001` |
-| `fastDcLinkVoltageIn` | HSI-009 fast supply boundary | [`U-TRACTION-CONTROL.fastDcLinkVoltageIn`](../TractionControl/DetailedDesign/UTractionControl.sysml) | `REQ-SYS-HSI-009`, `REQ-SYS-TRQCTL-001` |
+| `fastDcLinkVoltageIn` | HSI-009 fast supply boundary | [`U-TRACTION-CONTROL.fastDcLinkVoltageIn`](../TractionControl/DetailedDesign/UTractionControl.sysml), [`U-TRACTION-ACCEPT.fastDcLinkVoltageIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-HSI-009`, `REQ-SYS-TRQCTL-001` |
+| `qualifiedTemperatureIn` / `regularSupplyVoltageIn` / `supplyHealthIn` | Existing semantic temperature/supply outputs and generic conversion-health route | [`U-TRACTION-ACCEPT.qualifiedTemperatureIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml), [`U-TRACTION-ACCEPT.regularSupplyVoltageIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml), [`U-TRACTION-ACCEPT.supplyHealthIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml) | `REQ-SYS-INP-001`, `REQ-SYS-TRQACC-001` |
 | `sensorHealthIn` | HSI-009 health qualification | [`U-TRACTION-CONTROL.sensorHealthIn`](../TractionControl/DetailedDesign/UTractionControl.sysml) | `REQ-SYS-HSI-009`, `UR-TRACTION-CONTROL-001` |
 | `motionHealthIn` | `P-TR-MOTION-HEALTH-I`; `R-V27` Hall-health family | [`U-TRACTION-MOTION.motionHealthIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml) | `REQ-SYS-TRQMOTION-001` |
-| `tractionOutputStageExchange` | `P-TR-OUTPUT-I/O` | [`U-TRACTION-OUTPUT.outputStageEvidenceIn`](../TractionControl/DetailedDesign/UTractionOutput.sysml) ← boundary; [`U-TRACTION-OUTPUT.outputObservationOut`](../TractionControl/DetailedDesign/UTractionOutput.sysml) → [`U-TRACTION-ACTUAL-OUTPUT.outputStageEvidenceIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) and boundary | `REQ-SYS-HSI-009`, `REQ-SYS-TRQEX-001` |
+| `tractionOutputStageExchange` | `P-TR-OUTPUT-I/O` | Independently observed stage/protection evidence reaches [`U-TRACTION-OUTPUT.outputStageEvidenceIn`](../TractionControl/DetailedDesign/UTractionOutput.sysml) and [`U-TRACTION-ACCEPT.outputStageEvidenceIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml); [`U-TRACTION-OUTPUT.phaseExcitationCommandOut`](../TractionControl/DetailedDesign/UTractionOutput.sysml) alone publishes the typed command to the boundary | `REQ-SYS-HSI-009`, `REQ-SYS-TRQEX-001` |
 | `qualifiedMotionOut` | `P-TR-QUALIFIED-MOTION-O`; `SW-I-005` / `R-V05-*`, `R-V13` | [`U-TRACTION-MOTION.qualifiedMotionOut`](../TractionControl/DetailedDesign/UTractionMotion.sysml) | `REQ-SYS-TRQMOTION-001` |
 | `appliedTractionStateOut` | `P-TR-ACTUAL-OUTPUT-O`; `SW-I-005` / `R-V13` | [`U-TRACTION-ACTUAL-OUTPUT.appliedTractionStateOut`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) → [`U-TRACTION-ACCEPT.actualOutputIn`](../TractionControl/DetailedDesign/UTractionAccept.sysml); [`U-TRACTION-ACCEPT.appliedTractionStateOut`](../TractionControl/DetailedDesign/UTractionAccept.sysml) → public boundary | `REQ-SYS-TRQCTL-001`, `UR-TRACTION-ACTUAL-OUTPUT-001` |
 | `platformContextIn` | `SW-I-009`; current-context service input | [`U-TRACTION-MOTION.platformContextIn`](../TractionControl/DetailedDesign/UTractionMotion.sysml), [`U-TRACTION-ACTUAL-OUTPUT.platformContextIn`](../TractionControl/DetailedDesign/UTractionActualOutput.sysml) | `REQ-SYS-HSI-007`, `REQ-SYS-PLT-001` |

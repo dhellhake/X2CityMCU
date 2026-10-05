@@ -10,8 +10,8 @@ package X2CityComponent_MotorPositionEstimation {
            torque command, sensorless fallback, forced alignment, stationary holding or peripheral binding. */
         part signalMeasurement:MotorSignalMeasurement;
         part positionProcessing:MotorPositionProcessing;
-        port hallSignalsIn:HallSignalsInputPort { doc /* Raw physical Hall electrical levels from TractionHardware. */ }
-        port motorPhaseElectricalIn:MotorPhaseElectricalInputPort { doc /* Raw physical phase-current and bridge-voltage observation from TractionHardware. */ }
+        port hallSignalsIn:HallSignalsInputPort { doc /* Direct raw physical Hall electrical levels at the Traction boundary. */ }
+        port motorPhaseElectricalIn:MotorPhaseElectricalInputPort { doc /* Direct raw physical phase-current and bridge-voltage observation at the Traction boundary. */ }
         port motorPositionOut:MotorPositionOutputPort { doc /* Publishes the one electrical Position/Qualification composite to MotorControl and fault supervision. Recognized faults retain Qualification and leave unavailable Position members unavailable. */ }
         port phaseCurrentOut:PhaseCurrentMeasurementsOutputPort { doc /* Publishes semantic qualified phase-current feedback needed by MotorControl. Applied-winding voltage remains estimator-internal evidence. */ }
         flow hallSignalsToMeasurement from hallSignalsIn.hallSignals to signalMeasurement.hallSignalsIn.hallSignals;

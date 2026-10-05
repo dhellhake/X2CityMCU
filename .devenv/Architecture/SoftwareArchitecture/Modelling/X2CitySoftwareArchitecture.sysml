@@ -76,6 +76,9 @@ package X2CitySoftwareArchitecture {
     part hallInterfaceVehicle:HallInterface;
     part motorPositionEstimatorVehicle:MotorPositionEstimator;
     ref part tractionControlVehicle:TractionControl;
+    // Allocation-only wrapper for the expanded logical MotorControl leaf. It references the
+    // existing core and sensor occurrences below; it is not another deployed component.
+    ref part motorControlRealizationVehicle:MotorControlRealization;
     part platformVehicle:Platform;
 
     part suppliedBmsVehicle:SuppliedBms;
@@ -110,7 +113,6 @@ package X2CitySoftwareArchitecture {
     flow rV03Accelerator from acceleratorInterfaceVehicle.acceleratorPositionOut.payload to sessionVehicle.acceleratorPositionIn.payload;
     flow rV03Brake from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to sessionVehicle.brakeLeverStateIn.brakeLeverState;
     flow rV03Temperature from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to sessionVehicle.ridingReadinessIn.payload;
-    flow rV03Supply from supplyInterfaceVehicle.supplyVoltageOut.payload to sessionVehicle.ridingReadinessIn.payload;
     flow rV04 from hmiVehicle.ridingSettingsOut.payload to sessionVehicle.ridingSettingsIn.payload;
     flow rV05 from setVehicle.ridingSettingsStateOut.payload to sessionVehicle.ridingReadinessIn.payload;
     // Qualified physical motion is required for the explicit setting-application and Ready
@@ -151,10 +153,11 @@ package X2CitySoftwareArchitecture {
     flow rX01ReceivedData from suppliedVd18mtVehicle.uartReceivedDataOut.receivedData to hmiVehicle.uartReceivedDataIn.receivedData;
     flow rX01TransmittedData from hmiVehicle.uartTransmittedDataOut.transmittedData to suppliedVd18mtVehicle.uartTransmittedDataIn.transmittedData;
 
-    // R-V25/R-V26 are opaque software boundary information exchanges.
+    // R-V25 is the existing light boundary. R-V26 keeps one typed command direction and a
+    // separate physical-stage/protection evidence direction at the existing traction boundary.
     flow rV25 from lightPolicyVehicle.lightModesOut.payload to vehicleBoundary.lightModes.payload;
-    flow rV26Acquisition from vehicleBoundary.tractionInformationIo.payload to tractionControlVehicle.tractionOutputStageExchange.payload;
-    flow rV26ActuationObservation from tractionControlVehicle.tractionOutputStageExchange.payload to vehicleBoundary.tractionInformationIo.payload;
+    flow rV26Acquisition from vehicleBoundary.tractionInformationIo.evidence to tractionControlVehicle.tractionOutputStageExchange.evidence;
+    flow rV26ActuationObservation from tractionControlVehicle.tractionOutputStageExchange.phaseExcitationCommand to vehicleBoundary.tractionInformationIo.phaseExcitationCommand;
 
     // R-V27 carries qualified Hall observation, including sector bounds and transition evidence,
     // to the sole final-angle owner. It is not vehicle-speed qualification.
@@ -165,6 +168,10 @@ package X2CitySoftwareArchitecture {
     flow rV28Phase from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to tractionControlVehicle.phaseCurrentEpochIn.payload;
     flow rV28PhaseToPositionEstimator from motorPhaseInterfaceVehicle.phaseCurrentEpochOut.payload to motorPositionEstimatorVehicle.phaseCurrentEpochIn.payload;
     flow rV28Supply from supplyInterfaceVehicle.fastDcLinkVoltageOut.payload to tractionControlVehicle.fastDcLinkVoltageIn.payload;
+    // The existing traction condition publisher evaluates categorized local evidence from the
+    // shared semantic producers. These routes add no sensor conversion or fault latch to Traction.
+    flow rV28TemperatureCondition from temperatureInterfaceVehicle.qualifiedTemperatureOut.payload to tractionControlVehicle.qualifiedTemperatureIn.payload;
+    flow rV28RegularSupplyCondition from supplyInterfaceVehicle.supplyVoltageOut.payload to tractionControlVehicle.regularSupplyVoltageIn.payload;
     // R-V29 is a distinct source-qualified observer-voltage chain. Regular phase diagnostics
     // have no route to it and it remains unavailable until the open HSI source is qualified.
     flow rV29AppliedVoltageBoundary from vehicleBoundary.appliedPhaseVoltageEvidence.payload to motorPhaseInterfaceVehicle.appliedPhaseVoltageEvidenceIn.payload;

@@ -1,5 +1,6 @@
 package X2CityDetailedUnit_TractionOutput {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_MotorControl::*;
     private import X2CityDetailedSharedContracts::*;
     private import X2CityDetailedUnit_TractionControl::*;
     private import X2CitySoftwareContract_TractionControl::*;
@@ -17,11 +18,16 @@ package X2CityDetailedUnit_TractionOutput {
         doc /* Publishes current physical-stage state, availability, generation and provenance to actual-output estimation even at startup, disarmed or withdrawn states; it is not torque evidence. */
         out item payload:TractionOutputStageExchange;
     }
+    port def PhaseExcitationCommandOutputPort {
+        doc /* Publishes the abstract logical projection of requested phase voltage, overriding inhibition and expiry represented by the existing PWM/ADC plan and this unit's sole guarded CCR/JSQR stage/commit operation. It adds no voltage-to-duty computation, second register writer or hardware behavior, and is not physical-stage evidence. */
+        out item payload:PhaseExcitationCommand;
+    }
     part def TractionOutputCommitter {
         /* Solely stages and commits literal TIM8 CCR1..4 and JSQR data from PWMAndADCSamplingPlan under the selected inhibit/ordering contract. It owns publication of current physical-stage observation/provenance independently of a new PWM/ADC sampling plan, including startup, disarmed and withdrawn states; a stage fact may be unavailable but is never suppressed merely because no plan was accepted. That evidence feeds the separate actual-output estimator and does not claim physical PWM, gate behavior, braking, travel or torque. */
         port executionTimeIn:ExecutionTimeInputPort;
         port pwmAndAdcSamplingPlanIn:PWMAndADCSamplingPlanInputPort;
         port outputStageEvidenceIn:OutputStageEvidenceInputPort;
         port outputObservationOut:OutputObservationOutputPort;
+        port phaseExcitationCommandOut:PhaseExcitationCommandOutputPort;
     }
 }

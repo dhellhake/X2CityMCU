@@ -11,3 +11,5 @@ SessionPolicy and Platform. Qualification remains delivered even if Position is
 unavailable. The observer-voltage branch is a
 separate explicit HSI boundary and remains unavailable until qualified; it is never
 fed from the regular phase-voltage diagnostic path.
+
+`MotorControlRealization` specializes the expanded logical `MotorControl` allocation. It contains the one `TractionControl` FOC/output core and references the existing AnalogAcquisition, TemperatureInterface and SupplyInterface instances. Physical logical temperature/supply measurements are allocated to those existing acquisition/conversion chains, not connected as a second SC input. The core evaluates qualified temperature, regular GVDD, fast PVDD, stage/protection and conversion-health evidence into local categorized condition evidence independently of authority; Session owns fault latching and reporting. The wrapper adds no deployed component, sensor conversion, task or PWM/JSQR writer.

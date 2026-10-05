@@ -4,14 +4,16 @@ package X2CitySystemArchitecture {
     private import X2CityContract_SettingsPolicy::*;
     private import X2CityContract_DemandPolicy::*;
     private import X2CityContract_MotorControl::*;
-    private import X2CityContract_Input::*;
+    private import X2CityContract_TractionControl::*;
     private import X2CityContract_BrakeSignalMeasurement::*;
     private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityContract_AcceleratorSignalMeasurement::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
-    private import X2CityComponent_MotorControl::*;
     private import X2CityContract_MotorSignalMeasurement::*;
     private import X2CityContract_MotorPositionProcessing::*;
+    private import X2CityComponent_MotorControl::*;
+    private import X2CityComponent_TractionHardware::*;
+    private import X2CityComponent_TractionControl::*;
     private import X2CityComponent_MotorPositionEstimation::*;
     private import X2CityComponent_AcceleratorPositionIdentification::*;
     private import X2CityComponent_AcceleratorSignalMeasurement::*;
@@ -49,24 +51,14 @@ package X2CitySystemArchitecture {
     alias MechanicalBrakeDetection for X2CityComponent_MechanicalBrakeDetection::MechanicalBrakeDetection;
     alias BrakeSignalMeasurement for X2CityComponent_BrakeSignalMeasurement::BrakeSignalMeasurement;
     alias BrakeStateIdentification for X2CityComponent_BrakeStateIdentification::BrakeStateIdentification;
-    alias TemperatureElectricalSignalOutputPort for X2CityContract_Input::TemperatureElectricalSignalOutputPort;
-    alias TemperatureElectricalSignalInputPort for X2CityContract_Input::TemperatureElectricalSignalInputPort;
-    alias TemperatureMeasurementOutputPort for X2CityContract_Input::TemperatureMeasurementOutputPort;
-    alias TemperatureMeasurementInputPort for X2CityContract_Input::TemperatureMeasurementInputPort;
-    alias QualifiedTemperatureOutputPort for X2CityContract_Input::QualifiedTemperatureOutputPort;
-    alias QualifiedTemperatureInputPort for X2CityContract_Input::QualifiedTemperatureInputPort;
-    alias TemperatureHealthOutputPort for X2CityContract_Input::TemperatureHealthOutputPort;
-    alias TemperatureHealthInputPort for X2CityContract_Input::TemperatureHealthInputPort;
-    alias SupplyElectricalSignalOutputPort for X2CityContract_Input::SupplyElectricalSignalOutputPort;
-    alias SupplyElectricalSignalInputPort for X2CityContract_Input::SupplyElectricalSignalInputPort;
-    alias SupplyVoltageMeasurementOutputPort for X2CityContract_Input::SupplyVoltageMeasurementOutputPort;
-    alias SupplyVoltageMeasurementInputPort for X2CityContract_Input::SupplyVoltageMeasurementInputPort;
-    alias FastDcLinkVoltageOutputPort for X2CityContract_Input::FastDcLinkVoltageOutputPort;
-    alias FastDcLinkVoltageInputPort for X2CityContract_Input::FastDcLinkVoltageInputPort;
-    alias RegularSupplyVoltageOutputPort for X2CityContract_Input::RegularSupplyVoltageOutputPort;
-    alias RegularSupplyVoltageInputPort for X2CityContract_Input::RegularSupplyVoltageInputPort;
-    alias SupplyHealthOutputPort for X2CityContract_Input::SupplyHealthOutputPort;
-    alias SupplyHealthInputPort for X2CityContract_Input::SupplyHealthInputPort;
+    alias TemperatureMeasurementOutputPort for X2CityContract_TractionControl::TemperatureMeasurementOutputPort;
+    alias TemperatureMeasurementInputPort for X2CityContract_TractionControl::TemperatureMeasurementInputPort;
+    alias QualifiedTemperatureOutputPort for X2CityContract_TractionControl::QualifiedTemperatureOutputPort;
+    alias QualifiedTemperatureInputPort for X2CityContract_TractionControl::QualifiedTemperatureInputPort;
+    alias SupplyVoltageMeasurementOutputPort for X2CityContract_TractionControl::SupplyVoltageMeasurementOutputPort;
+    alias SupplyVoltageMeasurementInputPort for X2CityContract_TractionControl::SupplyVoltageMeasurementInputPort;
+    alias FastDcLinkVoltageOutputPort for X2CityContract_TractionControl::FastDcLinkVoltageOutputPort;
+    alias FastDcLinkVoltageInputPort for X2CityContract_TractionControl::FastDcLinkVoltageInputPort;
     alias AcceleratorElectricalSignal for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignal;
     alias AcceleratorElectricalSignalOutputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignalOutputPort;
     alias AcceleratorElectricalSignalInputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignalInputPort;
@@ -82,8 +74,13 @@ package X2CitySystemArchitecture {
     alias AcceleratorPositionProcessing for X2CityComponent_AcceleratorPositionProcessing::AcceleratorPositionProcessing;
     alias AcceleratorPositionIdentification for X2CityComponent_AcceleratorPositionIdentification::AcceleratorPositionIdentification;
     alias HallSignalsOutputPort for X2CityContract_MotorSignalMeasurement::HallSignalsOutputPort;
+    alias HallSignalsInputPort for X2CityContract_MotorSignalMeasurement::HallSignalsInputPort;
     alias MotorPhaseElectricalOutputPort for X2CityContract_MotorSignalMeasurement::MotorPhaseElectricalOutputPort;
+    alias MotorPhaseElectricalInputPort for X2CityContract_MotorSignalMeasurement::MotorPhaseElectricalInputPort;
     alias MotorPositionEstimation for X2CityComponent_MotorPositionEstimation::MotorPositionEstimation;
+    alias MotorControl for X2CityComponent_MotorControl::MotorControl;
+    alias TractionHardware for X2CityComponent_TractionHardware::TractionHardware;
+    alias TractionControl for X2CityComponent_TractionControl::TractionControl;
     alias RiderSettingsRequest for X2CityContract_SettingsPolicy::RiderSettingsRequest;
     alias ActiveRidingSettings for X2CityContract_SettingsPolicy::ActiveRidingSettings;
     alias RidingAuthority for X2CityContract_SessionPolicy::RidingAuthority;
@@ -91,6 +88,13 @@ package X2CitySystemArchitecture {
     alias ActualTractionOutput for X2CityContract_MotorControl::ActualTractionOutput;
     alias ElectricalBrakingState for X2CityContract_MotorControl::ElectricalBrakingState;
     alias QualifiedVehicleMotion for X2CityContract_MotorControl::QualifiedVehicleMotion;
+    alias PhaseExcitationCommand for X2CityContract_MotorControl::PhaseExcitationCommand;
+    alias RequestedPhaseVoltageVector for X2CityContract_MotorControl::RequestedPhaseVoltageVector;
+    alias TractionStageEvidence for X2CityContract_MotorControl::TractionStageEvidence;
+    alias TractionHardwareProtectionEvidence for X2CityContract_MotorControl::TractionHardwareProtectionEvidence;
+    alias TractionConditionEvidence for X2CityContract_MotorControl::TractionConditionEvidence;
+    alias TractionConditionCategory for X2CityContract_MotorControl::TractionConditionCategory;
+    alias PhysicalMotorActuation for X2CityContract_MotorControl::PhysicalMotorActuation;
     alias SelectedFaultIndication for X2CityContract_SessionPolicy::SelectedFaultIndication;
     alias NormalLightRequest for X2CityContract_LightControl::NormalLightRequest;
     alias FrontLightMode for X2CityContract_LightControl::FrontLightMode;
@@ -148,6 +152,15 @@ package X2CitySystemArchitecture {
     alias ElectricalBrakingStateInputPort for X2CityContract_MotorControl::ElectricalBrakingStateInputPort;
     alias QualifiedVehicleMotionOutputPort for X2CityContract_MotorControl::QualifiedVehicleMotionOutputPort;
     alias QualifiedVehicleMotionInputPort for X2CityContract_MotorControl::QualifiedVehicleMotionInputPort;
+    alias PhaseExcitationCommandOutputPort for X2CityContract_MotorControl::PhaseExcitationCommandOutputPort;
+    alias PhaseExcitationCommandInputPort for X2CityContract_MotorControl::PhaseExcitationCommandInputPort;
+    alias TractionStageEvidenceOutputPort for X2CityContract_MotorControl::TractionStageEvidenceOutputPort;
+    alias TractionStageEvidenceInputPort for X2CityContract_MotorControl::TractionStageEvidenceInputPort;
+    alias TractionHardwareProtectionEvidenceOutputPort for X2CityContract_MotorControl::TractionHardwareProtectionEvidenceOutputPort;
+    alias TractionHardwareProtectionEvidenceInputPort for X2CityContract_MotorControl::TractionHardwareProtectionEvidenceInputPort;
+    alias TractionConditionEvidenceOutputPort for X2CityContract_MotorControl::TractionConditionEvidenceOutputPort;
+    alias TractionConditionEvidenceInputPort for X2CityContract_MotorControl::TractionConditionEvidenceInputPort;
+    alias PhysicalMotorActuationPort for X2CityContract_MotorControl::PhysicalMotorActuationPort;
     alias NormalLightRequestOutputPort for X2CityContract_LightControl::NormalLightRequestOutputPort;
     alias NormalLightRequestInputPort for X2CityContract_LightControl::NormalLightRequestInputPort;
     alias LightModesOutputPort for X2CityContract_LightControl::LightModesOutputPort;
@@ -222,9 +235,7 @@ package X2CitySystemArchitecture {
         port motorPositionIn:MotorPositionInputPort { doc /* Receives estimator Position and Qualification for existing fault supervision. QualifiedVehicleMotion remains the separate standstill/speed evidence. */ }
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort;
         port qualifiedTemperatureIn:QualifiedTemperatureInputPort;
-        port temperatureHealthIn:TemperatureHealthInputPort;
-        port regularSupplyVoltageIn:RegularSupplyVoltageInputPort;
-        port supplyHealthIn:SupplyHealthInputPort;
+        port tractionConditionEvidenceIn:TractionConditionEvidenceInputPort;
         port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort { doc /* Receives BatteryControl startup assessment and separate recognized thermal/battery faults. */ }
         port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for low-charge selection. */ }
         port actualTractionOutputIn:ActualTractionInputPort;
@@ -245,35 +256,19 @@ package X2CitySystemArchitecture {
 
     part def Input { // LE-INPUT
         part riderDevices:RiderDevices;
-        part inputHardware:InputHardware;
-        part inputQualification:InputQualification;
         part accelerator:AcceleratorPositionIdentification;
         part mechanicalBrakeDetection:MechanicalBrakeDetection;
         port brakeLeverStateOut:BrakeLeverStateOutputPort;
         port acceleratorPositionOut:AcceleratorPositionOutputPort;
         port acceleratorHealthOut:AcceleratorHealthOutputPort;
         port brakeHealthOut:BrakeHealthOutputPort;
-        port qualifiedTemperatureOut:QualifiedTemperatureOutputPort;
-        port temperatureHealthOut:TemperatureHealthOutputPort;
-        port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort;
-        port regularSupplyVoltageOut:RegularSupplyVoltageOutputPort;
-        port supplyHealthOut:SupplyHealthOutputPort;
         flow brakeLeverStateFromFunction from mechanicalBrakeDetection.brakeLeverStateOut.brakeLeverState to brakeLeverStateOut.brakeLeverState;
         flow brakeHealthFromFunction from mechanicalBrakeDetection.brakeHealthOut.qualification to brakeHealthOut.qualification;
-        flow qualifiedTemperatureFromInputQualification from inputQualification.qualifiedTemperatureOut.payload to qualifiedTemperatureOut.payload;
-        flow temperatureHealthFromInputQualification from inputQualification.temperatureHealthOut.qualification to temperatureHealthOut.qualification;
-        flow fastDcLinkVoltageFromInputQualification from inputQualification.fastDcLinkVoltageOut.payload to fastDcLinkVoltageOut.payload;
-        flow regularSupplyVoltageFromInputQualification from inputQualification.regularSupplyVoltageOut.payload to regularSupplyVoltageOut.payload;
-        flow supplyHealthFromInputQualification from inputQualification.supplyHealthOut.qualification to supplyHealthOut.qualification;
         flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
         flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
         flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.signal to accelerator.electricalSignalIn.signal;
         interface brakeElectricalSignalToDetection : X2CityContract_BrakeSignalMeasurement::IfA007BrakeElectricalSignal
             connect riderDevices.brakeElectricalSignalOut to mechanicalBrakeDetection.brakeElectricalSignalIn;
-        interface temperatureMeasurementToQualification : X2CityContract_Input::IfA007TemperatureMeasurement
-            connect inputHardware.temperatureMeasurementOut to inputQualification.temperatureMeasurementIn;
-        interface supplyMeasurementToQualification : X2CityContract_Input::IfA007SupplyVoltageMeasurement
-            connect inputHardware.supplyVoltageMeasurementOut to inputQualification.supplyVoltageMeasurementIn;
     }
 
     part def RiderDevices { // LE-RIDER-DEVICES
@@ -282,55 +277,41 @@ package X2CitySystemArchitecture {
         port brakeElectricalSignalOut:BrakeElectricalSignalOutputPort;
     }
 
-    part def InputHardware { // LE-INPUT-HW
-        port temperatureElectricalSignalIn:TemperatureElectricalSignalInputPort;
-        port supplyElectricalSignalIn:SupplyElectricalSignalInputPort;
-        port temperatureMeasurementOut:TemperatureMeasurementOutputPort;
-        port supplyVoltageMeasurementOut:SupplyVoltageMeasurementOutputPort;
-    }
-    part def InputQualification { // LE-INPUT-QUAL
-        port temperatureMeasurementIn:TemperatureMeasurementInputPort;
-        port supplyVoltageMeasurementIn:SupplyVoltageMeasurementInputPort;
-        port qualifiedTemperatureOut:QualifiedTemperatureOutputPort;
-        port temperatureHealthOut:TemperatureHealthOutputPort;
-        port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort;
-        port regularSupplyVoltageOut:RegularSupplyVoltageOutputPort;
-        port supplyHealthOut:SupplyHealthOutputPort;
-    }
-
     part def Traction { // LE-TRACTION
-        part motorControl:X2CityComponent_MotorControl::MotorControl;
+        part tractionControl:TractionControl;
         part motorPositionEstimation:MotorPositionEstimation;
-        part tractionHardware:TractionHardware;
         port ridingAuthorityIn:RidingAuthorityInputPort;
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort;
         port tractionElectricalPower:TractionElectricalPowerPort { doc /* Physical bidirectional EnergyPath connection for propulsion and regenerative return. */ }
+        port physicalMotorActuation:PhysicalMotorActuationPort;
         port qualifiedVehicleMotionOut:QualifiedVehicleMotionOutputPort;
         port actualTractionOutputOut:ActualTractionOutputPort;
         port electricalBrakingStateOut:ElectricalBrakingStateOutputPort;
         port motorPositionOut:MotorPositionOutputPort { doc /* Delivers the estimator's full electrical Position/Qualification composite to platform and Session fault supervision. */ }
-        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort;
-        port supplyHealthIn:SupplyHealthInputPort;
-        flow ridingAuthorityToMotorControl from ridingAuthorityIn.payload to motorControl.ridingAuthorityIn.payload;
-        flow wheelTorqueCommandToMotorControl from wheelTorqueCommandIn.payload to motorControl.wheelTorqueCommandIn.payload;
-        flow fastDcLinkVoltageToMotorControl from fastDcLinkVoltageIn.payload to motorControl.fastDcLinkVoltageIn.payload;
-        flow supplyHealthToMotorControl from supplyHealthIn.qualification to motorControl.supplyHealthIn.qualification;
-        flow hallSignalsToMotorPositionEstimation from tractionHardware.hallSignalsOut.hallSignals to motorPositionEstimation.hallSignalsIn.hallSignals;
-        flow motorPhaseElectricalToMotorPositionEstimation from tractionHardware.motorPhaseElectricalOut.motorPhaseElectrical to motorPositionEstimation.motorPhaseElectricalIn.motorPhaseElectrical;
-        interface motorPositionToMotorControl : X2CityContract_MotorPositionProcessing::IfA005MotorPosition
-            connect motorPositionEstimation.motorPositionOut to motorControl.motorPositionIn;
-        interface phaseCurrentToMotorControl : X2CityContract_MotorPositionProcessing::IfA005PhaseCurrentMeasurements
-            connect motorPositionEstimation.phaseCurrentOut to motorControl.phaseCurrentIn;
+        port hallSignalsIn:HallSignalsInputPort;
+        port motorPhaseElectricalIn:MotorPhaseElectricalInputPort;
+        port qualifiedTemperatureOut:QualifiedTemperatureOutputPort;
+        port fastDcLinkVoltageOut:FastDcLinkVoltageOutputPort;
+        port tractionConditionEvidenceOut:TractionConditionEvidenceOutputPort;
+        flow ridingAuthorityToTractionControl from ridingAuthorityIn.payload to tractionControl.ridingAuthorityIn.payload;
+        flow wheelTorqueCommandToTractionControl from wheelTorqueCommandIn.payload to tractionControl.wheelTorqueCommandIn.payload;
+        interface energyToTractionControl : X2CityContract_EnergyPath::IfA010TractionElectricalPower
+            connect tractionElectricalPower to tractionControl.tractionElectricalPower;
+        interface motorActuationFromTractionControl : X2CityContract_MotorControl::IfA005PhysicalMotorActuation
+            connect tractionControl.physicalMotorActuation to physicalMotorActuation;
+        flow hallSignalsToMotorPositionEstimation from hallSignalsIn.hallSignals to motorPositionEstimation.hallSignalsIn.hallSignals;
+        flow motorPhaseElectricalToMotorPositionEstimation from motorPhaseElectricalIn.motorPhaseElectrical to motorPositionEstimation.motorPhaseElectricalIn.motorPhaseElectrical;
+        interface motorPositionToTractionControl : X2CityContract_MotorPositionProcessing::IfA005MotorPosition
+            connect motorPositionEstimation.motorPositionOut to tractionControl.motorPositionIn;
+        interface phaseCurrentToTractionControl : X2CityContract_MotorPositionProcessing::IfA005PhaseCurrentMeasurements
+            connect motorPositionEstimation.phaseCurrentOut to tractionControl.phaseCurrentIn;
         flow motorPositionFromEstimation from motorPositionEstimation.motorPositionOut.motorPosition to motorPositionOut.motorPosition;
-        flow qualifiedMotionFromMotorControl from motorControl.qualifiedVehicleMotionOut.payload to qualifiedVehicleMotionOut.payload;
-        flow actualOutputFromMotorControl from motorControl.actualTractionOutputOut.payload to actualTractionOutputOut.payload;
-        flow electricalBrakingFromMotorControl from motorControl.electricalBrakingStateOut.payload to electricalBrakingStateOut.payload;
-    }
-    part def TractionHardware { // LE-TRACTION-HW
-        port hallSignalsOut:HallSignalsOutputPort;
-        port motorPhaseElectricalOut:MotorPhaseElectricalOutputPort;
-        port temperatureElectricalSignalOut:TemperatureElectricalSignalOutputPort;
-        port supplyElectricalSignalOut:SupplyElectricalSignalOutputPort;
+        flow qualifiedTemperatureFromTractionControl from tractionControl.qualifiedTemperatureOut.payload to qualifiedTemperatureOut.payload;
+        flow fastDcLinkVoltageFromTractionControl from tractionControl.fastDcLinkVoltageOut.payload to fastDcLinkVoltageOut.payload;
+        flow localConditionFromTractionControl from tractionControl.tractionConditionEvidenceOut.payload to tractionConditionEvidenceOut.payload;
+        flow qualifiedMotionFromTractionControl from tractionControl.qualifiedVehicleMotionOut.payload to qualifiedVehicleMotionOut.payload;
+        flow actualOutputFromTractionControl from tractionControl.actualTractionOutputOut.payload to actualTractionOutputOut.payload;
+        flow electricalBrakingFromTractionControl from tractionControl.electricalBrakingStateOut.payload to electricalBrakingStateOut.payload;
     }
 
     part def EnergyPath { // LE-ENERGY-PATH
@@ -356,8 +337,8 @@ package X2CitySystemArchitecture {
         port acceleratorHealthIn:AcceleratorHealthInputPort;
         port motorPositionIn:MotorPositionInputPort { doc /* Receives the estimator's full Position/Qualification composite for the existing platform fault-supervision path. */ }
         port brakeHealthIn:BrakeHealthInputPort;
-        port temperatureHealthIn:TemperatureHealthInputPort;
-        port supplyHealthIn:SupplyHealthInputPort;
+        port qualifiedTemperatureIn:QualifiedTemperatureInputPort;
+        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort;
     }
 
     part def MechanicalControl; // LE-MECH; physical mechanical control boundary
@@ -397,10 +378,6 @@ package X2CitySystemArchitecture {
             connect traction.motorPositionOut to compute.platform.motorPositionIn;
         interface motorPositionToSession : X2CityContract_MotorPositionProcessing::IfA005MotorPosition
             connect traction.motorPositionOut to riding.session.motorPositionIn;
-        interface tractionTemperatureToInputHardware : X2CityContract_Input::IfA007TemperatureElectricalSignal
-            connect traction.tractionHardware.temperatureElectricalSignalOut to input.inputHardware.temperatureElectricalSignalIn;
-        interface tractionSupplyToInputHardware : X2CityContract_Input::IfA007SupplyElectricalSignal
-            connect traction.tractionHardware.supplyElectricalSignalOut to input.inputHardware.supplyElectricalSignalIn;
         interface brakeToSession : X2CityContract_BrakeStateIdentification::IfA001BrakeLeverState
             connect input.brakeLeverStateOut to riding.session.brakeLeverStateIn;
         interface brakeToDemand : X2CityContract_BrakeStateIdentification::IfA001BrakeLeverState
@@ -409,22 +386,14 @@ package X2CitySystemArchitecture {
             connect input.brakeLeverStateOut to lightControl.brakeLeverStateIn;
         interface brakeHealthToPlatform : X2CityContract_BrakeStateIdentification::IfA008BrakeHealth
             connect input.brakeHealthOut to compute.platform.brakeHealthIn;
-        interface temperatureToSession : X2CityContract_Input::IfA008QualifiedTemperature
-            connect input.qualifiedTemperatureOut to riding.session.qualifiedTemperatureIn;
-        interface temperatureHealthToSession : X2CityContract_Input::IfA008TemperatureHealth
-            connect input.temperatureHealthOut to riding.session.temperatureHealthIn;
-        interface temperatureHealthToPlatform : X2CityContract_Input::IfA008TemperatureHealth
-            connect input.temperatureHealthOut to compute.platform.temperatureHealthIn;
-        interface fastDcLinkVoltageToTraction : X2CityContract_Input::IfA008FastDcLinkVoltage
-            connect input.fastDcLinkVoltageOut to traction.fastDcLinkVoltageIn;
-        interface regularSupplyVoltageToSession : X2CityContract_Input::IfA008RegularSupplyVoltage
-            connect input.regularSupplyVoltageOut to riding.session.regularSupplyVoltageIn;
-        interface supplyHealthToSession : X2CityContract_Input::IfA008SupplyHealth
-            connect input.supplyHealthOut to riding.session.supplyHealthIn;
-        interface supplyHealthToPlatform : X2CityContract_Input::IfA008SupplyHealth
-            connect input.supplyHealthOut to compute.platform.supplyHealthIn;
-        interface supplyHealthToTraction : X2CityContract_Input::IfA008SupplyHealth
-            connect input.supplyHealthOut to traction.supplyHealthIn;
+        interface temperatureToSession : X2CityContract_TractionControl::IfA008QualifiedTemperature
+            connect traction.qualifiedTemperatureOut to riding.session.qualifiedTemperatureIn;
+        interface temperatureToPlatform : X2CityContract_TractionControl::IfA008QualifiedTemperature
+            connect traction.qualifiedTemperatureOut to compute.platform.qualifiedTemperatureIn;
+        interface fastDcLinkVoltageToPlatform : X2CityContract_TractionControl::IfA008FastDcLinkVoltage
+            connect traction.fastDcLinkVoltageOut to compute.platform.fastDcLinkVoltageIn;
+        interface tractionConditionToSession : X2CityContract_MotorControl::IfA005TractionConditionEvidence
+            connect traction.tractionConditionEvidenceOut to riding.session.tractionConditionEvidenceIn;
     }
 
     // LE-VEH is an installed-vehicle scope view, not a parent of the whole EPCS.

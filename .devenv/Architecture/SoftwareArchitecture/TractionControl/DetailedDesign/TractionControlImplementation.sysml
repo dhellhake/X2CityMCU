@@ -27,6 +27,8 @@ package X2CityDetailedComponent_TractionControlImplementation {
         port motorPositionIn:X2CitySoftwareContract_TractionControl::MotorPositionInputPort :>> TractionControl::motorPositionIn;
         port phaseCurrentEpochIn:X2CitySoftwareContract_TractionControl::PhaseCurrentEpochInputPort :>> TractionControl::phaseCurrentEpochIn;
         port fastDcLinkVoltageIn:X2CitySoftwareContract_TractionControl::FastDcLinkVoltageInputPort :>> TractionControl::fastDcLinkVoltageIn;
+        port qualifiedTemperatureIn:X2CitySoftwareContract_TractionControl::QualifiedTemperatureInputPort :>> TractionControl::qualifiedTemperatureIn;
+        port regularSupplyVoltageIn:X2CitySoftwareContract_TractionControl::RegularSupplyVoltageInputPort :>> TractionControl::regularSupplyVoltageIn;
         port supplyHealthIn:X2CitySoftwareContract_TractionControl::SupplyHealthInputPort :>> TractionControl::supplyHealthIn;
         port sensorHealthIn:X2CitySoftwareContract_TractionControl::TractionSensorHealthInputPort :>> TractionControl::sensorHealthIn;
         port motionHealthIn:X2CitySoftwareContract_TractionControl::MotionHealthInputPort :>> TractionControl::motionHealthIn;
@@ -71,12 +73,18 @@ package X2CityDetailedComponent_TractionControlImplementation {
         flow phaseToControl from phaseCurrentEpochIn.payload to control.phaseFeedbackIn.payload;
         flow phaseToActualOutput from phaseCurrentEpochIn.payload to actualOutput.phaseFeedbackIn.payload;
         flow fastDcLinkToControl from fastDcLinkVoltageIn.payload to control.fastDcLinkVoltageIn.payload;
+        flow qualifiedTemperatureToConditionEvaluation from qualifiedTemperatureIn.payload to accept.qualifiedTemperatureIn.payload;
+        flow fastDcLinkToConditionEvaluation from fastDcLinkVoltageIn.payload to accept.fastDcLinkVoltageIn.payload;
+        flow regularSupplyToConditionEvaluation from regularSupplyVoltageIn.payload to accept.regularSupplyVoltageIn.payload;
+        flow supplyHealthToConditionEvaluation from supplyHealthIn.qualification to accept.supplyHealthIn.qualification;
         flow sensorHealthToControl from sensorHealthIn.payload to control.sensorHealthIn.payload;
+        flow sensorHealthToConditionEvaluation from sensorHealthIn.payload to accept.sensorHealthIn.payload;
         flow motionHealthToMotion from motionHealthIn.payload to motion.motionHealthIn.payload;
-        flow stageEvidenceToOutput from tractionOutputStageExchange.payload to output.outputStageEvidenceIn.payload;
+        flow stageEvidenceToOutput from tractionOutputStageExchange.evidence to output.outputStageEvidenceIn.payload;
+        flow stageAndProtectionToConditionEvaluation from tractionOutputStageExchange.evidence to accept.outputStageEvidenceIn.payload;
         flow pwmAndAdcPlanToOutput from control.pwmAndAdcSamplingPlanOut.payload to output.pwmAndAdcSamplingPlanIn.payload;
         flow outputObservationToActualOutput from output.outputObservationOut.payload to actualOutput.outputStageEvidenceIn.payload;
-        flow outputObservationToBoundary from output.outputObservationOut.payload to tractionOutputStageExchange.payload;
+        flow phaseExcitationCommandToBoundary from output.phaseExcitationCommandOut.payload to tractionOutputStageExchange.phaseExcitationCommand;
         flow qualifiedMotionToBoundary from motion.qualifiedMotionOut.payload to qualifiedMotionOut.payload;
         flow actualOutputToAccept from actualOutput.appliedTractionStateOut.payload to accept.actualOutputIn.payload;
         flow actualOutputToElectricalBrakingState from actualOutput.electricalBrakingStateOut.payload to electricalBrakingStateOut.payload;
@@ -94,5 +102,13 @@ package X2CityDetailedComponent_TractionControlImplementation {
         bind compiledCalibrationValid = motion.compiledCalibrationValid;
         bind compiledCalibrationValid = actualOutput.compiledCalibrationValid;
         flow acceptedDemandToControl from accept.acceptedCommandOut.payload to control.acceptedDemandIn.payload;
+    }
+
+    part def MotorControlRealizationImplementation :> MotorControlRealization {
+        /* Selected detailed allocation of the logical MotorControl occurrence. The core is the
+           sole existing detailed control occurrence; the inherited reference roles identify the
+           already-selected shared acquisition/temperature/supply components. This wrapper adds
+           neither a second control implementation nor another output writer. */
+        part controlCore:TractionControlImplementation :>> MotorControlRealization::controlCore;
     }
 }

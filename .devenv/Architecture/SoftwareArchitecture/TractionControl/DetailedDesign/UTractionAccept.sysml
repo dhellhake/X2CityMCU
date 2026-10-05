@@ -17,6 +17,10 @@ package X2CityDetailedUnit_TractionAccept {
         doc /* Receives the independently produced qualified actual-output estimate for forwarding and observation; it is never derived from acceptance. */
         in item payload:ActualTractionOutput;
     }
+    port def TractionConditionStageEvidenceInputPort {
+        doc /* Receives independently observed stage and hardware-protection evidence for local condition categorization; command state cannot substitute for either observation. */
+        in item payload:TractionOutputStageExchange;
+    }
     port def AppliedTractionStateForwardOutputPort {
         doc /* Forwards the actual-output estimate to Demand across startup, disarmed and withdrawal states without gating or refreshing it. */
         out item payload:ActualTractionOutput;
@@ -31,7 +35,7 @@ package X2CityDetailedUnit_TractionAccept {
     }
     item def TractionObservationRecord :> UnitInformationEnvelope, TractionObservation;
     port def TractionObservationOutputPort {
-        doc /* Sends the generic qualified traction observation summary to Session and Light consumers; it cannot replace Demand's typed actual-output route. */
+        doc /* Sends current categorized local traction condition evidence to Session. Startup-pending or unavailable evidence remains distinct from a recognized fault, and this unit owns no fault latch or restart lifetime. */
         out item payload:TractionObservationRecord;
     }
     part def TractionCommandAcceptor {
@@ -45,12 +49,19 @@ package X2CityDetailedUnit_TractionAccept {
            PWM/register state and acceptance never substitute for actual applied wheel torque or
            powered-forward-travel evidence. The accepted record retains both battery amperage
            limits unchanged for downstream actual-electrical-transfer enforcement. It independently publishes a
-           generic qualified traction-observation summary for Session/Light
-           consumers; that summary cannot replace the typed actual-output route to Demand. */
+           categorized local traction-condition summary from its typed evidence inputs for Session;
+           that summary cannot replace the typed actual-output route to Demand and does not own
+           Session's vehicle-wide fault latch, priority/report selection or restart policy. */
         port executionTimeIn:ExecutionTimeInputPort;
         port authorityIn:TractionAuthorityInputPort;
         port commandIn:TractionCommandInputPort;
         port actualOutputIn:TractionActualOutputInputPort;
+        port qualifiedTemperatureIn:X2CitySoftwareContract_TractionControl::QualifiedTemperatureInputPort;
+        port fastDcLinkVoltageIn:X2CitySoftwareContract_TractionControl::FastDcLinkVoltageInputPort;
+        port regularSupplyVoltageIn:X2CitySoftwareContract_TractionControl::RegularSupplyVoltageInputPort;
+        port supplyHealthIn:X2CitySoftwareContract_TractionControl::SupplyHealthInputPort;
+        port sensorHealthIn:X2CitySoftwareContract_TractionControl::TractionSensorHealthInputPort;
+        port outputStageEvidenceIn:TractionConditionStageEvidenceInputPort;
         port appliedTractionStateOut:AppliedTractionStateForwardOutputPort;
         port acceptedCommandOut:AcceptedTractionCommandOutputPort;
         port observationOut:TractionObservationOutputPort;

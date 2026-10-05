@@ -1,5 +1,6 @@
 package X2CitySoftwareContract_TemperatureInterface {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_TractionControl::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
     attribute def TemperatureCalibration {
@@ -17,15 +18,15 @@ package X2CitySoftwareContract_TemperatureInterface {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for configured temperature channels. TemperatureInterface applies accepted board or motor calibration and retains source rank, sequence and timestamp provenance. */
         in item payload:AnalogSample;
     }
-    item def QualifiedTemperature:>ContextualSoftwareInformation, X2CityContract_Input::QualifiedTemperature {
+    item def QualifiedTemperature:>ContextualSoftwareInformation, X2CityContract_TractionControl::QualifiedTemperature {
         attribute sourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
         attribute sampleTimeMicroseconds:Integer;
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
-    port def QualifiedTemperatureOutputPort {
+    port def QualifiedTemperatureOutputPort :> X2CityContract_TractionControl::QualifiedTemperatureOutputPort {
         doc /* Publishes qualified `TractionBoard` and `Motor` temperature observations to SessionPolicy. Battery temperature observations used by battery supervision come through BmsLink. */
-        out item payload:QualifiedTemperature;
+        out item payload:QualifiedTemperature :>> X2CityContract_TractionControl::QualifiedTemperatureOutputPort::payload;
     }
     port def TemperatureHealthOutputPort {
         doc /* Publishes the conversion-health projection to Platform and SessionPolicy. The logical source/value qualification remains on QualifiedTemperature; this implementation health record reports conversion freshness and diagnostics without making a thermal operating decision. */

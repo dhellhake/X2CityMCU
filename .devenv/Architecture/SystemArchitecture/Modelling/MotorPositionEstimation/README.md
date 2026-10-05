@@ -6,7 +6,7 @@ Hall evidence is always required. A static accepted Hall sector is permitted at 
 
 ```mermaid
 flowchart LR
-    THW["LE-TRACTION-HW"] -->|raw Hall / phase / bridge observation| MSM["LE-MOTOR-SIGNAL\nMotorSignalMeasurement"]
+    PHYS["physical motor / traction board\nmulti-role realization"] -->|direct Hall / phase / bridge observation| MSM["LE-MOTOR-SIGNAL\nMotorSignalMeasurement"]
     MSM -->|physical measurement evidence| MPP["LE-MOTOR-POSITION-PROC\nMotorPositionProcessing"]
     MPP -->|MotorPosition composite| MC["LE-MOTOR-CTRL"]
     MPP -->|same MotorPosition composite| PL["LE-PLATFORM"]
@@ -16,7 +16,7 @@ flowchart LR
 
 | Exchange | Producer → consumer | Required content / owner |
 |---|---|---|
-| `hallSignalsIn`, `motorPhaseElectricalIn` | `LE-TRACTION-HW` → `MotorSignalMeasurement` | Raw physical Hall electrical levels, phase current and bridge-voltage observation; no ADC/DMA/pin allocation. `REQ-SYS-MSM-001`–002. |
+| `hallSignalsIn`, `motorPhaseElectricalIn` | Physical motor/traction board → `MotorSignalMeasurement` | Raw physical Hall electrical levels, phase current and bridge-voltage observation enter MotorPositionEstimation directly. The board may also realize TractionHardware, but it is not the logical producer on this path. No ADC/DMA/pin allocation. `REQ-SYS-MSM-001`–002. |
 | `motorSignalMeasurementsOut` | `MotorSignalMeasurement` → `MotorPositionProcessing` | Physical evidence and integrity for subsequent timestamped software acquisition and semantic conversion. |
 | `motorPositionOut` | `MotorPositionProcessing` → `LE-MOTOR-CTRL`, `LE-PLATFORM`, and `LE-SESSION` | The same complete `MotorPosition` (`Position` + `Qualification`) to all consumers, with angle, separately valid signed speed, reference time, accepted uncertainty and limited Hall evidence. Publication continues when angle is unavailable or only `Qualification` changes; qualification-only updates retain the actual position evidence reference time. Existing Session fault response owns inhibition and retention. `REQ-SYS-MPE-001`–004. |
 | `phaseCurrentOut` | `MotorPositionProcessing` → `LE-MOTOR-CTRL` | Qualified semantic phase-current feedback, jointly realized by the existing MotorPhaseInterface conversion path. Applied-winding voltage stays internal observer evidence; fast DC-link voltage remains a separate existing control route. `REQ-SYS-MPE-005`. |

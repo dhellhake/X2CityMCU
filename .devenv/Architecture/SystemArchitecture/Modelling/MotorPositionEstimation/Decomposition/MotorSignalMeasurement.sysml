@@ -34,9 +34,9 @@ package X2CityContract_MotorSignalMeasurement {
         attribute currentWindowStatus:ValidityStatus;
         item bridgeVoltageObservation:BridgeVoltageObservation;
     }
-    port def HallSignalsOutputPort { doc /* Presents raw physical Hall electrical levels from traction hardware. */ out item hallSignals:HallSignals; }
+    port def HallSignalsOutputPort { doc /* Presents raw physical Hall electrical levels from the direct Traction boundary. */ out item hallSignals:HallSignals; }
     port def HallSignalsInputPort { doc /* Receives raw physical Hall electrical levels for measurement. */ in item hallSignals:HallSignals; }
-    port def MotorPhaseElectricalOutputPort { doc /* Presents raw physical phase-current and bridge-voltage quantities from traction hardware. */ out item motorPhaseElectrical:MotorPhaseElectrical; }
+    port def MotorPhaseElectricalOutputPort { doc /* Presents raw physical phase-current and bridge-voltage quantities from the direct Traction boundary. */ out item motorPhaseElectrical:MotorPhaseElectrical; }
     port def MotorPhaseElectricalInputPort { doc /* Receives raw physical phase-current and bridge-voltage quantities for measurement. */ in item motorPhaseElectrical:MotorPhaseElectrical; }
     port def MotorSignalMeasurementsOutputPort { doc /* Publishes physical Hall/current/bridge measurement and capture evidence to software processing. */ out item motorSignalMeasurements:MotorSignalMeasurements; }
     port def MotorSignalMeasurementsInputPort { doc /* Receives physical Hall/current/bridge measurement and capture evidence for software processing. */ in item motorSignalMeasurements:MotorSignalMeasurements; }

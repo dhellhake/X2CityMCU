@@ -1,5 +1,6 @@
 package X2CitySoftwareContract_SupplyInterface {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_TractionControl::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
     private import X2CitySoftwareContract_Platform::*;
     attribute def SupplyCalibration {
@@ -20,23 +21,23 @@ package X2CitySoftwareContract_SupplyInterface {
         doc /* Receives completed regular ADC scans from AnalogAcquisition for regular supply-rail conversion. The regular path keeps its own source binding, state and calibration context separate from fast DC-link acquisition. */
         in item payload:AnalogSample;
     }
-    item def FastDcLinkVoltage:>ContextualSoftwareInformation, X2CityContract_Input::QualifiedSupplyVoltage {
+    item def FastDcLinkVoltage:>ContextualSoftwareInformation, X2CityContract_TractionControl::QualifiedSupplyVoltage {
         doc /* Qualified fast local PVDD. The inherited source is fixed to PVDD by this
                interface's immutable acquisition/calibration binding. */
-        attribute dcLinkVoltageVolts:Real :>> X2CityContract_Input::QualifiedSupplyVoltage::voltageVolts;
+        attribute dcLinkVoltageVolts:Real :>> X2CityContract_TractionControl::QualifiedSupplyVoltage::voltageVolts;
         attribute sourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
         attribute apertureNanoseconds:Real;
         attribute sampleTimeMicroseconds:Integer;
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
-    port def FastDcLinkVoltageOutputPort :> X2CityContract_Input::FastDcLinkVoltageOutputPort {
+    port def FastDcLinkVoltageOutputPort :> X2CityContract_TractionControl::FastDcLinkVoltageOutputPort {
         doc /* Publishes qualified fast DC-link voltage with paired source ranks, aperture, timestamp and calibration context to TractionControl. This output is the fast Vdc control input and is not derived by MotorPhaseInterface. */
-        out item payload:FastDcLinkVoltage :>> X2CityContract_Input::FastDcLinkVoltageOutputPort::payload;
+        out item payload:FastDcLinkVoltage :>> X2CityContract_TractionControl::FastDcLinkVoltageOutputPort::payload;
     }
-    item def SupplyVoltage:>ContextualSoftwareInformation, X2CityContract_Input::QualifiedSupplyVoltage {
-        attribute supplyRail:X2CityContract_Input::SupplyVoltageSource :>> X2CityContract_Input::QualifiedSupplyVoltage::source;
-        attribute railVoltageVolts:Real :>> X2CityContract_Input::QualifiedSupplyVoltage::voltageVolts;
+    item def SupplyVoltage:>ContextualSoftwareInformation, X2CityContract_TractionControl::QualifiedSupplyVoltage {
+        attribute supplyRail:X2CityContract_TractionControl::SupplyVoltageSource :>> X2CityContract_TractionControl::QualifiedSupplyVoltage::source;
+        attribute railVoltageVolts:Real :>> X2CityContract_TractionControl::QualifiedSupplyVoltage::voltageVolts;
         attribute sourceAdcRank:Integer;
         attribute sourceAdcSequence:Integer;
         attribute rankSkewNanoseconds:Real;
@@ -44,16 +45,16 @@ package X2CitySoftwareContract_SupplyInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def SupplyVoltageOutputPort {
-        doc /* Publishes qualified regular `GVDD` supply-diagnostic observations to SessionPolicy. supplyRail and railVoltageVolts refine the inherited logical source/value fields; source provenance remains local. */
+        doc /* Publishes qualified regular GVDD supply diagnostic values to the TractionControl condition evaluation. supplyRail and railVoltageVolts refine the supply observation; source provenance remains local. */
         out item payload:SupplyVoltage;
     }
-    item def SupplyHealthCondition:>SensorHealthCondition, X2CityContract_Input::SupplyQualification {
-        doc /* Supply-specific projection joining the System PVDD/GVDD qualification with
-               existing software conversion-health diagnostics. */
+    item def SupplyHealthCondition:>SensorHealthCondition {
+        doc /* Supply-specific software conversion-health diagnostics. Value-bearing logical
+               PVDD/GVDD qualification remains on FastDcLinkVoltage and SupplyVoltage. */
     }
-    port def SupplyHealthOutputPort :> X2CityContract_Input::SupplyHealthOutputPort {
+    port def SupplyHealthOutputPort {
         doc /* Publishes supply conversion-health evidence to Platform, SessionPolicy and TractionControl. The regular logical source/value qualification remains on SupplyVoltage; this record carries fast/regular conversion diagnostics rather than a voltage command. */
-        out item qualification:SupplyHealthCondition :>> X2CityContract_Input::SupplyHealthOutputPort::qualification;
+        out item qualification:SupplyHealthCondition;
     }
 }
 

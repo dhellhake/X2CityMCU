@@ -11,13 +11,14 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityContract_BatteryControl::*;
     private import X2CityComponent_LightControl::*;
     private import X2CityContract_EnergyPath::*;
+    private import X2CityContract_MotorControl::*;
     private import X2CityContract_MotorPositionProcessing::*;
-    private import X2CityContract_Input::*;
+    private import X2CityContract_TractionControl::*;
     private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityComponent_Compute::*;
     private import X2CityContract_ComputeHardware::*;
     part def ElectricalPropulsionControlSystem { // LE-EPCS
-        /* Composes riding policy, sibling rider interaction, input, traction, battery, energy, lighting and compute components. */
+        /* Composes riding policy, rider interaction, traction-owned measurement/qualification, battery, energy, lighting and compute components. */
         part riding:RidingSupervisor;
         part hmiControl:HMIControl;
         part input:Input;
@@ -42,10 +43,6 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect traction.motorPositionOut to compute.platform.motorPositionIn;
         interface motorPositionToSession : IfA005MotorPosition
             connect traction.motorPositionOut to riding.session.motorPositionIn;
-        interface tractionTemperatureToInputHardware : IfA007TemperatureElectricalSignal
-            connect traction.tractionHardware.temperatureElectricalSignalOut to input.inputHardware.temperatureElectricalSignalIn;
-        interface tractionSupplyToInputHardware : IfA007SupplyElectricalSignal
-            connect traction.tractionHardware.supplyElectricalSignalOut to input.inputHardware.supplyElectricalSignalIn;
         interface brakeToSession : IfA001BrakeLeverState
             connect input.brakeLeverStateOut to riding.session.brakeLeverStateIn;
         interface brakeToDemand : IfA001BrakeLeverState
@@ -55,20 +52,12 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
         interface brakeHealthToPlatform : IfA008BrakeHealth
             connect input.brakeHealthOut to compute.platform.brakeHealthIn;
         interface temperatureToSession : IfA008QualifiedTemperature
-            connect input.qualifiedTemperatureOut to riding.session.qualifiedTemperatureIn;
-        interface temperatureHealthToSession : IfA008TemperatureHealth
-            connect input.temperatureHealthOut to riding.session.temperatureHealthIn;
-        interface temperatureHealthToPlatform : IfA008TemperatureHealth
-            connect input.temperatureHealthOut to compute.platform.temperatureHealthIn;
-        interface fastDcLinkVoltageToTraction : IfA008FastDcLinkVoltage
-            connect input.fastDcLinkVoltageOut to traction.fastDcLinkVoltageIn;
-        interface regularSupplyVoltageToSession : IfA008RegularSupplyVoltage
-            connect input.regularSupplyVoltageOut to riding.session.regularSupplyVoltageIn;
-        interface supplyHealthToSession : IfA008SupplyHealth
-            connect input.supplyHealthOut to riding.session.supplyHealthIn;
-        interface supplyHealthToPlatform : IfA008SupplyHealth
-            connect input.supplyHealthOut to compute.platform.supplyHealthIn;
-        interface supplyHealthToTraction : IfA008SupplyHealth
-            connect input.supplyHealthOut to traction.supplyHealthIn;
+            connect traction.qualifiedTemperatureOut to riding.session.qualifiedTemperatureIn;
+        interface temperatureToPlatform : IfA008QualifiedTemperature
+            connect traction.qualifiedTemperatureOut to compute.platform.qualifiedTemperatureIn;
+        interface fastDcLinkVoltageToPlatform : IfA008FastDcLinkVoltage
+            connect traction.fastDcLinkVoltageOut to compute.platform.fastDcLinkVoltageIn;
+        interface tractionConditionToSession : IfA005TractionConditionEvidence
+            connect traction.tractionConditionEvidenceOut to riding.session.tractionConditionEvidenceIn;
     }
 }
