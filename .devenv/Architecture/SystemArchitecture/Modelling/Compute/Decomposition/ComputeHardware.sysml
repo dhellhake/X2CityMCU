@@ -1,9 +1,13 @@
 package X2CityComponent_ComputeHardware {
     private import X2CitySharedContracts::*;
     private import X2CityContract_ComputeHardware::*;
+    private import X2CityContract_Compute::*;
+    private import X2CityContract_EnergyPath::*;
     part def ComputeHardware { // LE-COMPUTE-HW
-        /* Provides processor, memory, related execution hardware and the MCU wake input for the compute boundary. This is a supplied physical role; software behavior is allocated to the platform and policies. */
+        /* Provides processor, memory and related execution hardware with the MCU wake input. It performs the selected sleep mode and wake capabilities for a current qualified Platform handoff; physical wake remains directly available while software sleeps. HMIControl owns awake physical power-lock observation and interpretation. Mode and wake compatibility remain characterization/derivation gates. */
         port controllerWakeIn:ControllerWakeInputPort { doc /* Receives conditioned hardware wake while the CPU is asleep; no UART or software task is required to deliver this signal. */ }
+        port vehicleElectricalPowerIn:VehicleElectricalPowerInputPort { doc /* Receives general EnergyPath vehicle electrical power at the Compute hardware boundary. */ }
+        port sleepRequestIn:ComputeSleepRequestInputPort { doc /* Receives Platform's validated selected-mode handoff with the Session grant's qualification, source context and expiry preserved; it does not renew permission or reevaluate eligibility. It performs the selected sleep mode and keeps conditioned hardware wake available in that mode. */ }
     }
 }
 

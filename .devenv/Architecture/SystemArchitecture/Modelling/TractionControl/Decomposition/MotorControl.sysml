@@ -30,8 +30,9 @@ package X2CityContract_MotorControl {
         attribute state:PhysicalOutputStageState;
     }
     item def TractionStageEvidence:>QualifiedInformationRecord {
-        doc /* Qualified physical output-stage evidence. It is distinct from PhaseExcitationCommand and does not prove the requested command was applied. */
+        doc /* Qualified physical output-stage evidence. It is distinct from PhaseExcitationCommand and does not prove the requested command was applied. inhibitRetainedWithoutMcuExecution is qualified evidence of the hardware capability to keep the stage inhibited without MCU execution; its sensing and retention mechanism are unspecified and it does not prove the actual state during sleep. */
         item observedOutputStageState:ObservedOutputStageState;
+        attribute inhibitRetainedWithoutMcuExecution:Boolean;
     }
     item def TractionHardwareProtectionEvidence:>QualifiedInformationRecord {
         doc /* Independent hardware protection evidence. Hardware protection can constrain its stage regardless of a software command. */
@@ -39,10 +40,11 @@ package X2CityContract_MotorControl {
     }
     enum def TractionConditionCategory { enum TemperatureLimit; enum TemperatureInformation; enum SupplyCondition; enum SupplyInformation; enum OutputStage; enum HardwareProtection; }
     item def TractionConditionEvidence:>QualifiedInformationRecord {
-        doc /* Local traction condition/fault evidence for Session. Session owns the common fault latch, selection, priority and restart lifetime. */
+        doc /* Local traction condition/fault evidence for Session. Session owns the common fault latch, selection, priority and restart lifetime. computeSleepPermitted may be true only with current qualified physical stage inhibition and evidence that inhibition is retained without MCU execution; commanded zero or software actuationInhibited alone is insufficient. */
         attribute startupTractionConditionsAccepted:Boolean;
         attribute recognizedFault:Boolean;
         attribute actuationInhibited:Boolean;
+        attribute computeSleepPermitted:Boolean;
         attribute conditionCategory:TractionConditionCategory[0..*];
     }
     item def PhysicalMotorActuation {

@@ -228,7 +228,7 @@ For simultaneous events, demand applies this order within the coherent decision 
 
 ## Settings application, HMI loss and lighting feedback
 
-The following interaction separates a current qualified VD18MT level/speed receipt from retained settings and current rider/traction evidence. Loss after a valid receipt retains valid active/pending settings and the normal-light request; it neither freezes torque nor creates authority. Missing current-startup receipt still blocks Ready. VD18MT electrical activity, initialization and switched power-lock are not software setting receipts or on/off commands.
+The following interaction separates a current qualified VD18MT level/speed receipt from retained settings and current rider/traction evidence. Loss after a valid receipt retains valid active/pending settings and the normal-light request; it neither freezes torque nor creates authority. Missing current-startup receipt still blocks Ready. Physical VD18MT electrical activity, initialization and switched power-lock are not UART setting receipts or UART on/off commands. The current Draft System allocation separately assigns HmiInformationProcessing to interpret the qualified electrical `HmiPowerLockObservation` as `VehicleOperationRequest`; detailed software port/unit mapping remains later refinement, while pin conditioning and the hardware wake path stay outside SC-HMI.
 
 ```mermaid
 sequenceDiagram

@@ -4,6 +4,7 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityComponent_HmiControl::*;
     private import X2CityComponent_HmiElectricalInterface::*;
     private import X2CityContract_HmiElectricalInterface::*;
+    private import X2CityContract_HmiControl::*;
     private import X2CityComponent_Input::*;
     private import X2CityComponent_Traction::*;
     private import X2CityComponent_BatteryControl::*;
@@ -16,6 +17,7 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityContract_TractionControl::*;
     private import X2CityContract_BrakeStateIdentification::*;
     private import X2CityComponent_Compute::*;
+    private import X2CityContract_Compute::*;
     private import X2CityContract_ComputeHardware::*;
     part def ElectricalPropulsionControlSystem { // LE-EPCS
         /* Composes riding policy, rider interaction, traction-owned measurement/qualification, battery, energy, lighting and compute components. */
@@ -33,10 +35,18 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
         interface vehicleElectricalPowerToHmi : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
+        interface vehicleElectricalPowerToCompute : IfA010VehicleElectricalPower
+            connect energyPath.vehicleElectricalPowerOut to compute.vehicleElectricalPowerIn;
         interface vd18mtDeviceConnection : IfA006HmiDeviceConnection
             connect hmiControl.vd18mtConnection to input.riderDevices.vd18mtConnection;
         interface controllerWakeToCompute : IfA006ControllerWake
             connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
+        interface vehicleOperationRequestToSession : IfA006VehicleOperationRequest
+            connect hmiControl.vehicleOperationRequestOut to riding.session.vehicleOperationRequestIn;
+        interface computeRuntimeInitializationToSession : IfA006ComputeRuntimeInitialization
+            connect compute.runtimeInitializationOut to riding.session.runtimeInitializationIn;
+        interface sessionSleepRequestToCompute : IfA006ComputeSleepRequest
+            connect riding.session.sleepRequestOut to compute.sleepRequestIn;
         interface tractionPowerToTraction : IfA010TractionElectricalPower
             connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
         interface motorPositionToPlatform : IfA005MotorPosition

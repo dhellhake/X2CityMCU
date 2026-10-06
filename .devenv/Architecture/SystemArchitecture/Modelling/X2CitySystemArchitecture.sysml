@@ -34,6 +34,10 @@ package X2CitySystemArchitecture {
     private import X2CityContract_HmiElectricalInterface::*;
     private import X2CityComponent_HmiControl::*;
     private import X2CityContract_ComputeHardware::*;
+    private import X2CityContract_Compute::*;
+    private import X2CityComponent_Compute::*;
+    private import X2CityComponent_ComputeHardware::*;
+    private import X2CityComponent_Platform::*;
 
     alias ValidityStatus for X2CitySharedContracts::ValidityStatus;
     alias SourceContext for X2CitySharedContracts::SourceContext;
@@ -183,6 +187,25 @@ package X2CitySystemArchitecture {
     alias ControllerWakeOutputPort for X2CityContract_ComputeHardware::ControllerWakeOutputPort;
     alias ControllerWakeInputPort for X2CityContract_ComputeHardware::ControllerWakeInputPort;
     alias IfA006ControllerWake for X2CityContract_ComputeHardware::IfA006ControllerWake;
+    alias HmiPowerLockObservationState for X2CityContract_HmiControl::HmiPowerLockObservationState;
+    alias HmiPowerLockObservation for X2CityContract_HmiControl::HmiPowerLockObservation;
+    alias HmiPowerLockObservationOutputPort for X2CityContract_HmiControl::HmiPowerLockObservationOutputPort;
+    alias HmiPowerLockObservationInputPort for X2CityContract_HmiControl::HmiPowerLockObservationInputPort;
+    alias VehicleOperationRequestState for X2CityContract_HmiControl::VehicleOperationRequestState;
+    alias VehicleOperationRequestQualification for X2CityContract_HmiControl::VehicleOperationRequestQualification;
+    alias VehicleOperationRequest for X2CityContract_HmiControl::VehicleOperationRequest;
+    alias VehicleOperationRequestOutputPort for X2CityContract_HmiControl::VehicleOperationRequestOutputPort;
+    alias VehicleOperationRequestInputPort for X2CityContract_HmiControl::VehicleOperationRequestInputPort;
+    alias IfA006HmiPowerLockObservation for X2CityContract_HmiControl::IfA006HmiPowerLockObservation;
+    alias ComputeRuntimeInitialization for X2CityContract_Compute::ComputeRuntimeInitialization;
+    alias ComputeRuntimeInitializationOutputPort for X2CityContract_Compute::ComputeRuntimeInitializationOutputPort;
+    alias ComputeRuntimeInitializationInputPort for X2CityContract_Compute::ComputeRuntimeInitializationInputPort;
+    alias ComputeSleepRequest for X2CityContract_Compute::ComputeSleepRequest;
+    alias ComputeSleepRequestOutputPort for X2CityContract_Compute::ComputeSleepRequestOutputPort;
+    alias ComputeSleepRequestInputPort for X2CityContract_Compute::ComputeSleepRequestInputPort;
+    alias IfA006VehicleOperationRequest for X2CityContract_HmiControl::IfA006VehicleOperationRequest;
+    alias IfA006ComputeRuntimeInitialization for X2CityContract_Compute::IfA006ComputeRuntimeInitialization;
+    alias IfA006ComputeSleepRequest for X2CityContract_Compute::IfA006ComputeSleepRequest;
 
     interface def IfA002RiderSettingsRequest {
         end producer:RiderSettingsRequestOutputPort;
@@ -229,6 +252,10 @@ package X2CitySystemArchitecture {
     }
 
     part def SessionPolicy { // LE-SESSION
+        /* Owns operation lifecycle, Ready/authority, fault/restart policy and riding authority. A qualified explicit physical Off ends the current operation session immediately, regardless of vehicle motion; Unknown or unavailable is not Off, and HMI UART loss does not change the physical request. A later On, including before sleep entry, begins fresh session qualification. Session's sleep request follows traction output handoff and is not physical inhibition evidence. */
+        port vehicleOperationRequestIn:VehicleOperationRequestInputPort;
+        port runtimeInitializationIn:ComputeRuntimeInitializationInputPort;
+        port sleepRequestOut:ComputeSleepRequestOutputPort;
         port brakeLeverStateIn:BrakeLeverStateInputPort;
         port acceleratorPositionIn:AcceleratorPositionInputPort;
         port qualifiedVehicleMotionIn:QualifiedVehicleMotionInputPort;
@@ -323,23 +350,9 @@ package X2CitySystemArchitecture {
 
 
 
-    part def Compute { // LE-COMPUTE
-        part computeHardware:ComputeHardware;
-        part platform:Platform;
-        port controllerWakeIn:ControllerWakeInputPort { doc /* Receives conditioned HMI hardware wake and delegates it to the compute hardware while the CPU is asleep. */ }
-        flow controllerWakeToHardware from controllerWakeIn.controllerWake to computeHardware.controllerWakeIn.controllerWake;
-    }
-
-    part def ComputeHardware { // LE-COMPUTE-HW
-        port controllerWakeIn:ControllerWakeInputPort { doc /* Receives conditioned hardware wake while the CPU is asleep; no UART or software task is required to deliver this signal. */ }
-    }
-    part def Platform { // LE-PLATFORM
-        port acceleratorHealthIn:AcceleratorHealthInputPort;
-        port motorPositionIn:MotorPositionInputPort { doc /* Receives the estimator's full Position/Qualification composite for the existing platform fault-supervision path. */ }
-        port brakeHealthIn:BrakeHealthInputPort;
-        port qualifiedTemperatureIn:QualifiedTemperatureInputPort;
-        port fastDcLinkVoltageIn:FastDcLinkVoltageInputPort;
-    }
+    alias Compute for X2CityComponent_Compute::Compute;
+    alias ComputeHardware for X2CityComponent_ComputeHardware::ComputeHardware;
+    alias Platform for X2CityComponent_Platform::Platform;
 
     part def MechanicalControl; // LE-MECH; physical mechanical control boundary
 
@@ -368,10 +381,18 @@ package X2CitySystemArchitecture {
             connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
         interface vehicleElectricalPowerToHmi : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
+        interface vehicleElectricalPowerToCompute : IfA010VehicleElectricalPower
+            connect energyPath.vehicleElectricalPowerOut to compute.vehicleElectricalPowerIn;
         interface vd18mtDeviceConnection : IfA006HmiDeviceConnection
             connect hmiControl.vd18mtConnection to input.riderDevices.vd18mtConnection;
         interface controllerWakeToCompute : IfA006ControllerWake
             connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
+        interface vehicleOperationRequestToSession : IfA006VehicleOperationRequest
+            connect hmiControl.vehicleOperationRequestOut to riding.session.vehicleOperationRequestIn;
+        interface computeRuntimeInitializationToSession : IfA006ComputeRuntimeInitialization
+            connect compute.runtimeInitializationOut to riding.session.runtimeInitializationIn;
+        interface sessionSleepRequestToCompute : IfA006ComputeSleepRequest
+            connect riding.session.sleepRequestOut to compute.sleepRequestIn;
         interface tractionPowerToTraction : IfA010TractionElectricalPower
             connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
         interface motorPositionToPlatform : X2CityContract_MotorPositionProcessing::IfA005MotorPosition

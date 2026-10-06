@@ -29,8 +29,13 @@ package X2CityComponent_SessionPolicy {
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_MotorPositionProcessing::*;
     private import X2CityContract_SessionPolicy::*;
+    private import X2CityContract_Compute::*;
+    private import X2CityContract_HmiControl::*;
     part def SessionPolicy { // LE-SESSION
-        /* Evaluates qualified accelerator position/rest, mechanical-brake state, vehicle motion, estimator Position/Qualification fault evidence, settings, BatteryControl readiness/fault evidence and actual SOC, and observed outputs into riding authority and rider information while leaving traction actuation to Traction. */
+        /* Owns operation lifecycle, Ready/authority, fault/restart policy, riding authority and sole sleep eligibility. A qualified explicit physical Off ends the current operation session immediately, regardless of vehicle motion; Unknown or unavailable is not Off, and HMI UART loss does not change the physical request. A later On, including before sleep entry, starts fresh session qualification rather than restoring prior Ready or authority. Session publishes a qualified current ComputeSleepRequest with its own expiry only when explicit Off and current qualified traction computeSleepPermitted evidence support eligibility; false revokes the grant. This is not physical inhibition evidence. */
+        port vehicleOperationRequestIn:VehicleOperationRequestInputPort;
+        port runtimeInitializationIn:ComputeRuntimeInitializationInputPort;
+        port sleepRequestOut:ComputeSleepRequestOutputPort { doc /* Publishes SessionPolicy's qualified current sleep eligibility grant and its lifetime. A false value revokes/cancels it; qualification, source context and expiry describe this Session grant and are preserved downstream. */ }
         port brakeLeverStateIn:BrakeLeverStateInputPort;
         port qualifiedTemperatureIn:QualifiedTemperatureInputPort { doc /* Receives qualified motor/traction-board temperature observations; Session owns their operating policy. */ }
         port tractionConditionEvidenceIn:TractionConditionEvidenceInputPort { doc /* Receives local traction condition/fault evidence. Session owns the common latch, selection, priority and restart lifetime. */ }
