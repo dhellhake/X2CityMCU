@@ -29,7 +29,7 @@ Primary sources: TI [EVM user's guide](https://www.ti.com/lit/pdf/slvubv6), TI [
 
 ## Requirements fit and allocation impact
 
-The following maps the requirements materially affected by the selection. It does not assign HMI, BMS, pack or retained mechanical-brake obligations to the EVM.
+The following maps the requirements materially affected by the selection. It does not assign HMI, BMS, pack, or supplied coded-brake electrical-input obligations to the EVM.
 
 | Requirement / existing contract | Board fit | Required realization or qualification |
 | --- | --- | --- |

@@ -354,18 +354,6 @@ package X2CitySystemArchitecture {
     alias ComputeHardware for X2CityComponent_ComputeHardware::ComputeHardware;
     alias Platform for X2CityComponent_Platform::Platform;
 
-    part def MechanicalControl; // LE-MECH; physical mechanical control boundary
-
-    part def VehicleIntegration { // LE-INTEGRATION
-        part carrierHardware:CarrierHardware;
-        part enclosureHardware:EnclosureHardware;
-        part harnessHardware:HarnessHardware;
-    }
-
-    part def CarrierHardware; // LE-CARRIER-HW
-    part def EnclosureHardware; // LE-ENCLOSURE-HW
-    part def HarnessHardware; // LE-HARNESS-HW
-
     part def ElectricalPropulsionControlSystem { // LE-EPCS
         part riding:RidingSupervisor;
         part hmiControl:HMIControl;
@@ -422,8 +410,6 @@ package X2CitySystemArchitecture {
 
     part def ProjectVehicleModel {
         part epcs:ElectricalPropulsionControlSystem;
-        part mechanicalControl:MechanicalControl;
-        part vehicleIntegration:VehicleIntegration;
         part installedVehicle:InstalledVehicleScope;
     }
 

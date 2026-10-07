@@ -8,7 +8,7 @@ package X2CityComponent_Input {
     private import X2CityContract_BrakeSignalMeasurement::*;
     private import X2CityContract_BrakeStateIdentification::*;
     part def Input { // LE-INPUT
-        /* Composes rider devices, accelerator and mechanical-brake functions. TractionControl owns motor/board-temperature and PVDD/GVDD measurement and qualification. */
+        /* Composes rider devices, accelerator and coded brake-lever electrical detection functions. TractionControl owns motor/board-temperature and PVDD/GVDD measurement and qualification. */
         part riderDevices:RiderDevices;
         part accelerator:AcceleratorPositionIdentification;
         part mechanicalBrakeDetection:MechanicalBrakeDetection;

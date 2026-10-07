@@ -2,39 +2,40 @@
 
 | Attribute | Value |
 |---|---|
-| Revision / release | 1.2 Draft, 2026-09-13; prior release ID-001-R1.0 in Git |
-| Status | Draft: incorporates owner-confirmed battery/BMS/UART, riding-temperature and storage changes |
-| Upstream | [PD-001 Draft1.3](../../README.md); released PD-001-R1.1 retained in [Git](README.md#release-and-history) |
+| Revision / release | 1.3 Draft, 2026-10-06; prior release ID-001-R1.0 in Git |
+| Status | Draft: defines supplied BMW mechanical platform assumption and electrical/electronic retrofit boundary |
+| Upstream | [PD-001 Draft1.6](../../README.md); released PD-001-R1.1 retained in [Git](README.md#release-and-history) |
 | Related records | [Requirements](REQ-001_Requirements.md); [decisions/issues](DEC-001_Decisions_and_Open_Issues.md); [index](README.md) |
 
 ## 1. Purpose, authority and coverage
 
 This document defines operational context, boundary interactions and safety-analysis inputs for the **Modified BMW X2City personal electric scooter**. PD-001 owns project scope, component selections, mission/performance/environment, constraints and broader scenarios. DEC-001 owns current owner decisions and their supersession. REQ-001 owns approved obligations and planned verification; the summaries here introduce no additional requirements. Its [PD obligation disposition](REQ-001_Requirements.md#pd-obligation-disposition) records upstream retention and remaining derivation across the full PD scope.
 
-The original ID-001-R1.0 input baseline is released; this changed working revision is Draft. Unresolved engineering and verification work remains assigned downstream. Owner decisions, approved requirements, provisional assumptions and demonstrated evidence remain distinct. Historical interface/software observations do not verify the proposed vehicle behavior. The built pack/BMS selection is fixed; the released [safety goals](../Safety/SG-001_Safety_Goals.md) and [functional concept](../Architecture/FC-001_Functional_Concept.md) guide the separately released [component architecture](../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md). Sensing, algorithms, formal safety classification, technical mechanisms and physical acceptance remain downstream.
+The ID-001-R1.0 input baseline and earlier safety, functional and architecture records remain historical releases in Git; this changed working revision and its scope-aligned successors are Draft. Unresolved electrical/electronic engineering and verification remain assigned downstream. Owner decisions, requirements, assumptions and demonstrated evidence remain distinct. The built pack/BMS selection is fixed. Sensing, algorithms, electrical safety mechanisms and acceptance remain downstream.
 
 ## 2. Item boundary, actors and interfaces
 
+<a id="external-mechanical-platform-assumption"></a>
 ### 2.1 Vehicle item and functional development system
 
-The item is the complete modified scooter in its riding configuration: retained mechanical platform, steering and mechanical brakes; lights and brake-handle networks; installed rear hub motor, accelerator and VD18MT; installed removable battery; and all supporting electrical/electronic equipment, wiring, enclosures, software and calibration. Retained parts remain inside vehicle validation scope.
+The item is the electrical/electronic retrofit as installed on the selected BMW X2City: the motor's electrical and control interfaces, accelerator and VD18MT, removable battery and BMS, EPCS, lights and brake-handle electrical input, wiring, electrical protection, software and calibration. The project treats the selected BMW X2City frame, running gear, steering, mechanical brakes, battery tray and lock as a supplied external platform. Their mechanical design, structural/dynamic suitability, condition, braking adequacy, retention strength and service life are assumed to be supplied and fit for the intended use; this project does not design or qualify those mechanical properties. Existing bay fit, normal access and the owner's basic tray/lock handling sequence are supplied interface facts/procedure, not mechanical engineering acceptance tasks. The EPCS project owns electrical/electronic compatibility, safe energy, electrical continuity/insulation, and motor, sensor, lighting and control behavior at its boundaries.
 
-The **Electrical Propulsion and Control System (EPCS)** is the functional development system in PD-001 §4.4, covering energy storage/supervision, distribution, motor/rider/brake control, vehicle supervision, HMI, lighting and diagnostics. It is not a particular controller board; development-responsibility interfaces do not remove provided components from the functional system.
+The **Electrical Propulsion and Control System (EPCS)** is the functional development system in PD-001 §4.4, covering energy storage/supervision, distribution, motor/rider/brake-input control, vehicle supervision, HMI, lighting and diagnostics. It is not a particular controller board; development-responsibility interfaces do not remove supplied electrical components from the functional system.
 
-The same battery when removed remains in the vehicle project's handling and storage scope. Electrically connected but unseated/unlocked is an intermediate handling configuration, not readiness. Installed regeneration is a separate riding function.
+The same battery when removed remains in the project's electrical handling and storage scope. Electrically connected but unseated/unlocked is an intermediate electrical-safety configuration, not readiness. Installed regeneration is a separate riding function. The 16-inch wheel basis, payload/total-mass reference, speed, grade, range and use profiles are supplied duty inputs for electrical propulsion sizing and qualification; they do not create frame, wheel, brake, handling or structural qualification work.
 
 ### 2.2 Actors and boundary interactions
 
 | Actor/entity | Interaction | PD-001 interface |
 |---|---|---|
-| Rider | Support, steering, accelerator, mechanical levers, VD18MT controls and battery handling/locking | IF-EXT-001 |
-| Private paved surface | Grip, grade, tyre forces and disturbances | IF-EXT-002 |
+| Rider | Accelerator, mechanical-lever actuation (electrical state input only), VD18MT controls and supplied battery handling/locking procedure | IF-EXT-001 |
+| Private paved surface | Grade, speed/load duty and disturbances supplied to EPCS performance qualification | IF-EXT-002 |
 | Other people, vehicles, obstacles | External collision/interference context | IF-EXT-003 |
 | Ambient/parking environment | Heat/cold, sun, moisture, contamination, snow and freeze/thaw; exposed battery bay | IF-EXT-004, IF-EXT-007 |
 | Removed battery | Same pack crosses riding, handling and storage configurations | IF-EXT-005 |
 | Maintainer/developer/service equipment | Inspection, isolation, measurement, calibration and controlled development | IF-EXT-006 |
 
-The EPCS receives accelerator position, shared brake-handle information, VD18MT level/speed/light commands and the VD18MT power-control interface. Mechanical steering and braking remain available independently of EPCS power.
+The EPCS receives accelerator position, shared electrical brake-handle state information, VD18MT level/speed/light commands and the VD18MT power-control interface. The supplied mechanical steering and braking remain external platform functions; the EPCS does not create their availability or establish their mechanical adequacy.
 
 The **fixed brake interface** is a passive, polarity-independent, resistance-coded network: each normally open contact has a parallel release resistor and permanent series resistor; two branches join through a passive Y into one two-wire trunk. Four finite codes represent neither/left/right/both pressed. It is not two independent electrical channels. The [brake reference](evidence/Brake_Input_Reference.md) owns resistance values, terminal measurements, provenance and inherent diagnostic limits. The left lever operates the front mechanical brake; the right operates the rear. Only that interface is adopted; sensing, excitation/loading, protection, acquisition, classification, filtering, timing and diagnostic coverage must be derived (DEC-REF-002; WS-OI-012).
 
@@ -54,7 +55,7 @@ The [battery event matrix](../Architecture/SystemArchitecture/Modelling/BatteryC
 
 PD-001 §§6–8 control the one-adult-plus-luggage private-property mission, reference range/acceleration/grades, mass and environmental exposure. RQ-001 qualifies at least 70 km using a new battery inside **20–80% actual SOC**; energy outside that window receives no qualification credit. Riding ambient is now **−10…+40°C** under DEC-BAT-002; fitted/empty-bay outdoor storage remains −15…+40°C. Cell-surface discharge limits are −10…60°C and charge acceptance for regeneration is 0…45°C, with conservative integrated limits to be derived. Cold/weather performance allowances apply only within applicable temperature limits.
 
-For mass planning, [DEC-MAS-001](DEC-001_Decisions_and_Open_Issues.md#dec-mas-001) permits the provisional [PD DV-012 budget](../../README.md#dv-012--payload-and-vehicle-mass-budget) without first weighing the gutted scooter. This does not change the 30 kg vehicle / 100 kg minimum payload limits or the 130 kg performance/range reference; complete mass verification remains a later acceptance gate.
+The 130 kg total carried mass remains the defined electrical propulsion performance/range duty input. Any payload and component-mass figures describe that assumed use case; the project does not set a vehicle mass ceiling, certify payload capacity, or require whole-platform mass acceptance. The supplied platform's mechanical suitability remains an external assumption under §2.1.
 
 Storage duty is **168 h outdoors with the battery fitted or empty bay exposed**, and **672 h for the detached pack dry indoors at 15–30°C**. Both battery duties start at normal full charge, 80% actual SOC subject to qualified conservative tolerance; entry above 80% or below qualified normal full is outside duration qualification. Normal post-storage conditioning, energy preparation if needed, and qualification may precede use, with stored condition inspected first. No guaranteed remaining range or forced discharge is implied ([DEC-STO-001–002](DEC-001_Decisions_and_Open_Issues.md#dec-sto-001); PD §8.2).
 
@@ -90,7 +91,7 @@ Refitting: **connect scooter power connector → place pack in base tray → loc
 
 Removal: **VD18MT switch-off → unlock → lift from tray → disconnect**. Subsequent switch-on uses the VD18MT power button and the full Ready guard. The same switch-off action is accepted while stationary or moving; gradual torque withdrawal is not required.
 
-Connection before seating/locking is intentional. Contact energization/isolation, lock/fit detection, residual energy, contamination and abnormal handling remain unresolved; no interlock is implied (DEC-BAT-001, DEC-PWR-001; REQ-VEH-BAT-001–002, REQ-SYS-BAT-001, REQ-SYS-PWR-001–003; WS-OI-007, WS-OI-011).
+Connection before seating/locking is part of the supplied handling procedure. Electrical contact energization/isolation, residual or generated energy, contamination and abnormal energized handling remain to be resolved; mechanical lock/fit sensing and interlocking are outside project scope (DEC-BAT-001, DEC-PWR-001; REQ-SYS-BAT-001/003, REQ-SYS-PWR-001–003; WS-OI-007/011).
 
 ### 4.3 Requested and active riding levels
 

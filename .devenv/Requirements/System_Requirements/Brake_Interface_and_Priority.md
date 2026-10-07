@@ -6,7 +6,7 @@ Part of **REQ-001-R1.6**. [Model, status and cluster index](../REQ-001_Requireme
 
 ## Brake priority and release
 
-[REQ-VEH-BRK-001](../Abstract_Hardware_Requirements/Retained_Mechanical_Control.md#req-veh-brk-001) retains mechanical braking independence under the approved hardware allocation. The following EPCS behavior does not alter that obligation or select brake-input sensing.
+The supplied mechanical brakes are assumed available and adequate under [ID-001 §2.1](../ID-001_Item_Definition.md#external-mechanical-platform-assumption). This cluster covers only the fixed electrical lever-state input, its EPCS priority behavior and any permitted electrical regeneration; it does not qualify mechanical brake performance.
 
 | ID | Requirement | Planned verification / distinguishing cases | Sources | Open dependencies / qualifications |
 | --- | --- | --- | --- | --- |

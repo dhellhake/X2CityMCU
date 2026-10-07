@@ -2,17 +2,17 @@
 
 ## Electrical Re-Engineering of a BMW X2City Scooter
 
-Defines project scope, boundaries, objectives, constraints and qualification basis. Detailed rider behavior, item interactions and approved requirements are maintained in the [requirements workstream](.devenv/Requirements/README.md). The built battery and selected BMS are fixed inputs; the reviewed [component architecture](.devenv/Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#release-identity) is released, with detailed engineering and qualification still open.
+Defines project scope, boundaries, objectives, constraints and qualification basis. Detailed rider behavior, item interactions and current Draft requirements are maintained in the [requirements workstream](.devenv/Requirements/README.md). The built battery and selected BMS are fixed inputs; the released component-architecture baseline remains historical, while its current successor is Draft and detailed engineering and qualification remain open.
 
 ## Document metadata
 
 | Field | Value |
 |---|---|
 | Document / owner | PD-001 / Dominik |
-| Revision / date | **1.5 Draft / 2026-09-14** |
-| Status | **Draft change to released PD-001-R1.1; owner-authorized battery, temperature, traction-board and vehicle-controller decisions** |
+| Revision / date | **1.6 Draft / 2026-10-06** |
+| Status | **Draft scope change: electrical/electronic retrofit on supplied BMW X2City platform; not released** |
 | Release / prior baseline | PD-001-R1.1, approved 2026-09-09, remains the historical release in [Git](.devenv/Requirements/README.md#release-and-history); this working revision is not released |
-| Change basis | Built 14S5P Samsung 35E pack, JBD SP14S004P14S50A/UART selection, −10°C riding minimum, assumption-based mass planning and derived integration obligations; selected unmodified DRV8300DRGE-EVM and WeAct STM32H723VGT6 vehicle host; DEC-BAT-002 / DEC-MAS-001 / DEC-MOTOR-001 |
+| Change basis | Owner decision 2026-10-06: supplied BMW X2City mechanical platform and its mechanical fitness are external assumptions; project scope is the electrical/electronic retrofit and its interfaces |
 | Repository role | Sole current PD; original released bytes and prior versions retained in Git history |
 | Downstream use | Concept, hazard analysis, requirements and targeted feasibility characterization, subject to the recorded open-issue gates |
 | Configuration | [Release authority and Git history](.devenv/Requirements/README.md#release-and-history); current authority is recorded below |
@@ -72,19 +72,19 @@ Fixed starting components, custom-development commitments and project/vehicle bo
 
 ### OBJ-001 — Functional commuter vehicle
 
-Meet RJ-001 and the separate new-battery RQ-001 qualification (§6): 2 × 20 km/day, five days/week; ≥70 km level range within actual SOC 20–80%. Preserve ≥100 kg payload within 130 kg total / 30 kg vehicle mass. Energy, mass, packaging and motor feasibility remain unproven.
+Meet RJ-001 and the separate new-battery RQ-001 qualification (§6): 2 × 20 km/day, five days/week; ≥70 km level range within actual SOC 20–80%. Use the defined 130 kg total-mass load case for EPCS performance and range qualification. Energy and motor feasibility remain unproven.
 
 ### OBJ-002 — Electrical-engineering focus
 
-Integrate and qualify the already built removable battery pack; integrate the owner-selected DRV8300DRGE-EVM traction board with required adapter/protection, and develop embedded vehicle software. Develop vehicle supervision and a separate controller if needed; the selected off-the-shelf BMS and commercial constituent components are included (§5.4). Mechanical integration and suitability verification support this scope.
+Integrate and qualify the already built removable battery pack; integrate the owner-selected DRV8300DRGE-EVM traction board with required electrical protection, and develop embedded vehicle software. Develop vehicle supervision and a separate controller if needed; the selected off-the-shelf BMS and commercial constituent components are included (§5.4). The selected BMW X2City mechanics are supplied platform context, not project mechanical design or qualification.
 
 ### OBJ-003 — Controlled and predictable propulsion
 
 Provide predictable rider-commanded propulsion throughout the validated domain. Address unintended sustained propulsion, uncontrolled acceleration and unexpected torque after startup, reset, fault recovery or reconnection in downstream safety/requirements work.
 
-### OBJ-004 — Preserve independent mechanical control
+### OBJ-004 — Respect supplied mechanical platform interfaces
 
-Retained steering and both mechanical brakes shall remain usable independently of EPCS/electrical power. Integration shall preserve steering/lever travel, rider grip, mechanical actuation, wheel rotation, bell and kickstand use.
+The selected platform's mechanical steering and brakes, running gear, tray and lock are supplied functions and are assumed mechanically suitable for the intended duty. The project uses only the electrical brake-lever state interface for EPCS priority and control; it does not qualify mechanical braking or other mechanical fitness. See [ID-001 external platform assumption](.devenv/Requirements/ID-001_Item_Definition.md#external-mechanical-platform-assumption).
 
 ### OBJ-005 — Safe electrical-energy handling
 
@@ -92,7 +92,7 @@ Develop and verify the installed battery, distribution, wiring and connected veh
 
 ### OBJ-006 — Integrate the installed hub motor
 
-Characterize and integrate the installed direct-drive rear hub motor with compatible power, sensing, protection and control. It remains the baseline unless evidence shows it cannot meet the required operating, mechanical, thermal and safety envelope.
+Characterize and integrate the installed direct-drive rear hub motor's electrical power, sensing, thermal, protection and control interfaces. It remains the baseline unless evidence shows it cannot meet the required electrical operating and safety envelope. Supplied mechanical fitness is assumed externally.
 
 ### OBJ-007 — Integrate the selected rider interfaces
 
@@ -147,7 +147,7 @@ No ISO 26262 compliance/certification, formal ASIL or series-production evidence
 
 ### 3.3 Broader safety scope
 
-Assess the complete vehicle, including electrical/battery/energy/thermal hazards, unintended propulsion/braking/drag, mechanical integration, steering/braking preservation, environment, wiring/connectors, maintenance and misuse. Scope extends beyond electronic-control malfunctions.
+Assess electrical/electronic retrofit hazards and interactions with the rider, external platform, surface and environment, including unintended propulsion/electrical braking, energy/thermal hazards, wiring/connectors, service and electrical misuse. Mechanical platform fitness remains an external assumption, not a project analysis or qualification obligation.
 
 ## 4. Item definition
 
@@ -157,21 +157,21 @@ Assess the complete vehicle, including electrical/battery/energy/thermal hazards
 
 ### 4.2 Item purpose
 
-Transport one adult and personal luggage on private property through rider-controlled electric propulsion, manual steering and front/rear mechanical braking; §6 defines the reference duty.
+Provide rider-controlled electric propulsion to support the one-adult-plus-luggage private-property reference duty in §6. Manual steering and front/rear mechanical braking are supplied platform functions.
 
 ### 4.3 Item composition
 
-The safety item is the complete modified scooter: retained platform (§4.5), installed motor, VD18MT and Hall accelerator (§10), custom removable battery, inverter, EPCS functions, and all required mounting, enclosures, protection, wiring, software and calibration. The selected BMS and built cell bank are fixed by §10.8.
+The project safety item is the E/E retrofit and its electrical installation on the supplied platform: motor electrical interfaces, VD18MT and Hall accelerator (§10), removable battery/BMS, inverter, EPCS functions, electrical protection, wiring, software and calibration. Mechanical platform functions are external assumptions (§4.5).
 
 ### 4.4 Primary development system
 
 The **Electrical Propulsion and Control System (EPCS)** includes traction storage/battery supervision, high-current distribution, motor control and permitted accelerator-requested regeneration, low-voltage supply, rider/brake-input acquisition and validity, vehicle supervision, HMI, lighting, diagnostics, wiring, software and calibration. Make-or-buy commitments are in §5.4.
 
-The complete scooter remains the hazard-analysis/vehicle-validation item because safety depends on EPCS interaction with the rider, retained mechanics, surface and environment.
+The electrical/electronic retrofit and its installation remain the hazard-analysis and qualification item. Rider, supplied platform, surface and environment remain external context; mechanical fitness is assumed, while electrical interactions and control behavior are in scope.
 
 ### 4.5 Retained donor platform
 
-**CONFIRMED:** frame/deck, steering column/handlebar/fork, front wheel, rear-wheel structure with replacement hub motor, both mechanical brakes/levers and their normally open contacts, front/rear lights, kickstand and mechanical bell. The selected coded brake networks/Y are detailed in §10.6.
+The frame/running gear, steering, mechanical brakes, battery tray and lock are supplied platform facts assumed mechanically suitable; project mechanical inspection, alteration and qualification are excluded. The electrical brake-lever contacts/network and lights are electrical interfaces; the fixed coded brake network is detailed in §10.6.
 
 Retained parts remain inside the item and require inspection, necessary characterization and suitability verification. They are not primary redesign content.
 
@@ -183,24 +183,24 @@ Retained parts remain inside the item and require inspection, necessary characte
 
 ### 5.1 Vehicle item and project boundary
 
-The **vehicle item** is the complete modified scooter in its riding configuration, including its installed removable battery, hardware, software, calibration, wiring and retained components. The broader vehicle project also covers normal removal/refitting, exposed-empty-bay behavior and storage of the same pack when detached.
+The **project item** is the electrical/electronic retrofit installed on the supplied BMW X2City platform, including its removable battery/BMS, motor electrical/control interface, inputs, HMI/lights, software, calibration, wiring and electrical protection. The project also covers electrical safety during the supplied battery handling procedure, exposed-empty-bay behavior and storage of the same pack detached. Mechanical platform design and fitness are external assumptions recorded at [ID-001 §2.1](.devenv/Requirements/ID-001_Item_Definition.md#external-mechanical-platform-assumption).
 
 ```mermaid
 flowchart LR
-    Rider["Rider"] <--> Vehicle["Modified BMW X2City: battery installed for riding"]
-    Surface["Private paved surface; simulated Munich duty"] <--> Vehicle
+    Rider["Rider"] <--> Vehicle["E/E retrofit on supplied BMW X2City platform"]
+    Surface["Private paved surface; supplied load and motion duty"] <--> Vehicle
     Weather["Temperature, sun, rain, snow, contamination"] --> Vehicle
-    Vehicle <-->|"Removal and refitting: same battery"| Pack["Removed custom battery: handling/storage scope"]
+    Vehicle <-->|"Supplied removal/refitting procedure: same battery"| Pack["Removed custom battery: electrical handling/storage scope"]
     Tools["Service and test equipment"] <--> Vehicle
     Tools <--> Pack
     People["Other people, vehicles and obstacles"] <--> Vehicle
 ```
 
-This is a **functional context**, not a circuit architecture. The two battery configurations represent the **same physical pack**, not two batteries. Installed regenerative charging is a riding function within the vehicle item. The vehicle project owns its battery docking interface, pack retention, safe handling, exposed contacts, refitting and detached-pack storage.
+This is a **functional context**, not a circuit architecture. The two battery configurations represent the **same physical pack**, not two batteries. Installed regenerative charging is an EPCS function. The project owns battery electrical interfaces, safe energy handling, exposed contacts and detached-pack storage; bay fit, mechanical retention and tray/lock operation are supplied platform assumptions.
 
 ### 5.2 Inside the vehicle item
 
-The riding item includes the retained/selected hardware in §4 and custom EPCS development in §5.4, including the installed battery, docking/retention, low-voltage power, protection, harnesses and mechanical/thermal integration. Required vehicle supervision is included regardless of whether a separate controller is selected. The same pack remains in handling and storage scope when removed (§5.1).
+The project item includes supplied electrical interfaces and custom EPCS development in §5.4, including the installed battery/BMS, low-voltage power, electrical protection, harnesses and electrical/thermal integration. Required vehicle supervision is included regardless of whether a separate controller is selected. The same pack remains in electrical handling and storage scope when removed (§5.1).
 
 ### 5.3 External entities
 
@@ -210,7 +210,7 @@ Rider, site/surface/infrastructure, surrounding people/vehicles, weather and wor
 
 | Area | Project commitment | Status |
 |---|---|---|
-| Battery pack | Integrate the owner-built, working, bay-fitting 14S5P Samsung INR18650-35E pack; qualify enclosure, interconnections, thermal/protection integration and removability | CONFIRMED construction/initial fit; DESIGN DECISION integration |
+| Battery pack | Integrate the owner-built, working 14S5P Samsung INR18650-35E pack; qualify electrical connections, insulation, thermal/protection integration and electrical handling | CONFIRMED construction/initial bay fit; DESIGN DECISION electrical integration |
 | BMS | JBD SP14S004P14S50A selected; UART interaction required. Actual configuration, electrical interface and protection compatibility remain to be qualified | DESIGN DECISION |
 | Inverter | Owner-selected unmodified DRV8300DRGE-EVM is the traction-board baseline; develop required host/adapter, independent protection and control implementation | DESIGN DECISION |
 | Vehicle controller | Owner-selected WeAct STM32H723VGT6 V1.2 hosts vehicle supervision and motor control; qualify its power, resource and EVM interface integration | DESIGN DECISION |
@@ -220,7 +220,7 @@ Rider, site/surface/infrastructure, surrounding people/vehicles, weather and wor
 
 ### 5.5 Supporting engineering
 
-Include donor inspection, characterization, electrical/thermal/EMC design, wiring, diagnostics, mounts/enclosures, torque reaction, safety analysis, staged verification and configuration/release control. Preserve handling/folding and user-removable battery access; no separate folding optimization target. Larger energy capacity, speed and winter exposure require retained-part suitability evidence. A need for fundamental mechanical redesign requires a controlled scope decision.
+Include electrical/electronic characterization and design, thermal/EMC behavior, wiring, diagnostics, electrical enclosures/protection, safety analysis, staged verification and configuration/release control. Use supplied bay fit, access, tray/lock handling, mechanical brake, wheel, load and running-gear facts as boundary inputs. Do not create mechanical suitability, load retention, braking-distance, fatigue, handling, folding or donor-structure qualification work.
 
 ### 5.6 Project resources and delivery constraints
 
@@ -268,12 +268,12 @@ $$
 | Project maximum total mass | **130 kg**, for load-dependent sizing and qualification | DESIGN DECISION |
 | Minimum available payload | **100 kg**, including rider, clothing, luggage and separately carried equipment | DESIGN DECISION |
 | Maximum ready-to-ride vehicle mass | **30 kg**, including installed battery, motor, all fitted electronics and required riding equipment | DERIVED VALUE |
-| Modified vehicle mass | Assumption-based planning budget in DV-012; complete-vehicle weighing deferred to mass acceptance / mass-dependent physical qualification | ASSUMPTION now; verification OPEN ISSUE |
+| Performance and range mass input | **130 kg total carried mass** is the fixed electrical propulsion load case; donor/vehicle mass allocation is outside project scope | DESIGN DECISION; physical EPCS qualification OPEN ISSUE |
 | Actual available payload | 130 kg minus actual ready-to-ride mass; shall be **at least 100 kg** | DERIVED VALUE / DESIGN DECISION |
 | Original donor permitted total mass | 150 kg, historical donor rating; not the active project limit | REPORTED SPECIFICATION [S1][S1] |
 | Original complete scooter mass | 21 kg; not a measurement of the modified scooter or stripped carrier | REPORTED SPECIFICATION [S2][S2] |
 
-Use the explicit DV-012 planning allowances for the carrier, installed replacement motor, remaining electronics and pack. The owner has no scale and authorizes proceeding with assumptions; the historical 21 kg donor figure does not establish an actual mass or proven pack allowance. Meeting range by reducing payload below 100 kg fails scope. A lower total mass does not prove 40 km/h, hill or environmental suitability.
+The 130 kg combined mass is a supplied load condition for EPCS sizing and qualification. This project does not set a chassis mass ceiling, certify payload capacity, apportion mechanical/electrical mass budgets or require whole-vehicle weighing for mechanical acceptance. Do not infer electrical propulsion performance from a lower actual mass without qualifying the stated load case.
 
 ### 6.3 Reference journey — RJ-001
 
@@ -345,11 +345,11 @@ At 30 km/h, assumed acceleration/deceleration distances are 69.4/34.7 m, fitting
 | PERF-003 | Sustain **at least 10 km/h** up a **14% grade for at least 100 m** at the common reference | DESIGN DECISION |
 | PERF-004 | Start from rest on a **14% uphill grade** at the common reference; launch response and rollback tolerance to be derived | DESIGN DECISION / OPEN ISSUE for detailed acceptance |
 | PERF-005 | Support controlled descent at **20 km/h reference speed**, down a **14% grade for at least 100 m**, including at the **90% actual-SOC regenerative ceiling** when regeneration is unavailable | DESIGN DECISION |
-| PERF-006 | Preserve front and rear mechanical braking independently of electrical operation and regenerative availability; permitted accelerator-requested regeneration may act alongside mechanical braking | DESIGN DECISION |
+| PERF-006 | Treat supplied front/rear mechanical braking as externally available and adequate; EPCS regeneration is supplemental, never the sole stopping function | SUPPLIED PLATFORM ASSUMPTION |
 | PERF-007 | Permit reduced acceleration, power and speed during cold operation within applicable temperature limits according to validated realization limits; recognized upper/lower temperature-limit violations instead invoke the common fault response under DEC-TMP-001 | DESIGN DECISION |
 | PERF-008 | Permit reduced performance in wet or snowy conditions; full ±14% hill performance is required only at +20 °C in dry conditions | DESIGN DECISION |
 
-Accelerator-requested regeneration is supplemental in Levels 1–5; Level 0 coasts at rest. Mechanical brakes remain independent/additive and levers do not request regeneration. [DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) and [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) own detailed torque, profile, startup, speed, fault and lighting behavior. Interpretable VD18MT limits above 40 km/h clamp to 40; decoded zero means no limit requested and also sets 40, including startup; changes require simultaneous standstill/physical accelerator rest (DEC-SPD-001). PERF-001 accepts sustained travel just below 40 km/h; system validation shall determine the tolerance (OI-054 / WS-OI-013), preserving mandatory zero commanded torque at/above 40 km/h.
+Accelerator-requested regeneration is supplemental in Levels 1–5; Level 0 coasts at rest. The supplied mechanical brakes are assumed available and adequate; electrical lever-state input and propulsion priority remain project behavior. [DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) and [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) own detailed torque, profile, startup, speed, fault and lighting behavior. Interpretable VD18MT limits above 40 km/h clamp to 40; decoded zero means no limit requested and also sets 40, including startup; changes require simultaneous standstill/physical accelerator rest (DEC-SPD-001). PERF-001 accepts sustained travel just below 40 km/h; system validation shall determine the tolerance (OI-054 / WS-OI-013), preserving mandatory zero commanded torque at/above 40 km/h.
 
 Grade is rise/horizontal distance, not degrees. The owner-defined 14%/100 m reference is not a surveyed Olympiaberg path; initial modelling treats 100 m as slope length (13.9 m elevation). Average acceleration is Δv/Δt, with no constant-waveform or above-20 km/h minimum implied. Hill launch and sustained climb are separate tests. Hill qualification within 20–80% remains required; derive SOC points/tolerances against restricted entry at 20%. Descent assessment covers recovered charge up to 90% and reduced/unavailable regeneration. Flat-performance start remains ≤80%.
 
@@ -389,7 +389,7 @@ Derive separate post-cutoff auxiliary, shutdown and storage consumption/protecti
 
 RQ-001 applies only to a new battery and its stated level/+20 °C conditions. No guarantee covers hills, cold/wet/snow, aged batteries or continuous 40 km/h; no numerical battery cycle life/end-of-life range is selected. Evaluate RJ-001 energy/power separately. Under identical consumption, 50 km after 20 km and 30 km after 40 km are arithmetic margins, not SOC percentages, extra reserve or demonstrated hilly range.
 
-**DUR-001 — Vehicle service life (DESIGN DECISION, owner 2026-09-09):** 50,000 km or 5 years, whichever comes first. DEC-LIFE-001 fixes the origin at modified-vehicle commissioning and permits battery/normal wear-part replacement; retained donor age/wear remains separately assessed. OI-050 shall define maintenance and durability acceptance. This does not extend the new-battery RQ-001 range guarantee to end of life.
+**DUR-001 — Electrical retrofit service life (DESIGN DECISION, owner 2026-09-09, scoped 2026-10-06):** 50,000 km or 5 years, whichever comes first, from commissioning of the modified electrical retrofit. Battery and applicable normal electrical wear-part replacement is permitted within the controlled maintenance basis; supplied mechanical platform life is external. OI-050 defines electrical equipment durability acceptance. This does not extend the new-battery RQ-001 range guarantee to end of life.
 
 ### 6.7 Battery preparation, parking, and handling
 
@@ -465,7 +465,7 @@ Normal duty, faults, and misuse shall be distinguished. A scenario's inclusion d
 | Other people/vehicles | Possible interactions on the private site | ASSUMPTION |
 | Off-road/deep snow/ice | Not intended; unexpected ice remains a foreseeable hazard | DESIGN DECISION |
 
-Full reference hills need not be combined with wet/snow or −10 °C startup. Derive safe traction/cold/warning limits while preserving control, steering and mechanical braking. No minimum winter journey distance is specified. Recognized temperature-limit faults follow DEC-TMP-001 rather than continued reduced operation.
+Full reference hills need not be combined with wet/snow or −10 °C startup. Derive EPCS torque/cold/thermal limits for the supplied use conditions; steering and mechanical braking are external platform functions. No minimum winter journey distance is specified. Recognized temperature-limit faults follow DEC-TMP-001 rather than continued reduced operation.
 
 ### 8.2 Ambient, parking and weather exposure
 
@@ -486,7 +486,7 @@ Full reference hills need not be combined with wet/snow or −10 °C startup. De
 
 The same removed battery shall support **at least 672 h unattended dry indoor storage at 15–30 °C** ([DEC-STO-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-sto-001)). Both battery storage duties require **normal full charge at 80% actual SOC**, subject to the qualified conservative preparation/control tolerance ([DEC-STO-002](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-sto-002)). Entry below qualified normal full or above 80%, including up to 90% after regeneration, is outside these duration qualifications. This does not select forced discharge or guarantee immediate riding/remaining range afterward. Ordinary parking and handling retain their applicable protection requirements.
 
-The HMI is reported for −15 °C to +40 °C operation and −20 °C to +50 °C storage; the latter does not enlarge the complete vehicle domain. [S5][S5] Derive exposure severities, solar/local temperatures, cycling, salt and normal-full entry tolerance; separately budget post-propulsion-cutoff loads. Donor ratings do not verify expanded winter/weather capability: assess tyres, brakes, steering, removal hardware and seals. [S2][S2]
+The HMI is reported for −15 °C to +40 °C operation and −20 °C to +50 °C storage; the latter does not enlarge the project electrical/electronic exposure domain. [S5][S5] Derive electrical equipment exposure severities, local temperatures, cycling, contamination and normal-full entry tolerance; separately budget post-propulsion-cutoff loads. Supplied donor mechanical ratings are not project qualification inputs. [S2][S2]
 
 ### 8.3 Mechanical and electromagnetic environment
 
@@ -526,7 +526,7 @@ Additional scenarios include pushing, carrying, wheel-off-ground testing, tip-ov
 
 ### 10.1 Mechanical donor platform
 
-Retained hardware is listed once in §4.5; mass definitions and historical donor ratings are in §6.2. Preserve normal pack removal/refitting with the custom battery; docking, retention, fitted-part identity and expanded-duty suitability remain open.
+Retained hardware is listed once in §4.5; mass definitions and supplied duty assumptions are in §6.2. Use the normal pack removal/refitting procedure as context. Electrical connector/interface identity, energy protection and expanded EPCS duty remain open; mechanical docking and retention are external platform facts.
 
 ### 10.2 Installed rear hub motor
 
@@ -564,7 +564,7 @@ Preserve available source, definitions/message tables, traces, scripts/results, 
 
 ### 10.5 Selected accelerator
 
-**DESIGN DECISION:** selected hand-operated Hall accelerator. Three-pin connection is **CONFIRMED**; 3.3 V tolerance and analogue ratiometric output are **REPORTED**. Supply/ground/signal roles are expected, but physical pin order, actual supply/idle/full ranges, mechanical return/hysteresis/travel, mounting ergonomics and environmental suitability require characterization (OI-033–036). §11.5 defines the signal relation; no acquisition realization is selected.
+**DESIGN DECISION:** selected hand-operated Hall accelerator. Three-pin connection is **CONFIRMED**; 3.3 V tolerance and analogue ratiometric output are **REPORTED**. Supply/ground/signal roles are expected, but pin order, electrical supply/ground integrity, signal behavior at the supplied physical rest/full-application end stops, repeatability, electrical hysteresis and environmental electrical compatibility require characterization (OI-033–036). Mechanical travel, return mechanism and mounting ergonomics are external product properties. §11.5 defines the signal relation; no acquisition realization is selected.
 
 ### 10.6 Retained brake switches
 
@@ -572,7 +572,7 @@ Preserve available source, definitions/message tables, traces, scripts/results, 
 
 The [Brake Input Reference](.devenv/Requirements/evidence/Brake_Input_Reference.md) is canonical for the adopted network/coding, four historical assembled-Y terminal measurements from one development assembly, and evidence limits. No historical sensing circuit, excitation, acquisition settings, thresholds, firmware or bring-up result is adopted as the sensing realization/evidence.
 
-An open switch-only bypass can hide a press while retaining released resistance; component/resistive faults may alias valid codes. Y/trunk common paths prevent claiming independent safety channels or universal damage detection. Derive sensing, protection, diagnostics/coverage, code acceptance and residual-fault treatment downstream. OI-037/049 retain fitted BOM/tolerances, handle/connector identity, verification of left/front and right/rear mapping, contact resistance/bounce/closure point/minimum load, harness/fault envelope, environment and end-to-end verification. Terminal records do not prove production suitability. Preserve mechanical independence (OBJ-004 / CON-008).
+An open switch-only bypass can hide a press while retaining released resistance; component/resistive faults may alias valid codes. Y/trunk common paths prevent claiming independent safety channels or universal damage detection. Derive sensing, protection, diagnostics/coverage, code acceptance and residual-fault treatment downstream. OI-037/049 retain fitted BOM/tolerances, handle/connector identity, verification of left/front and right/rear association, contact resistance/bounce/closure point/minimum load, harness/fault envelope, environment and end-to-end verification. Terminal records do not prove production suitability. Mechanical brake adequacy is a supplied platform assumption; brake-state sensing and propulsion priority remain EPCS obligations.
 
 ### 10.7 Retained lights
 
@@ -588,7 +588,7 @@ OI-038/039 retain verification of electrical serviceability, rated/permitted vol
 
 The owner revised riding ambient to **−10…+40°C** to address the cell discharge-temperature incompatibility. Cell-surface discharge limits are **−10…60°C** and charge-acceptance limits for regeneration are **0…45°C**; ambient permission does not prove permissible cell temperatures. Outdoor storage retains **−15…+40°C**. The BMS does not establish thermal coverage or enforce the existing fault policy by itself. DEC-TMP-003 permits propulsion at qualified discharge-only cell temperatures while regeneration is ordinarily unavailable; actual applicable operating-limit/information faults retain the common fault response.
 
-Resolve the manufacturer's non-isolated UART restriction, actual board/firmware/settings, protection coordination and SOC calibration before dependent integration. Regeneration, range, mass, retention and weather qualification remain required. Loaded 40 km/h compatibility at the selected pack voltage is unresolved against the motor's reported speed constant; BAT-001 records the provisional calculation. The EVM host/adapter and protection augmentation remain to be designed and qualified.
+Resolve the manufacturer's non-isolated UART restriction, actual board/firmware/settings, protection coordination and SOC calibration before dependent integration. Electrical regeneration, range, pack energy/current/thermal behavior and E/E environmental qualification remain required using the supplied load duty case. Loaded 40 km/h compatibility at the selected pack voltage is unresolved against the motor's reported speed constant; BAT-001 records the provisional calculation. The EVM host/adapter and protection augmentation remain to be designed and qualified.
 
 ## 11. External and boundary interfaces
 
@@ -616,8 +616,7 @@ The following interfaces connect new electrical development to retained or provi
 | IF-EPCS-005 | Rear light | Electrical power and any switching function |
 | IF-EPCS-006 | VD18MT HMI | Battery supply, ground, switched power-lock line, and 5 V UART |
 | IF-EPCS-007 | Accelerator handle | Sensor supply, reference ground, and ratiometric analogue signal |
-| IF-EPCS-008 | Mechanical carrier | Component mounting, **battery removal/refitting and retention**, cable routing, heat transfer, vibration, environmental protection |
-| IF-EPCS-009 | Mechanical brakes and steering | Preservation of clearance, travel, access, and electrical independence |
+| IF-EPCS-008 | Supplied battery carrier interface | Supplied bay fit and removal/refitting procedure provide context; project owns electrical contacts, wiring, insulation, energy protection, electrical heat transfer and E/E environmental compatibility. Mechanical carrier design and retention are external. |
 
 ### 11.3 Rear hub-motor electrical interface
 
@@ -631,13 +630,13 @@ Six-pin connector functions are owner-identified as Vcc, Gnd, Temp, Hall1, Hall2
 
 #### Mechanical and environmental motor interface
 
-Direct drive and retained rear brake are **CONFIRMED**; axle torque reaction is **DERIVED**. Inspect retention, alignment, cable exit/strain relief and sealing; measure loaded circumference/calibrate retained nominal 16-inch wheels independently of VD18MT wheel settings (DEC-SPD-002). Verify actual-speed accuracy and propulsion/regenerative torque capability (OI-011/013).
+The rear hub motor is a supplied mechanical assembly; project work covers its electrical/control interface. Measure loaded circumference/calibrate the supplied nominal 16-inch wheel basis independently of VD18MT wheel settings (DEC-SPD-002). Verify actual-speed accuracy and propulsion/regenerative torque capability (OI-013/018).
 
 ### 11.4 VD18MT HMI interface
 
 The confirmed connector mixes battery-class supply/power-lock and 5 V UART conductors. The verified pinout and protocol are canonical in the [independent VD18MT interface](.devenv/VD18MT/VD18MT_Tongsheng_UART_Interface.md): black ground; green display RX; yellow battery P+; white display TX; red switched-P+ power lock (pins 1–5 respectively). Directions are from the display perspective.
 
-Characterize supply/brownout and active/off current; power-lock voltage/drop/current/leakage/timing/abnormal behavior; exact UART levels/thresholds/unpowered behavior; connector/retention/sealing (OI-026–031). Power-architecture use of the lock line remains deferred.
+Characterize supply/brownout and active/off current; power-lock voltage/drop/current/leakage/timing/abnormal behavior; exact UART levels/thresholds/unpowered behavior; electrical connector identity, continuity, contact quality and environmental sealing (OI-026–031). Mechanical connector retention is supplied product/platform context. Power-architecture use of the lock line remains deferred.
 
 ### 11.5 Accelerator interface
 
@@ -663,11 +662,11 @@ Detected-invalid input is unknown, not a physical press. DEC-FLT-002–003 / REQ
 
 | Interface | Project-level definition | Status |
 |---|---|---|
-| Vehicle-to-pack interface | Normal removal/refitting, secure retention and electrical connection, no need to recreate removed BMW electronic protocols | DESIGN DECISION |
+| Vehicle-to-pack interface | Supplied normal removal/refitting procedure and initial bay fit; electrical connection and protection, no need to recreate removed BMW electronic protocols | DESIGN DECISION / SUPPLIED CONTEXT |
 | Exposed bay/pack contacts | Handling, contamination, moisture and unintended connection considered in fitted, intermediate and detached configurations | DESIGN DECISION; safeguards downstream |
 | Service | Controlled maintenance, firmware identification, measurements and diagnostic access | DESIGN DECISION; implementation OPEN ISSUE |
 
-Preserving battery removability does not require electrical interchangeability with the removed OEM battery. It does require normal user removal/refitting rather than workshop disassembly. Existing mechanical interfaces shall be characterized before changing access or retention.
+Electrical integration does not require interchangeability with the removed OEM battery. The supplied normal removal/refitting procedure is context; the project qualifies electrical contacts, insulation, accessible energy, residual/generated-energy protection and detached-pack electrical storage. Mechanical access and retention are external assumptions.
 
 ## 12. Derived values and preliminary consistency checks
 
@@ -699,7 +698,7 @@ At 1,000 W mechanical output, $P=T\omega$ gives 25 N·m at 382 rpm, 38 N·m at 2
 
 ### DV-007 — Direct-drive motor consequences
 
-Wheel and motor speed are directly related; wheel rotation can generate voltage. Electrical faults may cause braking/drag as well as propulsion loss. Axle retention must withstand propulsion and regenerative torque. Verify motor/inverter regenerative envelope and battery charge acceptance (OI-048).
+Wheel and motor speed are directly related; wheel rotation can generate voltage. Electrical faults may cause braking/drag as well as propulsion loss. Verify the supplied motor's electrical/inverter regenerative envelope and battery charge acceptance (OI-048); axle retention and torque reaction are external platform properties.
 
 ### DV-008 — Mission distance and reserve margins
 
@@ -742,25 +741,10 @@ Use that integral, measured pack data or a suitable cell model. Only with approx
 
 Selected pack references are 50.4 V, 16.75 Ah and 844.2 Wh on the standard-cell-test basis (§10.8); usable interval energy and system qualification remain open.
 
-### DV-012 — Payload and vehicle mass budget
+<a id="dv-012--payload-and-vehicle-mass-budget"></a>
+### Supplied total-mass duty input
 
-$m_\text{vehicle,max}=130-100=30$ kg, including fitted battery. Pack allowance is 30 kg minus the **actual rest-of-vehicle mass**, not the old complete-scooter mass. Count carried equipment once as fitted mass or payload.
-
-**Current planning basis — assumptions, 2026-09-10:** the owner has no scale for the gutted scooter and authorizes assumption-based progress ([DEC-MAS-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-mas-001)). The following engineering allowances support requirements, architecture and feasibility planning; they are neither measurements nor mandatory subsystem mass allocations.
-
-| Mass item | Planning allowance | Boundary / basis |
-|---|---:|---|
-| Current scooter assembly without removable battery | **21 kg** | Includes retained running gear, the already installed replacement rear hub motor and any other currently fitted parts. Historical complete-donor mass supplies only a rough numerical reference; no removed-part credit or measured upper-bound claim. |
-| Complete removable battery | **5 kg** | 3.50 kg bare-cell datasheet bound plus **1.50 kg assumed allowance** for BMS, interconnections, insulation, enclosure, connector and pack-side retention. |
-| Remaining fitted equipment | **2 kg** | All additions absent from the current assembly/complete-pack allowance: inverter, controller, supplies, remaining harnesses, mounts and enclosures. Count already fitted components only once. |
-| Planned ready-to-ride mass | **28 kg** | 21 + 5 + 2 kg; unverified estimate. |
-| Unallocated headroom to 30 kg | **2 kg** | Planning reserve, not a demonstrated uncertainty bound. |
-
-At this planning total, available payload is **102 kg** by subtraction from 130 kg; only **at least 100 kg** is required. Each additional kilogram consumes one kilogram of headroom. With the other allowances fixed, an as-is assembly above **23 kg** would exceed the 30 kg target. Reconcile component scope and revise/reallocate allowances as design information improves; do not claim mass compliance from the estimate. No probability or confidence interval is assigned.
-
-Separate weighing of the gutted scooter is **not a prerequisite** for current requirements/architecture work. Verify the complete configured vehicle mass, with appropriate uncertainty, before final mass acceptance and physical tests requiring a qualified mass reference. Range, hill, braking and propulsion models retain **130 kg total**, independently of this provisional vehicle/pack split. Other protection and mechanical test gates remain applicable.
-
-Meeting ≥70 km in the 60-point SOC window, ≥100 kg payload and removable packaging is a coupled feasibility obligation. Initial pack fit is owner-confirmed (§10.8); measured mass and range remain open. Any inability to meet all obligations requires a controlled project decision.
+Use **130 kg total carried mass** for the defined EPCS performance and range sizing/qualification cases. This value is an owner-defined duty input, not a vehicle mass ceiling, payload certification, mechanical strength rating or requirement to qualify the BMW platform's load capacity. The donor's initial battery-bay fit is owner-confirmed; only electrical pack integration and energy capability remain project acceptance work.
 
 ### DV-013 — Synthetic urban level-cycle timing
 
@@ -787,13 +771,11 @@ Includes departure/arrival ramps; excludes destination dwell. RJ-001 hills, nonu
 |---|---|
 | CON-001 | Produce a functioning physical scooter meeting the defined use (OBJ-001). |
 | CON-002 | Electrical-engineering/embedded development remains primary (OBJ-002). |
-| CON-003 | BMW X2City is the fixed baseline mechanical carrier. |
-| CON-004 | No fundamental redesign of retained frame, steering, wheels, brakes, kickstand or bell without controlled scope change. |
+| CON-003 | The selected BMW X2City is the supplied external platform; its mechanical design and fitness are assumed, not developed or qualified by this project. See ID-001 §2.1. |
 | CON-005 | Retain installed rear hub motor unless characterization establishes unsuitability. |
 | CON-006 | Use the selected high-voltage VD18MT. |
 | CON-007 | Use the selected three-wire Hall accelerator handle. |
-| CON-008 | Both mechanical brakes remain available independently of EPCS/electrical power. |
-| CON-009 | Retain front/rear lights if characterization establishes safe, adequate integration. |
+| CON-009 | Retain front/rear lights; qualify their electrical integration and function. |
 | CON-010 | Use the fixed polarity-independent coded two-wire/Y brake interface; distinguish all four fault-free lever combinations. Derive sensing/diagnostics downstream; no separate lines or independent safety channels (§10.6). |
 | CON-011 | Removed BMW electronics/firmware/protocol compatibility is not required. |
 | CON-012 | Reuse the prior verified VD18MT protocol baseline (§10.4). |
@@ -805,18 +787,16 @@ Includes departure/arrival ramps; excludes destination dwell. RJ-001 hills, nonu
 |---|---|
 | CON-014 | Use proportionate ISO 26262-inspired discipline, without a compliance target. |
 | CON-015 | Make no ISO 26262 compliance or ASIL claim. |
-| CON-016 | Steering/braking shall not depend on phone, cloud, wireless or internet. |
-| CON-017 | Essential propulsion/fault handling shall not depend on phone, cloud, wireless or internet. |
+| CON-016 | Essential propulsion/fault handling shall not depend on phone, cloud, wireless or internet. |
 | CON-018 | Use verified component limits or conservative documented assumptions. |
 | CON-019 | Verify complete voltage/current-envelope compatibility of battery, control, HMI, motor, harness and protection; nominal ratings alone are insufficient. |
-| CON-020 | Preserve steering/lever travel, rider grip, bell, wheel and brake operation. |
 | CON-021 | Identify and protect mixed-voltage interfaces against incorrect connection. |
 | CON-022 | Configuration-control important hardware, software, calibration, interfaces and test artifacts. |
 | CON-023 | Assess safety-related changes and perform applicable re-verification. |
 | CON-024 | Stage powered development from inspection/low-energy bench work to controlled vehicle tests. |
 | CON-025 | No regular commuter use with an unresolved critical safety anomaly. |
 | CON-026 | Identify the as-built configuration uniquely at release. |
-| CON-027 | Maintain/inspect according to documented procedures. |
+| CON-027 | Maintain project electrical/electronic equipment according to documented procedures. |
 
 ### Operating-scope constraints
 
@@ -834,16 +814,16 @@ All constraints below are **DESIGN DECISIONS** except where an assumption or dow
 
 | ID | Constraint |
 |---|---|
-| CON-034 | Meet §6.2: ≤130 kg total, ≥100 kg payload, ≤30 kg ready-to-ride vehicle including battery. |
+| CON-034 | Use 130 kg total carried mass as the EPCS performance/range load case; no vehicle mass ceiling or payload certification is a project requirement. |
 | CON-035 | Meet RJ-001 and ≥70 km RQ-001 under §6.6; exclude energy outside 20–80% actual SOC. |
 | CON-036 | Use the provisional §6.4–6.4.1 trace and sensitivities for initial sizing; retain assumption status. |
 | CON-037 | Meet dry/+20 °C/130 kg reference ±14%/≥100 m duties: ≥10 km/h ascent, standstill uphill launch, 20 km/h descent. |
 | CON-038 | Meet dry/level/+20 °C/130 kg flat performance: 40 km/h and ≥0.5 m/s² average 0–20 km/h, starting at normal charge ≤80% actual SOC. |
-| CON-039 | Meet −10 °C to +40 °C riding, wet/light-snow and ≥168 h unattended sun/rain/snow storage at −15 °C to +40 °C; permitted reductions follow §8. |
+| CON-039 | Qualify project electrical/electronic operation for −10 °C to +40 °C riding and ≥168 h unattended sun/rain/snow storage at −15 °C to +40 °C; wet/light-snow are supplied use conditions and reductions follow §8. |
 | CON-040 | Keep component-rating incompatibilities visible; no silent reduction of agreed targets. |
 | CON-041 | Integrate the owner-built 14S5P Samsung INR18650-35E pack (§10.8); custom-develop the traction inverter and embedded vehicle software. |
 | CON-042 | Use selected JBD SP14S004P14S50A BMS and its UART for system interaction; qualify integration. Develop a separate supervisor only if needed. |
-| CON-045 | Preserve donor handling and normal user pack removal/refitting; no separate folding-optimization objective. |
+| CON-045 | Use the supplied battery removal/refitting procedure and initial bay fit as interface context; mechanical access, lock function and retention are external platform facts. |
 | CON-046 | Quality, safety and functionality motivate process discipline; process education is secondary. |
 | CON-047 | Core function, suitability and verification remain required despite excluding public-road approval. |
 | CON-048 | Implement OBJ-014 / DEC-SOC-001: 20% severe positive-torque/speed reduction, retained 10% positive cutoff until >20%, normal-full/RQ-001 entry ≤80%, ≤90% regeneration; ordinary use of recovered energy and detailed transitions remain as defined there. |
@@ -859,12 +839,8 @@ Assumptions are provisional, not confirmed component capability or approved redu
 
 | ID | Assumption and disposition |
 |---|---|
-| ASM-001 | Donor frame/joints undamaged; verify 130 kg, 40 km/h expanded duty (OI-010/052). |
-| ASM-002 | Steering serviceable; cold/weather suitability unverified. |
-| ASM-003 | Wheels/tyres/bearings/attachments serviceable; verify speed/light-snow use. |
-| ASM-004 | Brakes retainable after repeated-stop, dry/+20 °C hill-descent and reduced winter/wet validation; OEM capability does not prove 40 km/h suitability. |
-| ASM-005 | Mechanical brakes/steering function with EPCS unpowered. |
-| ASM-006 | Motor/axle attachment retainable after torque-reaction/grade assessment. |
+| ASM-001 | Supplied BMW X2City mechanical platform is assumed fit for the intended use; no project mechanical inspection or qualification is assigned (ID-001 §2.1). |
+| ASM-005 | Supplied steering and mechanical brakes remain external platform functions independent of EPCS; project brake input is electrical-state sensing only. |
 | ASM-007 | Reported motor ratings (§10.2) are preliminary characterization inputs only. |
 | ASM-008 | Three Hall outputs show clean 3.3 V switching with +5 V Vcc/common Gnd/external pull-ups; usable aligned rotor-sector interpretation, timing and fault coverage remain to qualify. |
 | ASM-009 | A Temp-to-Gnd resistive path is 9.257 kilohm with a 23.8 °C housing IR observation; internal sensor temperature, identity and useful limits remain to qualify. |
@@ -873,9 +849,9 @@ Assumptions are provisional, not confirmed component capability or approved redu
 | ASM-012 | Selected display matches prior verified protocol implementation. |
 | ASM-013 | Available reference source/evidence can be preserved (§10.4). |
 | ASM-014 | Accelerator supports suitable 3.3 V-class supply and monotonic ratiometric output; verify limits. |
-| ASM-015 | Accelerator has effective mechanical return. |
+| ASM-015 | The supplied accelerator has a mechanical return; characterize its electrical output at the supplied physical endpoints. |
 | ASM-016 | Retained lights remain safe/useful within required conditions. |
-| ASM-017 | Initial fit of the built 14S5P pack is owner-confirmed. Its RQ-001 capability and ≤30 kg complete vehicle / ≥100 kg payload remain coupled feasibility assumptions. DV-012 now provides an authorized assumption-based mass budget; weighing is deferred under DEC-MAS-001. |
+| ASM-017 | Initial bay fit of the built 14S5P pack is owner-confirmed. Its RQ-001 energy capability remains an electrical integration/qualification issue; the 130 kg total carried mass is a supplied performance duty input. |
 | ASM-019 | Listed tools accessible (§5.6); verify ratings/gaps before work. Purchases permitted. |
 | ASM-021 | ACCESS CLOSED: unrestricted private-site access confirmed; physical/task suitability still checked. |
 | ASM-022 | Personal use only; no commercial/rental/fleet operation. |
@@ -891,7 +867,7 @@ Assumptions are provisional, not confirmed component capability or approved redu
 | ASM-033 | Referenced donor specification applies to fitted variant; verify type plate/discrepancies. Lower component limits need impact assessment, never silently replace 130 kg project limit. |
 | ASM-034 | 30 km/h nominal level model; 20/40 sensitivities. No measured route average/additional speed cap. |
 | ASM-035 | Synthetic constant acceleration/deceleration 0.5/1.0 m/s², uniform stops, zero endpoint speeds; product acceleration requirement is only the 0–20 km/h average. |
-| ASM-036 | Initial built-pack bay fit is owner-confirmed; adequate range energy, retention, contacts and environmental suitability remain unverified. |
+| ASM-036 | Initial built-pack bay fit is owner-confirmed; adequate range energy and electrical contact/environmental suitability remain unverified. Mechanical retention and fitness are supplied external platform assumptions. |
 | ASM-037 | No numerical budget; record expenditure before commitment. Purchase permission is not unlimited spending. |
 
 ## 15. Unresolved issues
@@ -903,24 +879,21 @@ Existing identifiers are preserved. A closed scope question can still have expli
 | ID | Topic | Current disposition | Remaining action / gate |
 |---|---|---|---|
 | OI-001 | Jurisdiction/public-road approval | CLOSED: private-property-only scope | No road-approval work; retain restriction |
-| OI-002 | Design load/payload | CLOSED: §6.2 mass limits | Verify mass budget, fit and load-dependent performance |
+| OI-002 | EPCS reference load | DEFINED: 130 kg total carried-mass duty input in §6.2; no payload certification or vehicle mass ceiling | Prepare the stated load case and verify applicable EPCS performance |
 | OI-003 | Reference commute | DEFINED: RJ-001; provisional trace in §6.4.1 | Baseline model before sizing freeze |
 | OI-004 | Gradient | DEFINED: PERF-003–005; provisional event density | Derive launch criterion and test SOC points |
 | OI-005 | Range/reserve | DEFINED: RQ-001; no outside-window credit | Derive interval energy, allowances and tolerances |
 | OI-006 | Performance | DEFINED: PERF-001–008 | Derive tolerances and verify capability |
 | OI-007 | Environment | DEFINED: §8; reduced adverse-weather performance | Derive permissible envelope/exposure/storage qualification |
-| OI-008 | Handling/removability | DEFINED: normal user removal/refitting | Characterize bay/retention/contacts and safe handling |
+| OI-008 | Handling/removability | DEFINED: supplied normal user removal/refitting procedure | Characterize electrical contacts, accessible energy and safe electrical handling; no mechanical access/retention qualification |
 | OI-009 | Resources | Access/purchases/schedule in §5.6 | Record budget/expenditures and task-specific capabilities or bounded assumptions |
 
 Protocol discovery is not reopened. Physical display identification and electrical characterization are distinct from its already verified protocol.
 
-### 15.2 Donor-platform and mechanical-interface issues
+### 15.2 Supplied platform and electrical speed-reference issue
 
 | ID | Open issue | Required outcome | Target activity |
 |---|---|---|---|
-| OI-010 | Donor-platform condition and expanded duty | Record condition and assess suitability for **130 kg**, 40 km/h, steep descent, and winter/outdoor exposure | Initial inspection before concept commitment; full validation before release |
-| OI-011 | Rear hub-motor attachment | Verify axle retention, propulsion and regenerative-braking torque reaction for hill duty, alignment, cable exit, and brake compatibility | Before powered high-torque testing |
-| OI-012 | Packaging/mass/payload | Initial fit confirmed; use DV-012 mass assumptions for current planning and later verify complete mass / §6.2 payload; RQ-001 energy remains separate | Mass weighing before final mass acceptance and mass-dependent physical tests, not a prerequisite for requirements/architecture planning; other integration gates remain |
 | OI-013 | Loaded wheel circumference | Measure/calibrate speed and distance for the retained nominal 16-inch wheels, independently of rider VD18MT wheel-size settings; verify actual-speed accuracy (DEC-SPD-002) | Characterization |
 
 ### 15.3 Motor issues
@@ -931,7 +904,7 @@ Protocol discovery is not reopened. Physical display identification and electric
 | OI-015 | Meaning of 70 V rating | Determine nominal, rated, test, or maximum voltage meaning | Characterization |
 | OI-016 | Meaning of 20 A rating | Determine DC-bus versus phase current and continuous versus peak duty | Characterization |
 | OI-017 | Meaning of 1,000 W rating | Determine input/output and continuous/peak definition | Characterization |
-| OI-018 | Torque/hill feasibility | Verify PERF-003/004; illustrative loads in DV-009 do not establish ratings/margins | Before inverter/pack sizing commitment |
+| OI-018 | EPCS torque/hill feasibility | Verify PERF-003/004; illustrative loads in DV-009 do not establish electrical ratings/margins | Before inverter/pack sizing commitment |
 | OI-019 | Pole count | Resolve 42 total poles versus 42 pole-pairs | Characterization |
 | OI-020 | Phase mapping | Identify phase order and rotation direction | Characterization |
 | OI-021 | Hall/Temp connector mapping | Functions Vcc/Gnd/Temp/Hall1–3 are owner-identified; record physical pin order/orientation, connector family and return arrangement | Characterization |
@@ -951,7 +924,7 @@ The VD18MT protocol message set and relevant behaviour are **not** open issues.
 | OI-028 | VD18MT current consumption | Measure active and off-state input current | Electrical characterization |
 | OI-029 | Power-lock electrical characteristics | Establish pin-5 voltage, current capability, leakage, timing, and abnormal behaviour | Electrical characterization |
 | OI-030 | UART electrical characteristics | Establish exact high/low levels, thresholds, and unpowered behaviour | Electrical characterization |
-| OI-031 | HMI connector family and sealing | Identify mating connector, retention, and environmental requirements | Interface characterization |
+| OI-031 | HMI connector family and electrical sealing | Identify mating connector, pinout, electrical contact/continuity and sealing/environmental requirements; supplied connector mating/retention is interface context | Electrical interface characterization |
 | OI-032 | Required HMI function set | Owner-selected behavior is in DEC-001 / REQ-001; resolve remaining messages, indications, encodings, selected-unit presentation and integration evidence (WS-OI-009). | Functional requirements |
 
 ### 15.5 Accelerator, brake-switch, and lighting issues
@@ -960,7 +933,7 @@ The VD18MT protocol message set and relevant behaviour are **not** open issues.
 |---|---|---|---|
 | OI-033 | Accelerator pinout and supply range | Verify supply, ground, and signal pins and permissible voltage | Characterization |
 | OI-034 | Accelerator signal range | Measure idle, active, and full-demand ratios over relevant conditions | Characterization |
-| OI-035 | Accelerator mechanical behaviour | Verify travel, return spring, hysteresis, and mounting ergonomics | Characterization |
+| OI-035 | Accelerator electrical endpoint characterization | Measure the electrical output at the supplied physical rest and full-application end stops; determine signal repeatability, hysteresis and endpoint uncertainty. Mechanical travel, return mechanism and mounting ergonomics are external platform/product properties. | Characterization |
 | OI-036 | Accelerator environmental suitability | Establish water, vibration, temperature, and connector capability | Characterization |
 | OI-037 | Coded brake interface qualification | §10.6 fixes terminal coding/Y only. Derive sensing, diagnostics/coverage, thresholds/error budget and residual-fault treatment; qualify fitted BOM/identity, contact/load behavior, harness/fault/environment limits, four-state recognition and the confirmed left/front–right/rear mapping. Assess aliases/common paths; no independent-channel or universal-detection claim. | Characterization, hazard analysis and verification before interface qualification |
 | OI-038 | Front-light characteristics | Determine voltage, current, polarity, functions, connector, and condition | Characterization |
@@ -970,23 +943,22 @@ The VD18MT protocol message set and relevant behaviour are **not** open issues.
 
 | ID | Open issue | Required outcome | Target activity |
 |---|---|---|---|
-| OI-040 | Built removable battery qualification | Cell model, 14S5P construction and initial fit confirmed (§10.8). Verify assembled mass, actual usable energy, interconnections, cell/current/thermal envelopes and RJ-001/RQ-001 compatibility | Before dependent integration/qualification; mass measurement uses DV-012 gate, and cell selection is settled |
+| OI-040 | Built removable battery qualification | Cell model, 14S5P construction and initial bay fit confirmed (§10.8). Verify actual usable energy, electrical interconnections, cell/current/thermal envelopes and RJ-001/RQ-001 compatibility | Before dependent electrical integration/qualification; cell selection and supplied bay-fit context are settled |
 | OI-041 | Selected BMS integration and SOC compatibility | SP14S004P14S50A/UART selected. BMS connection confirmed, configuration incomplete: derive then qualify effective settings, revision, UART electrical restriction/readback, protection, current/thermal limits, SOC accuracy and balancing within 80%; coordinate recovery, auxiliaries and all-load protection. BAT-001 owns source facts | Before battery/UART/regenerative-control integration acceptance |
 | OI-043 | Selected traction board integration | DRV8300DRGE-EVM is owner-held unmodified with actual revision/jumpers unrecorded. Define and qualify host/adapter, external independent gate-inhibit/protection, current/voltage/timing/thermal envelopes, generated-energy response, 5-V Hall supply with 3.3-V pull-ups, enclosure and motor/pack/speed/hill compatibility. The EVM alone supplies no independent fault shutdown. | System design |
 | OI-044 | Selected vehicle controller | WeAct STM32H723VGT6 V1.2 is the shared vehicle host for supervision and motor control. Qualify complete EVM PWM/ADC/Hall, rider/BMS/lamp resource allocation, timer/DMA/cache timing, power/reset/backfeed and common-cause/fault response; no firmware pin implementation is selected.  | Functional concept and architecture |
 | OI-045 | Low-voltage supply and power distribution | Define voltage rails, protection, switching, and service isolation | System architecture |
 | OI-046 | Wiring and connector strategy | Define conductor sizes, routing, connectors, sealing, strain relief, and identification | System architecture |
 | OI-047 | Diagnostic/service interface | [Service acceptance](.devenv/Requirements/System_Requirements/Service_and_Durability.md#service-acceptance-contract) and debugger inspection of producer-owned state define current observations/identity and configuration-specific return guards. Derive task procedures, debugger access, self-test coverage, effective-configuration checks and programming/calibration controls; no persistent failure history after restart (DEC-FLT-007). | System requirements |
-| OI-048 | Regenerative braking | INCLUSION/ROLE DEFINED: accelerator-requested supplemental regeneration, independent/additive mechanical brakes, no lever request (DEC-REG-001). Preserve post-stop hand parking without commanded regeneration until forward powered travel resumes (DEC-REG-006). Derive quantitative limits/transitions, charge acceptance, motor/inverter and axle capability, safety and verification; OBJ-014 / RQ-001 limits remain. | Hazard analysis, functional concept and operating-limit verification |
+| OI-048 | Regenerative braking | INCLUSION/ROLE DEFINED: accelerator-requested supplemental regeneration, supplied mechanical brakes remain external, and brake levers do not request regeneration (DEC-REG-001). Preserve post-stop hand parking without commanded regeneration until forward powered travel resumes (DEC-REG-006). Derive EPCS quantitative limits/transitions, charge acceptance, motor/inverter capability, electrical safety and verification; OBJ-014 / RQ-001 limits remain. | Hazard analysis, functional concept and operating-limit verification |
 | OI-049 | Vehicle-level fault responses | Owner behavior is defined in DEC-FLT-001–009 / DEC-TMP-001–002 / DEC-HMI-006 / DEC-LGT-001. Derive fault catalogue/classification, diagnostic/self-test coverage and initialization periods, finite response, additional protection/isolation/regenerative-energy behavior and auxiliary protection boundaries. Retain unknown brake actuation and assess coded-interface aliases/common paths with OI-037. DEC-FLT-010 specifies the Draft lowest-code rule for indistinguishable earliest ties; recognition-order resolution remains open (WS-OI-010/018/019). | Hazard analysis and safety concept |
-| OI-050 | Verification and durability targets | DUR-001: 50,000 km or 5 years from modified-vehicle commissioning, first reached; DEC-LIFE-001 permits battery/normal wear-part replacement. Define duty, maintenance/replacement criteria and durability acceptance/tests, assessing retained donor condition separately. Replacement does not reset the vehicle-life clock; retain 200 km/week reference usage | Verification planning |
+| OI-050 | Electrical/electronic durability targets | DUR-001: 50,000 km or 5 years from electrical retrofit commissioning, first reached; battery and applicable normal electrical wear-part replacement follows the controlled maintenance basis. Define electrical duty, maintenance and acceptance; supplied donor mechanical life is external. | Verification planning |
 
 ### 15.7 Compatibility and qualification issue dispositions
 
 | ID | Issue | Required resolution | Latest closure gate |
 |---|---|---|---|
 | OI-051 | HMI cold mismatch | CLOSED historically in Rev0.6 at −15°C; current riding minimum is −10°C per DEC-BAT-002. Component-domain conflict resolved; complete vehicle thermal capability remains unverified | Verify adopted cold envelope before cold-use release |
-| OI-052 | Retained mechanical system at 40 km/h | Establish braking, tyres, bearings, steering, frame, and attachment suitability; original speed capability is insufficient evidence | Before high-speed riding tests |
 | OI-053 | 70 km range qualification | Age/SOC/distance basis DEFINED by §6.6; below-20% energy excluded. Baseline precise level trace, tolerances, auxiliary data, SOC/energy allowances and thermal preparation; coordinate 20% endpoint with restricted entry (OI-061). | Before capacity freeze |
 | OI-054 | Performance-condition matrix | Core PERF-001–008 choices DEFINED. Derive launch acceptance, test SOC/tolerances and permitted reduced envelope; validate the accepted sustained-speed tolerance just below 40 km/h while retaining zero torque at/above 40, and coordinate the RQ-001 20% endpoint with restricted entry. Cover descent through 90% actual SOC with regeneration reduced/unavailable. | Before performance requirements baseline |
 | OI-055 | Light-snow/winter envelope | Qualify provisional 20 mm loose snow/no ice, permitted reduced capability and salt severity | Environmental requirements/validation |
@@ -994,7 +966,7 @@ The VD18MT protocol message set and relevant behaviour are **not** open issues.
 | OI-059 | Reference cycle completion | RQ-001 nominal trace is fixed by DEC-RNG-002; complete its physical conformance acceptance. Define the separate RJ-001 hill/event trace from §6.3/6.4.1 assumptions and apply the qualified positive-traction energy model | Before energy/performance simulation baseline |
 | OI-060 | Custom-development resources | Record budget/expenditures and needed probes/fixtures/fabrication/test capabilities within §5.6 | Bounded assumption at first review; task readiness before use |
 | OI-061 | SOC operating-policy evidence | Verify OBJ-014 / DEC-SOC-001 / DEC-FLT-005–007 / DEC-HMI-002/005: actual-SOC reference/uncertainty/margins; validation-set severe torque/speed caps; transition/ramp/report bounds; 10% cutoff retention until >20%; restart/refit continuity; truthful usable/fallback display; SOC qualification/loss and common fault response. Derive protection/auxiliary and battery-fault limits (WS-OI-017/018). Coordinate RQ-001 endpoints and performance with restricted entry; no energy outside 20–80% counts. | Before BMS/regenerative-control requirements freeze |
-| OI-062 | Removable battery interface | Initial bay fit owner-confirmed; characterize and qualify retention, handling, contacts/weather, cycle durability and complete mass; no OEM electronic compatibility required | Before interface acceptance or relevant layout/enclosure changes; complete-mass verification uses DV-012 gate |
+| OI-062 | Battery electrical interface | Initial bay fit is owner-confirmed context. Qualify electrical contacts, insulation, exposed-interface protection, energy/thermal behavior and electrical cycling; no OEM electronic compatibility required. Mechanical retention and handling fitness are external. | Before electrical interface acceptance or changes to electrical layout/enclosure |
 | OI-063 | Range/propulsion endpoints, auxiliaries and storage | Qualify DEC-STO-002 normal-full 80% entry/tolerance for the 168 h fitted and 672 h detached duties; derive residual-load/self-discharge/uncertainty allowances and all-load protection. Assess post-cutoff HMI/lighting; 10% is not an all-load floor and neither endpoint grants indefinite storage. Preserve ≥70 km within 20–80%. | Before energy-capacity/storage qualification freeze |
 
 Remaining characterization and architecture issues need not all be closed to start hazard analysis. Each shall have an owner, required closure evidence, affected design decision, and latest closure milestone in the project register. The project owner is the default responsible person until otherwise assigned.
@@ -1015,9 +987,9 @@ Battery cells, 14S5P configuration and BMS/UART selection are fixed (§10.8). Th
 
 Derive allocation, state-machine implementation, motor control, arbitration/limits, numerical accelerator curves/filtering, timeouts, diagnostics/self-tests, permitted logging, calibration/SOC estimation and update/bootloader strategy. Preserve no persistent past-failure history across any restart (DEC-FLT-007); behavior and implementation are distinct.
 
-### Detailed mechanical integration
+### Detailed electrical/electronic integration
 
-Qualify existing and derive remaining pack enclosure, retention and contact protection; derive controller location, heat sinking, routing/connectors, torque reaction, HMI/accelerator mounting, ingress protection and justified thermal provisions. Preserve the fixed removal/refitting function and shared brake interface.
+Qualify electrical pack connections, insulation, protection and thermal behavior; derive E/E component interfaces, electrical enclosures, wiring/connectors, shielding/EMC, heat flow from project electronics, and safe-energy behavior. Use supplied mounting/bay/access facts as context; no mechanical mount strength, retention, torque reaction, frame, brake, steering or handling qualification is assigned.
 
 ## 17. Explicitly excluded functionality and activities
 
@@ -1056,7 +1028,7 @@ Qualify existing and derive remaining pack enclosure, retention and contact prot
 | EXC-019 | Design and manufacture of a new electric motor |
 | EXC-020 | Electromagnetic redesign or rewinding of the installed hub motor |
 | EXC-021 | Recreation of removed BMW electronics, firmware, or proprietary protocols |
-| EXC-022 | Electrical/protocol interchangeability with the removed OEM battery, motor, controller, display or pedal. **This does not exclude preservation of the battery removal/refitting function and required mechanical access.** |
+| EXC-022 | Electrical/protocol interchangeability with the removed OEM battery, motor, controller, display or pedal. The supplied battery removal/refitting procedure remains use context; mechanical access/retention design is outside scope. |
 | EXC-023 | Repeating basic VD18MT UART protocol reverse engineering already completed by the prior test implementation |
 | EXC-024 | Treating regenerative braking as the sole or primary mechanical stopping method |
 | EXC-025 | Designing unrelated consumer connectivity features before the core vehicle is functional and verified |
@@ -1067,7 +1039,7 @@ Excluded functions may enter scope only through explicit change and impact asses
 
 ## 18. Configuration and release authority
 
-README is the sole current vehicle PD. PD-001-R1.1 was approved by Dominik on 2026-09-09; this 1.5 revision is Draft and has not been released. The owner authorized the current pack/BMS, temperature, traction-board and vehicle-host decisions. Their obligations, open gates and change effects are stated in this PD and the linked DEC, requirement, architecture and evidence records. Git retains released baselines and prior revisions; retrieval authority is in the [workstream index](.devenv/Requirements/README.md#release-and-history). Controlled revision, owner approval and affected re-verification are required for later changes.
+README is the sole current vehicle PD. PD-001-R1.1 was approved by Dominik on 2026-09-09; this 1.6 successor Draft, dated 2026-10-06, has not been released. The owner authorized the current pack/BMS, temperature, traction-board and vehicle-host decisions. The narrowed electrical/electronic project scope is a new owner decision; no prior release or review approves it. Its obligations, open gates and change effects are stated in this PD and the linked DEC, requirement, architecture and evidence records. Git retains released baselines and prior revisions; retrieval authority is in the [workstream index](.devenv/Requirements/README.md#release-and-history). Controlled revision, owner approval and affected re-verification are required for later changes.
 
 ## 19. Sources and evidence
 
@@ -1075,7 +1047,7 @@ README is the sole current vehicle PD. PD-001-R1.1 was approved by Dominik on 20
 
 Owner inputs establish selections, retained/installed condition, HMI pinout/prior successful protocol use and mission/scope choices; they do not demonstrate new performance. Preserve available source, photos, measurements and test records under configuration control.
 
-[DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) records current owner decisions, provenance and supersession; [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) contains approved requirements/planned acceptance. Their subsequent owner approval is recorded in the workstream index; planned verification remains distinct from executed evidence. HMI protocol source/reference is identified in §10.4; project code assignments and selected-display presentation remain distinct from independent datasheet labels.
+[DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) records current owner decisions, provenance and supersession; [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) contains historical approved requirements and their current Draft successors/planned acceptance. Prior approval records apply only to their released snapshots; planned verification remains distinct from executed evidence. HMI protocol source/reference is identified in §10.4; project code assignments and selected-display presentation remain distinct from independent datasheet labels.
 
 The owner requested brake-interface restoration on 2026-09-08 from `.devenv/specification/application/brake-input.md` at commit `9dd60546a82fee2378cfa95ee90f783e7083c84a` (2026-08-28, “Implemented Brake Input detection”). The [Brake Input Reference](.devenv/Requirements/evidence/Brake_Input_Reference.md) preserves the adopted terminal interface, four assembled-Y resistance records and intrinsic limitations. Only that fixed interface is inherited; historical sensing circuitry/acquisition/thresholds/firmware bring-up and claimed diagnostic capability are excluded. Derive and verify sensing/diagnostics downstream.
 
@@ -1106,8 +1078,8 @@ S1–S5 and S9 retain the 2026-09-05 baseline review provenance; S4 was rechecke
 ### End of document
 
 **Document:** PD-001\
-**Revision:** 1.5 Draft\
+**Revision:** 1.6 Draft\
 **Prior released baseline:** PD-001-R1.1\
 **Status:** Draft; owner-authorized changes, not released\
-**Change authority:** Dominik, project owner; battery/temperature, EVM and WeAct selections recorded through 2026-09-14\
-**Revision date:** 2026-09-14
+**Change authority:** Dominik, project owner; electrical/electronic scope decision 2026-10-06, plus existing battery/temperature, EVM and WeAct selections\
+**Revision date:** 2026-10-06

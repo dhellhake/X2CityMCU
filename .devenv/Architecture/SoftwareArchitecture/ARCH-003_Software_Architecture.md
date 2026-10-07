@@ -1,7 +1,7 @@
 # ARCH-003 — Software architecture and deployment
 
-**Draft vehicle baseline — 2026-09-16.** The full vehicle component catalogue, typed ports, `R-V*` route families, external boundaries, endpoint diagrams, state ownership and timing contracts are retained.
-**Draft 1.4 — 2026-09-14; successor to ARCH-003-R1.1.** This controlled refinement records Hall interpretation and Hall-sensored FOC responsibility with the selected EVM traction-board and WeAct vehicle-host boundaries while preserving existing released requirement targets. It remains consistent with [FC-001](../FC-001_Functional_Concept.md), [FC-002](../FC-002_Function_Trace.md) and REQ-001-R2.0. Timing, circuit, algorithm, diagnostic-coverage and physical-output acceptance remain derived work.
+**Draft EPCS baseline — 2026-10-06.** Software ownership and contracts support the E/E retrofit only. Supplied BMW mechanical behavior is platform context; the scope update does not add or validate a mechanical software responsibility.
+**Historical Draft 1.4 — 2026-09-14; successor to ARCH-003-R1.1 (superseded for current scope).** This controlled refinement records Hall interpretation and Hall-sensored FOC responsibility with the selected EVM traction-board and WeAct vehicle-host boundaries while preserving existing released requirement targets. It remains consistent with [FC-001](../FC-001_Functional_Concept.md), [FC-002](../FC-002_Function_Trace.md) and REQ-001-R2.0. Timing, circuit, algorithm, diagnostic-coverage and physical-output acceptance remain derived work.
 
 ## Reading this architecture
 
@@ -90,7 +90,7 @@ For [REQ-SYS-SOC-006](../SystemArchitecture/Modelling/BatteryControl/Battery_SOC
 
 ## Typed software interactions
 
-These local interfaces refine, and do not replace, ARCH-001 `IF-A-001` through `IF-A-013`. Every project-host software component has the canonical typed `executionTimeIn` input carrying `ExecutionTime(currentTimeMicroseconds:Integer)` from its caller; supplied external endpoints do not. Data exchanges retain value, qualification and producer/reset context; measurement and event timestamps describe their actual source timing. Symbolic deadlines are derived later.
+These local interfaces refine, and do not replace, ARCH-001 `IF-A-001` through `IF-A-011`. Every project-host software component has the canonical typed `executionTimeIn` input carrying `ExecutionTime(currentTimeMicroseconds:Integer)` from its caller; supplied external endpoints do not. Data exchanges retain value, qualification and producer/reset context; measurement and event timestamps describe their actual source timing. Symbolic deadlines are derived later.
 
 The caller samples the shared monotonic host clock immediately before each component invocation and holds that `currentTimeMicroseconds` value fixed for the invocation. It is never a planned release timestamp or a stale task-start snapshot reused after an unbounded delay. Direct and interrupt callers supply the same reference without a queue or scheduler. Each component owns its own timeout supervision and applies the supplied time to local age and expiry decisions; WCET and elapsed margin evidence bound the fixed invocation input. The current cyclic `src/os` path still passes planned `task.timestamp_us` to callbacks, which is a documented implementation limitation; a future calling-task adapter obtains live `GetElapsedMicroseconds` at the call boundary. No clock-provider component or Platform time broadcast is introduced.
 
