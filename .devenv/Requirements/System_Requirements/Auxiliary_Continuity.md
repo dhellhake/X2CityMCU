@@ -1,6 +1,6 @@
 # Auxiliary continuity
 
-**Type:** System Requirement. **Target:** `LE-VEH`. This cross-cutting obligation remains canonical here because its contributors include HMIControl, LightControl and vehicle electrical protection.
+**Type:** System Requirement. **Target:** `LE-EPCS`. This cross-cutting obligation is allocated to the integrating EPCS because its contributors include HMIControl, LightControl and battery protection.
 
 | ID | Requirement | Planned verification / distinguishing cases | Sources | Open dependencies / qualifications |
 | --- | --- | --- | --- | --- |

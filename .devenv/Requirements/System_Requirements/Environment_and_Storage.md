@@ -20,7 +20,7 @@ Riding ambient limits are not component-temperature or regenerative charge-accep
 
 ## Fitted-battery storage energy
 
-The following child contributes the fitted-battery energy aspect of [REQ-VEH-ENV-003](Environment_and_Storage.md#req-veh-env-003); it does not establish architectural containment between `LE-VEH` and `LE-EPCS` or cover the parent's other weather/interface obligations. Detached-pack duration/environment now follow [REQ-SYS-STO-002](Environment_and_Storage.md#req-sys-sto-002); DEC-STO-002 fixes normal-full entry and post-storage preparation, while quantitative acceptance remains OI-056/063 work; the empty-bay weather requirement does not extend the vehicle exposure domain to the detached pack.
+The following child contributes the fitted-battery energy aspect of [REQ-VEH-ENV-003](Environment_and_Storage.md#req-veh-env-003) and does not cover the parent's other weather/interface obligations. Detached-pack duration/environment now follow [REQ-SYS-STO-002](Environment_and_Storage.md#req-sys-sto-002); DEC-STO-002 fixes normal-full entry and post-storage preparation, while quantitative acceptance remains OI-056/063 work; the empty-bay weather requirement does not extend the supplied scooter exposure domain to the detached pack.
 
 | ID | Requirement | Derived from | Planned verification / distinguishing cases | Sources | Open dependencies / qualifications |
 |---|---|---|---|---|---|

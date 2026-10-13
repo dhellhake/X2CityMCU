@@ -1,6 +1,6 @@
 # Battery SOC and continued auxiliary operation
 
-**Type:** System Requirement. **Targets:** `REQ-SYS-*` → `LE-EPCS`; `REQ-VEH-*` → `LE-VEH`. These whole-vehicle performance and enforcement records remain EPCS/VEH requirements although co-located with BatteryControl.
+**Type:** System Requirement. **Target:** `LE-EPCS`.
 
 Part of **REQ-001-R1.6**. [Model, status and cluster index](../../../../Requirements/REQ-001_Requirements.md) · [Shared verification](../../../../Requirements/REQ-001_Requirements.md#reading-and-verification-rules) · [Common interpretation](../../../../Requirements/REQ-001_Requirements.md#common-interpretation-and-upstream-scope). These rules apply to every row; relocation preserves its approval/status and qualifications.
 

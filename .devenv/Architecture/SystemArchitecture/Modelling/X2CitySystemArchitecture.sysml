@@ -378,12 +378,9 @@ package X2CitySystemArchitecture {
             connect traction.tractionConditionEvidenceOut to riding.session.tractionConditionEvidenceIn;
     }
 
-    // LE-VEH is an installed-vehicle scope view, not a parent of the whole EPCS.
-    part def InstalledVehicleScope;
-
+    // EPCS assembly used for realization binding; supplied BMW mechanics and performance conditions are external qualification context.
     part def ProjectVehicleModel {
         part epcs:ElectricalPropulsionControlSystem;
-        part installedVehicle:InstalledVehicleScope;
     }
 
     // The selected detailed vehicle binds this System reference to the one MotorControl pilot

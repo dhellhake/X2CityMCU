@@ -1,6 +1,6 @@
 # Brake interface and priority
 
-**Type:** System Requirement. **Targets:** `REQ-SYS-*` → [LE-EPCS](../REQ-001_Requirements.md#le-epcs); `REQ-VEH-*` → [LE-VEH](../REQ-001_Requirements.md#le-veh).
+**Type:** System Requirement. **Target:** [LE-EPCS](../REQ-001_Requirements.md#le-epcs).
 
 Part of **REQ-001-R1.6**. [Model, status and cluster index](../REQ-001_Requirements.md) · [Shared verification](../REQ-001_Requirements.md#reading-and-verification-rules) · [Common interpretation](../REQ-001_Requirements.md#common-interpretation-and-upstream-scope). These rules apply to every row; relocation preserves its approval/status and qualifications.
 

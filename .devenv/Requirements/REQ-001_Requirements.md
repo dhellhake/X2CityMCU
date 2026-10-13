@@ -54,10 +54,9 @@ These identifiers retain the responsibility scopes from [ID §2.1](ID-001_Item_D
 
 | Target | Scope and current assignment |
 |---|---|
-| <a id="le-veh"></a>`LE-VEH` | Project-level E/E performance and use-context root for `REQ-VEH-*`; supplied mechanical platform functions are external assumptions |
-| <a id="le-epcs"></a>`LE-EPCS` | Vehicle EPCS functional development system, including energy storage/supervision and installed regeneration; default scope for `REQ-SYS-*`; explicit cluster/row targets override it |
+| <a id="le-epcs"></a>`LE-EPCS` | Project EPCS functional development system, including energy storage/supervision and installed regeneration; responsible root for project E/E performance and use-context requirements. Explicit cluster/row targets identify narrower responsibilities. |
 
-Vehicle and EPCS are overlapping scope views, not an asserted parent/child pair: the same pack remains in vehicle-project scope across installed operation, removal/refitting and detached storage. Architecture development must establish applicable configuration and containment relations explicitly. Cross-cutting obligations may remain at their responsible root or common parent.
+The same physical pack remains within EPCS responsibility across installed operation, removal/refitting and detached storage; requirements retain their applicable configuration and containment conditions explicitly. Cross-cutting obligations may remain at their responsible root or common parent.
 
 ## Traceability concept
 
@@ -105,7 +104,7 @@ This is project tailoring; method references are [NASA logical decomposition](ht
 
 ## Reading and verification rules
 
-The 171 R1.6 active records remain the historical approved baseline. This 2026-10-06 Draft removes pure mechanical qualifications and narrows mixed requirements to project electrical/electronic obligations; no prior review or release approves this scope change. Nine retained FSC records remain **Draft**. The ten reclassified records retain their historical identities. Historical approval does not establish full architecture B or implementation acceptance. `SYS` identifies EPCS responsibility; `VEH` identifies project-level performance/use context. PD-001 supplies objectives and constraints; each active row records its obligation, planned verification, source and unresolved dependencies.
+The 171 R1.6 active records remain the historical approved baseline. This 2026-10-06 Draft removes pure mechanical qualifications and narrows mixed requirements to project electrical/electronic obligations; no prior review or release approves this scope change. Nine retained FSC records remain **Draft**. The ten reclassified records retain their historical identities. Historical approval does not establish full architecture B or implementation acceptance. `SYS` and `VEH` remain stable record identifiers; each active row's target metadata identifies current responsibility. PD-001 supplies objectives and constraints; each active row records its obligation, planned verification, source and unresolved dependencies.
 
 Deferred and Withdrawn rows retain historical IDs/provenance only and impose no current obligation; Withdrawn means superseded by a later owner decision.
 
