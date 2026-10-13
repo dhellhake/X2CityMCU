@@ -8,7 +8,7 @@ package X2CityComponent_AcceleratorPositionIdentification {
         /* End-to-end logical accelerator function: electrical signal through measurement to qualified Position/Qualification. It owns no torque mapping, policy authorization or session latch. */
         part signalMeasurement:AcceleratorSignalMeasurement;
         part positionProcessing:AcceleratorPositionProcessing;
-        port electricalSignalIn:AcceleratorElectricalSignalInputPort { doc /* Receives RiderDevices' unqualified electrical accelerator signal. */ }
+        port electricalSignalIn:AcceleratorElectricalSignalInputPort { doc /* Receives the unqualified electrical accelerator observation at the vehicle function boundary. */ }
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Publishes one Position/Qualification composite to policy consumers. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Publishes the composite Qualification projection to platform health. */ }
         flow electricalSignalToSignalMeasurement from electricalSignalIn.signal to signalMeasurement.electricalSignalIn.signal;

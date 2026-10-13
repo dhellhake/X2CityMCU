@@ -37,8 +37,6 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
         interface vehicleElectricalPowerToCompute : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to compute.vehicleElectricalPowerIn;
-        interface vd18mtDeviceConnection : IfA006HmiDeviceConnection
-            connect hmiControl.vd18mtConnection to input.riderDevices.vd18mtConnection;
         interface controllerWakeToCompute : IfA006ControllerWake
             connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
         interface vehicleOperationRequestToSession : IfA006VehicleOperationRequest

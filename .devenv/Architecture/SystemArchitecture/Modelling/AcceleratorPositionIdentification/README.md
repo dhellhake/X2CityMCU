@@ -10,7 +10,7 @@
 
 ```mermaid
 flowchart LR
-    R[Rider electrical signal] --> HW[AcceleratorSignalMeasurement]
+    HW[AcceleratorSignalMeasurement<br/>electricalSignalIn]
     HW --> SW[AcceleratorPositionProcessing]
     SW --> P[Settings / Session / Demand]
     SW --> H[Platform health]

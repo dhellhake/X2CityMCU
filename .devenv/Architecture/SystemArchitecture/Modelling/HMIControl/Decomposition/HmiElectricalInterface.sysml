@@ -22,15 +22,6 @@ package X2CityContract_HmiElectricalInterface {
         in item informationFromDisplay:HmiDisplayRequestData;
         in item powerLock:HmiPowerLockSignal;
     }
-    interface def IfA006HmiDeviceConnection {
-        doc /* Connects the vehicle and supplied VD18MT through required logical energy, information and raw power-lock signal exchanges. ARCH-002 refines their physical conductor and connector realization. */
-        end vehicle:HmiDevicePort;
-        end display:~HmiDevicePort;
-        flow vehicle.displayPower to display.displayPower;
-        flow vehicle.informationToDisplay to display.informationToDisplay;
-        flow display.informationFromDisplay to vehicle.informationFromDisplay;
-        flow display.powerLock to vehicle.powerLock;
-    }
 }
 
 package X2CityComponent_HmiElectricalInterface {

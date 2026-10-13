@@ -1,6 +1,6 @@
 # Mechanical brake detection
 
-`MechanicalBrakeDetection` converts RiderDevices' coded brake electrical signal into one `BrakeLeverState` composite. `State` carries the `Neither`/`Left`/`Right`/`Both` lever combination and the actual measurement time. `Qualification` carries usability and measurement-health attribution.
+`MechanicalBrakeDetection` converts the passive coded-brake electrical signal exposed at `BrakeSignalMeasurement.brakeElectricalSignalIn` into one `BrakeLeverState` composite. `State` carries the `Neither`/`Left`/`Right`/`Both` lever combination and the actual measurement time. `Qualification` carries usability and measurement-health attribution.
 
 | Element | Responsibility | Requirements |
 | --- | --- | --- |
@@ -10,7 +10,7 @@
 
 ```mermaid
 flowchart LR
-    R[RiderDevices coded brake signal] --> HW[BrakeSignalMeasurement]
+    HW[BrakeSignalMeasurement<br/>brakeElectricalSignalIn]
     HW --> SW[BrakeStateIdentification]
     SW --> C[Session / Demand / Light]
     SW --> H[Platform health]

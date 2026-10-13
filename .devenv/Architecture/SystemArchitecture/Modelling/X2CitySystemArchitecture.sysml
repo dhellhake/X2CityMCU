@@ -44,7 +44,6 @@ package X2CitySystemArchitecture {
     alias Expiry for X2CitySharedContracts::Expiry;
     alias QualifiedInformationRecord for X2CitySharedContracts::QualifiedInformationRecord;
 
-    alias BrakeElectricalSignalOutputPort for X2CityContract_BrakeSignalMeasurement::BrakeElectricalSignalOutputPort;
     alias BrakeElectricalSignalInputPort for X2CityContract_BrakeSignalMeasurement::BrakeElectricalSignalInputPort;
     alias BrakeMeasurementOutputPort for X2CityContract_BrakeSignalMeasurement::BrakeMeasurementOutputPort;
     alias BrakeMeasurementInputPort for X2CityContract_BrakeSignalMeasurement::BrakeMeasurementInputPort;
@@ -64,7 +63,6 @@ package X2CitySystemArchitecture {
     alias FastDcLinkVoltageOutputPort for X2CityContract_TractionControl::FastDcLinkVoltageOutputPort;
     alias FastDcLinkVoltageInputPort for X2CityContract_TractionControl::FastDcLinkVoltageInputPort;
     alias AcceleratorElectricalSignal for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignal;
-    alias AcceleratorElectricalSignalOutputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignalOutputPort;
     alias AcceleratorElectricalSignalInputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorElectricalSignalInputPort;
     alias AcceleratorMeasurement for X2CityContract_AcceleratorSignalMeasurement::AcceleratorMeasurement;
     alias AcceleratorMeasurementOutputPort for X2CityContract_AcceleratorSignalMeasurement::AcceleratorMeasurementOutputPort;
@@ -182,7 +180,6 @@ package X2CitySystemArchitecture {
     alias HmiControllerReportData for X2CityContract_HmiElectricalInterface::HmiControllerReportData;
     alias HmiDevicePort for X2CityContract_HmiElectricalInterface::HmiDevicePort;
     alias HmiPowerLockSignal for X2CityContract_HmiElectricalInterface::HmiPowerLockSignal;
-    alias IfA006HmiDeviceConnection for X2CityContract_HmiElectricalInterface::IfA006HmiDeviceConnection;
     alias ControllerWakeSignal for X2CityContract_ComputeHardware::ControllerWakeSignal;
     alias ControllerWakeOutputPort for X2CityContract_ComputeHardware::ControllerWakeOutputPort;
     alias ControllerWakeInputPort for X2CityContract_ComputeHardware::ControllerWakeInputPort;
@@ -282,7 +279,7 @@ package X2CitySystemArchitecture {
     }
 
     part def Input { // LE-INPUT
-        part riderDevices:RiderDevices;
+        /* Composes accelerator and coded brake-lever electrical detection functions. Their electrical input ports mark the exposed function boundaries; no rider-operated endpoint or sensor implementation is selected here. */
         part accelerator:AcceleratorPositionIdentification;
         part mechanicalBrakeDetection:MechanicalBrakeDetection;
         port brakeLeverStateOut:BrakeLeverStateOutputPort;
@@ -293,15 +290,6 @@ package X2CitySystemArchitecture {
         flow brakeHealthFromFunction from mechanicalBrakeDetection.brakeHealthOut.qualification to brakeHealthOut.qualification;
         flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
         flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
-        flow riderElectricalToAccelerator from riderDevices.acceleratorElectricalSignalOut.signal to accelerator.electricalSignalIn.signal;
-        interface brakeElectricalSignalToDetection : X2CityContract_BrakeSignalMeasurement::IfA007BrakeElectricalSignal
-            connect riderDevices.brakeElectricalSignalOut to mechanicalBrakeDetection.brakeElectricalSignalIn;
-    }
-
-    part def RiderDevices { // LE-RIDER-DEVICES
-        port vd18mtConnection:~HmiDevicePort;
-        port acceleratorElectricalSignalOut:AcceleratorElectricalSignalOutputPort;
-        port brakeElectricalSignalOut:BrakeElectricalSignalOutputPort;
     }
 
     part def Traction { // LE-TRACTION
@@ -371,8 +359,6 @@ package X2CitySystemArchitecture {
             connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
         interface vehicleElectricalPowerToCompute : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to compute.vehicleElectricalPowerIn;
-        interface vd18mtDeviceConnection : IfA006HmiDeviceConnection
-            connect hmiControl.vd18mtConnection to input.riderDevices.vd18mtConnection;
         interface controllerWakeToCompute : IfA006ControllerWake
             connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
         interface vehicleOperationRequestToSession : IfA006VehicleOperationRequest

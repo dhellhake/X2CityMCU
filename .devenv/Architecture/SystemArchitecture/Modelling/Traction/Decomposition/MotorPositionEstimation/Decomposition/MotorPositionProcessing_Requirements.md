@@ -1,6 +1,6 @@
 # Motor position processing requirements
 
-**Draft addition — 2026-09-21.** **Type:** Abstract Software Requirement. **Target:** [LE-MOTOR-POSITION-PROC](../../../ARCH-001_System_Architecture.md#le-motor-position-proc).
+**Draft addition — 2026-09-21.** **Type:** Abstract Software Requirement. **Target:** [LE-MOTOR-POSITION-PROC](../../../../../ARCH-001_System_Architecture.md#le-motor-position-proc).
 
 The software leaf maps physical measurement evidence into the caller's host-monotonic time and current context, validates its immutable compiled calibration, and publishes the sole final `MotorPosition`. `SC-HALL-IF.V`, `SC-MOTOR-PHASE-IF.V`, `SC-MOTOR-POSITION-ESTIMATOR.V` and the existing acquisition contribution jointly realize these duties.
 

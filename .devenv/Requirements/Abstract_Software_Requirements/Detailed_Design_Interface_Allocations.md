@@ -1,6 +1,6 @@
 # Detailed-design interface allocations
 
-**Draft successor — 2026-10-02; retains REQ-001-R2.0.** The motor-control and traction temperature/supply records are canonical in [MotorControl requirements](../../Architecture/SystemArchitecture/Modelling/TractionControl/Decomposition/MotorControl_Requirements.md). This document retains the Platform and fast-runtime allocations.
+**Draft successor — 2026-10-02; retains REQ-001-R2.0.** The motor-control and traction temperature/supply records are canonical in [MotorControl requirements](../../Architecture/SystemArchitecture/Modelling/Traction/Decomposition/TractionControl/Decomposition/MotorControl_Requirements.md). This document retains the Platform and fast-runtime allocations.
 
 ## Caller-supplied execution-time allocation
 

@@ -21,7 +21,7 @@ The logical and software views select one detailed-design implementation occurre
 SysML `:>>` feature redefinitions carry the same occurrence selection through the
 chain; they do not create a second MotorControl or TractionControl instance. The
 selected containing context is defined by the detailed-design model. See the
-[system MotorControl model](../../SystemArchitecture/Modelling/TractionControl/Decomposition/MotorControl.sysml),
+[system MotorControl model](../../SystemArchitecture/Modelling/Traction/Decomposition/TractionControl/Decomposition/MotorControl.sysml),
 [software TractionControl model](../TractionControl/TractionControl.sysml),
 the [TractionControlImplementation model](../TractionControl/DetailedDesign/TractionControlImplementation.sysml),
 and [detailed-design container model](Modelling/X2CityDetailedDesign.sysml).
