@@ -7,7 +7,7 @@ package X2CityContract_MotorControl {
         attribute actualElectricalBrakingPresent:Boolean;
     }
     item def QualifiedVehicleMotion:>QualifiedInformationRecord {
-        doc /* Traction-owned vehicle motion evidence. Speed is the sole System producer for HMI presentation as well as SettingsPolicy, SessionPolicy and DemandPolicy. */
+        doc /* Traction-owned vehicle motion evidence. Speed is the sole System producer for HMI presentation and RidingControl policy. */
         attribute vehicleSpeedKilometresPerHour:Real;
         attribute travelDirection:String;
         attribute standstill:Boolean;
@@ -51,12 +51,12 @@ package X2CityContract_MotorControl {
         doc /* Physical motor-actuation boundary between the traction output stage and motor. It does not claim a particular winding, switching, isolation or torque realization. */
     }
 
-    port def ActualTractionOutputPort { doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy and DemandPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command; MotorControl's electrical-braking projection provides LightControl's dedicated input. */ out item payload:ActualTractionOutput; }
-    port def ActualTractionInputPort { doc /* Carries qualified observations of actual traction output from Traction to SessionPolicy and DemandPolicy. The record is output-stage evidence for policy decisions and remains separate from the requested torque command; MotorControl's electrical-braking projection provides LightControl's dedicated input. */ in item payload:ActualTractionOutput; }
+    port def ActualTractionOutputPort { doc /* Carries qualified actual traction output from Traction to RidingControl for demand and recovery policy. It remains separate from the requested torque command; MotorControl's electrical-braking projection provides LightControl's dedicated input. */ out item payload:ActualTractionOutput; }
+    port def ActualTractionInputPort { doc /* Receives qualified actual traction output at RidingControl for demand and recovery policy. It remains separate from the requested torque command; MotorControl's electrical-braking projection provides LightControl's dedicated input. */ in item payload:ActualTractionOutput; }
     port def ElectricalBrakingStateOutputPort { doc /* Carries Traction's qualified actual electrical-braking present/absent projection. It is derived from actual output-stage evidence, retains that evidence's qualification, and is distinct from a brake-lever request and from battery charging. */ out item payload:ElectricalBrakingState; }
     port def ElectricalBrakingStateInputPort { doc /* Receives Traction's qualified actual electrical-braking present/absent projection. It is derived from actual output-stage evidence, retains that evidence's qualification, and is distinct from a brake-lever request and from battery charging. */ in item payload:ElectricalBrakingState; }
-    port def QualifiedVehicleMotionOutputPort { doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy, DemandPolicy and HmiInformationProcessing. This physical-motion qualification is separate from accelerator/brake facts and HMI protocol encoding. */ out item payload:QualifiedVehicleMotion; }
-    port def QualifiedVehicleMotionInputPort { doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to SettingsPolicy, SessionPolicy, DemandPolicy or HmiInformationProcessing. This physical-motion qualification is separate from accelerator/brake facts and HMI protocol encoding. */ in item payload:QualifiedVehicleMotion; }
+    port def QualifiedVehicleMotionOutputPort { doc /* Carries Traction-owned qualified vehicle speed, direction and standstill observations to RidingControl and HmiInformationProcessing. This physical-motion qualification is separate from accelerator/brake facts and HMI protocol encoding. */ out item payload:QualifiedVehicleMotion; }
+    port def QualifiedVehicleMotionInputPort { doc /* Receives Traction-owned qualified vehicle speed, direction and standstill observations at RidingControl or HmiInformationProcessing. This physical-motion qualification is separate from accelerator/brake facts and HMI protocol encoding. */ in item payload:QualifiedVehicleMotion; }
     port def PhaseExcitationCommandOutputPort { doc /* Publishes requested phase excitation and overriding inhibition to traction hardware. */ out item payload:PhaseExcitationCommand; }
     port def PhaseExcitationCommandInputPort { doc /* Receives requested phase excitation and overriding inhibition; it does not prove physical output. */ in item payload:PhaseExcitationCommand; }
     port def TractionStageEvidenceOutputPort { doc /* Publishes qualified physical output-stage evidence independently of command. */ out item payload:TractionStageEvidence; }
@@ -80,14 +80,13 @@ package X2CityContract_MotorControl {
 package X2CityComponent_MotorControl {
     private import X2CitySharedContracts::*;
     private import X2CityContract_MotorControl::*;
-    private import X2CityContract_SessionPolicy::*;
-    private import X2CityContract_DemandPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_MotorPositionProcessing::*;
     private import X2CityContract_TractionControl::*;
 
     part def MotorControl { // LE-MOTOR-CTRL
         /* Software logical responsibility for controlled traction output. It derives requested phase excitation from authority, demand and qualified feedback. It must inhibit both propulsion and regenerative signs until required startup traction conditions, including GVDD, are qualified and accepted; any recognized fault remains inhibited until a clean restart. Measurement remains active while actuation is disarmed, so startup evidence does not depend on activation. Session owns the common fault latch. */
-        port ridingAuthorityIn:RidingAuthorityInputPort { doc /* Session authorization boundary for excitation. */ }
+        port ridingAuthorityIn:RidingAuthorityInputPort { doc /* RidingControl authorization boundary for excitation. */ }
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort { doc /* Signed demand input; a zero request remains distinct from inhibition. */ }
         port motorPositionIn:MotorPositionInputPort { doc /* Qualified electrical position/qualification composite from the estimator. */ }
         port phaseCurrentIn:PhaseCurrentMeasurementsInputPort { doc /* Qualified semantic phase-current feedback from the estimator. */ }

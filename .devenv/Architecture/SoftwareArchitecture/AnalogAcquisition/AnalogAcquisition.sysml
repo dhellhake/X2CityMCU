@@ -41,15 +41,13 @@ package X2CitySoftwareContract_AnalogAcquisition {
         out item payload:FastInjectedEpoch;
     }
     port def AdcAcquisitionHealthOutputPort {
-        doc /* Publishes acquisition-path health evidence to Platform and SessionPolicy. The evidence qualifies capture freshness and integrity; it does not become a sensor measurement. */
+        doc /* Publishes acquisition-path health evidence to Platform and RidingControl session logic. The evidence qualifies capture freshness and integrity; it does not become a sensor measurement. */
         out item payload:SensorHealthCondition;
     }
 }
 
 package X2CitySoftwareComponent_AnalogAcquisition {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AnalogAcquisition::*;
-    private import X2CitySoftwareContract_Platform::*;
     part def AnalogAcquisition {
         /* Owns raw regular DMA completion and raw injected JEOS/JDR acquisition only. The regular
            and fast paths have distinct records, state, buffers and producer contexts. It assigns

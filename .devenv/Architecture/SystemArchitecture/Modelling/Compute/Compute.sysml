@@ -6,14 +6,14 @@ package X2CityContract_Compute {
         attribute requiredRuntimeReady:Boolean;
     }
     item def ComputeSleepRequest:>QualifiedInformationRecord {
-        doc /* SessionPolicy is the sole sleep-eligibility owner and originates this qualified current request and its lifetime. It publishes enterSleep=true only while qualified explicit HMI Off and current qualified TractionConditionEvidence.computeSleepPermitted evidence both support eligibility. A false request revokes/cancels the grant. Consumers require valid, present, current-context, unexpired qualification; forwarding or copying preserves expiry and source context and cannot renew permission. */
+        doc /* RidingControl is the sole sleep-eligibility owner and originates this qualified current request and its lifetime. It publishes enterSleep=true only while qualified explicit HMI Off and current qualified TractionConditionEvidence.computeSleepPermitted evidence both support eligibility. A false request revokes/cancels the grant. Consumers require valid, present, current-context, unexpired qualification; forwarding or copying preserves expiry and source context and cannot renew permission. */
         attribute enterSleep:Boolean;
         attribute expiry:Expiry;
     }
 
-    port def ComputeRuntimeInitializationOutputPort { doc /* Publishes Platform runtime initialization availability to SessionPolicy. */ out item initialization:ComputeRuntimeInitialization; }
+    port def ComputeRuntimeInitializationOutputPort { doc /* Publishes Platform runtime initialization availability to RidingControl. */ out item initialization:ComputeRuntimeInitialization; }
     port def ComputeRuntimeInitializationInputPort { doc /* Receives Platform runtime initialization availability for session qualification. */ in item initialization:ComputeRuntimeInitialization; }
-    port def ComputeSleepRequestOutputPort { doc /* Carries SessionPolicy's qualified sleep request or explicit cancellation through Platform to ComputeHardware. */ out item request:ComputeSleepRequest; }
+    port def ComputeSleepRequestOutputPort { doc /* Carries RidingControl's qualified sleep request or explicit cancellation through Platform to ComputeHardware. */ out item request:ComputeSleepRequest; }
     port def ComputeSleepRequestInputPort { doc /* Receives the current qualified sleep request. False, absent, invalid, expired, context-mismatched, superseded or cancelled requests clear any older pending true request; it cannot be replayed or renewed downstream. */ in item request:ComputeSleepRequest; }
 
     interface def IfA006ComputeRuntimeInitialization { end platform:ComputeRuntimeInitializationOutputPort; end session:ComputeRuntimeInitializationInputPort; flow platform.initialization to session.initialization; }
@@ -30,7 +30,7 @@ package X2CityComponent_Compute {
     private import X2CityContract_EnergyPath::*;
 
     part def Compute { // LE-COMPUTE
-        /* Composes compute hardware and runtime Platform. Vehicle function blocks remain sibling allocations hosted by this MCU. The conditioned HMI wake is delegated directly to hardware; SessionPolicy owns sleep eligibility, and Platform checks request validity at execution before carrying out the selected handoff. */
+        /* Composes compute hardware and runtime Platform. Vehicle function blocks remain sibling allocations hosted by this MCU. The conditioned HMI wake is delegated directly to hardware; RidingControl owns sleep eligibility, and Platform checks request validity at execution before carrying out the selected handoff. */
         part computeHardware:ComputeHardware;
         part platform:Platform;
         port controllerWakeIn:ControllerWakeInputPort { doc /* Receives conditioned HMI hardware wake and delegates it to the compute hardware while the CPU is asleep. */ }

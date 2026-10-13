@@ -2,8 +2,7 @@ package X2CityComponent_Traction {
     private import X2CitySharedContracts::*;
     private import X2CityComponent_TractionControl::*;
     private import X2CityComponent_MotorPositionEstimation::*;
-    private import X2CityContract_SessionPolicy::*;
-    private import X2CityContract_DemandPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_EnergyPath::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_MotorPositionProcessing::*;

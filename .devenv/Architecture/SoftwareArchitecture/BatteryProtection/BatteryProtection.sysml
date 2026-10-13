@@ -15,9 +15,7 @@ package X2CitySoftwareContract_BatteryProtection {
 }
 
 package X2CitySoftwareComponent_BatteryProtection {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
-    private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_Platform::*;
     part def BatteryProtection {
         /* Vehicle-resident battery supervision. It assesses qualified pack measurements against

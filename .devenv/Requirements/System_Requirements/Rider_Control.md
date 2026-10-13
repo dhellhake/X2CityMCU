@@ -47,7 +47,7 @@ The four active level-selection requirements are allocated in [Settings and cont
 
 ## VD18MT speed settings and walk-assistance exclusion
 
-[Speed-selection policy](../Abstract_Software_Requirements/Settings_and_Control_Policy.md#speed-selection-and-application) contains unchanged SPD-002/004/005/008 under LE-SET. The requirements below retain physical cutoff/recovery, fixed-wheel and walk-exclusion responsibilities.
+[Speed-selection policy](../Abstract_Software_Requirements/Settings_and_Control_Policy.md#speed-selection-and-application) contains unchanged SPD-002/004/005/008 under LE-RIDING. The requirements below retain physical cutoff/recovery, fixed-wheel and walk-exclusion responsibilities.
 
 | ID | Requirement | Planned verification / distinguishing cases | Sources | Open dependencies / qualifications |
 | --- | --- | --- | --- | --- |

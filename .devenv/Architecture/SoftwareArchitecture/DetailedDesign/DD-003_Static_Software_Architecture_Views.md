@@ -111,10 +111,10 @@ to the MotorControl pilot and does not alter requirement contracts.
 ```mermaid
 flowchart TB
     subgraph V[Vehicle-control component types]
-        SET[SC-SET] -->|contains| US[U-SET-STATE]
-        SESSION[SC-SESSION] -->|contains| USE[U-SESSION-ELIGIBILITY]
-        SESSION -->|contains| USR[U-SESSION-REPORT]
-        DEMAND[SC-DEMAND] -->|contains| UDA[U-DEMAND-ARBITER]
+        RIDING[SC-RIDING-CONTROL] -->|contains| US[U-SET-STATE]
+        RIDING -->|contains| USE[U-SESSION-ELIGIBILITY]
+        RIDING -->|contains| USR[U-SESSION-REPORT]
+        RIDING -->|contains| UDA[U-DEMAND-ARBITER]
         HMI[SC-HMI] -->|contains| UHA[U-HMI-ADAPTER]
         LIGHT[SC-LIGHT-POLICY] -->|contains| ULM[U-LIGHT-MODE]
         ANALOG[SC-ANALOG-ACQ] -->|contains| UAR[U-ANALOG-ACQ-REGULAR]
@@ -154,7 +154,8 @@ flowchart LR
     HIF -->|capture buffer and valid state/edge evidence| P[U-HALL-POSITION]
     P -->|qualified Hall sector bounds/direction/edge time| M[U-MOTOR-POSITION-ESTIMATOR]
     M -->|one MotorPositionRecord| T[SC-TRACTION-CTRL.V]
-    M -->|same record| SES[SC-SESSION.V]
+    M -->|one publication| RC[SC-RIDING-CONTROL.V]
+    RC -->|internal shared snapshot| USE[U-SESSION-ELIGIBILITY]
     M -->|same record| PL[SC-PLATFORM.V]
     P -.->|unavailable without map/alignment| M
     T -.->|separate qualified conversion required| S[mechanical/vehicle speed]
@@ -246,9 +247,8 @@ flowchart LR
     subgraph HV[HC-CONTROLLER — WeAct STM32H723VGT6 vehicle host]
         direction TB
         VV[Vehicle instances]
-        V1[SC-SET.V]
-        V2[SC-SESSION.V]
-        V3[SC-DEMAND.V]
+        V1[SC-RIDING-CONTROL.V
+4 internal units]
         V4[SC-HMI.V]
         V5[SC-LIGHT-POLICY.V]
         V6[SC-ANALOG-ACQ.V and named sensor-interface .V instances]
@@ -267,28 +267,42 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    ACC[U-ACCELERATOR-QUALIFY\nAcceleratorPosition: Position + Qualification] -->|P-DEM-ACCELERATOR-I| D[U-DEMAND-ARBITER]
-    BRK[U-BRAKE-QUALIFY\nBrakeLeverState: State + Qualification] -->|P-DEM-BRAKE-I| D
-    SET[U-SET-STATE\nActiveRidingSettings] -->|P-DEM-ACTIVE-SETTINGS-I| D
-    SES["U-SESSION-ELIGIBILITY<br/>RidingAuthority"] -->|P-DEM-AUTHORITY-I| D
-    BAT["U-BAT-POLICY-RESTRICTION<br/>BatteryOperatingLimitsAssessment"] -->|P-DEM-BATTERY-OPERATING-LIMITS-I| D
-    MOT[U-TRACTION-MOTION\nQualifiedMotion] -->|P-DEM-MOTION-I| D
-    OUT[U-TRACTION-ACTUAL-OUTPUT\nActualTractionOutput estimate] -->|P-DEM-ACTUAL-OUTPUT-I| D
-    PLT[U-PLATFORM-CONTEXT / HEALTH\ncurrent generation] --> D
-    CAL[SC-DEMAND build\nimmutable DemandPolicyCalibration] -.->|owner-local attribute| D
-    D -->|"P-DEM-COMMAND-O<br/>wheel torque + both A bounds, authorityGeneration, commandExpiryTimeMicroseconds"| TA[U-TRACTION-ACCEPT]
-    TA -->|accepted signed request\neffectiveAcceptedExpiryTimeMicroseconds| TC[U-TRACTION-CONTROL]
+    ACC[SC-ACCELERATOR-IF.V] -->|acceleratorPositionIn once| RC[SC-RIDING-CONTROL.V]
+    BRK[SC-BRAKE-IF.V] -->|brakeLeverStateIn once| RC
+    HMI[SC-HMI.V] -->|hmiRiderSettingsRequestIn once| RC
+    BAT[SC-BAT-POLICY.V] -->|battery readiness, SOC and operating limits once each| RC
+    TR[SC-TRACTION-CTRL.V] -->|motion, motor position, temperature, condition and actual output once each| RC
+    PLT[SC-PLATFORM.V] -->|runtime readiness, context and health| RC
+    CALL[CallingExecutionContextBoundary] -->|fresh executionTimeIn immediately before invocation| RC
+    subgraph Internal[Four units inside SC-RIDING-CONTROL.V]
+        SET[U-SET-STATE]
+        SES[U-SESSION-ELIGIBILITY]
+        REP[U-SESSION-REPORT]
+        D[U-DEMAND-ARBITER]
+        SET -->|internal ActiveRidingSettings| D
+        SES -->|internal RidingAuthority state| D
+        SES --> REP
+    end
+    RC -->|shared typed invocation snapshot| SET
+    RC -->|shared typed invocation snapshot| SES
+    RC -->|shared typed invocation snapshot| REP
+    RC -->|shared typed invocation snapshot| D
+    D -->|internal command result| RC
+    SES -->|ridingAuthorityOut| TA[Traction acceptance]
+    RC -->|wheelTorqueCommandOut| TA
+    REP -->|selectedFaultIndicationOut| HMI
+    RC -->|sleepRequestOut| PLT
 ```
 
 `U-TRACTION-MOTION` is a real producer route, not a reinterpretation of a Demand command: it interprets current qualified Hall capture/position evidence only with current capture health, its compiled map/pole-pair/final-drive/loaded-wheel parameters and a released bounded-observability/standstill criterion before publishing speed, direction and standstill. A static Hall state or no edge alone is unavailable for this purpose. `U-TRACTION-ACTUAL-OUTPUT` publishes `ActualTractionOutput` only as a current qualified estimate from post-stage physical evidence with provenance plus same-operation phase-current/position and qualified vehicle-motion evidence with its immutable compiled estimator parameters. It operates independently of acceptance; `U-TRACTION-ACCEPT` passes that observation without refreshing or gating it while separately issuing accepted demand to control. Its applied-torque and powered-forward-travel fields must be unavailable if that chain has only a requested torque, FOC reference, register/PWM state, output-stage event or acceptance result. The command is a request; neither observation proves physical torque or vehicle travel.
 
 | Decision input/output | Consumer acceptance and ownership |
 |---|---|
-| Active settings | Only the active level/speed setting is used. Pending values, receipt order and setting activation remain `SC-SET` ownership. |
+| Active settings | Only the internal active level/speed setting is used. Pending values never reach the demand unit. U-SET-STATE owns receipt and activation. |
 | Authority and command | `authorityExpiryTimeMicroseconds` and `commandExpiryTimeMicroseconds` carry independent decision sequences in the shared host monotonic domain. The command also carries independent discharge and regenerative-charge amperage bounds; acceptance emits `effectiveAcceptedExpiryTimeMicroseconds` and Traction applies the bound matching actual electrical transfer. Demand cannot refresh authority by issuing a command. |
 | Motion and actual output | Demand requires current qualified motion for speed/standstill decisions and current qualified actual positive applied torque plus forward travel to re-arm regeneration after stop. Hand-push travel cannot satisfy the latter proof. |
 | Battery operating limits | `BatteryOperatingLimitsAssessment` supplies independently qualified discharge and regenerative-charge current limits, SOC positive torque/speed caps, reasons and a host-local assessment reference. Demand checks freshness from caller time and may tighten or hold a regenerative-charge allowance for its owned recovery episode; it never enlarges either battery current bound. Traction acceptance preserves those effective limits and applies them by actual electrical transfer. |
-| Calibration | `SC-DEMAND` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. |
+| Calibration | `SC-RIDING-CONTROL` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. |
 
 ## Static local-interface view
 
@@ -300,44 +314,22 @@ flowchart LR
         ACC[SC-ACCELERATOR-IF.V]
         BRK[SC-BRAKE-IF.V]
         HMI[SC-HMI.V]
-        SET[SC-SET.V\nacceleratorPositionIn]
-        SES[SC-SESSION.V\nacceleratorPositionIn]
-        DEM[SC-DEMAND.V]
+        RC[SC-RIDING-CONTROL.V
+U-SET-STATE · U-SESSION-ELIGIBILITY · U-SESSION-REPORT · U-DEMAND-ARBITER]
         TR[SC-TRACTION-CTRL.V]
         BAT[SC-BAT-POLICY.V]
-        LGT[SC-LIGHT-POLICY.V]
-        BMS[SC-BMS-LINK.V]
-        PLV[SC-PLATFORM.V\nacceleratorQualificationIn]
-        ACC -->|SW-I-001 AcceleratorPosition| SET
-        ACC -->|SW-I-001 full AcceleratorPosition| SES
-        ACC -->|SW-I-001 qualified Position + Qualification| DEM
-        ACC -->|R-V41-ACCELERATOR Qualification projection| PLV
-        BRK -->|SW-I-001 data| SES
-        BRK -->|SW-I-001 brake data| DEM
-        BRK -->|SW-I-001 data| LGT
-        HMI -->|SW-I-002 data| SET
-        HMI -->|SW-I-002 data| SES
-        SET -->|SW-I-002 active-settings data| DEM
-        BMS -->|SW-I-003 BatteryMeasurements| BAT
-        BAT -->|SW-I-003 batteryReadinessAndFaultOut + stateOfChargeOut| SES
-        BAT -->|SW-I-003 batteryOperatingLimitsOut| DEM
-        BAT -->|SW-I-006 qualified actual SOC + signed current| HMI
-        SES -->|SW-I-004 control token| TR
-        SES -->|SW-I-004 authority data| DEM
-        DEM -->|SW-I-004 control data| TR
-        TR -->|SW-I-005 data| SES
-        TR -->|SW-I-005 qualified motion data| SET
-        TR -->|SW-I-005 qualified motion/actual-output data| DEM
-        TR -->|SW-I-005 actual electrical braking| LGT
-        TR -->|SW-I-005 qualified motion for display speed/period| HMI
-        SES -->|SW-I-006 selected fault/no-error| HMI
-        HMI -->|SW-I-006 qualified normal-light request| LGT
-        PLV -->|SW-I-009 event/service| ACC
-        PLV -->|SW-I-009 event/service| BRK
-        PLV -->|SW-I-009 event/service| SES
-        PLV -->|SW-I-009 event/service| BAT
-        PLV -->|SW-I-009 event/service| TR
+        PLV[SC-PLATFORM.V]
     end
+    ACC -->|AcceleratorPosition once| RC
+    BRK -->|BrakeLeverState once| RC
+    HMI -->|RiderSettingsRequest once| RC
+    TR -->|qualified motion, motor position, condition and actual output once each| RC
+    BAT -->|readiness/fault, SOC and limits once each| RC
+    PLV -->|runtime readiness, context, health and execution time| RC
+    RC -->|ridingAuthorityOut| TR
+    RC -->|wheelTorqueCommandOut| TR
+    RC -->|selectedFaultIndicationOut| HMI
+    RC -->|sleepRequestOut| PLV
 ```
 
 `SW-I-009` applies to all local components; selected edges keep the view legible. This figure also suppresses parts of `SW-I-003`, `SW-I-006` and `SW-I-007` where their crossing edges would obscure the host boundary. The complete endpoint, route and fanout record is [ARCH-003 port registry and route catalogue](../ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue); the `SW-I-*` interface definitions remain in [ARCH-003](../ARCH-003_Software_Architecture.md#typed-software-interactions).

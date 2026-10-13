@@ -1,12 +1,11 @@
 package X2CitySoftwareContract_HmiAdapter {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityContract_HmiControl::*;
-    private import X2CityContract_SettingsPolicy::*;
-    private import X2CityContract_SessionPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CityContract_LightControl::*;
     private import X2CityContract_MotorControl::*;
-    private import X2CitySoftwareContract_SessionPolicy::*;
+    private import X2CitySoftwareContract_RidingControl::*;
 
     item def HmiRiderSettingsRequest :> ContextualSoftwareInformation, RiderSettingsRequest {
         doc /* Receipt time of the latest validated frame in the caller-supplied host-boot monotonic microsecond domain, not a battery or motor measurement time. A new valid frame refreshes it even when values are unchanged; invalid frames, cached republications and qualification-only updates do not. Before the first valid frame it is unusable under qualification. */
@@ -16,17 +15,18 @@ package X2CitySoftwareContract_HmiAdapter {
         doc /* Receipt time of the latest validated frame in the caller-supplied host-boot monotonic microsecond domain, not a battery or motor measurement time. A new valid frame refreshes it even when values are unchanged; invalid frames, cached republications and qualification-only updates do not. Before the first valid frame it is unusable under qualification. */
         attribute receiptTimeMicroseconds:Integer;
     }
-    port def RiderSettingsRequestOutputPort :> X2CityContract_SettingsPolicy::RiderSettingsRequestOutputPort {
+    port def RiderSettingsRequestOutputPort :> X2CityContract_RidingControl::RiderSettingsRequestOutputPort {
         doc /* Publishes one qualified current-context rider level/speed receipt. It retains the exact receipt qualification and never substitutes decoder initialization, link state or retained settings. */
-        out item payload:HmiRiderSettingsRequest :>> X2CityContract_SettingsPolicy::RiderSettingsRequestOutputPort::payload;
+        out item payload:HmiRiderSettingsRequest :>> X2CityContract_RidingControl::RiderSettingsRequestOutputPort::payload;
     }
+    port def VehicleOperationRequestOutputPort :> X2CityContract_HmiControl::VehicleOperationRequestOutputPort;
     port def HmiNormalLightRequestOutputPort :> X2CityContract_LightControl::NormalLightRequestOutputPort {
         doc /* Publishes HMI's qualified normal-light request with source/context metadata. Link loss does not fabricate a new request; LightPolicy owns retention. */
         out item normalLightRequest:HmiNormalLightRequest :>> X2CityContract_LightControl::NormalLightRequestOutputPort::normalLightRequest;
     }
-    port def SelectedFaultIndicationInputPort :> X2CityContract_SessionPolicy::SelectedFaultIndicationInputPort {
+    port def SelectedFaultIndicationInputPort :> X2CityContract_RidingControl::SelectedFaultIndicationInputPort {
         doc /* Receives Session's already-selected fault wire code, including qualified no-error. HMI neither ranks faults nor owns another report truth. */
-        in item selectedFaultIndication:X2CitySoftwareContract_SessionPolicy::SoftwareSelectedFaultIndication :>> X2CityContract_SessionPolicy::SelectedFaultIndicationInputPort::selectedFaultIndication;
+        in item selectedFaultIndication:SoftwareSelectedFaultIndication :>> X2CityContract_RidingControl::SelectedFaultIndicationInputPort::selectedFaultIndication;
     }
     port def BatteryStateOfChargeInputPort :> X2CityContract_BatteryControl::BatteryStateOfChargeInputPort {
         doc /* Receives qualified actual SOC for presentation; a fallback encoding never becomes a battery fact. */
@@ -43,10 +43,7 @@ package X2CitySoftwareContract_HmiAdapter {
 }
 
 package X2CitySoftwareComponent_HmiAdapter {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_HmiAdapter::*;
-    private import X2CityContract_HmiControl::*;
-    private import X2CityContract_LightControl::*;
     private import X2CitySoftwareContract_Platform::*;
     part def HmiAdapter {
         /* SC-HMI.V realizes LE-HMI information processing. It decodes qualified VD18MT frames,
@@ -58,6 +55,7 @@ package X2CitySoftwareComponent_HmiAdapter {
         port uartReceivedDataIn:HmiUartReceivedDataInputPort;
         port uartTransmittedDataOut:HmiUartTransmittedDataOutputPort;
         port ridingSettingsOut:RiderSettingsRequestOutputPort;
+        port vehicleOperationRequestOut:VehicleOperationRequestOutputPort;
         port runningLightStateOut:HmiNormalLightRequestOutputPort;
         port selectedFaultIn:SelectedFaultIndicationInputPort;
         port stateOfChargeIn:BatteryStateOfChargeInputPort;

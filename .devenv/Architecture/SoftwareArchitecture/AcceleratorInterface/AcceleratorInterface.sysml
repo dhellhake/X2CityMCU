@@ -14,32 +14,32 @@ package X2CitySoftwareContract_AcceleratorInterface {
         doc /* Receives completed regular ADC scan records from AnalogAcquisition. The accelerator interface uses the source rank, sequence, timestamp and fixed compiled configuration provenance to produce a semantic position; the inbound record remains raw ADC evidence. */
         in item payload:AnalogSample;
     }
-    item def AcceleratorPositionValue {
+    item def AcceleratorPositionValue :> X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionValue {
         attribute acceleratorPositionPercent:Real; // percent, 0..100 after qualified scaling.
         attribute acceleratorAtRest:Boolean;
-        attribute sampleTimeMicroseconds:Integer;
+        attribute sampleTimeMicroseconds:Integer :>> X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionValue::measurementTimeMicroseconds;
     }
-    item def AcceleratorPositionQualification :> SensorHealthCondition {
+    item def AcceleratorPositionQualification :> SensorHealthCondition, X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionQualification {
         // This is the sole authoritative measurement-status set for Position. Inherited
         // SensorHealthCondition fields preserve current source, reason, severity, health evidence
         // and immediate inhibit request even when Position values are unusable.
         attribute measurementValidity:Validity;
         attribute measurementQualification:Qualification;
     }
-    item def AcceleratorPosition {
+    item def AcceleratorPosition :> X2CityContract_AcceleratorPositionProcessing::AcceleratorPosition {
         // Position status is carried only by Qualification, so a health update can report an
         // unavailable Position without masking source-health evidence. A health-only publication
         // never rejuvenates the Position sample time.
-        item Position:AcceleratorPositionValue;
-        item Qualification:AcceleratorPositionQualification;
+        item Position:AcceleratorPositionValue :>> X2CityContract_AcceleratorPositionProcessing::AcceleratorPosition::Position;
+        item Qualification:AcceleratorPositionQualification :>> X2CityContract_AcceleratorPositionProcessing::AcceleratorPosition::Qualification;
     }
     port def AcceleratorPositionOutputPort {
-        doc /* Publishes one current composite record to SettingsPolicy, SessionPolicy and DemandPolicy. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample time and never refreshes measurement age. */
+        doc /* Publishes one current composite record to RidingControl settings logic, RidingControl session logic and RidingControl demand arbitration. Consumers use Position only when its contained Qualification supports it, and process health evidence even when Position is unavailable. A health-only publication retains Position sample time and never refreshes measurement age. */
         out item payload:AcceleratorPosition;
     }
-    port def AcceleratorPositionInputPort {
+    port def AcceleratorPositionInputPort :> X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionInputPort {
         doc /* Receives AcceleratorInterface's single position-and-health composite. Consumers use Position only when contained Qualification supports it, while processing Qualification even when Position is unavailable. */
-        in item payload:AcceleratorPosition;
+        in item acceleratorPosition:AcceleratorPosition :>> X2CityContract_AcceleratorPositionProcessing::AcceleratorPositionInputPort::acceleratorPosition;
     }
     port def AcceleratorQualificationInputPort {
         doc /* Receives the SensorHealthCondition-compatible Qualification projected from AcceleratorPosition for platform health aggregation. */
@@ -48,9 +48,7 @@ package X2CitySoftwareContract_AcceleratorInterface {
 }
 
 package X2CitySoftwareComponent_AcceleratorInterface {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
-    private import X2CitySoftwareContract_Platform::*;
     // SC-ACCELERATOR-IF.V; semantic rider-position interface.
     part def AcceleratorInterface {
         /* Accepts a completed regular scan with its fixed compiled calibration in the current context,

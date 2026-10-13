@@ -1,6 +1,6 @@
 package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CitySharedContracts::*;
-    private import X2CityComponent_RidingSupervisor::*;
+    private import X2CityComponent_RidingControl::*;
     private import X2CityContract_HmiControl::*;
     private import X2CityComponent_DriverInteraction::*;
     private import X2CityComponent_Traction::*;
@@ -16,13 +16,12 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityComponent_Compute::*;
     private import X2CityContract_Compute::*;
     private import X2CityContract_ComputeHardware::*;
-    private import X2CityContract_SettingsPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_LightControl::*;
-    private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
     part def ElectricalPropulsionControlSystem { // LE-EPCS
-        /* Composes riding policy, rider interaction, traction-owned measurement/qualification, battery, energy, lighting and compute components. */
-        part riding:RidingSupervisor;
+        /* Composes RidingControl, rider interaction, traction-owned measurement/qualification, battery, energy, lighting and compute components. */
+        part ridingControl:RidingControl;
         part driverInteraction:DriverInteraction;
         part traction:Traction;
         part batteryControl:BatteryControl { doc /* Removable pack and vehicle-host battery supervision composite. */ }
@@ -39,40 +38,36 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect energyPath.vehicleElectricalPowerOut to compute.vehicleElectricalPowerIn;
         interface controllerWakeToCompute : IfA006ControllerWake
             connect driverInteraction.controllerWakeOut to compute.controllerWakeIn;
-        interface vehicleOperationRequestToSession : IfA006VehicleOperationRequest
-            connect driverInteraction.vehicleOperationRequestOut to riding.session.vehicleOperationRequestIn;
-        interface computeRuntimeInitializationToSession : IfA006ComputeRuntimeInitialization
-            connect compute.runtimeInitializationOut to riding.session.runtimeInitializationIn;
-        interface sessionSleepRequestToCompute : IfA006ComputeSleepRequest
-            connect riding.session.sleepRequestOut to compute.sleepRequestIn;
+        interface vehicleOperationRequestToRidingControl : IfA006VehicleOperationRequest
+            connect driverInteraction.vehicleOperationRequestOut to ridingControl.vehicleOperationRequestIn;
+        interface computeRuntimeInitializationToRidingControl : IfA006ComputeRuntimeInitialization
+            connect compute.runtimeInitializationOut to ridingControl.runtimeInitializationIn;
+        interface ridingControlSleepRequestToCompute : IfA006ComputeSleepRequest
+            connect ridingControl.sleepRequestOut to compute.sleepRequestIn;
         interface tractionPowerToTraction : IfA010TractionElectricalPower
             connect energyPath.tractionElectricalPower to traction.tractionElectricalPower;
         interface motorPositionToPlatform : IfA005MotorPosition
             connect traction.motorPositionOut to compute.platform.motorPositionIn;
-        interface motorPositionToSession : IfA005MotorPosition
-            connect traction.motorPositionOut to riding.session.motorPositionIn;
-        interface brakeToSession : IfA001BrakeLeverState
-            connect driverInteraction.brakeLeverStateOut to riding.session.brakeLeverStateIn;
-        interface brakeToDemand : IfA001BrakeLeverState
-            connect driverInteraction.brakeLeverStateOut to riding.demand.brakeLeverStateIn;
+        interface motorPositionToRidingControl : IfA005MotorPosition
+            connect traction.motorPositionOut to ridingControl.motorPositionIn;
+        interface brakeToRidingControl : IfA001BrakeLeverState
+            connect driverInteraction.brakeLeverStateOut to ridingControl.brakeLeverStateIn;
         interface brakeToLightControl : IfA001BrakeLeverState
             connect driverInteraction.brakeLeverStateOut to lightControl.brakeLeverStateIn;
         interface brakeHealthToPlatform : IfA008BrakeHealth
             connect driverInteraction.brakeHealthOut to compute.platform.brakeHealthIn;
-        interface acceleratorToSettings : IfA001AcceleratorPosition
-            connect driverInteraction.acceleratorPositionOut to riding.settings.acceleratorPositionIn;
-        interface acceleratorToSession : IfA001AcceleratorPosition
-            connect driverInteraction.acceleratorPositionOut to riding.session.acceleratorPositionIn;
-        interface acceleratorToDemand : IfA001AcceleratorPosition
-            connect driverInteraction.acceleratorPositionOut to riding.demand.acceleratorPositionIn;
+        interface acceleratorToRidingControl : IfA001AcceleratorPosition
+            connect driverInteraction.acceleratorPositionOut to ridingControl.acceleratorPositionIn;
         interface acceleratorHealthToPlatform : IfA008AcceleratorHealth
             connect driverInteraction.acceleratorHealthOut to compute.platform.acceleratorHealthIn;
-        interface settingsToSettingsPolicy : IfA002RiderSettingsRequest
-            connect driverInteraction.ridingSettingsOut to riding.settings.hmiRiderSettingsRequestIn;
-        interface settingsToSession : IfA002RiderSettingsRequest
-            connect driverInteraction.ridingSettingsOut to riding.session.hmiRiderSettingsRequestIn;
+        interface settingsToRidingControl : IfA002RiderSettingsRequest
+            connect driverInteraction.ridingSettingsOut to ridingControl.hmiRiderSettingsRequestIn;
         interface selectedFaultToDriverInteraction : IfA006SelectedFaultIndication
-            connect riding.session.selectedFaultIndicationOut to driverInteraction.selectedFaultIn;
+            connect ridingControl.selectedFaultIndicationOut to driverInteraction.selectedFaultIn;
+        interface ridingAuthorityToTraction : X2CityContract_RidingControl::IfA004RidingAuthority
+            connect ridingControl.ridingAuthorityOut to traction.ridingAuthorityIn;
+        interface wheelTorqueCommandToTraction : X2CityContract_RidingControl::IfA004WheelTorqueCommand
+            connect ridingControl.wheelTorqueCommandOut to traction.wheelTorqueCommandIn;
         interface normalLightToLightControl : IfA006NormalLightRequest
             connect driverInteraction.runningLightStateOut to lightControl.runningLightStateIn;
         interface stateOfChargeToDriverInteraction : IfA003BatteryStateOfCharge
@@ -81,13 +76,23 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
             connect batteryControl.batteryCurrentOut to driverInteraction.batteryCurrentIn;
         interface vehicleMotionToDriverInteraction : IfA005QualifiedVehicleMotion
             connect traction.qualifiedVehicleMotionOut to driverInteraction.vehicleMotionIn;
-        interface temperatureToSession : IfA008QualifiedTemperature
-            connect traction.qualifiedTemperatureOut to riding.session.qualifiedTemperatureIn;
+        interface vehicleMotionToRidingControl : X2CityContract_MotorControl::IfA005QualifiedVehicleMotion
+            connect traction.qualifiedVehicleMotionOut to ridingControl.qualifiedVehicleMotionIn;
+        interface temperatureToRidingControl : IfA008QualifiedTemperature
+            connect traction.qualifiedTemperatureOut to ridingControl.qualifiedTemperatureIn;
         interface temperatureToPlatform : IfA008QualifiedTemperature
             connect traction.qualifiedTemperatureOut to compute.platform.qualifiedTemperatureIn;
         interface fastDcLinkVoltageToPlatform : IfA008FastDcLinkVoltage
             connect traction.fastDcLinkVoltageOut to compute.platform.fastDcLinkVoltageIn;
-        interface tractionConditionToSession : IfA005TractionConditionEvidence
-            connect traction.tractionConditionEvidenceOut to riding.session.tractionConditionEvidenceIn;
+        interface tractionConditionToRidingControl : IfA005TractionConditionEvidence
+            connect traction.tractionConditionEvidenceOut to ridingControl.tractionConditionEvidenceIn;
+        interface actualTractionOutputToRidingControl : IfA005ActualTractionOutput
+            connect traction.actualTractionOutputOut to ridingControl.actualTractionOutputIn;
+        interface batteryReadinessToRidingControl : IfA003BatteryReadinessAndFault
+            connect batteryControl.batteryReadinessAndFaultOut to ridingControl.batteryReadinessAndFaultIn;
+        interface batteryLimitsToRidingControl : IfA003BatteryOperatingLimits
+            connect batteryControl.batteryOperatingLimitsOut to ridingControl.batteryOperatingLimitsIn;
+        interface stateOfChargeToRidingControl : IfA003BatteryStateOfCharge
+            connect batteryControl.stateOfChargeOut to ridingControl.stateOfChargeIn;
     }
 }

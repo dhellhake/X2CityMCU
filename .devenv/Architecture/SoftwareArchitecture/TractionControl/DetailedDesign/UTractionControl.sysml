@@ -5,7 +5,7 @@ package X2CityDetailedUnit_TractionControl {
     private import X2CityDetailedUnit_MotorPhaseInterface::*;
     private import X2CityDetailedUnit_SupplyInterface::*;
     private import X2CitySoftwareContract_Platform::*;
-    private import X2CitySoftwareContract_DemandPolicy::*;
+    private import X2CitySoftwareContract_RidingControl::*;
     private import X2CityDetailedUnit_TractionAccept::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;

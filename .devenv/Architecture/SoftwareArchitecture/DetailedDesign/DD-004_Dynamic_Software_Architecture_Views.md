@@ -21,8 +21,8 @@ sequenceDiagram
     participant H as SC-HMI.V
     participant B as SC-BMS-LINK.V
     participant BP as SC-BAT-POLICY.V
-    participant S as SC-SESSION.V
-    participant D as SC-DEMAND.V
+    participant RC as SC-RIDING-CONTROL.V
+    participant D as U-DEMAND-ARBITER
     participant T as SC-TRACTION-CTRL.V
     participant L as SC-LIGHT-POLICY.V
     participant CE as CallingExecutionContextBoundary
@@ -35,27 +35,31 @@ sequenceDiagram
     P->>B: startup/reset context
     P->>T: startup/reset context
     P->>BP: lowSocRetentionCandidateIn with validity/context
-    A-->>S: full current-startup AcceleratorPosition (Position + Qualification)
-    BR-->>S: qualified current-startup brake fact
-    H-->>S: qualified current-startup level and speed receipt
+    P-->>RC: runtimeInitializationIn, platformContextIn and platformHealthIn
+    CE->>CE: sample a fresh currentTimeMicroseconds immediately before RidingControl invocation
+    CE->>RC: executionTimeIn: fixed ExecutionTime for this invocation
+    A-->>RC: acceleratorPositionIn once: current-startup AcceleratorPosition
+    BR-->>RC: brakeLeverStateIn once: qualified current-startup brake fact
+    H-->>RC: hmiRiderSettingsRequestIn once: qualified level/speed receipt
     B-->>BP: batteryMeasurementsIn: field-qualified BatteryMeasurements with host last-accepted update references
-    BP-->>S: batteryReadinessAndFaultOut and stateOfChargeOut
-    T-->>S: qualified motion, self-test and output-observation facts
-    Note over S: initially ineligible, evaluate the complete Ready guard
+    BP-->>RC: batteryReadinessAndFaultIn, stateOfChargeIn and batteryOperatingLimitsIn
+    T-->>RC: motion, motor-position, temperature, traction-condition and actual-output inputs
+    Note over RC,D: one component; U-SESSION-ELIGIBILITY evaluates the complete Ready guard, U-DEMAND-ARBITER consumes the same invocation inputs
     alt all current guard facts hold
-        S-->>D: current authority token
-        S-->>T: current authority token
+        RC->>D: internal authority state
+        RC-->>T: ridingAuthorityOut
         D->>D: form signed command from qualified inputs and BatteryOperatingLimitsAssessment
-        D-->>T: requestedWheelTorqueNewtonMetres, both A bounds, authorityGeneration, commandExpiryTimeMicroseconds
+        D-->>RC: internal signed command result
+        RC-->>T: wheelTorqueCommandOut with signed request, both A bounds and independent command expiry
         T->>T: accept current authority/command, require valid Hall/current/Vdc/configuration
         T->>T: FOC with zero d-axis demand, qualified torque-current target and actual-transfer current-bound enforcement
-        T-->>S: qualified acceptance/output/energy observation
+        T-->>RC: qualified acceptance/output/energy observation
         T-->>L: qualified or unqualified active-braking/output observation
     else a guard fact is absent, invalid, expired, mismatched, or inhibited
-        S-->>T: no usable authority
+        RC-->>T: ridingAuthorityOut unavailable/withdrawn
         T->>T: request zero of both signs, physical outcome remains separately observed
     end
-    S-->>H: selected qualified fault/no-error indication
+    RC-->>H: selectedFaultIndicationOut
     BP-->>H: stateOfChargeOut and batteryCurrentOut, each with its own qualification
     T-->>H: qualified physical motion for speed/period encoding
 ```
@@ -167,7 +171,7 @@ sequenceDiagram
     C->>C: apply its own expiry/fault policy, including when no new intercom data arrived
 ```
 
-For example, a lossy telemetry route can surface sequence loss, whereas `SC-SESSION` retains the first reportable fault in owned state and authority/command expiry is rejected at `U-TRACTION-ACCEPT`. VD18MT byte/link loss is interpreted only by `SC-HMI` under its existing continuity rule. These behaviors are not generic queue semantics.
+For example, a lossy telemetry route can surface sequence loss, whereas `U-SESSION-REPORT` retains the first reportable fault in owned state and authority/command expiry is rejected at `U-TRACTION-ACCEPT`. VD18MT byte/link loss is interpreted only by `SC-HMI` under its existing continuity rule. These behaviors are not generic queue semantics.
 
 ## Hall acquisition and rotor-sector interpretation
 
@@ -203,7 +207,7 @@ This does not require an edge at rest, treat an absent edge as a default fault, 
 
 ## Demand decision, withdrawal and post-stop regeneration rearm
 
-`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; unavailable `BatteryOperatingLimitsAssessment` withdraws dependent rider permission and sends zero current for its affected electrical branch. It does not reuse a prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-DEMAND` build parameters, so this interaction claims no numerical response time.
+`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; unavailable `BatteryOperatingLimitsAssessment` withdraws dependent rider permission and sends zero current for its affected electrical branch. It does not reuse a prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-RIDING-CONTROL` build parameters, so this interaction claims no numerical response time.
 
 ```mermaid
 sequenceDiagram
@@ -224,7 +228,7 @@ sequenceDiagram
     D-->>T: requestedWheelTorqueNewtonMetres, both independent A bounds, authorityGeneration, commandExpiryTimeMicroseconds
 ```
 
-For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm and regeneration-recovery hold constrain rider-requested regeneration; lever and SOC positive-propulsion caps constrain positive rider torque; active-profile/ramp/taper results are then clamped within the remaining limits. A restriction recovery or limit increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies independent battery current limits and an assessment reference; `SC-DEMAND` owns qualification of each reduction episode and forwards both current bounds. `SC-TRACTION-CTRL` selects the applicable bound from actual electrical transfer, never wheel-torque sign. Session fault restart remains `SC-SESSION` state; neither that nor restriction recovery re-arms post-stop regeneration.
+For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm and regeneration-recovery hold constrain rider-requested regeneration; lever and SOC positive-propulsion caps constrain positive rider torque; active-profile/ramp/taper results are then clamped within the remaining limits. A restriction recovery or limit increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies independent battery current limits and an assessment reference; `SC-RIDING-CONTROL` owns qualification of each reduction episode and forwards both current bounds. `SC-TRACTION-CTRL` selects the applicable bound from actual electrical transfer, never wheel-torque sign. RidingControl session fault restart remains `U-SESSION-ELIGIBILITY` state; neither that nor restriction recovery re-arms post-stop regeneration.
 
 ## Settings application, HMI loss and lighting feedback
 
@@ -236,40 +240,43 @@ sequenceDiagram
     participant H as SC-HMI.V
     participant A as SC-ACCELERATOR-IF.V
     participant B as SC-BRAKE-IF.V
-    participant SET as SC-SET.V
-    participant D as SC-DEMAND.V
+    participant RC as SC-RIDING-CONTROL.V
+    participant SET as U-SET-STATE
+    participant SES as U-SESSION-ELIGIBILITY
+    participant REP as U-SESSION-REPORT
+    participant D as U-DEMAND-ARBITER
     participant T as SC-TRACTION-CTRL.V
     participant L as SC-LIGHT-POLICY.V
 
     VD->>H: received data carrying settings and normal-light request
-    H-->>SET: current qualified decoded level/speed request
-    A-->>SET: AcceleratorPosition; use qualified Position.acceleratorAtRest
-    T-->>SET: qualified standstill fact
+    H-->>RC: hmiRiderSettingsRequestIn once: qualified decoded level/speed request
+    A-->>RC: acceleratorPositionIn once: qualified Position/rest evidence
+    T-->>RC: qualifiedVehicleMotionIn once: qualified standstill fact
+    RC->>SET: route shared input snapshot internally
     alt interpretable setting and both application facts hold
         SET->>SET: atomically apply latest valid pending setting
     else setting valid but application guard not complete
         SET->>SET: retain as pending, active setting unchanged
     end
-    SET-->>D: current active setting
-    A-->>D: AcceleratorPosition; use qualified Position
-    B-->>D: qualified brake fact
-    T-->>D: qualified vehicle-motion and actual-output observations
-    D-->>T: current signed demand and both battery current bounds when authority and operating limits permit
+    SET-->>D: internal ActiveRidingSettings
+    RC->>D: shared accelerator, brake, motion, battery and actual-output snapshots
+    D-->>RC: internal signed demand result
+    RC-->>T: wheelTorqueCommandOut with signed demand and both battery current bounds when permitted
     T-->>L: active electrical-braking observation or unqualified state
     B-->>L: qualified lever state or unqualified state
     H-->>L: qualified normal-light request
     L->>L: front follows normal request, rear mode follows canonical policy
     Note over VD,H: endpoint loss after valid receipt
-    H-->>SET: no new qualified receipt
+    H-->>RC: no new qualified settings receipt
     SET->>SET: retain existing active/pending settings
     L->>L: retain normal-light request
-    A-->>D: live AcceleratorPosition continues
-    B-->>D: live qualified brake fact continues
-    T-->>D: live qualified vehicle-motion and actual-output observations continue
-    D-->>T: do not reuse a frozen demand
+    RC->>D: current live AcceleratorPosition snapshot
+    RC->>D: current live BrakeLeverState snapshot
+    RC->>D: current qualified motion and actual-output snapshots
+    RC-->>T: wheelTorqueCommandOut expires/renews per its own command validity
 ```
 
-A retained active-setting publication after link loss is current state, not a new receipt: it retains the source receipt provenance and cannot refresh it. HMI absence alone does not expire a valid active selection; physical sample age, qualification and source time likewise cannot be refreshed by republishing. Session retains fault selection independently, LightPolicy retains the normal request independently, and SC-HMI only encodes those records with qualified battery and motion data; a transmitted update never establishes display receipt.
+A retained active-setting publication after link loss is current state, not a new receipt: it retains the source receipt provenance and cannot refresh it. HMI absence alone does not expire a valid active selection; physical sample age, qualification and source time likewise cannot be refreshed by republishing. RidingControl retains session fault selection independently, LightPolicy retains the normal request independently, and SC-HMI only encodes those records with qualified battery and motion data; a transmitted update never establishes display receipt.
 
 The rear logical mode can be Full for an actuated lever, active electrical braking, or either unqualified fact; it is otherwise Dim for normal request On and Off for Off.  This is logical intent, not lamp output or visible-light evidence.
 
@@ -297,7 +304,7 @@ stateDiagram-v2
     end note
 ```
 
-`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` only; rejected frames do not refresh their field update references. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge current limits distinct, publishes zero permitted current for an unavailable or forbidden branch, and reports normal restrictions separately from recognized battery faults. Newly available limits cannot authorize torque or clear `SC-SESSION.V` inhibition.
+`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` only; rejected frames do not refresh their field update references. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge current limits distinct, publishes zero permitted current for an unavailable or forbidden branch, and reports normal restrictions separately from recognized battery faults. Newly available limits cannot authorize torque or clear `SC-RIDING-CONTROL.V` inhibition.
 
 ## Traceability and limits
 

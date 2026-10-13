@@ -24,7 +24,7 @@ flowchart LR
 
 `MotorControl` owns semantic qualification and the control law. It consumes qualified electrical angle and phase current from MotorPositionEstimation, then commands the selected Hall-sensored FOC phase excitation. A zero torque command, `PhaseExcitationCommand.actuationInhibited`, and `TractionStageEvidence` of physical output are three different facts. `TractionHardwareProtectionEvidence` records independent hardware shutdown, which remains effective independently of software. HC-TRACTION-POWER/HC-INPUT-FE can physically support both logical roles without creating a logical `LE-TRACTION-HW` to MotorSignalMeasurement observation route.
 
-GVDD measurement, qualification, and local operating-condition evaluation remain inside TractionControl. Session receives the resulting startup prerequisite and categorized condition evidence for its vehicle-level latch, report selection, and restart policy; no numeric qualified GVDD value crosses the boundary. Generic acquisition/conversion health continues over its existing service-health route.
+GVDD measurement, qualification, and local operating-condition evaluation remain inside TractionControl. RidingControl receives the resulting startup prerequisite and categorized condition evidence for its vehicle-level latch, report selection, and restart policy; no numeric qualified GVDD value crosses the boundary. Generic acquisition/conversion health continues over its existing service-health route.
 
 | Boundary | Rationale |
 |---|---|

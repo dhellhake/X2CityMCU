@@ -7,9 +7,11 @@ The model contains only vehicle V instances. `SharedSoftwareTypes.sysml` holds c
 `MotorPositionEstimator` jointly realizes `LE-MOTOR-POSITION-PROC` with HallInterface
 and MotorPhaseInterface. HallInterface publishes observations; the estimator owns one
 final `MotorPositionRecord(Position, Qualification)` publication to TractionControl,
-SessionPolicy and Platform. Qualification remains delivered even if Position is
+RidingControl and Platform. Qualification remains delivered even if Position is
 unavailable. The observer-voltage branch is a
 separate explicit HSI boundary and remains unavailable until qualified; it is never
 fed from the regular phase-voltage diagnostic path.
 
-`MotorControlRealization` specializes the expanded logical `MotorControl` allocation. It contains the one `TractionControl` FOC/output core and references the existing AnalogAcquisition, TemperatureInterface and SupplyInterface instances. Physical logical temperature/supply measurements are allocated to those existing acquisition/conversion chains, not connected as a second SC input. The core evaluates qualified temperature, regular GVDD, fast PVDD, stage/protection and conversion-health evidence into local categorized condition evidence independently of authority; Session owns fault latching and reporting. The wrapper adds no deployed component, sensor conversion, task or PWM/JSQR writer.
+`MotorControlRealization` specializes the expanded logical `MotorControl` allocation. It contains the one `TractionControl` FOC/output core and references the existing AnalogAcquisition, TemperatureInterface and SupplyInterface instances. Physical logical temperature/supply measurements are allocated to those existing acquisition/conversion chains, not connected as a second SC input. The core evaluates qualified temperature, regular GVDD, fast PVDD, stage/protection and conversion-health evidence into local categorized condition evidence independently of authority; RidingControl owns session fault latching and reporting. The wrapper adds no deployed component, sensor conversion, task or PWM/JSQR writer.
+
+The sole `SC-RIDING-CONTROL.V` instance and its four contained units are defined in [RidingControl](RidingControl/README.md); detailed unit contracts are consolidated in that component folder.

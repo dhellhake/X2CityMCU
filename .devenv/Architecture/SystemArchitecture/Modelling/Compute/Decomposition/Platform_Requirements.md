@@ -2,7 +2,7 @@
 
 **Type:** Abstract Software Requirement. **Target:** `LE-PLATFORM`. **Status:** Draft.
 
-These obligations allocate compute runtime initialization and validation/execution of SessionPolicy's sleep handoff to Platform. SessionPolicy alone determines sleep eligibility from current qualified Off and traction sleep-permission evidence. Platform does not consume or recheck those source records; it validates the current request's qualification, source context, lifetime and cancellation before execution. SessionPolicy also owns operation lifecycle, Ready, fault lifetime and riding authority.
+These obligations allocate compute runtime initialization and validation/execution of RidingControl's sleep handoff to Platform. RidingControl alone determines sleep eligibility from current qualified Off and traction sleep-permission evidence. Platform does not consume or recheck those source records; it validates the current request's qualification, source context, lifetime and cancellation before execution. RidingControl also owns operation lifecycle, Ready, fault lifetime and riding authority.
 
 | ID | Requirement | Derived from / governing contract | Planned verification / remaining gate |
 |---|---|---|---|

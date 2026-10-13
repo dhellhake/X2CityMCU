@@ -2,7 +2,7 @@ package X2CityContract_BatteryControl {
     private import X2CitySharedContracts::*;
 
     attribute def FaultRecognitionOrder {
-        doc /* Comparable recognition ordering shared with SessionPolicy fault evidence. Zero means not recognized; equal non-zero values mean indistinguishable recognition order and require SessionPolicy's established tie rule. The ordering is not a BMS measurement timestamp or a battery-local sequence. */
+        doc /* Comparable recognition ordering shared with RidingControl fault evidence. Zero means not recognized; equal non-zero values mean indistinguishable recognition order and require RidingControl's established tie rule. The ordering is not a BMS measurement timestamp or a battery-local sequence. */
     }
 
     item def BatteryPower {
@@ -73,7 +73,7 @@ package X2CityContract_BatteryControl {
         item fieldUpdateReferences:BmsFieldUpdateReferences;
     }
     item def BatteryReadinessAndFault:>QualifiedInformationRecord {
-        doc /* Current startup assessment and recognized battery fault evidence for SessionPolicy under BMS-005/006/007. Thermal and other battery fault categories stay distinct; recognition order supports SessionPolicy's existing first-recognized reporting rule without preselecting a display fault. */
+        doc /* Current startup assessment and recognized battery fault evidence for RidingControl under BMS-005/006/007. Thermal and other battery fault categories stay distinct; recognition order supports RidingControl's existing first-recognized reporting rule without preselecting a display fault. */
         attribute startupChecksPassed:Boolean;
         attribute thermalFaultRecognized:Boolean;
         attribute thermalFaultRecognitionOrder:FaultRecognitionOrder;
@@ -97,7 +97,7 @@ package X2CityContract_BatteryControl {
         attribute regenerativeChargeRestrictionReason:Integer;
     }
     item def BatteryStateOfCharge:>QualifiedInformationRecord {
-        doc /* BatterySupervision's qualified actual SOC for HMI display and SessionPolicy's low-charge selection. It is distinct from the supplied BMS candidate SOC. */
+        doc /* BatterySupervision's qualified actual SOC for HMI display and RidingControl's low-charge selection. It is distinct from the supplied BMS candidate SOC. */
         attribute actualStateOfChargePercent:Real;
     }
     item def BatteryCurrent:>QualifiedInformationRecord {
@@ -112,12 +112,12 @@ package X2CityContract_BatteryControl {
     port def BmsTelemetryInputPort { doc /* Receives selected BMS source fields at BatterySupervision for qualification. */ in item telemetry:BmsTelemetry; }
     port def BatteryMeasurementsOutputPort { doc /* Sends BmsLink's qualified BMS measurements to BatteryProtection's operating-policy realization inside BatterySupervision. */ out item measurements:BatteryMeasurements; }
     port def BatteryMeasurementsInputPort { doc /* Receives BmsLink's qualified BMS measurements at BatteryProtection's operating-policy realization inside BatterySupervision. */ in item measurements:BatteryMeasurements; }
-    port def BatteryReadinessAndFaultOutputPort { doc /* Publishes startup assessment and separate recognized thermal/battery fault evidence to SessionPolicy. */ out item readinessAndFault:BatteryReadinessAndFault; }
-    port def BatteryReadinessAndFaultInputPort { doc /* Receives startup assessment and separate recognized thermal/battery fault evidence at SessionPolicy. */ in item readinessAndFault:BatteryReadinessAndFault; }
-    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified discharge, regenerative-charge, and SOC-positive-propulsion limits to DemandPolicy. */ out item operatingLimits:BatteryOperatingLimits; }
-    port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge, regenerative-charge, and SOC-positive-propulsion limits at DemandPolicy. */ in item operatingLimits:BatteryOperatingLimits; }
-    port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl or SessionPolicy. */ out item stateOfCharge:BatteryStateOfCharge; }
-    port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl or SessionPolicy. */ in item stateOfCharge:BatteryStateOfCharge; }
+    port def BatteryReadinessAndFaultOutputPort { doc /* Publishes startup assessment and separate recognized thermal/battery fault evidence to RidingControl. */ out item readinessAndFault:BatteryReadinessAndFault; }
+    port def BatteryReadinessAndFaultInputPort { doc /* Receives startup assessment and separate recognized thermal/battery fault evidence at RidingControl. */ in item readinessAndFault:BatteryReadinessAndFault; }
+    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified discharge, regenerative-charge, and SOC-positive-propulsion limits to RidingControl. */ out item operatingLimits:BatteryOperatingLimits; }
+    port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge, regenerative-charge, and SOC-positive-propulsion limits at RidingControl. */ in item operatingLimits:BatteryOperatingLimits; }
+    port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl or RidingControl. */ out item stateOfCharge:BatteryStateOfCharge; }
+    port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl or RidingControl. */ in item stateOfCharge:BatteryStateOfCharge; }
     port def BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current to HMIControl. */ out item batteryCurrent:BatteryCurrent; }
     port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at HMIControl. */ in item batteryCurrent:BatteryCurrent; }
 
@@ -141,9 +141,9 @@ package X2CityComponent_BatteryControl {
         part batteryAssembly:BatteryAssembly { doc /* The sole removable physical 14S5P pack assembly. */ }
         part batterySupervision:BatterySupervision { doc /* Project vehicle-host supervision for BMS reading, qualification, and battery operating policy. */ }
         port batteryPower:BatteryPowerPort { doc /* External physical bidirectional pack-to-EnergyPath boundary for discharge and regeneration. */ }
-        port batteryReadinessAndFaultOut:BatteryReadinessAndFaultOutputPort { doc /* External SessionPolicy evidence for startup and recognized battery faults. */ }
-        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External DemandPolicy operating limits including both current-sign branches and SOC caps. */ }
-        port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* External qualified actual-SOC publication for HMI and SessionPolicy. */ }
+        port batteryReadinessAndFaultOut:BatteryReadinessAndFaultOutputPort { doc /* External RidingControl evidence for startup and recognized battery faults. */ }
+        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External RidingControl operating limits including both current-sign branches and SOC caps. */ }
+        port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* External qualified actual-SOC publication for HMI and RidingControl. */ }
         port batteryCurrentOut:BatteryCurrentOutputPort { doc /* External qualified signed-current publication for HMI. */ }
         flow assemblyPowerToBoundary from batteryAssembly.batteryPower.batteryPower to batteryPower.batteryPower;
         flow boundaryPowerToAssembly from batteryPower.batteryPower to batteryAssembly.batteryPower.batteryPower;

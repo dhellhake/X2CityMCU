@@ -53,15 +53,13 @@ package X2CitySoftwareContract_SupplyInterface {
                PVDD/GVDD qualification remains on FastDcLinkVoltage and SupplyVoltage. */
     }
     port def SupplyHealthOutputPort {
-        doc /* Publishes supply conversion-health evidence to Platform, SessionPolicy and TractionControl. The regular logical source/value qualification remains on SupplyVoltage; this record carries fast/regular conversion diagnostics rather than a voltage command. */
+        doc /* Publishes supply conversion-health evidence to Platform, RidingControl session logic and TractionControl. The regular logical source/value qualification remains on SupplyVoltage; this record carries fast/regular conversion diagnostics rather than a voltage command. */
         out item qualification:SupplyHealthCondition;
     }
 }
 
 package X2CitySoftwareComponent_SupplyInterface {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
-    private import X2CitySoftwareContract_Platform::*;
     // SC-SUPPLY-IF.V; separate fast DC-link and regular supply-voltage semantic state.
     part def SupplyInterface {
         /* Owns DC-link voltage conversion from the fast injected aperture and regular supply

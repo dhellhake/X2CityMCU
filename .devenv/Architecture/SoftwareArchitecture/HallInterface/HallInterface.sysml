@@ -42,15 +42,13 @@ package X2CitySoftwareContract_HallInterface {
         out item payload:HallObservation;
     }
     port def HallHealthOutputPort {
-        doc /* Publishes Hall capture and position-estimation health evidence to Platform, SessionPolicy and TractionControl. Overrun, incoherence, age, context or calibration failure is represented through the health qualification. */
+        doc /* Publishes Hall capture and position-estimation health evidence to Platform, RidingControl session logic and TractionControl. Overrun, incoherence, age, context or calibration failure is represented through the health qualification. */
         out item payload:SensorHealthCondition;
     }
 }
 
 package X2CitySoftwareComponent_HallInterface {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_HallInterface::*;
-    private import X2CitySoftwareContract_Platform::*;
     // SC-HALL-IF.V; qualified Hall-observation interface.
     part def HallInterface {
         /* Owns capture integrity, rings and bounded access; transition acceptance, direction

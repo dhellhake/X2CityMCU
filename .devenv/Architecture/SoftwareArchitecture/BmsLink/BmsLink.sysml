@@ -9,9 +9,7 @@ package X2CitySoftwareContract_BmsLink {
 }
 
 package X2CitySoftwareComponent_BmsLink {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_BmsLink::*;
-    private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_Platform::*;
     part def BmsLink {
         /* Exchanges read transactions with the supplied BMS endpoint and interprets accepted

@@ -24,7 +24,6 @@ package X2CitySoftwareContract_LightPolicy {
 }
 
 package X2CitySoftwareComponent_LightPolicy {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_LightPolicy::*;
     private import X2CitySoftwareContract_Platform::*;
     part def LightPolicy {

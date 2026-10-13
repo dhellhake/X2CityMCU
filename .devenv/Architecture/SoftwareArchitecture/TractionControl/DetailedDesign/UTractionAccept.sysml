@@ -1,8 +1,7 @@
 package X2CityDetailedUnit_TractionAccept {
     private import X2CityDetailedSharedContracts::*;
     private import X2CitySharedSoftwareTypes::*;
-    private import X2CitySoftwareContract_SessionPolicy::*;
-    private import X2CitySoftwareContract_DemandPolicy::*;
+    private import X2CitySoftwareContract_RidingControl::*;
     private import X2CitySoftwareContract_TractionControl::*;
     // Owner: SC-TRACTION-CTRL.V; DD-001; REQ-SYS-TRQACC-001; SW-I-004/005.
     port def TractionAuthorityInputPort {

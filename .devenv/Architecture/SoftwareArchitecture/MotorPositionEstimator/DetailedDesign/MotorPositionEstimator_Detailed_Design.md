@@ -14,7 +14,7 @@ unavailable observer-voltage source with otherwise acceptable Hall error produce
 Hall-only estimate, not a false fault. A contradiction, lost mandatory Hall evidence
 or recognized required-source failure makes the affected Position unavailable. The
 unit still publishes the current `SoftwareMotorPositionQualification` inside its one
-`MotorPositionRecord` to TractionControl, SessionPolicy and Platform, preserving
+`MotorPositionRecord` to TractionControl, RidingControl and Platform, preserving
 source/reason/event-time/configuration/reset context for the established fault policy.
 A qualification-only publication never refreshes the Position reference time.
 

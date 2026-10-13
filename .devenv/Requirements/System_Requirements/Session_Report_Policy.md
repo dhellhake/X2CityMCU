@@ -1,6 +1,6 @@
-# Session fault-report policy
+# RidingControl session fault-report policy
 
-**Type:** System Requirement. **Target:** `LE-SESSION`. These retained approved HMI report-policy requirements are Session obligations; HMIControl encodes and transmits the report it receives without changing selection, priority, or retention.
+**Type:** System Requirement. **Target:** `LE-RIDING`. These retained approved HMI report-policy requirements are Session obligations; HMIControl encodes and transmits the report it receives without changing selection, priority, or retention.
 
 | ID | Requirement | Planned verification / distinguishing cases | Sources | Open dependencies / qualifications |
 | --- | --- | --- | --- | --- |

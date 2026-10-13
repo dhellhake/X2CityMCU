@@ -1,7 +1,6 @@
 package X2CityContract_HmiControl {
     private import X2CitySharedContracts::*;
-    private import X2CityContract_SettingsPolicy::*;
-    private import X2CityContract_SessionPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_LightControl::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CityContract_MotorControl::*;
@@ -40,7 +39,7 @@ package X2CityContract_HmiControl {
     port def HmiUartTransmittedDataInputPort { doc /* Receives software-prepared bytes and handoff qualification for electrical transmission; the electrical leaf does not interpret protocol fields. */ in item transmittedData:HmiUartTransmittedData; }
     port def HmiPowerLockObservationOutputPort { doc /* Publishes awake conditioned physical power-lock state and integrity from HmiElectricalInterface to HmiInformationProcessing. */ out item observation:HmiPowerLockObservation; }
     port def HmiPowerLockObservationInputPort { doc /* Receives the awake conditioned physical power-lock state and integrity for HMIControl's semantic request qualification. */ in item observation:HmiPowerLockObservation; }
-    port def VehicleOperationRequestOutputPort { doc /* Publishes HMIControl's qualified physical On/Off interpretation to SessionPolicy. */ out item request:VehicleOperationRequest; }
+    port def VehicleOperationRequestOutputPort { doc /* Publishes HMIControl's qualified physical On/Off interpretation to RidingControl. */ out item request:VehicleOperationRequest; }
     port def VehicleOperationRequestInputPort { doc /* Receives HMIControl's qualified physical On/Off interpretation; UART state is not part of this contract. */ in item request:VehicleOperationRequest; }
 
     interface def IfA006HmiUartReceivedData { end electrical:HmiUartReceivedDataOutputPort; end information:HmiUartReceivedDataInputPort; flow electrical.receivedData to information.receivedData; }
@@ -51,8 +50,6 @@ package X2CityContract_HmiControl {
 
 package X2CityComponent_HmiControl {
     private import X2CityContract_HmiControl::*;
-    private import X2CityContract_SettingsPolicy::*;
-    private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_LightControl::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CityContract_MotorControl::*;
@@ -66,13 +63,13 @@ package X2CityComponent_HmiControl {
         /* Vehicle-side rider interaction, kept separate from riding policy. The electrical leaf owns physical power-lock identification and qualification while awake and forwards a hardware-conditioned wake signal directly to Compute; the software leaf interprets the power-lock observation independently of UART framing and owns display information exchange. */
         part hmiElectricalInterface:HmiElectricalInterface; // LE-HMI-ELECTRICAL
         part hmiInformationProcessing:HmiInformationProcessing; // LE-HMI
-        port ridingSettingsOut:RiderSettingsRequestOutputPort { doc /* Qualified requested riding level/speed receipt for SettingsPolicy and SessionPolicy. */ }
+        port ridingSettingsOut:RiderSettingsRequestOutputPort { doc /* Qualified requested riding level/speed receipt for RidingControl. */ }
         port runningLightStateOut:NormalLightRequestOutputPort { doc /* Qualified normal-light request for LightControl; it carries no retained-light policy. */ }
         port selectedFaultIn:SelectedFaultIndicationInputPort { doc /* Qualified Session-selected wire code, including no-error, for report encoding only. */ }
         port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Qualified actual SOC for rider-information encoding. */ }
         port batteryCurrentIn:BatteryCurrentInputPort { doc /* Qualified signed pack current for rider-information encoding. */ }
         port vehicleMotionIn:QualifiedVehicleMotionInputPort { doc /* Qualified Traction-owned speed/direction/standstill for rider-information encoding. */ }
-        port vehicleOperationRequestOut:VehicleOperationRequestOutputPort { doc /* HMI-owned qualified physical On/Off semantic request to SessionPolicy, independent of UART framing or protocol availability. */ }
+        port vehicleOperationRequestOut:VehicleOperationRequestOutputPort { doc /* HMI-owned qualified physical On/Off semantic request to RidingControl, independent of UART framing or protocol availability. */ }
         port vehicleElectricalPowerIn:VehicleElectricalPowerInputPort { doc /* EnergyPath supply made available to the VD18MT on/off function. */ }
         port vd18mtConnection:HmiDevicePort { doc /* Vehicle-side logical VD18MT energy and information exchange. */ }
         port controllerWakeOut:ControllerWakeOutputPort { doc /* Conditioned hardware wake forwarded from HmiElectricalInterface to Compute, independent of UART/software execution. */ }

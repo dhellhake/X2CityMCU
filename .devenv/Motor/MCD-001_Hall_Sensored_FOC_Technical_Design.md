@@ -14,7 +14,7 @@ Primary technical references: [Microchip AN4064, Hall-sensored FOC for a scooter
 
 ## Boundaries, quantities and sign conventions
 
-`SC-DEMAND.V` remains the owner of an allowed signed **wheel-torque request** `T_w*` (N m); it is not a speed command. `SC-TRACTION-CTRL.V` accepts it only with current authority and all existing validity/expiry/context rules. Its calibrated internal request is
+`SC-RIDING-CONTROL.V` remains the owner of an allowed signed **wheel-torque request** `T_w*` (N m); it is not a speed command. `SC-TRACTION-CTRL.V` accepts it only with current authority and all existing validity/expiry/context rules. Its calibrated internal request is
 
 `Iq* = clamp(K_Tinv(T_w*), Iq_min(conditions), Iq_max(conditions))` in A, and `Id* = 0 A`.
 

@@ -1,11 +1,14 @@
 package X2CitySoftwareContract_Platform {
     private import X2CitySharedSoftwareTypes::*;
+    private import X2CityContract_Compute::*;
     private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeQualification;
     item def PlatformContext:>ContextualSoftwareInformation;
     port def PlatformContextOutputPort {
         doc /* Publishes the current execution, reset and context generation information to software components that require a coherent local operating context. Consumers use it to qualify observations and reject records from another context. */
         out item payload:PlatformContext;
     }
+    port def RuntimeInitializationOutputPort :> X2CityContract_Compute::ComputeRuntimeInitializationOutputPort;
+    port def SleepRequestInputPort :> X2CityContract_Compute::ComputeSleepRequestInputPort;
     item def RetentionCandidate:>ContextualSoftwareInformation;
     port def RetentionCandidateOutputPort {
         doc /* Publishes retained-state information to policy components. BatteryProtection uses the retained candidate with its validity context for reached-10% recovery handling. */
@@ -41,9 +44,7 @@ package X2CitySoftwareContract_Platform {
 }
 
 package X2CitySoftwareComponent_Platform {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AcceleratorInterface::AcceleratorQualificationInputPort;
-    private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeQualification;
     private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     private import X2CitySoftwareContract_Platform::*;
     part def Platform {
@@ -56,6 +57,8 @@ package X2CitySoftwareComponent_Platform {
            not own ADC sampling, control math, or PWM/JSQR writes. */
         port executionTimeIn:ExecutionTimeInputPort;
         port platformContextOut:PlatformContextOutputPort;
+        port runtimeInitializationOut:RuntimeInitializationOutputPort;
+        port sleepRequestIn:SleepRequestInputPort;
         port retentionCandidateOut:RetentionCandidateOutputPort;
         port platformHealthOut:PlatformHealthOutputPort;
         port sensorHealthIn:SensorHealthInputPort;

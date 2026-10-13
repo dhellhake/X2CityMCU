@@ -41,8 +41,7 @@ package X2CityComponent_TractionControl {
     private import X2CityComponent_MotorControl::*;
     private import X2CityComponent_TractionHardware::*;
     private import X2CityContract_MotorControl::*;
-    private import X2CityContract_SessionPolicy::*;
-    private import X2CityContract_DemandPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_TractionControl::*;
     private import X2CityContract_EnergyPath::*;
     private import X2CityContract_MotorPositionProcessing::*;
@@ -51,7 +50,7 @@ package X2CityComponent_TractionControl {
         /* Logical composite for software motor control and traction hardware. It owns local temperature/supply conversion and qualification with values, delegates energy routing to hardware, and forwards local condition evidence to Session without latching it. */
         part motorControl:MotorControl;
         part tractionHardware:TractionHardware;
-        port ridingAuthorityIn:RidingAuthorityInputPort { doc /* Delegated Session authorization. */ }
+        port ridingAuthorityIn:RidingAuthorityInputPort { doc /* Delegated RidingControl authorization. */ }
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort { doc /* Delegated signed wheel-torque demand. */ }
         port motorPositionIn:MotorPositionInputPort { doc /* Qualified electrical rotor position from sibling MotorPositionEstimation. */ }
         port phaseCurrentIn:PhaseCurrentMeasurementsInputPort { doc /* Qualified phase-current feedback from sibling MotorPositionEstimation. */ }

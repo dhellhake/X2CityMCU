@@ -3,29 +3,27 @@ package X2CityDetailedUnit_DemandArbiter {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_AcceleratorInterface::*;
     private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
-    private import X2CitySoftwareContract_SettingsPolicy::*;
-    private import X2CitySoftwareContract_SessionPolicy::*;
+    private import X2CitySoftwareContract_RidingControl::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
     private import X2CitySoftwareContract_TractionControl::*;
-    private import X2CitySoftwareContract_DemandPolicy::*;
     private import X2CitySoftwareContract_Platform::*;
-    // Owner: SC-DEMAND; DD-001; UR-DEMAND-001; SW-I-001..005.
+    // Owner: SC-RIDING-CONTROL; DD-001; UR-DEMAND-001; SW-I-001..005.
     port def DemandAcceleratorInputPort {
         doc /* Receives U-ACCELERATOR-QUALIFY's composite. It uses Position as the active-profile request source only when contained Qualification supports it, and retains the health evidence when Position is unavailable. */
         in item payload:AcceleratorPosition;
     }
-    port def DemandBrakeLeverStateInputPort :> X2CitySoftwareContract_DemandPolicy::BrakeLeverStateInputPort {
+    port def DemandBrakeLeverStateInputPort :> X2CitySoftwareContract_RidingControl::BrakeLeverStateInputPort {
         doc /* Receives U-BRAKE-QUALIFY's exact State/Qualification composite; qualified Left, Right or Both blocks only the positive branch. */
-        in item brakeLeverState:SoftwareBrakeLeverState :>> X2CitySoftwareContract_DemandPolicy::BrakeLeverStateInputPort::brakeLeverState;
+        in item brakeLeverState:SoftwareBrakeLeverState :>> X2CitySoftwareContract_RidingControl::BrakeLeverStateInputPort::brakeLeverState;
     }
     port def DemandActiveSettingsInputPort {
         doc /* Receives U-SET-STATE's active level 0–5 and active normalized speed limit; pending settings cannot enter this port. */
-        in item payload:ActiveRidingSettings;
+        in item payload:X2CitySoftwareContract_RidingControl::ActiveRidingSettings;
     }
     port def DemandAuthorityInputPort {
         doc /* Receives Session authority with independent generation, decision and expiry timestamps; matching generation never prolongs authority expiry. */
-        in item payload:RidingAuthority;
+        in item payload:X2CitySoftwareContract_RidingControl::RidingAuthority;
     }
     port def DemandBatteryOperatingLimitsInputPort {
         doc /* Receives independent discharge and regenerative-charge current limits and qualification, plus SOC positive torque/speed caps. Both amperage limits propagate alongside the wheel request; Traction selects by actual electrical transfer, never wheel-torque sign. */
@@ -37,7 +35,7 @@ package X2CityDetailedUnit_DemandArbiter {
     }
     port def DemandActualOutputInputPort {
         doc /* Receives U-TRACTION-ACTUAL-OUTPUT's qualified applied-wheel-torque estimate and powered-forward evidence for post-stop regen rearm. */
-        in item payload:ActualTractionOutput;
+        in item payload:X2CitySharedSoftwareTypes::ActualTractionOutput;
     }
     port def DemandPlatformContextInputPort {
         doc /* Receives the current platform context that invalidates Demand state and prevents an old decision from crossing a reset boundary. */

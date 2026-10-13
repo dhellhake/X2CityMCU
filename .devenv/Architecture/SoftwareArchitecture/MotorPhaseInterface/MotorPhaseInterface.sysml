@@ -49,7 +49,7 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def PhaseVoltageDiagnosticOutputPort {
-        doc /* Publishes separately qualified phase-voltage diagnostic observations to SessionPolicy. This slow diagnostic output is not used as fast FOC feedback or battery supervision evidence. */
+        doc /* Publishes separately qualified phase-voltage diagnostic observations to RidingControl session logic. This slow diagnostic output is not used as fast FOC feedback or battery supervision evidence. */
         out item payload:PhaseVoltageDiagnostic;
     }
     item def QualifiedAppliedPhaseVoltage:>ContextualSoftwareInformation {
@@ -96,15 +96,13 @@ package X2CitySoftwareContract_MotorPhaseInterface {
         out item payload:QualifiedAppliedPhaseVoltage;
     }
     port def MotorPhaseHealthOutputPort {
-        doc /* Publishes phase-current and phase-voltage conversion health evidence to Platform, SessionPolicy and TractionControl. It carries qualification state rather than a phase command. */
+        doc /* Publishes phase-current and phase-voltage conversion health evidence to Platform, RidingControl session logic and TractionControl. It carries qualification state rather than a phase command. */
         out item payload:SensorHealthCondition;
     }
 }
 
 package X2CitySoftwareComponent_MotorPhaseInterface {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
-    private import X2CitySoftwareContract_Platform::*;
     // SC-MOTOR-PHASE-IF.V; semantic phase-current and phase-voltage interface.
     part def MotorPhaseInterface {
         /* Owns current scaling, accepted offset/gain/polarity calibration, valid-window checks,

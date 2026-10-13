@@ -2,11 +2,11 @@
 
 `LE-COMPUTE` is the vehicle execution infrastructure composite. It contains only `LE-COMPUTE-HW` and `LE-PLATFORM`; system-function ownership remains with the owning logical components. The selected WeAct STM32H723VGT6 V1.2 board hosts vehicle execution. EnergyPath supplies distributed vehicle electrical power to Compute.
 
-The conditioned HMI hardware wake is a direct path from HMIControl through Compute to ComputeHardware and remains available while the processor sleeps. After hardware wake, Platform initializes runtime independently of HMI request qualification. HMIControl publishes its qualified `VehicleOperationRequest` to SessionPolicy only; SessionPolicy evaluates sleep eligibility from qualified explicit Off and qualified traction `computeSleepPermitted` evidence, then grants or revokes the sleep request. Platform validates the SessionPolicy request at sleep entry and executes it; it does not re-evaluate HMI or traction eligibility or renew permission while forwarding. Platform does not observe or emit the awake power-lock signal.
+The conditioned HMI hardware wake is a direct path from HMIControl through Compute to ComputeHardware and remains available while the processor sleeps. After hardware wake, Platform initializes runtime independently of HMI request qualification. HMIControl publishes its qualified `VehicleOperationRequest` to RidingControl only; RidingControl evaluates sleep eligibility from qualified explicit Off and qualified traction `computeSleepPermitted` evidence, then grants or revokes the sleep request. Platform validates the RidingControl request at sleep entry and executes it; it does not re-evaluate HMI or traction eligibility or renew permission while forwarding. Platform does not observe or emit the awake power-lock signal.
 
-Platform publishes `ComputeRuntimeInitialization` readiness for required clocks, peripherals and the runtime monotonic timebase used by caller-supplied time references. This is a runtime prerequisite and does not establish vehicle Ready. SessionPolicy owns On/Off lifecycle, vehicle Ready and fault-latch authority. A qualified explicit Off immediately closes the current operation session regardless of motion. A later qualified On requires fresh session qualification; it never resumes prior Ready or authority.
+Platform publishes `ComputeRuntimeInitialization` readiness for required clocks, peripherals and the runtime monotonic timebase used by caller-supplied time references. This is a runtime prerequisite and does not establish vehicle Ready. RidingControl owns On/Off lifecycle, vehicle Ready and fault-latch authority. A qualified explicit Off immediately closes the current operation session regardless of motion. A later qualified On requires fresh session qualification; it never resumes prior Ready or authority.
 
-SessionPolicy requests sleep only after the required traction output handoff. Each true request is a current qualified grant with an expiry; false cancels it. Platform accepts only the latest current-context, valid, unexpired true request at actual entry, preserving its qualification, source context and expiry without renewing it. Revoked, invalid, missing, expired or superseded grants cannot initiate sleep, and a pending true handoff clears when no longer current. The traction `computeSleepPermitted` value is capability evidence used by SessionPolicy, not final permission. No physical disconnect/isolation behavior is implied.
+RidingControl requests sleep only after the required traction output handoff. Each true request is a current qualified grant with an expiry; false cancels it. Platform accepts only the latest current-context, valid, unexpired true request at actual entry, preserving its qualification, source context and expiry without renewing it. Revoked, invalid, missing, expired or superseded grants cannot initiate sleep, and a pending true handoff clears when no longer current. The traction `computeSleepPermitted` value is capability evidence used by RidingControl, not final permission. No physical disconnect/isolation behavior is implied.
 
 ## Decomposition
 
@@ -31,13 +31,13 @@ flowchart TB
 flowchart LR
     HMI[HMIControl] -->|conditioned hardware wake; works while MCU sleeps| Compute[LE-COMPUTE]
     Compute -->|direct hardware wake delegation| HW[LE-COMPUTE-HW]
-    HMI -->|vehicleOperationRequestOut| Session[SessionPolicy]
+    HMI -->|vehicleOperationRequestOut| RidingControl[RidingControl]
     EnergyPath[LE-ENERGY-PATH] -->|IF-A-010 vehicle electrical power| Compute
     Compute -->|delegated EnergyPath supply| HW
-    Platform -->|ComputeRuntimeInitialization readiness| Session
-    Session -->|ComputeSleepRequest after traction handoff| Compute
+    Platform -->|ComputeRuntimeInitialization readiness| RidingControl
+    RidingControl -->|ComputeSleepRequest after traction handoff| Compute
     Compute -->|delegated sleep request| Platform
-    Traction[TractionControl capability evidence] -->|TractionConditionEvidence.computeSleepPermitted| Session
+    Traction[TractionControl capability evidence] -->|TractionConditionEvidence.computeSleepPermitted| RidingControl
     Platform -->|guarded sleep handoff| HW
 ```
 

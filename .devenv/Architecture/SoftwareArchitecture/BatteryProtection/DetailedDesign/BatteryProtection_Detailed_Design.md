@@ -13,7 +13,7 @@ Invocation timing follows the canonical caller supplied `ExecutionTime` contract
 
 `U-BAT-POLICY-RESTRICTION` applies operation context to those candidates. It publishes separate propulsion and regenerative-charge consequences. In `.V`, qualified entry to the approved 10% cutoff sets `reached10%`; positive propulsion remains restricted until qualified actual SOC exceeds 20%. The state does not remove auxiliary discharge capability and does not become a session fault/history. A qualified discharge-permissible/charge-forbidden temperature becomes a regeneration restriction, not a battery fault solely because charge is forbidden.
 
-Execution is: invalidate old-context inputs → evaluate availability and candidate causes → update `.V` cutoff state → publish one coherent envelope/reason/fault snapshot. A newly available envelope cannot clear `SC-SESSION` inhibition, authorize torque, or bypass the distinct regeneration acceptance conditions.
+Execution is: invalidate old-context inputs → evaluate availability and candidate causes → update `.V` cutoff state → publish one coherent envelope/reason/fault snapshot. A newly available envelope cannot clear `SC-RIDING-CONTROL` inhibition, authorize torque, or bypass the distinct regeneration acceptance conditions.
 
 ### State, reset and invariants
 

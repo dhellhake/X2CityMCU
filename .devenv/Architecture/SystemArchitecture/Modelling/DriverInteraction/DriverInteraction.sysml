@@ -8,9 +8,8 @@ package X2CityComponent_DriverInteraction {
     private import X2CityContract_HmiElectricalInterface::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
     private import X2CityContract_BrakeStateIdentification::*;
-    private import X2CityContract_SettingsPolicy::*;
+    private import X2CityContract_RidingControl::*;
     private import X2CityContract_LightControl::*;
-    private import X2CityContract_SessionPolicy::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_HmiControl::*;
@@ -34,13 +33,13 @@ package X2CityComponent_DriverInteraction {
         port brakeHealthOut:BrakeHealthOutputPort { doc /* Publishes only the brake Qualification projection to Platform health supervision. */ }
         port acceleratorPositionOut:AcceleratorPositionOutputPort { doc /* Publishes the qualified accelerator Position/Qualification composite to riding policy consumers. */ }
         port acceleratorHealthOut:AcceleratorHealthOutputPort { doc /* Publishes only the accelerator Qualification projection to Platform health supervision. */ }
-        port ridingSettingsOut:RiderSettingsRequestOutputPort { doc /* Forwards HMIControl's qualified riding-settings request to SettingsPolicy and SessionPolicy; they retain setting and session policy. */ }
+        port ridingSettingsOut:RiderSettingsRequestOutputPort { doc /* Forwards HMIControl's qualified riding-settings request to RidingControl, which retains requested, pending and active settings internally. */ }
         port runningLightStateOut:NormalLightRequestOutputPort { doc /* Forwards HMIControl's qualified normal-light request to LightControl, which retains lighting policy. */ }
         port selectedFaultIn:SelectedFaultIndicationInputPort { doc /* Receives the Session-selected fault indication for HMI report encoding, without selecting or latching faults here. */ }
         port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Receives qualified battery SOC for HMI rider-information encoding. */ }
         port batteryCurrentIn:BatteryCurrentInputPort { doc /* Receives qualified signed pack current for HMI rider-information encoding. */ }
         port vehicleMotionIn:QualifiedVehicleMotionInputPort { doc /* Receives qualified Traction vehicle motion for HMI rider-information encoding. */ }
-        port vehicleOperationRequestOut:VehicleOperationRequestOutputPort { doc /* Forwards HMIControl's qualified physical On/Off request to SessionPolicy, independent of UART state. */ }
+        port vehicleOperationRequestOut:VehicleOperationRequestOutputPort { doc /* Forwards HMIControl's qualified physical On/Off request to RidingControl, independent of UART state. */ }
         port vehicleElectricalPowerIn:VehicleElectricalPowerInputPort { doc /* Receives EnergyPath supply for the display on/off function, available while MCU software sleeps. */ }
         port controllerWakeOut:ControllerWakeOutputPort { doc /* Forwards the conditioned hardware wake to Compute independently of UART or running software. */ }
         flow acceleratorSignalToFunction from driverElectricalConnection.acceleratorConnection.signal to accelerator.electricalSignalIn.signal;

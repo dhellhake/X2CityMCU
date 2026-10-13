@@ -35,7 +35,6 @@ package X2CitySoftwareContract_BrakeInterface {
 }
 
 package X2CitySoftwareComponent_BrakeInterface {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_BrakeInterface::*;
     private import X2CitySoftwareContract_Platform::*;
     // SC-BRAKE-IF.V; semantic coded-brake interface.

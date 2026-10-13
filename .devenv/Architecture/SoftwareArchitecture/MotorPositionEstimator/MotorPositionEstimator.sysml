@@ -38,7 +38,7 @@ package X2CitySoftwareContract_MotorPositionEstimator {
     }
     port def MotorPositionOutputPort {
         doc /* The sole final electrical-position composite. Position and Qualification stay
-           paired for TractionControl, SessionPolicy and Platform; angle availability, observer
+           paired for TractionControl, RidingControl session logic and Platform; angle availability, observer
            contribution and signed-speed availability are independent. */
         out item payload:MotorPositionRecord;
     }
@@ -50,9 +50,7 @@ package X2CitySoftwareContract_MotorPositionEstimator {
 }
 
 package X2CitySoftwareComponent_MotorPositionEstimator {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_MotorPositionEstimator::*;
-    private import X2CitySoftwareContract_Platform::*;
     part def MotorPositionEstimator {
         /* Realizes MotorPositionProcessing from mandatory qualified Hall observations. A valid
            static Hall sector may give a bounded angle at rest. Accepted transitions permit

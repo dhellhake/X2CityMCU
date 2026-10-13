@@ -2,8 +2,7 @@ package X2CitySoftwareContract_TractionControl {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_TractionControl::*;
-    private import X2CitySoftwareContract_SessionPolicy::*;
-    private import X2CitySoftwareContract_DemandPolicy::*;
+    private import X2CitySoftwareContract_RidingControl::*;
     private import X2CityContract_MotorPositionProcessing::*;
     private import X2CitySoftwareContract_MotorPhaseInterface::*;
     private import X2CitySoftwareContract_SupplyInterface::*;
@@ -24,15 +23,15 @@ package X2CitySoftwareContract_TractionControl {
         attribute standstillObservabilityBoundMicroseconds:Integer;
         attribute buildValidated:Boolean;
     }
-    port def RidingAuthorityInputPort :> X2CityContract_SessionPolicy::RidingAuthorityInputPort {
-        doc /* Receives SessionPolicy authority generation and its independent validity/expiry context. TractionControl accepts commands only when this authority is current in the common host-boot monotonic microsecond domain. */
-        in item payload:RidingAuthority :>> X2CityContract_SessionPolicy::RidingAuthorityInputPort::payload;
+    port def RidingAuthorityInputPort :> X2CityContract_RidingControl::RidingAuthorityInputPort {
+        doc /* Receives RidingControl session logic authority generation and its independent validity/expiry context. TractionControl accepts commands only when this authority is current in the common host-boot monotonic microsecond domain. */
+        in item payload:RidingAuthority :>> X2CityContract_RidingControl::RidingAuthorityInputPort::payload;
     }
-    port def WheelTorqueRequestInputPort :> X2CityContract_DemandPolicy::WheelTorqueCommandInputPort {
-        doc /* Receives DemandPolicy's requested signed wheel-torque command with authority linkage,
+    port def WheelTorqueRequestInputPort :> X2CityContract_RidingControl::WheelTorqueCommandInputPort {
+        doc /* Receives RidingControl demand arbitration's requested signed wheel-torque command with authority linkage,
            expiry, and independently dimensioned battery charge/discharge-current bounds. Traction
            uses the amperage bounds as electrical limits; they are not wheel-torque values. */
-        in item payload:WheelTorqueRequest :>> X2CityContract_DemandPolicy::WheelTorqueCommandInputPort::payload;
+        in item payload:WheelTorqueRequest :>> X2CityContract_RidingControl::WheelTorqueCommandInputPort::payload;
     }
     port def MotorPositionInputPort :> X2CityContract_MotorPositionProcessing::MotorPositionInputPort {
         doc /* Receives the one final qualified electrical position from MotorPositionEstimator
@@ -87,11 +86,11 @@ package X2CitySoftwareContract_TractionControl {
         in item evidence:TractionOutputStageExchange;
     }
     port def QualifiedMotionOutputPort :> QualifiedVehicleMotionOutputPort {
-        doc /* Publishes qualified physical vehicle motion and standstill evidence to SettingsPolicy, SessionPolicy and DemandPolicy. The publication remains live during startup/disarm and reports unavailable until its qualification criteria are met. */
+        doc /* Publishes qualified physical vehicle motion and standstill evidence to RidingControl settings logic, RidingControl session logic and RidingControl demand arbitration. The publication remains live during startup/disarm and reports unavailable until its qualification criteria are met. */
         out item payload:QualifiedMotion :>> QualifiedVehicleMotionOutputPort::payload;
     }
     port def AppliedTractionStateOutputPort :> ActualTractionOutputPort {
-        doc /* Publishes qualified observed applied-output evidence, including independently qualified positive torque and powered-forward travel, to DemandPolicy. It is derived from actual output observations and remains separate from the requested command. */
+        doc /* Publishes qualified observed applied-output evidence, including independently qualified positive torque and powered-forward travel, to RidingControl demand arbitration. It is derived from actual output observations and remains separate from the requested command. */
         out item payload:X2CitySharedSoftwareTypes::ActualTractionOutput :>> ActualTractionOutputPort::payload;
     }
     item def TractionObservation:>ContextualSoftwareInformation, X2CityContract_MotorControl::TractionConditionEvidence {
@@ -99,7 +98,7 @@ package X2CitySoftwareContract_TractionControl {
                distinct from recognizedFault; Session alone owns the latched fault and clean-restart lifetime. */
     }
     port def TractionObservationOutputPort :> X2CityContract_MotorControl::TractionConditionEvidenceOutputPort {
-        doc /* Publishes the software refinement of locally evaluated and categorized traction condition evidence to SessionPolicy. Session owns vehicle-wide fault latching, priority/report selection and restart policy; this is not a command or actuation channel. */
+        doc /* Publishes the software refinement of locally evaluated and categorized traction condition evidence to RidingControl session logic. Session owns vehicle-wide fault latching, priority/report selection and restart policy; this is not a command or actuation channel. */
         out item payload:TractionObservation :>> X2CityContract_MotorControl::TractionConditionEvidenceOutputPort::payload;
     }
     item def ElectricalBrakingStateRecord:>ContextualSoftwareInformation, ElectricalBrakingState {
@@ -113,9 +112,7 @@ package X2CitySoftwareContract_TractionControl {
 }
 
 package X2CitySoftwareComponent_TractionControl {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_TractionControl::*;
-    private import X2CitySoftwareContract_Platform::*;
     private import X2CityComponent_MotorControl::*;
     private import X2CitySoftwareComponent_AnalogAcquisition::*;
     private import X2CitySoftwareComponent_TemperatureInterface::*;

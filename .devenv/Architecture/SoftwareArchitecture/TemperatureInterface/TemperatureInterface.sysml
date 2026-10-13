@@ -25,19 +25,17 @@ package X2CitySoftwareContract_TemperatureInterface {
         attribute configurationContextId:String; // fixed compiled build/config provenance; never live rollover.
     }
     port def QualifiedTemperatureOutputPort :> X2CityContract_TractionControl::QualifiedTemperatureOutputPort {
-        doc /* Publishes qualified `TractionBoard` and `Motor` temperature observations to SessionPolicy. Battery temperature observations used by battery supervision come through BmsLink. */
+        doc /* Publishes qualified `TractionBoard` and `Motor` temperature observations to RidingControl session logic. Battery temperature observations used by battery supervision come through BmsLink. */
         out item payload:QualifiedTemperature :>> X2CityContract_TractionControl::QualifiedTemperatureOutputPort::payload;
     }
     port def TemperatureHealthOutputPort {
-        doc /* Publishes the conversion-health projection to Platform and SessionPolicy. The logical source/value qualification remains on QualifiedTemperature; this implementation health record reports conversion freshness and diagnostics without making a thermal operating decision. */
+        doc /* Publishes the conversion-health projection to Platform and RidingControl session logic. The logical source/value qualification remains on QualifiedTemperature; this implementation health record reports conversion freshness and diagnostics without making a thermal operating decision. */
         out item payload:SensorHealthCondition;
     }
 }
 
 package X2CitySoftwareComponent_TemperatureInterface {
-    private import X2CitySharedSoftwareTypes::*;
     private import X2CitySoftwareContract_TemperatureInterface::*;
-    private import X2CitySoftwareContract_Platform::*;
     // SC-TEMPERATURE-IF.V; semantic temperature interface.
     part def TemperatureInterface {
         /* Converts regular-scan temperature channels under accepted calibration and publishes
