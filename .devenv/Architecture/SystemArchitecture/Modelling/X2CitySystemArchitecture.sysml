@@ -278,19 +278,7 @@ package X2CitySystemArchitecture {
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort;
     }
 
-    part def Input { // LE-INPUT
-        /* Composes accelerator and coded brake-lever electrical detection functions. Their electrical input ports mark the exposed function boundaries; no rider-operated endpoint or sensor implementation is selected here. */
-        part accelerator:AcceleratorPositionIdentification;
-        part mechanicalBrakeDetection:MechanicalBrakeDetection;
-        port brakeLeverStateOut:BrakeLeverStateOutputPort;
-        port acceleratorPositionOut:AcceleratorPositionOutputPort;
-        port acceleratorHealthOut:AcceleratorHealthOutputPort;
-        port brakeHealthOut:BrakeHealthOutputPort;
-        flow brakeLeverStateFromFunction from mechanicalBrakeDetection.brakeLeverStateOut.brakeLeverState to brakeLeverStateOut.brakeLeverState;
-        flow brakeHealthFromFunction from mechanicalBrakeDetection.brakeHealthOut.qualification to brakeHealthOut.qualification;
-        flow acceleratorPositionFromFunction from accelerator.acceleratorPositionOut.acceleratorPosition to acceleratorPositionOut.acceleratorPosition;
-        flow acceleratorHealthFromFunction from accelerator.acceleratorHealthOut.qualification to acceleratorHealthOut.qualification;
-    }
+    alias DriverInteraction for X2CityComponent_DriverInteraction::DriverInteraction;
 
     part def Traction { // LE-TRACTION
         part tractionControl:TractionControl;
@@ -344,8 +332,7 @@ package X2CitySystemArchitecture {
 
     part def ElectricalPropulsionControlSystem { // LE-EPCS
         part riding:RidingSupervisor;
-        part hmiControl:HMIControl;
-        part input:Input;
+        part driverInteraction:DriverInteraction;
         part traction:Traction;
         part batteryControl:BatteryControl { doc /* Removable BatteryAssembly and vehicle-host BatterySupervision composite. */ }
         part energyPath:EnergyPath { doc /* General vehicle electrical-power distribution sibling. */ }
@@ -355,14 +342,14 @@ package X2CitySystemArchitecture {
             connect batteryControl.batteryPower to energyPath.batteryPower;
         interface vehicleElectricalPowerToLightControl : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to lightControl.vehicleElectricalPowerIn;
-        interface vehicleElectricalPowerToHmi : IfA010VehicleElectricalPower
-            connect energyPath.vehicleElectricalPowerOut to hmiControl.vehicleElectricalPowerIn;
+        interface vehicleElectricalPowerToDriverInteraction : IfA010VehicleElectricalPower
+            connect energyPath.vehicleElectricalPowerOut to driverInteraction.vehicleElectricalPowerIn;
         interface vehicleElectricalPowerToCompute : IfA010VehicleElectricalPower
             connect energyPath.vehicleElectricalPowerOut to compute.vehicleElectricalPowerIn;
         interface controllerWakeToCompute : IfA006ControllerWake
-            connect hmiControl.controllerWakeOut to compute.controllerWakeIn;
+            connect driverInteraction.controllerWakeOut to compute.controllerWakeIn;
         interface vehicleOperationRequestToSession : IfA006VehicleOperationRequest
-            connect hmiControl.vehicleOperationRequestOut to riding.session.vehicleOperationRequestIn;
+            connect driverInteraction.vehicleOperationRequestOut to riding.session.vehicleOperationRequestIn;
         interface computeRuntimeInitializationToSession : IfA006ComputeRuntimeInitialization
             connect compute.runtimeInitializationOut to riding.session.runtimeInitializationIn;
         interface sessionSleepRequestToCompute : IfA006ComputeSleepRequest
@@ -374,13 +361,13 @@ package X2CitySystemArchitecture {
         interface motorPositionToSession : X2CityContract_MotorPositionProcessing::IfA005MotorPosition
             connect traction.motorPositionOut to riding.session.motorPositionIn;
         interface brakeToSession : X2CityContract_BrakeStateIdentification::IfA001BrakeLeverState
-            connect input.brakeLeverStateOut to riding.session.brakeLeverStateIn;
+            connect driverInteraction.brakeLeverStateOut to riding.session.brakeLeverStateIn;
         interface brakeToDemand : X2CityContract_BrakeStateIdentification::IfA001BrakeLeverState
-            connect input.brakeLeverStateOut to riding.demand.brakeLeverStateIn;
+            connect driverInteraction.brakeLeverStateOut to riding.demand.brakeLeverStateIn;
         interface brakeToLightControl : X2CityContract_BrakeStateIdentification::IfA001BrakeLeverState
-            connect input.brakeLeverStateOut to lightControl.brakeLeverStateIn;
+            connect driverInteraction.brakeLeverStateOut to lightControl.brakeLeverStateIn;
         interface brakeHealthToPlatform : X2CityContract_BrakeStateIdentification::IfA008BrakeHealth
-            connect input.brakeHealthOut to compute.platform.brakeHealthIn;
+            connect driverInteraction.brakeHealthOut to compute.platform.brakeHealthIn;
         interface temperatureToSession : X2CityContract_TractionControl::IfA008QualifiedTemperature
             connect traction.qualifiedTemperatureOut to riding.session.qualifiedTemperatureIn;
         interface temperatureToPlatform : X2CityContract_TractionControl::IfA008QualifiedTemperature
@@ -404,21 +391,21 @@ package X2CitySystemArchitecture {
     ref part x2CityVehicle:ProjectVehicleModel;
 
     // IF-A-001: LE-ACCELERATOR owns qualified Position/Qualification; LE-MECHANICAL-BRAKE owns the exact four-state State/Qualification route inside LE-EPCS. LE-TRACTION owns qualified vehicle motion.
-    flow ifA001AcceleratorToSettings from x2CityVehicle.epcs.input.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.settings.acceleratorPositionIn.acceleratorPosition;
-    flow ifA001AcceleratorToSession from x2CityVehicle.epcs.input.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.session.acceleratorPositionIn.acceleratorPosition;
-    flow ifA001AcceleratorToDemand from x2CityVehicle.epcs.input.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.demand.acceleratorPositionIn.acceleratorPosition;
-    flow ifA001AcceleratorToPlatform from x2CityVehicle.epcs.input.acceleratorHealthOut.qualification to x2CityVehicle.epcs.compute.platform.acceleratorHealthIn.qualification;
+    flow ifA001AcceleratorToSettings from x2CityVehicle.epcs.driverInteraction.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.settings.acceleratorPositionIn.acceleratorPosition;
+    flow ifA001AcceleratorToSession from x2CityVehicle.epcs.driverInteraction.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.session.acceleratorPositionIn.acceleratorPosition;
+    flow ifA001AcceleratorToDemand from x2CityVehicle.epcs.driverInteraction.acceleratorPositionOut.acceleratorPosition to x2CityVehicle.epcs.riding.demand.acceleratorPositionIn.acceleratorPosition;
+    flow ifA001AcceleratorToPlatform from x2CityVehicle.epcs.driverInteraction.acceleratorHealthOut.qualification to x2CityVehicle.epcs.compute.platform.acceleratorHealthIn.qualification;
     flow ifA001VehicleMotionToSettings from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.settings.qualifiedVehicleMotionIn.payload;
     flow ifA001VehicleMotionToSession from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.session.qualifiedVehicleMotionIn.payload;
 
     // IF-A-002: HMIControl requests feed LE-SET and startup receipt reaches LE-SESSION; demand receives only active settings.
     interface ifA002HmiToSettings : X2CityContract_SettingsPolicy::IfA002RiderSettingsRequest
-        connect x2CityVehicle.epcs.hmiControl.ridingSettingsOut to x2CityVehicle.epcs.riding.settings.hmiRiderSettingsRequestIn;
+        connect x2CityVehicle.epcs.driverInteraction.ridingSettingsOut to x2CityVehicle.epcs.riding.settings.hmiRiderSettingsRequestIn;
     interface ifA002HmiToSession : X2CityContract_SettingsPolicy::IfA002RiderSettingsRequest
-        connect x2CityVehicle.epcs.hmiControl.ridingSettingsOut to x2CityVehicle.epcs.riding.session.hmiRiderSettingsRequestIn;
+        connect x2CityVehicle.epcs.driverInteraction.ridingSettingsOut to x2CityVehicle.epcs.riding.session.hmiRiderSettingsRequestIn;
     flow ifA002ActiveRidingSettingsToDemand from x2CityVehicle.epcs.riding.settings.activeRidingSettingsOut.payload to x2CityVehicle.epcs.riding.demand.activeRidingSettingsIn.payload;
 
-    // IF-A-003: BatteryControl directly provides policy and HMI evidence; Input and Traction do not assemble battery observations.
+    // IF-A-003: BatteryControl directly provides policy and HMI evidence; DriverInteraction and Traction do not assemble battery observations.
     interface ifA003ReadinessToSession : IfA003BatteryReadinessAndFault
         connect x2CityVehicle.epcs.batteryControl.batteryReadinessAndFaultOut to x2CityVehicle.epcs.riding.session.batteryReadinessAndFaultIn;
     interface ifA003LimitsToDemand : IfA003BatteryOperatingLimits
@@ -426,9 +413,9 @@ package X2CitySystemArchitecture {
     interface ifA003SocToSession : IfA003BatteryStateOfCharge
         connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.riding.session.stateOfChargeIn;
     interface ifA003SocToHmi : IfA003BatteryStateOfCharge
-        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.hmiControl.stateOfChargeIn;
+        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.driverInteraction.stateOfChargeIn;
     interface ifA003CurrentToHmi : IfA003BatteryCurrent
-        connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.hmiControl.batteryCurrentIn;
+        connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.driverInteraction.batteryCurrentIn;
 
     // IF-A-004: authority informs demand and traction; demand alone provides the signed command.
     flow ifA004AuthorityToDemand from x2CityVehicle.epcs.riding.session.ridingAuthorityOut.payload to x2CityVehicle.epcs.riding.demand.ridingAuthorityIn.payload;
@@ -439,14 +426,14 @@ package X2CitySystemArchitecture {
     flow ifA005TractionToSession from x2CityVehicle.epcs.traction.actualTractionOutputOut.payload to x2CityVehicle.epcs.riding.session.actualTractionOutputIn.payload;
     flow ifA005VehicleMotionToDemand from x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut.payload to x2CityVehicle.epcs.riding.demand.qualifiedVehicleMotionIn.payload;
     interface ifA005VehicleMotionToHmi : IfA005QualifiedVehicleMotion
-        connect x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut to x2CityVehicle.epcs.hmiControl.vehicleMotionIn;
+        connect x2CityVehicle.epcs.traction.qualifiedVehicleMotionOut to x2CityVehicle.epcs.driverInteraction.vehicleMotionIn;
     flow ifA005TractionToDemand from x2CityVehicle.epcs.traction.actualTractionOutputOut.payload to x2CityVehicle.epcs.riding.demand.actualTractionOutputIn.payload;
     interface ifA005ElectricalBrakingToLightControl : IfA005ElectricalBrakingState
         connect x2CityVehicle.epcs.traction.electricalBrakingStateOut to x2CityVehicle.epcs.lightControl.electricalBrakingStateIn;
 
     // IF-A-006: selected Session fault indication and HMI's accepted normal-light request.
     interface ifA006SelectedFaultToHmi : X2CityContract_SessionPolicy::IfA006SelectedFaultIndication
-        connect x2CityVehicle.epcs.riding.session.selectedFaultIndicationOut to x2CityVehicle.epcs.hmiControl.selectedFaultIn;
+        connect x2CityVehicle.epcs.riding.session.selectedFaultIndicationOut to x2CityVehicle.epcs.driverInteraction.selectedFaultIn;
     interface ifA006HmiToLightControl : IfA006NormalLightRequest
-        connect x2CityVehicle.epcs.hmiControl.runningLightStateOut to x2CityVehicle.epcs.lightControl.runningLightStateIn;
+        connect x2CityVehicle.epcs.driverInteraction.runningLightStateOut to x2CityVehicle.epcs.lightControl.runningLightStateIn;
 }

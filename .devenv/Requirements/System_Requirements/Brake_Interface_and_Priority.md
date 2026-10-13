@@ -18,7 +18,7 @@ The supplied mechanical brakes are assumed available and adequate under [ID-001 
 
 ## Deferred resistance-coded brake diagnostics
 
-The fixed passive shared two-wire interface is defined by [Brake_Input_Reference](../evidence/Brake_Input_Reference.md), [DEC-REF-002](../DEC-001_Decisions_and_Open_Issues.md#dec-ref-002) and PD `CON-010`. The canonical approved bodies `REQ-SYS-BRK-006`–008 and their Draft successor allocation are in [MechanicalBrakeDetection requirements](../../Architecture/SystemArchitecture/Modelling/MechanicalBrakeDetection/MechanicalBrakeDetection_Requirements.md). Only the handle/harness terminal interface is adopted; sensing and diagnostic realization remain downstream.
+The fixed passive shared two-wire interface is defined by [Brake_Input_Reference](../evidence/Brake_Input_Reference.md), [DEC-REF-002](../DEC-001_Decisions_and_Open_Issues.md#dec-ref-002) and PD `CON-010`. The canonical approved bodies `REQ-SYS-BRK-006`–008 and their Draft successor allocation are in [MechanicalBrakeDetection requirements](../../Architecture/SystemArchitecture/Modelling/DriverInteraction/Decomposition/MechanicalBrakeDetection/MechanicalBrakeDetection_Requirements.md). Only the handle/harness terminal interface is adopted; sensing and diagnostic realization remain downstream.
 
 | ID | Requirement | Planned verification / distinguishing cases | Sources | Open dependencies / qualifications |
 | --- | --- | --- | --- | --- |
