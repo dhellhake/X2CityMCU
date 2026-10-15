@@ -28,7 +28,7 @@ and [detailed-design container model](Modelling/X2CityDetailedDesign.sysml).
 
 The selected logical container path is `vehicle.epcs.traction.tractionControl.motorControl`. The detailed
 model specializes System `TractionControl` and redefines `motorControl` to the realization wrapper, then specializes
-`Traction`, `ElectricalPropulsionControlSystem` and `ProjectVehicleModel`. The wrapper contains the sole core
+`Traction`, `X2CityMCU` and `ProjectVehicleModel`. The wrapper contains the sole core
 implementation and references the existing sensor components. The existing `vehicle.traction` path is a reference
 alias to that core; bind statements select the same occurrence chain for this pilot.
 

@@ -1,6 +1,6 @@
-# X2City EPCS system architecture SysML v2 model
+# X2CityMCU system architecture SysML v2 model
 
-`ARCH-001_System_Architecture.md` is the logical EPCS architecture authority. Load the `.sysml` resources in `Modelling/` recursively, including subfolders, as one SysML v2 model, rooted at `X2CitySystemArchitecture`.
+`ARCH-001_System_Architecture.md` is the logical EPCS architecture authority. The [X2CityMCU root model](Modelling/X2CityMCU/X2CityMCU.sysml) represents `X2CityMCU` (`LE-EPCS`); its folder also contains shared contracts and the EnergyPath child model. Load the `.sysml` resources in `Modelling/` recursively, including subfolders, as one SysML v2 model, rooted at `X2CitySystemArchitecture`.
 
 Component navigation: [Traction](Modelling/Traction/Traction.sysml), [Motor position estimation](Modelling/Traction/Decomposition/MotorPositionEstimation/README.md), [Traction control](Modelling/Traction/Decomposition/TractionControl/README.md), [DriverInteraction](Modelling/DriverInteraction/DriverInteraction.sysml) ([requirements](Modelling/DriverInteraction/DriverInteraction_Requirements.md)), [Accelerator position identification](Modelling/DriverInteraction/Decomposition/AcceleratorPositionIdentification/README.md), [Mechanical brake detection](Modelling/DriverInteraction/Decomposition/MechanicalBrakeDetection/README.md), [HMIControl](Modelling/DriverInteraction/Decomposition/HMIControl/README.md), [Compute](Modelling/Compute/README.md), [LightControl](Modelling/LightControl/README.md), [RidingControl](Modelling/RidingControl/README.md), and [BatteryControl](Modelling/BatteryControl/README.md).
 

@@ -263,7 +263,7 @@ package X2CitySystemArchitecture {
     alias ComputeHardware for X2CityComponent_ComputeHardware::ComputeHardware;
     alias Platform for X2CityComponent_Platform::Platform;
 
-    part def ElectricalPropulsionControlSystem { // LE-EPCS
+    part def X2CityMCU { // LE-EPCS
         part ridingControl:RidingControl { doc /* Consolidated LE-RIDING software allocation; owns internal settings, session and demand policy state. */ }
         part driverInteraction:DriverInteraction;
         part traction:Traction;
@@ -329,7 +329,7 @@ package X2CitySystemArchitecture {
 
     // EPCS assembly used for realization binding; supplied BMW mechanics and performance conditions are external qualification context.
     part def ProjectVehicleModel {
-        part epcs:ElectricalPropulsionControlSystem;
+        part epcs:X2CityMCU;
     }
 
     // The selected detailed vehicle binds this System reference to the one MotorControl pilot

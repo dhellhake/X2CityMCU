@@ -12,7 +12,7 @@ This document defines logical component types, composition and system interfaces
 
 A logical component has a bounded responsibility, owned subparts or state, and interfaces to other components. Functions from FC-001 are allocated behaviour; they are not interchangeable with component identities. Containment, connection, function allocation and software hosting are distinct relations. System interfaces state required energy, signal and data exchanges plus fixed constraints. Conductors, pins, ground, voltage classes and connector realization are owned by [ARCH-002](../ARCH-002_Hardware_Architecture.md); System does not import that physical refinement. This follows the structural/behavioural and allocation distinctions in the [OMG SysML overview](https://www.omg.org/sysml/sysmlv1/); these Markdown/Mermaid views use the relations declared here without claiming a tool-native SysML model.
 
-The logical type catalogue decomposes the project EPCS. <a id="le-epcs"></a>LE-EPCS is the project system boundary and owns project E/E performance and use-context requirements. The supplied BMW X2City and its mechanical systems are external platform context under [ID-001 §2.1](../../Requirements/ID-001_Item_Definition.md#external-mechanical-platform-assumption); the project does not model their internals or claim fitness validation for an altered envelope.
+The logical type catalogue decomposes the project EPCS. <a id="le-epcs"></a>`X2CityMCU` (`LE-EPCS`) is the project system boundary and owns project E/E performance and use-context requirements. The supplied BMW X2City and its mechanical systems are external platform context under [ID-001 §2.1](../../Requirements/ID-001_Item_Definition.md#external-mechanical-platform-assumption); the project does not model their internals or claim fitness validation for an altered envelope.
 
 Types are not physical instances. Component types in this model have EPCS-local state and hosting. The supplied electrical pack has one physical instance; its connection to EPCS is an electrical interface, not vehicle containment. BMW mechanical installation features remain given external context.
 
@@ -24,7 +24,7 @@ Edges below mean **composed of**, not communication or power flow. The table giv
 
 ```mermaid
 flowchart TB
-    Context["Installed BMW X2City context"] -.->|platform context| EPCS["LE-EPCS retrofit"]
+    Context["Installed BMW X2City context"] -.->|platform context| EPCS["X2CityMCU · LE-EPCS"]
     EPCS -->|contains| RidingControl["LE-RIDING · software-allocated leaf"]
     EPCS -->|contains| DriverInteraction["DriverInteraction (`LE-INPUT`)"]
     EPCS -->|contains| Traction["LE-TRACTION"]

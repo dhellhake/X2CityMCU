@@ -1,4 +1,4 @@
-package X2CityComponent_ElectricalPropulsionControlSystem {
+package X2CityComponent_X2CityMCU {
     private import X2CitySharedContracts::*;
     private import X2CityComponent_RidingControl::*;
     private import X2CityContract_HmiControl::*;
@@ -19,7 +19,7 @@ package X2CityComponent_ElectricalPropulsionControlSystem {
     private import X2CityContract_RidingControl::*;
     private import X2CityContract_LightControl::*;
     private import X2CityContract_AcceleratorPositionProcessing::*;
-    part def ElectricalPropulsionControlSystem { // LE-EPCS
+    part def X2CityMCU { // LE-EPCS
         /* Composes RidingControl, rider interaction, traction-owned measurement/qualification, battery, energy, lighting and compute components. */
         part ridingControl:RidingControl;
         part driverInteraction:DriverInteraction;

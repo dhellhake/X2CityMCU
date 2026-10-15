@@ -73,9 +73,9 @@ package X2CityDetailedDesign {
     part def SelectedTraction :> X2CitySystemArchitecture::Traction {
         part tractionControl:SelectedTractionControl :>> X2CitySystemArchitecture::Traction::tractionControl;
     }
-    part def SelectedEpcs :> X2CitySystemArchitecture::ElectricalPropulsionControlSystem {
-        part traction:SelectedTraction :>> X2CitySystemArchitecture::ElectricalPropulsionControlSystem::traction;
-        part ridingControl:RidingControlDetailedDesign :>> X2CitySystemArchitecture::ElectricalPropulsionControlSystem::ridingControl;
+    part def SelectedEpcs :> X2CitySystemArchitecture::X2CityMCU {
+        part traction:SelectedTraction :>> X2CitySystemArchitecture::X2CityMCU::traction;
+        part ridingControl:RidingControlDetailedDesign :>> X2CitySystemArchitecture::X2CityMCU::ridingControl;
     }
     part def VehicleDetailedDesign :> X2CitySystemArchitecture::ProjectVehicleModel {
         part epcs:SelectedEpcs :>> X2CitySystemArchitecture::ProjectVehicleModel::epcs;
