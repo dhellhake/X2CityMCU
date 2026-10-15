@@ -1,12 +1,6 @@
-# BMS information qualification
+# Selected-unit UART read acceptance support
 
-**Type:** Abstract Software Requirement. **Draft successor target:** `LE-BATTERY-SUPERVISION`, realized by the existing BmsLink and BatteryProtection project software contributions on the owner-selected vehicle host; deployment and acceptance specifics remain open.
-
-Part of **REQ-001-R1.6**. [Model and verification rules](../../../../../Requirements/REQ-001_Requirements.md) apply. Software interprets qualified UART transport; electrical compatibility and physical information accuracy remain system responsibilities. This relocation and Draft successor binding preserve the released record's status.
-
-| ID | Requirement | Planned verification | Derived from | Sources / qualifications |
-|---|---|---|---|---|
-| <a id="req-sys-bmsif-001"></a>`REQ-SYS-BMSIF-001` | BMS information software shall decode the selected-unit-qualified JBD UART read responses into value, validity and freshness information for the quantities in its parent. It shall reject unsuccessful, malformed, wrong-command, inconsistent or stale responses according to the qualified contract, and shall preserve current direction, scaling mode, 14-group identity and temperature units. | `T-SW`, `T-SYS`. Use captured selected-unit responses and independently constructed valid/invalid cases for framing/checksum/status, lengths/counts, signed/scaled boundaries, missing/late data and sleep/restart. Verify consumers cannot mistake a display fallback for qualified control data. | [REQ-SYS-BMS-003](../Battery_Integration.md#req-sys-bms-003) | [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md), PD `OI-041/061`. Derive polling, timeout, plausibility, freshness and uncertainty contracts; no UART peripheral, parser implementation or write/control-command support selected. VD18MT retains current magnitude clamped to 51 A and invalid-current fallback 0 A; these are presentation rules only. |
+Canonical requirement: [REQ-SYS-BMSIF-001](BatterySupervision.sysml). Software interprets qualified UART transport; electrical compatibility and physical information accuracy remain system responsibilities.
 
 ## Selected-unit UART read acceptance contract
 

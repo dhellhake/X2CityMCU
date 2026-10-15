@@ -26,8 +26,8 @@ The released 188-record snapshot is historical. The following five approved allo
 | Requirement / canonical source | Status / role | Contributing functionAs) |
 |---|---|---|
 | [REQ-SYS-CELL-001](SystemArchitecture/Modelling/BatteryControl/Decomposition/Cell_Bank.md#req-sys-cell-001) | Approved / C | [F-008](FC-001_Functional_Concept.md#f-008) |
-| [REQ-SYS-BMSPOL-001](SystemArchitecture/Modelling/BatteryControl/Decomposition/Battery_Capability_Policy.md#req-sys-bmspol-001) | Approved / F | [F-007](FC-001_Functional_Concept.md#f-007) |
-| [REQ-SYS-BMSIF-001](SystemArchitecture/Modelling/BatteryControl/Decomposition/BMS_Information.md#req-sys-bmsif-001) | Approved / F | [F-006](FC-001_Functional_Concept.md#f-006) |
+| [REQ-SYS-BMSPOL-001](SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml) | Approved / F | [F-007](FC-001_Functional_Concept.md#f-007) |
+| [REQ-SYS-BMSIF-001](SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml) | Approved / F | [F-006](FC-001_Functional_Concept.md#f-006) |
 | [REQ-SYS-LGTPOL-001](SystemArchitecture/Modelling/LightControl/Decomposition/LightModeSelection_Requirements.md#req-sys-lgtpol-001) | Draft / F | [F-016](FC-001_Functional_Concept.md#f-016) |
 | [REQ-SYS-LGTPOL-002](SystemArchitecture/Modelling/LightControl/Decomposition/LightModeSelection_Requirements.md#req-sys-lgtpol-002) | Draft / F | [F-016](FC-001_Functional_Concept.md#f-016) |
 | [REQ-SYS-LGTPOL-003](SystemArchitecture/Modelling/LightControl/Decomposition/LightModeSelection_Requirements.md#req-sys-lgtpol-003) | Draft / F | [F-016](FC-001_Functional_Concept.md#f-016) |
