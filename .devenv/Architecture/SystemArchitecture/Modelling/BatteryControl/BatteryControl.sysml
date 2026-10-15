@@ -135,6 +135,7 @@ package X2CityComponent_BatteryControl {
     private import X2CityContract_BatteryControl::*;
     private import X2CityComponent_BatteryAssembly::*;
     private import X2CityComponent_BatterySupervision::*;
+    private import RequirementTypes::SystemRequirement;
 
     part def BatteryControl { // LE-BATTERY-CONTROL
         doc /* EPCS battery composite. It contains exactly the removable physical BatteryAssembly and vehicle-host BatterySupervision, separating supplied BMS protection from project read/qualification and operating policy. */
@@ -155,5 +156,120 @@ package X2CityComponent_BatteryControl {
         flow limitsFromSupervision from batterySupervision.batteryOperatingLimitsOut.operatingLimits to batteryOperatingLimitsOut.operatingLimits;
         flow socFromSupervision from batterySupervision.stateOfChargeOut.stateOfCharge to stateOfChargeOut.stateOfCharge;
         flow currentFromSupervision from batterySupervision.batteryCurrentOut.batteryCurrent to batteryCurrentOut.batteryCurrent;
+    }
+
+    doc /*
+    System Requirements allocated to LE-BATTERY-CONTROL. Canonical historical record: REQ-001-R1.6, Approved;
+    successor allocation is Draft and integrated acceptance remains open. These approved elaborations implement
+    owner-confirmed [DEC-BAT-002](../../../../Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-bat-002).
+    [BAT-001](../../../../Battery/BAT-001_Selected_Pack_and_BMS.md) is the canonical component/rating reference; selection and reported initial
+    fit are settled. Apply the [REQ-001 model and verification rules](../../../../Requirements/REQ-001_Requirements.md).
+    */
+
+    requirement <'REQ-SYS-BAT-002'> removableBatteryAssemblySelection : SystemRequirement {
+        doc /*
+        Draft successor allocation: LE-BATTERY-CONTROL.
+        Sources: PD CON-041–042, §10.8; DEC-BAT-002; BAT-001.
+        Planned verification: I, T-SYS. Record cell identity, group construction, selected BMS hardware/firmware/configuration
+        identity and working UART readback; reconcile the installed assembly with the owner's configuration.
+        Open dependencies / qualifications: OI-040/041/062: construction and initial bay fit are owner-confirmed; BMS
+        connection is now owner-confirmed; derive its incomplete configuration and record effective settings/identity
+        and complete integration evidence. No cell reselection or invented vendor-internal decomposition required.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require constraint {
+            doc /* BatteryControl shall use a removable battery comprising the owner-built 14S5P bank of 70 Samsung INR18650-35E cells and the selected JBD SP14S004P14S50A BMS, with UART as its system communication interface. */
+        }
+    }
+
+    requirement <'REQ-SYS-BMS-002'> integratedBmsConfiguration : SystemRequirement {
+        doc /*
+        Draft successor allocation: LE-BATTERY-CONTROL.
+        Sources: PD OI-041/061, CON-048–050; BAT-001; [service](../../../../Requirements/System_Requirements/Service_and_Durability.md#req-sys-svc-001).
+        Planned verification: I, A, T-SYS. Read and assess actual capacity, voltage/current/temperature thresholds, delays,
+        release behavior and balancing settings against cell limits and system reaction budgets; qualify SOC calibration/
+        uncertainty within the vehicle policy.
+        Open dependencies / qualifications: OI-041/049/061: source family defaults are not accepted operating settings;
+        vendor voltage trips or RSOC alone do not implement actual-SOC policy. Determine remaining independent
+        protection/diagnostic coverage.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require constraint {
+            doc /* BatteryControl shall integrate BMS configuration and supervisory protection compatible with the 14S5P 35E bank, the vehicle actual-SOC policy, regenerative charge acceptance and balancing. Configuration identity and qualified settings shall be available for vehicle integration/service acceptance. */
+        }
+    }
+
+    requirement <'REQ-SYS-BMS-003'> batteryInterfaceProvision : SystemRequirement {
+        doc /*
+        Draft successor allocation: LE-BATTERY-CONTROL.
+        Sources: PD OI-041/047/061; BAT-001; [input qualification](../../../../Requirements/System_Requirements/Interface_Qualification.md);
+        [SOC and fault behavior](../../../../Requirements/System_Requirements/Power_Startup_and_Faults.md).
+        Planned verification: I, T-SYS. Exercise the qualified read protocol, expected group/temperature counts, signs/scales,
+        malformed/stale/inconsistent data, startup, sleep/wake and interrupted communication. Compare against independent
+        references and current-session qualification/fault behavior.
+        Open dependencies / qualifications: WS-OI-005/018/019, OI-041/049: verify actual firmware support, accuracy,
+        polling/response/freshness and initialization limits. A BMS estimate becomes actual-SOC information only after
+        qualification. Fourteen groups and available probes are not complete individual-cell/temperature fault coverage.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require constraint {
+            doc /* BatteryControl shall provide qualified pack voltage, signed battery current, actual-SOC information, all 14 series-group voltages, available temperature information and relevant protection/charge/discharge-path state through the selected BMS UART. Values, validity and freshness shall remain distinguishable; unavailable or unqualified data shall not authorize dependent operation. */
+        }
+    }
+
+    requirement <'REQ-SYS-BMS-006'> batteryStartupQualification : SystemRequirement {
+        doc /*
+        Draft successor allocation: LE-BATTERY-CONTROL.
+        Parents: integratedBmsConfiguration (REQ-SYS-BMS-002) and batteryInterfaceProvision (REQ-SYS-BMS-003),
+        both defined in this file; [REQ-SYS-STA-006](../../../../Requirements/System_Requirements/Power_Startup_and_Faults.md#req-sys-sta-006).
+        Planned verification: I, A, T-SYS, T-FI. Cover each qualification item independently missing, inconsistent, stale and
+        valid; wrong series count/configuration, missing required probe, active protection, expected path disable and actual
+        failed path. Verify riding Ready after each applicable restart.
+        Open dependencies / qualifications: OI-041/049/061; WS-OI-007/018/019. Use the
+        [BMS configuration derivation](../../../../Battery/BAT-001_Selected_Pack_and_BMS.md#bms-configuration-derivation);
+        define effective configuration-check evidence and admission/change control where settings are not observable through
+        selected telemetry reads. A correct packet/device string is not complete configuration/self-test evidence.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require constraint {
+            doc /* Before granting battery-dependent riding permission at startup or restart, BatteryControl shall assess correspondence to the qualified pack/configuration, all 14 series groups, required information validity and current protection/energy-path readiness for riding. An incomplete or failed required assessment shall not produce a passing result. */
+        }
+    }
+
+    requirement <'REQ-SYS-BMS-007'> batteryOperatingClassification : SystemRequirement {
+        doc /*
+        Draft successor allocation: LE-BATTERY-CONTROL.
+        Parents: batteryInterfaceProvision (REQ-SYS-BMS-003), defined in this file; [REQ-SYS-BMS-005](Battery_Integration.md#req-sys-bms-005).
+        Planned verification: I, A, T-SYS, T-FI. Apply the
+        [battery event matrix](Battery_Integration.md#battery-event-and-recovery-matrix); contrast normal SOC cutoff with
+        weakest-group undervoltage protection, charge-disabled by a known ordinary restriction with unexpected trip, and
+        valid status bits with physical path failure. Verify report masking does not change protection.
+        Open dependencies / qualifications: DEC-FLT-005–009, DEC-TMP-001–003; OI-041/049/061. Qualify actual BMS flags,
+        expected state per operating configuration, recognition timing and observation limitations. No automatic MOS override
+        or new fault code is introduced.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require constraint {
+            doc /* BatteryControl shall distinguish ordinary initial qualification, normal operating restrictions, expected energy-path states and recognized battery/protection-information faults when determining operating permissions and fault reports. An observed disabled path alone shall not prove either a fault or successful physical isolation; unknown required path/protection status shall not authorize the dependent transfer. */
+        }
+    }
+
+    requirement <'REQ-SYS-BMS-008'> dischargePermissiveChargeRestriction : SystemRequirement {
+        doc /*
+        Draft successor allocation: LE-BATTERY-CONTROL.
+        Parents: [REQ-SYS-BMS-001](Battery_Integration.md#req-sys-bms-001),
+        [REQ-SYS-REG-001](../../../../Requirements/System_Requirements/Rider_Control.md#req-sys-reg-001).
+        Planned verification: A, T-SYS. Cover valid cell temperatures below 0°C and above 45°C while within discharge limits,
+        each riding level, held regenerative demand, exit/re-entry and standstill recovery. Verify no charging outside its
+        envelope, no new fault/availability indication for this restriction, and preserved response to independent faults.
+        Open dependencies / qualifications: DEC-TMP-003; WS-OI-005/019. Cell references are discharge −10…60°C and
+        charging 0…45°C; qualify stricter integrated margins/coverage. Applicable discharge-limit violations and
+        required-temperature-information faults retain both-sign inhibition; forbidden actual charge transfer is not ordinary
+        waiting.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require constraint {
+            doc /* When qualified cell temperatures permit discharge but do not permit charging, BatteryControl shall keep propulsion otherwise eligible and make regenerative charging unavailable as an ordinary operating restriction. Clearing that restriction shall use the existing regenerative-capability recovery rules and shall not require a restart solely for this condition. */
+        }
     }
 }

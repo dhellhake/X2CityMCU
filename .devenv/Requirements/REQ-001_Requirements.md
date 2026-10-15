@@ -6,7 +6,7 @@ Sources: [PD-001](../../README.md), [item definition](ID-001_Item_Definition.md)
 
 ## Requirement types and architecture model
 
-The owner selected this project model on 2026-09-09. Requirement type records abstraction and realization allocation; functional, performance, interface and environmental classifications are separate attributes. A requirement remains verifiable at its stated level even when called abstract.
+The owner selected this project model on 2026-09-09. Requirement type records abstraction and realization allocation; functional, performance, interface and environmental classifications are separate attributes. A requirement remains verifiable at its stated level even when called abstract. Reusable SysML classifications are defined in [RequirementTypes.sysml](RequirementTypes.sysml).
 
 | Type | Responsible target | Permitted requirement derivation |
 |---|---|---|
@@ -156,7 +156,8 @@ The current working inventory includes the Draft Compute and Platform lifecycle 
 | <a id="rider-hmi-indications-and-lighting"></a>[HMIControl](../Architecture/SystemArchitecture/Modelling/DriverInteraction/Decomposition/HMIControl/HMIControl_Requirements.md), [Session report policy](System_Requirements/Session_Report_Policy.md), and [auxiliary continuity](System_Requirements/Auxiliary_Continuity.md) | Released `REQ-VEH-HMI-*`, `REQ-VEH-AUX-*`; Draft System composition `REQ-SYS-HMIC-001` and operation request `REQ-SYS-CMP-001` | 21 released; +2 Draft |
 | [LightControl](../Architecture/SystemArchitecture/Modelling/LightControl/LightControl_Requirements.md) | `REQ-VEH-LGT-001…009`, `REQ-VEH-FSC-012` | 10 |
 | [Environment and storage](System_Requirements/Environment_and_Storage.md) | `REQ-VEH-ENV-*`, `REQ-SYS-STO-*` | 5 |
-| [Built battery and supplied BMS](../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_Integration.md) | `REQ-SYS-BAT-002`, `REQ-SYS-BMS-*` | 10 |
+| [BatteryControl](../Architecture/SystemArchitecture/Modelling/BatteryControl/BatteryControl.sysml) | System; Draft successor allocation to `LE-BATTERY-CONTROL`; `REQ-SYS-BAT-002`, `REQ-SYS-BMS-002/003/006–008` | 6 |
+| [Built battery and supplied BMS integration](../Architecture/SystemArchitecture/Modelling/BatteryControl/Battery_Integration.md) | System; Draft successor allocation to `LE-EPCS`; `REQ-SYS-BMS-001/004/005/009` | 4 |
 | [Energy and protection](System_Requirements/Energy_and_Protection.md) | `REQ-SYS-ENE-*` | 4 |
 | [Interface qualification](System_Requirements/Interface_Qualification.md) | `REQ-SYS-INT-*` | 4 |
 | [Accelerator position identification](../Architecture/SystemArchitecture/Modelling/DriverInteraction/Decomposition/AcceleratorPositionIdentification/AcceleratorPositionIdentification_Requirements.md) | System; Draft `REQ-SYS-ACC-001`, `REQ-SYS-ACC-004`–`009`, `REQ-SYS-ACC-022`, `REQ-SYS-ACC-024`, `026`–`027`, `029`, `031`, `046`–`049` | 17 |

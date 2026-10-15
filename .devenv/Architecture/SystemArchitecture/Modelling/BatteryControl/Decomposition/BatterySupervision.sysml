@@ -1,8 +1,6 @@
 package X2CityComponent_BatterySupervision {
     private import X2CityContract_BatteryControl::*;
-
-    requirement def AbstractSoftwareRequirement {
-    }
+    private import RequirementTypes::AbstractSoftwareRequirement;
 
     part def BatterySupervision { // LE-BATTERY-SUPERVISION
         doc /* Project software responsibility on the vehicle host. It logically owns the existing BmsLink read/qualification and BatteryProtection operating-policy responsibilities; their existing software components realize this part, while supplied BMS internals remain outside it. */
@@ -19,7 +17,7 @@ package X2CityComponent_BatterySupervision {
         Abstract Software Requirement. Canonical historical record: REQ-001-R1.6, Approved.
         Draft successor allocation: LE-BATTERY-SUPERVISION, realized by existing BmsLink and BatteryProtection
         project software contributions on the owner-selected vehicle host. Deployment and integration acceptance remain open.
-        Parent: [REQ-SYS-BMS-003](../Battery_Integration.md#req-sys-bms-003).
+        Parent: batteryInterfaceProvision (REQ-SYS-BMS-003, [BatteryControl.sysml](../BatteryControl.sysml)).
         Source: [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md); PD OI-041/061.
         Derive polling, timeout, plausibility, freshness and uncertainty contracts. No UART peripheral, parser implementation,
         or write/control-command support is selected. VD18MT current magnitude clamped to 51 A and invalid-current fallback
@@ -47,9 +45,9 @@ package X2CityComponent_BatterySupervision {
         Draft successor allocation: LE-BATTERY-SUPERVISION, realized by existing BmsLink and BatteryProtection
         project software contributions on the owner-selected vehicle host. Configuration-specific deployment and acceptance remain open.
         Parents: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001),
-        [REQ-SYS-BMS-006](../Battery_Integration.md#req-sys-bms-006),
-        [REQ-SYS-BMS-007](../Battery_Integration.md#req-sys-bms-007),
-        [REQ-SYS-BMS-008](../Battery_Integration.md#req-sys-bms-008).
+        batteryStartupQualification (REQ-SYS-BMS-006, [BatteryControl.sysml](../BatteryControl.sysml)),
+        batteryOperatingClassification (REQ-SYS-BMS-007, [BatteryControl.sysml](../BatteryControl.sysml)),
+        dischargePermissiveChargeRestriction (REQ-SYS-BMS-008, [BatteryControl.sysml](../BatteryControl.sysml)).
         Planned verification: A, T-SW, T-SYS and T-FI. Exercise the
         [battery event and recovery matrix](../Battery_Integration.md#battery-event-and-recovery-matrix) with independently
         varied data quality, path/configuration states and overlapping current/SOC/temperature restrictions. Compare output
