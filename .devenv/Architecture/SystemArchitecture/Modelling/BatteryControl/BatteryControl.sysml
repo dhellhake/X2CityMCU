@@ -39,23 +39,6 @@ package X2CityContract_BatteryControl {
         item protectionPathState:ProtectionPathState[0..1];
         item socSourceEvidence:BmsSocSourceEvidence[0..1];
     }
-    item def BatteryMeasurements:>QualifiedInformationRecord {
-        doc /* BatterySupervision's aggregated, field-qualified projection of BMS-003 source data. Each validity flag is independently assessed: accepting one discriminated source response refreshes only its represented fields and never refreshes other groups or identity. Qualification includes BatterySupervision's internal assessment of source timeliness; this shared observation record carries no measurement ages, host timing references, or claim that receipt time is measurement time. Its inherited sourceContext retains the host-provided producer and current controller-startup context for source identity; it does not control the regenerative capacity snapshot. */
-        attribute packVoltageVolts:Real;
-        attribute packVoltageValid:Boolean;
-        attribute packCurrentAmperes:Real;
-        attribute packCurrentValid:Boolean;
-        attribute stateOfChargeCandidatePercent:Real;
-        attribute stateOfChargeCandidateValid:Boolean;
-        attribute cellGroupVoltagesVolts:Real[14];
-        attribute cellGroupVoltagesValid:Boolean;
-        item availableTemperatures:TemperatureObservation[*];
-        attribute availableTemperaturesValid:Boolean;
-        item protectionPathState:ProtectionPathState;
-        attribute protectionPathStateValid:Boolean;
-        item socSourceEvidence:BmsSocSourceEvidence;
-        attribute socSourceEvidenceValid:Boolean;
-    }
     item def BatteryStatus {
         doc /* Logical reporting contract: battery fault, independently recognized local actual thermal fault,
             and ordinary at-least-one-MOS-disabled warning are independent, simultaneous conditions. Each has
@@ -111,8 +94,6 @@ package X2CityContract_BatteryControl {
     port def BmsReadRequestInputPort { doc /* Receives a read-only UART information request at the supplied BMS. */ in item request:BmsReadRequest; }
     port def BmsTelemetryOutputPort { doc /* Sends selected BMS source fields from the supplied BMS to BatterySupervision over the read-only UART route. */ out item telemetry:BmsTelemetry; }
     port def BmsTelemetryInputPort { doc /* Receives selected BMS source fields at BatterySupervision for qualification. */ in item telemetry:BmsTelemetry; }
-    port def BatteryMeasurementsOutputPort { doc /* Sends qualified BMS measurements to the operating policy inside BatterySupervision. */ out item measurements:BatteryMeasurements; }
-    port def BatteryMeasurementsInputPort { doc /* Receives qualified BMS measurements for the operating policy inside BatterySupervision. */ in item measurements:BatteryMeasurements; }
     port def BatteryStatusOutputPort {
         doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */
         out item status:BatteryStatus;
@@ -134,7 +115,6 @@ package X2CityContract_BatteryControl {
     interface def IfA003BatteryCurrent { end producer:BatteryCurrentOutputPort; end consumer:BatteryCurrentInputPort; flow producer.batteryCurrent to consumer.batteryCurrent; }
     interface def IfA009BmsReadRequest { end producer:BmsReadRequestOutputPort; end consumer:BmsReadRequestInputPort; flow producer.request to consumer.request; }
     interface def IfA009BmsTelemetry { end producer:BmsTelemetryOutputPort; end consumer:BmsTelemetryInputPort; flow producer.telemetry to consumer.telemetry; }
-    interface def IfA009BatteryMeasurements { end producer:BatteryMeasurementsOutputPort; end consumer:BatteryMeasurementsInputPort; flow producer.measurements to consumer.measurements; }
     interface def IfA010BatteryPower { end batteryControl:BatteryPowerPort; end energyPath:BatteryPowerPort; flow batteryControl.batteryPower to energyPath.batteryPower; flow energyPath.batteryPower to batteryControl.batteryPower; }
 }
 
@@ -255,7 +235,8 @@ package X2CityComponent_BatteryControl {
             and
             [Per-consumer information acceptance criteria](Battery_Integration.md#per-consumer-information-acceptance),
             including the exact supported per-command response schemas and payload lengths, expected group/temperature
-            counts and encodings, signs/scales, malformed/stale/inconsistent data, startup,
+            counts and encodings, signs/scales, malformed/stale data and per-field domain failures. Verify that
+            disagreement between measurements does not invalidate individually valid BMS readings. Exercise startup,
             sleep/wake and interrupted communication. Compare against independent references and current-session
             qualification/fault behavior.
 
@@ -315,7 +296,7 @@ package X2CityComponent_BatteryControl {
             dependent branch qualification and operation-specific qualification from BatteryOperatingLimits.
 
             Open dependencies / qualifications: OI-041/049/061; WS-OI-007/018/019. Define per-consumer
-            input subsets, required temperature channels, numeric plausibility limits and timeout criteria;
+            input subsets, required temperature channels, applicable per-field domain criteria and timeout criteria;
             the qualified BMS pack-current observation is not required by either current-limit branch. Use the
             [BMS configuration derivation](../../../../Battery/BAT-001_Selected_Pack_and_BMS.md#bms-configuration-derivation);
             retain commissioning evidence and admission/change control for protection settings that are not observable
@@ -323,8 +304,9 @@ package X2CityComponent_BatteryControl {
             two checks in BATSUP-001 from the same current accepted Basic (0x03) response: decoded software version
             3.2 and 14 series groups. A 0x05 identity read remains informational. The selected-unit version field
             interpretation remains subject to protocol evidence; no wire encoding is presumed. Current/capacity
-            scale, temperature/probe consistency and all 14 group voltages remain ordinary field or capability
-            qualification. Hardware/model/configuration acceptance remains commissioning evidence. Existing
+            scale, supported temperature encoding, probe identity/layout, and group-voltage encoding remain ordinary
+            field or capability qualification. Hardware/model/configuration acceptance remains commissioning\
+            evidence. Existing
             response validation and timeout/field qualification remain required. Applicable shared checks are internal
             to each dependent branch qualification.
         */

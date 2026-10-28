@@ -113,10 +113,6 @@ package X2CitySystemArchitecture {
     alias BmsReadRequestInputPort for X2CityContract_BatteryControl::BmsReadRequestInputPort;
     alias BmsTelemetryOutputPort for X2CityContract_BatteryControl::BmsTelemetryOutputPort;
     alias BmsTelemetryInputPort for X2CityContract_BatteryControl::BmsTelemetryInputPort;
-    alias BatteryMeasurements for X2CityContract_BatteryControl::BatteryMeasurements;
-    alias BatteryMeasurementsOutputPort for X2CityContract_BatteryControl::BatteryMeasurementsOutputPort;
-    alias BatteryMeasurementsInputPort for X2CityContract_BatteryControl::BatteryMeasurementsInputPort;
-    alias IfA009BatteryMeasurements for X2CityContract_BatteryControl::IfA009BatteryMeasurements;
     alias BatteryStatus for X2CityContract_BatteryControl::BatteryStatus;
     alias BatteryStatusOutputPort for X2CityContract_BatteryControl::BatteryStatusOutputPort;
     alias BatteryStatusInputPort for X2CityContract_BatteryControl::BatteryStatusInputPort;

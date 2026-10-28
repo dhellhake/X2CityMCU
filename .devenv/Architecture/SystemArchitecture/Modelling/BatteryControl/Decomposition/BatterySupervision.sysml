@@ -152,21 +152,27 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
-            [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS complete, missing,
-            reordered, implausible and contradictory group sets. Open:
-            physical measurement adequacy and evidence-based physical/inter-group/pack plausibility
-            bounds require product validation under OI-041/061; WS-OI-018/019. Measurement adequacy is
-            engineering evidence, not a runtime uncertainty adjustment.
+            [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance).
+            Owner decision 2026-10-28: BMS fields qualify independently; runtime cross-measurement
+            agreement is not required. Independent-reference comparisons are commissioning/verification
+            evidence. Verify: T-SW/T-SYS complete, missing, reordered and individually out-of-domain
+            group sets.
+            Confirm contradictory-but-individually-valid group readings or disagreement with pack voltage
+            do not invalidate each other, and missing pack voltage does not affect a complete valid set.
+            Open: physical measurement adequacy and per-field physical-domain acceptance require product
+            validation under OI-041/061; WS-OI-018/019. Independent-reference measurements may establish
+            accuracy and adequacy as commissioning/verification evidence without creating runtime agreement
+            checks or uncertainty adjustment.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
-                BatterySupervision shall qualify group voltage only when the payload conforms to the
-                selected-unit 0x04 schema and represents a complete, ordered set of 14 identified
-                groups with qualified millivolt-to-volt units and evidence-based physical,
-                inter-group and pack-comparison plausibility checks consistent with the selected-unit
-                profile. An incomplete, unsupported, implausible or contradictory set shall remain unqualified
-                without invalidating independent observations.
+                BatterySupervision shall qualify group voltage only when an accepted response matches the
+                supported 0x04 schema and contains a complete, ordered set of exactly 14 identified groups
+                with supported encoding, millivolt-to-volt scaling, and applicable per-field physical-domain
+                validity. As required by REQ-SYS-BMSIF-009, values qualify independently of agreement with
+                other BMS readings. Pack voltage is not a prerequisite for group-voltage qualification. An
+                incomplete, unsupported or individually out-of-domain set remains unqualified.
             */
         }
     }
@@ -223,7 +229,11 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance);
             owner decision 2026-10-28: qualified pack current is consumed by RidingControl.CurrentConsumptionCoordination
-            as well as HMIControl, and its field-only unavailability affects only its own qualification. Verify:
+            as well as HMIControl, and its field-only unavailability affects only its own qualification.
+            Owner decision 2026-10-28: qualify each BMS field using its own accepted source, supported
+            schema/encoding/scaling, individual validity and timeliness, never runtime agreement with
+            another measurement. Independent-reference comparisons are commissioning/verification
+            evidence. Verify:
             T-SW/T-SYS field loss, invalidity, staleness and independence; distinguish current-field-only absence
             from Basic-response/transport loss; confirm independently recognized fault and required-field policies
             remain effective and display fallback cannot qualify control data. Open: evidence-based source-age and
@@ -233,7 +243,10 @@ package X2CityComponent_BatterySupervision {
         require constraint {
             doc /*
                 BatterySupervision shall qualify each applicable field independently. Unknown,
-                invalid or stale information shall remain unqualified. The qualified signed pack-current
+                invalid or stale information shall remain unqualified. Each BMS value is qualified on
+                its own accepted source, supported schema/encoding/scaling, applicable single-field
+                validity and source timeliness, not by agreement with other BMS measurements. The
+                qualified signed pack-current
                 value is consumed by RidingControl.CurrentConsumptionCoordination for shared-budget
                 supervision and by HMIControl for display; positive means charging and negative means
                 discharging. If only the pack-current field is absent, invalid or stale, BatterySupervision
@@ -288,7 +301,7 @@ package X2CityComponent_BatterySupervision {
         require constraint {
             doc /*
                 BatterySupervision shall retain an accepted observation only while its applicable
-                source-age and consistency criteria remain satisfied; a rejected response, brief
+                source-age and other applicable single-observation qualification criteria remain satisfied; a rejected response, brief
                 interruption, missed transaction deadline or sleep/wake alone shall not invalidate
                 still-qualified data. On expiry or loss of another qualification criterion, it shall
                 withdraw only affected shared or branch qualification and set the dependent
@@ -305,9 +318,7 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
-            [operating-limit qualification](BatterySupervision.sysml#req-sys-batsup-002). Verify: T-SW/T-SYS controller startup and source loss/recovery, preserving unrelated validity and
-            RidingControl fault authority. BatteryMeasurements retains its host-provided producer
-            identity and current controller-startup context.
+            [operating-limit qualification](BatterySupervision.sysml#req-sys-batsup-002). Verify: T-SW/T-SYS controller startup and source loss/recovery, preserving unrelated validity, accepted source identity and current controller-startup context, and RidingControl fault authority.
             Open: required-source criteria under OI-041/061; WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
@@ -383,9 +394,11 @@ package X2CityComponent_BatterySupervision {
             [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract).
             Verify: T-SW/T-SYS missing, invalid, mismatched and accepted startup evidence on every
             normal or unexpected controller startup. Scope: current/capacity scale and
-            temperature/probe consistency remain under BMSIF-005/008; 0x04 group-voltage checks
-            remain under BMSIF-006; physical acceptance remains commissioning evidence; 0x05 remains
-            informational. Open: selected-unit version field interpretation under OI-041/061.
+            temperature/probe schema and field qualification remain under BMSIF-005/008;
+            0x04 group-voltage completeness and per-field qualification remain under BMSIF-006.
+            Cross-measurement agreement is not a runtime validity condition. Physical acceptance
+            remains commissioning evidence; 0x05 remains informational. Open: selected-unit
+            version field interpretation under OI-041/061.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
@@ -412,7 +425,7 @@ package X2CityComponent_BatterySupervision {
             configuration and per-consumer acceptance. Verify:
             inspection, analysis, T-SW/T-SYS/T-FI across controller startup, independent
             shared/branch loss, restrictions and recovery. Open: two startup checks, source ages,
-            per-consumer input subsets and required temperature channels, numeric plausibility limits,
+            per-consumer input subsets and required temperature channels, applicable individual physical-domain limits,
             timeout criteria, dependencies and update budget under OI-041/049/061; WS-OI-007/018/019.
             The qualified BMS pack-current observation is not required by either current-limit branch.
         */
@@ -626,7 +639,9 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized regenerative pack capability decision.
-            Verify: T-SW/T-SYS at and around each configured endpoint, and with each group missing.
+            Verify: T-SW/T-SYS at and around each configured endpoint, with each group missing,
+            and with pack voltage absent or inconsistent with the valid 14-group readings; pack
+            voltage shall not affect the voltage ceiling.
             Evidence: Existing BMS interface requirements govern each group observation and its age.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
@@ -730,7 +745,9 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized discharge pack capability decision.
-            Verify: T-SW/T-SYS at and around each configured endpoint, and with each group missing.
+            Verify: T-SW/T-SYS at and around each configured endpoint, with each group missing,
+            and with pack voltage absent or inconsistent with the valid 14-group readings; pack
+            voltage shall not affect the voltage ceiling.
             Evidence: Existing BMS interface requirements govern each group observation and its age.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
