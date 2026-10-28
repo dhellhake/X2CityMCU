@@ -40,9 +40,8 @@ package X2CityContract_BatteryControl {
         item socSourceEvidence:BmsSocSourceEvidence[0..1];
     }
     item def BatteryStatus {
-        doc /* Logical reporting contract: battery fault, independently recognized local actual thermal fault,
-            ordinary at-least-one-MOS-disabled warning, and lowDischargeVoltageWarning are independent,
-            simultaneous conditions. Each has
+        doc /* Logical reporting contract: battery fault, ordinary at-least-one-MOS-disabled warning, and
+            lowDischargeVoltageWarning are independent, simultaneous conditions. Each has
             meaningful known/unknown state; unknown is not absence. Battery fault includes BMS faults (including
             BMS thermal faults), recognized startup mismatch and recognized required battery-information failure.
             Recognition order is comparable with other RidingControl fault evidence for its first-recognized rule.
@@ -54,9 +53,10 @@ package X2CityContract_BatteryControl {
             Independent discharge and regenerative-charge operating branches under BMSPOL-001. Shared assessment is
             internal to BatterySupervision: each branchQualified field includes its own applicable shared required
             checks together with operation-specific checks. Shared assessment is not published as a separate validity
-            flag. Effective limits are finite, nonnegative ceilings that include applicable physical capability
-            and battery policy, protection, configuration, and path restrictions. A qualified zero limit means known
-            zero capability; it is not missing information or a fault. Qualification remains authoritative: when
+            flag. Effective limits are finite, nonnegative ordinary operating ceilings calculated from the selected
+            temperature and voltage curves, subject to path status, qualification and retained faults. Physical
+            current protection is configured in the supplied BMS and is distinct from these operating ceilings.
+            A qualified zero limit means known zero capability; it is not missing information or a fault. Qualification remains authoritative: when
             required current-envelope information is unqualified, the affected effective current limit is zero and
             dependent operation is unavailable. A numeric zero alone never qualifies the limit. Battery current sign
             is not a wheel-torque sign; BatterySupervision assesses each electrical current branch independently.
@@ -202,7 +202,9 @@ package X2CityComponent_BatteryControl {
 
             Open dependencies / qualifications: OI-041/049/061: source family defaults are not accepted operating
             settings; vendor voltage trips or RSOC alone do not implement actual-SOC policy. Determine remaining
-            independent protection/diagnostic coverage.
+            independent protection/diagnostic coverage. The selected ordinary operating-current equations are
+            allocated to BatterySupervision. Their conservative selection within cell, BMS and assembly
+            capabilities is the design basis; final configuration and hardware verification remain open.
         */
         subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
         require X2CityComponent_BatteryAssembly::assemblyConfigurationRequirements;
@@ -215,6 +217,9 @@ package X2CityComponent_BatteryControl {
                 fixed 14S5P 35E bank, including cell voltage, current, temperature and balancing, and the
                 [SOC source acceptance criteria](Battery_Integration.md#soc-source-acceptance) for actual-SOC
                 calibration/uncertainty and the vehicle regenerative-charge policy.
+
+                BatteryControl shall integrate configured supplied-BMS physical pack current and temperature protection
+                through the assembly configuration requirements and REQ-SYS-BMSDEV-002.
 
                 Commissioning records of effective configuration identity and accepted settings shall be
                 available for vehicle integration/service acceptance.
@@ -235,11 +240,13 @@ package X2CityComponent_BatteryControl {
             [selected-unit UART read acceptance contract](Decomposition/BMS_Information.md#selected-unit-uart-read-acceptance-contract)
             and
             [Per-consumer information acceptance criteria](Battery_Integration.md#per-consumer-information-acceptance),
-            including the exact supported per-command response schemas and payload lengths, expected group/temperature
-            counts and encodings, signs/scales, malformed/stale data and per-field domain failures. Verify that
-            disagreement between measurements does not invalidate individually valid BMS readings. Exercise startup,
-            sleep/wake and interrupted communication. Compare against independent references and current-session
-            qualification/fault behavior.
+            including accepted frame/envelope/transaction matching; supported response schemas, payload lengths,
+            field presence/count/order, encoding, units/scales and finite decoded values; malformed/stale fields;
+            and SOC outside 0..100 percent remaining unqualified without clamping. Verify valid zero or below-cutoff
+            group voltage, signed current, valid cold/hot temperatures, positive startup capacity qualification,
+            rejected-frame retention versus accepted invalid T2 withdrawal, and that disagreement between readings
+            does not invalidate individually valid fields. Exercise startup, sleep/wake and interrupted communication.
+            Compare against independent references and current-session qualification/fault behavior.
 
             Open dependencies / qualifications: WS-OI-005/018/019, OI-041/049: verify firmware support and its fixed
             mapping to accepted protocol captures, exact implemented response schemas and accuracy. Polling,
@@ -288,14 +295,16 @@ package X2CityComponent_BatteryControl {
             Native derivation parents are modeled below; external parent:
             [REQ-SYS-STA-006](../../../../Requirements/System_Requirements/Power_Startup_and_Faults.md#req-sys-sta-006).
 
-            Planned verification: I, A, T-SYS, T-FI. Cover each qualification item independently missing, inconsistent,
-            stale and valid; wrong series count/configuration, missing required T2 channel, active protection,
+            Planned verification: I, A, T-SYS, T-FI. Cover each qualification item independently missing,
+            schema-invalid, stale and valid, including zero/below-cutoff group voltage, signed current, valid cold/hot
+            temperature, SOC outside 0..100 percent, rejected-frame retention versus accepted invalid T2, and unchanged
+            positive-capacity startup qualification; wrong series count/configuration, missing required T2 channel, active protection,
             expected path disable and actual failed path. Confirm temperature qualification is ordinary field and
             consumer assessment, not a third startup check. At each applicable restart, verify shared checks are
             reflected in each dependent branch and operation-specific qualification from BatteryOperatingLimits.
 
             Open dependencies / qualifications: OI-041/049/061; WS-OI-007/018/019. Define per-consumer
-            input subsets and applicable per-field domain criteria; required temperature channels are
+            input subsets; required temperature channels are
             consumer-specific under BMSIF-008. Temperature mapping/qualification is ordinary field
             and consumer assessment, not a third startup check; physical accuracy, coverage, latency
             and required-channel criteria remain open;
@@ -333,9 +342,10 @@ package X2CityComponent_BatteryControl {
                 assessment.
                 A known ordinary restriction, including a temperature that forbids charging,
                 may leave an applicable branch qualified with a reduced or zero effective limit. Every effective limit
-                shall be finite and nonnegative, and shall include applicable physical capability and battery
-                policy/protection/configuration/path restrictions. A qualified zero limit denotes known zero
-                capability, not missing information or a fault. If required information is unqualified, the affected
+                shall be finite and nonnegative. With required evidence qualified and no retained fault, an enabled
+                path shall yield the selected temperature and voltage curve minimum and a known disabled path shall
+                yield qualified zero. Unknown path status yields unqualified zero. A qualified zero limit denotes
+                known zero capability, not missing information or a fault. If required information is unqualified, the affected
                 assessment shall remain unqualified and its effective current limit shall be zero.
 
                 Missing charge-only evidence shall not withdraw an otherwise qualified discharge branch. The
@@ -373,7 +383,6 @@ package X2CityComponent_BatteryControl {
         require X2CityComponent_BatterySupervision::dischargePathCapability;
         require X2CityComponent_BatterySupervision::bmsMosDisabledStatus;
         require X2CityComponent_BatterySupervision::batteryFaultRecognition;
-        require X2CityComponent_BatterySupervision::localThermalFaultRecognition;
         require X2CityComponent_BatterySupervision::batteryFaultRetainedEffect;
         require X2CityComponent_BatterySupervision::batteryStatusPublication;
         require X2CityComponent_BatterySupervision::batteryStatusRestart;
@@ -394,8 +403,8 @@ package X2CityComponent_BatteryControl {
                 that classification to produce the applicable effective operating limits and evidence published for
                 system integration. A recognized restart-required battery-side fault retains both branches
                 unqualified with effective limits zero until the next normal or unexpected controller
-                restart. BatteryStatus publishes independent battery-fault, local actual thermal-fault and
-                MOS-warning and lowDischargeVoltageWarning reporting conditions, including unknown state and
+                restart. BatteryStatus publishes independent battery-fault, MOS-warning and
+                lowDischargeVoltageWarning reporting conditions, including unknown state and
                 common fault recognition order, without selecting an HMI code. BatteryControl shall express battery-side effects on
                 operation and recovery through operating values and their qualification; BatteryStatus shall
                 provide reporting information only. A qualified disabled path contributes known zero
@@ -697,7 +706,6 @@ package X2CityComponent_BatteryControl {
         end #derive dischargePathCapability : Requirements::RequirementCheck;
         end #derive bmsMosDisabledStatus : Requirements::RequirementCheck;
         end #derive batteryFaultRecognition : Requirements::RequirementCheck;
-        end #derive localThermalFaultRecognition : Requirements::RequirementCheck;
         end #derive batteryFaultRetainedEffect : Requirements::RequirementCheck;
         end #derive batteryStatusPublication : Requirements::RequirementCheck;
         end #derive batteryStatusRestart : Requirements::RequirementCheck;
@@ -719,7 +727,6 @@ package X2CityComponent_BatteryControl {
         end dischargePathCapability ::> X2CityComponent_BatterySupervision::dischargePathCapability;
         end bmsMosDisabledStatus ::> X2CityComponent_BatterySupervision::bmsMosDisabledStatus;
         end batteryFaultRecognition ::> X2CityComponent_BatterySupervision::batteryFaultRecognition;
-        end localThermalFaultRecognition ::> X2CityComponent_BatterySupervision::localThermalFaultRecognition;
         end batteryFaultRetainedEffect ::> X2CityComponent_BatterySupervision::batteryFaultRetainedEffect;
         end batteryStatusPublication ::> X2CityComponent_BatterySupervision::batteryStatusPublication;
         end batteryStatusRestart ::> X2CityComponent_BatterySupervision::batteryStatusRestart;

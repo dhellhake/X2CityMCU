@@ -55,32 +55,53 @@ package X2CityComponent_Bms {
         doc /*
             Status: Draft. Allocation: LE-BMS.
 
-            Parent: [REQ-SYS-BMS-002](../BatteryControl.sysml). Related assessment/policy dependencies:
-            [REQ-SYS-BMS-006](../BatteryControl.sysml), [REQ-SYS-BMS-007](../BatteryControl.sysml), and
-            [REQ-SYS-BMS-008](../BatteryControl.sysml) consume accepted configuration information; they remain
-            BatteryControl/Supervision responsibilities.
+            Parent: [REQ-SYS-BMS-002](../BatteryControl.sysml). Related software-assessment dependencies:
+            [REQ-SYS-BMS-006](../BatteryControl.sysml) covers startup and source qualification,
+            [REQ-SYS-BMS-007](../BatteryControl.sysml) covers operating classification, and
+            [REQ-SYS-BMS-008](../BatteryControl.sysml) covers operating-limit derivation. These remain
+            BatteryControl/Supervision responsibilities; physical current and temperature protection configuration
+            and enforcement remain BMS responsibilities under this requirement.
 
             Sources:
             [BAT-001 BMS configuration derivation](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md#bms-configuration-derivation),
-            [BMS integration](../Battery_Integration.md), and the qualified 14S5P35E cell-bank operating envelope.
+            [BMS integration](../Battery_Integration.md), the qualified 14S5P35E cell-bank operating envelope,
+            and general thermal policy [REQ-SYS-TMP-001](../../../../../Requirements/System_Requirements/Power_Startup_and_Faults.md#req-sys-tmp-001)
+            and [REQ-SYS-TMP-002](../../../../../Requirements/System_Requirements/Power_Startup_and_Faults.md#req-sys-tmp-002).
 
             Planned verification: I, A, T-SYS. At commissioning, establish effective supported settings and units/scales
             from observable readback and controlled configuration evidence against the Configuration acceptance baseline
             in [Battery_Integration.md](../Battery_Integration.md#qualification-evidence-and-response-budget). Verify
-            configured protection, balancing and capacity/SOC calibration behavior against that baseline's qualified
-            cell and system envelopes, including representative trip and release cases; retain the settings and
-            effective-behavior evidence for controlled acceptance.
+            charge and discharge current protection separately against the accepted thresholds, response and release
+            criteria for the fixed 14S5P 35E assembly. Exercise below- and above-trip current, measurement error and
+            response delay, release behavior, and protection with host/UART unavailable. Verify configured hot and cold
+            charge and discharge temperature protection, including applicable BMS internal and pack observations,
+            against accepted thresholds, delays and releases, with host/UART unavailable; retain settings and
+            effective-behavior evidence for controlled acceptance. Also verify balancing and capacity/SOC calibration
+            behavior against the qualified cell and system envelopes.
 
-            Open dependencies / qualifications: OI-041/045/049/061; actual parameter support, settings, uncertainty,
-            margins, timing, balancing behavior and calibration evidence are unresolved. No family example or default
-            establishes an accepted value; commissioning acceptance requires the effective settings and identity
+            Open dependencies / qualifications: OI-041/045/049/061; actual parameter support, accepted charge and
+            discharge trip thresholds, delays, release criteria, measurement uncertainty, margins, balancing behavior
+            and calibration evidence remain to be established. Temperature protection thresholds, delays, releases,
+            applicable probes and settings require configuration and validation for the assembly. The thresholds and
+            response criteria shall be configured and accepted for the fixed 14S5P 35E assembly against actual
+            cell, BMS and pack limits. Declared cell-bank
+            reference currents are not accepted BMS trip settings or normal operating allowances. No family example or
+            default establishes an accepted value; commissioning acceptance requires effective settings and identity
             evidence. Complete configuration readback through the selected project UART is not assumed.
         */
         subject bms:Bms = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batteryAssembly.bms;
         require constraint {
             doc /*
-                Bms shall operate according to its effective supported protection, balancing, capacity and
-                SOC-calibration settings accepted against the Configuration acceptance baseline in
+                Bms shall protect the pack against excessive charge and discharge current by detecting current at its
+                configured, accepted direction-specific thresholds and performing the configured protective switching
+                or interruption according to accepted response and release criteria. These settings shall protect the
+                actual fixed 14S5P 35E cell, BMS and pack assembly limits, and this protection shall operate with the
+                host and UART unavailable. Thresholds are protection trip settings, not normal operating-current
+                allowances. Bms shall protect the pack using configured hot and cold charge and discharge temperature
+                protection, including BMS internal and pack temperature observations where applicable, according to
+                accepted thresholds, delays and release criteria. This protection shall operate with the host and UART
+                unavailable. Bms shall also operate according to its effective supported voltage, temperature,
+                balancing, capacity and SOC-calibration settings accepted against the Configuration acceptance baseline in
                 [Battery_Integration.md](../Battery_Integration.md#qualification-evidence-and-response-budget).
             */
         }
