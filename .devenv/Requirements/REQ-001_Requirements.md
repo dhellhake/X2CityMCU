@@ -8,6 +8,8 @@ Sources: [PD-001](../../README.md), [item definition](ID-001_Item_Definition.md)
 
 The owner selected this project model on 2026-09-09. Requirement type records abstraction and realization allocation; functional, performance, interface and environmental classifications are separate attributes. A requirement remains verifiable at its stated level even when called abstract. Reusable SysML classifications are defined in [RequirementTypes.sysml](RequirementTypes.sysml).
 
+The operational/reporting interface guideline for future requirement derivation is [AG-001](../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#ag-001-operational-and-reporting-interfaces).
+
 | Type | Responsible target | Permitted requirement derivation |
 |---|---|---|
 | **System Requirement** | Logical system or logical element; realization may remain open | May derive further System Requirements, Abstract Software Requirements or Abstract Hardware Requirements |

@@ -8,6 +8,7 @@
   and [software](Architecture/SoftwareArchitecture/ARCH-003_Software_Architecture.md) retain released **ARCH-001-R1.0 / ARCH-002/003-R1.1**;
   **ARCH-002/003 Draft1.3** refine the selected EVM traction-board and WeAct vehicle-host boundaries pending review.
   Their [release record](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#release-identity) preserves the historical released composition, while the current vehicle-only architecture and completion B remain open.
+  The [operational/reporting interface guideline](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#ag-001-operational-and-reporting-interfaces) governs future architecture and requirements work.
 - [ARCH-003 static port registry and route catalogue](Architecture/SoftwareArchitecture/ARCH-003_Software_Architecture.md#static-port-registry-and-connection-catalogue)
   indexes the 14 component types, 19 local instances, architectural ports and complete local/external route catalogue.
 - [Detailed design](Architecture/SoftwareArchitecture/DetailedDesign/DD-001_Software_Unit_Design.md), [battery-protection design](Architecture/SoftwareArchitecture/DetailedDesign/DD-002_Battery_Protection_Unit_Design.md),

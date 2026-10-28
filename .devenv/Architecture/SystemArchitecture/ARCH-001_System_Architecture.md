@@ -18,6 +18,17 @@ Types are not physical instances. Component types in this model have EPCS-local 
 
 The 2026-10-06 Draft narrows active architecture ownership to E/E retrofit functions. BatteryControl, accelerator observation, electrical coded-brake detection and HMIControl remain within that boundary. Pure mechanical steering, braking, carrier, enclosure and integration roles have been removed from this active model; released history is not silently re-approved. A logical HW leaf can be realized by cooperating HW parts; a SW leaf may have several deployed instances of its component type. These logical leaves describe responsibility only: later realization can distribute the intended hardware and software contributions without establishing a fixed component owner here. Supplied assemblies retain opaque vendor software and boundary acceptance rather than invented project units. Device schematics, code units and numerical parameters remain downstream.
 
+<a id="ag-001-operational-and-reporting-interfaces"></a>
+### AG-001 — Operational and reporting interfaces
+
+**Owner guideline, 2026-10-28.**
+
+Applies to System, HW/SW realization, Detailed Design and requirement derivation. Information exchanged between elements to determine operational behavior shall use operational interfaces with defined qualification semantics. Diagnostic and status interfaces shall serve reporting purposes only. Purpose determines classification: commands, measurements and effective limits are operational inputs; a brake-lever state remains operational even if named as state or represented as a boolean.
+
+Qualification means suitable for the stated use and distinguishes a known qualified zero from missing or unreliable information; a valid measurement remains available even when its operational effect is prohibited. Operational contracts shall allocate required element-owned state, timing, configuration, fault effects, fallback and recovery, plus ownership and release conditions for any fault effect retained until restart, independently of diagnostic/report delivery.
+
+Existing contracts require staged alignment in future revisions; this introduction does not implement that alignment.
+
 ## Logical composition
 
 Edges below mean **composed of**, not communication or power flow. The table gives every immediate parent, including children omitted from the overview.

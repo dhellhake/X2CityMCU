@@ -10,6 +10,11 @@ These entries consolidate owner decisions recorded 2026-09-06–10 and the scope
 
 Unless stated otherwise, torque means commanded motor-produced rear-wheel torque: positive points forward, negative provides regeneration during forward travel. Every torque permission remains subject to Ready, valid demand, brake priority and applicable operating/safety limits. Zero commanded torque does not promise zero passive drag or generated voltage. “Abrupt permitted” allows but does not mandate that response; “abrupt required” excludes deliberately added comfort ramps. Finite physical response and measurement bounds remain to be derived.
 
+<a id="dec-arch-002"></a>
+### DEC-ARCH-002 — Operational and reporting interfaces
+
+Owner, 2026-10-28: adopt [AG-001](../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#ag-001-operational-and-reporting-interfaces) as the governing interface guideline for future architecture and requirements work.
+
 <a id="dec-scope-001"></a>
 ### DEC-SCOPE-001 — Electrical/electronic retrofit on supplied BMW platform
 
