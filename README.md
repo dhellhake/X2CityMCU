@@ -547,7 +547,7 @@ Retained hardware is listed once in §4.5; mass definitions and supplied duty as
 | Manufacturer and exact model | Unknown | OPEN ISSUE |
 | Continuous and peak rating definitions | Not yet established | OPEN ISSUE |
 
-The reported ratings shall be treated as preliminary sizing inputs until their definitions and applicability are verified. [MOT-001](.devenv/Motor/MOT-001_Motor_Interface_Evidence.md) is canonical for the measured phase, Hall and temperature-interface evidence and its limitations. [MCD-001 Hall-sensored FOC design](.devenv/Motor/MCD-001_Hall_Sensored_FOC_Technical_Design.md) selects the traction-control method and its 40-km/h voltage-headroom gate; it neither changes the target nor proves that the reported 9.5 rpm/V or 58.8-V outer-cell reference provides sufficient loaded operating margin.
+The reported ratings shall be treated as preliminary sizing inputs until their definitions and applicability are verified. [MOT-001](.devenv/Motor/MOT-001_Motor_Interface_Evidence.md) is canonical for the measured phase, Hall and temperature-interface evidence and its limitations. [DEC-MOTOR-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-motor-001) records the selected Hall-required FOC control contribution and its open 40-km/h voltage-headroom gate; it neither changes the target nor proves that the reported 9.5 rpm/V or 58.8-V outer-cell reference provides sufficient loaded operating margin.
 
 ### 10.3 Selected HMI
 
@@ -909,7 +909,7 @@ Protocol discovery is not reopened. Physical display identification and electric
 | OI-021 | Hall/Temp connector mapping | Functions Vcc/Gnd/Temp/Hall1–3 are owner-identified; record physical pin order/orientation, connector family and return arrangement | Characterization |
 | OI-022 | Hall electrical characteristics | Clean 3.3 V switching was observed with +5 V Vcc/common Gnd/external pull-ups; characterize output type, pull-up range, state order, timing, electrical angle, alignment and fault coverage | Characterization |
 | OI-023 | Temp-path characteristics | Temp-to-Gnd is 9.257 kilohm with a 23.8 °C housing IR observation; determine sensor identity/topology, curve, location, internal-temperature relation, thermal response and useful limits | Characterization |
-| OI-024 | Electrical motor parameters | Line-to-line phase resistance is 0.56 ohm under unrecorded conditions; repeat with lead compensation, measure inductance/insulation, verify speed constant/back-EMF, and establish loaded inverter/battery modulation headroom for the MCD-001 40-km/h feasibility gate | Characterization |
+| OI-024 | Electrical motor parameters | Line-to-line phase resistance is 0.56 ohm under unrecorded conditions; repeat with lead compensation, measure inductance/insulation, verify speed constant/back-EMF, and establish loaded inverter/battery modulation headroom for the Hall-required FOC 40-km/h feasibility gate | Characterization |
 | OI-025 | Motor thermal envelope | Verify reference hill/repeated-stop capability and permitted cold performance within component limits. Temperature faults/required-information loss follow DEC-TMP-001–002; derive thermal references, margins, coverage and finite response (WS-OI-019). | Requirements and validation |
 
 ### 15.4 HMI issues

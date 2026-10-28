@@ -1,6 +1,6 @@
 # MotorControl requirements
 
-**Draft successor allocation — 2026-10-02.** **Type:** Abstract Software Requirement. **Target:** `LE-MOTOR-CTRL`, realized cooperatively by `SC-TRACTION-CTRL.V`, `SC-TEMPERATURE-IF.V`, and `SC-SUPPLY-IF.V`.
+**Draft successor allocation — 2026-10-02.** **Type:** Abstract Software Requirement. **Target:** `LE-MOTOR-CTRL`; software realization pending.
 
 The rows below are the canonical successors for the transferred traction-control and temperature/supply allocations. `REQ-SYS-INP-002` remains the separate Platform-owned acquisition allocation. MotorControl decides neither Session's retained fault/report policy nor hardware shutdown; it reports qualified observations and commands actuation.
 

@@ -4,7 +4,7 @@ package RequirementTypes {
     }
 
     requirement def AbstractSoftwareRequirement {
-        doc /* Abstract requirement classification for software responsibility allocated to a logical system target and realized by system-level software. */
+        doc /* Abstract requirement classification for a software responsibility allocated to a logical system target; realization may remain pending. */
     }
 
     requirement def AbstractHardwareRequirement {

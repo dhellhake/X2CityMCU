@@ -4,4 +4,4 @@
 
 RidingControl owns the vehicle's low-SOC propulsion cutoff and recovery policy in [Riding_SOC_Requirements.md](Riding_SOC_Requirements.md). It consumes qualified actual SOC from BatteryControl; battery current-capability assessment remains a separate input.
 
-The architecture allocation and interfaces are documented in [ARCH-001](../../ARCH-001_System_Architecture.md) and the sole software realization in [SC-RIDING-CONTROL](../../../SoftwareArchitecture/RidingControl/README.md).
+The architecture allocation and interfaces are documented in [ARCH-001](../../ARCH-001_System_Architecture.md); software realization is pending.

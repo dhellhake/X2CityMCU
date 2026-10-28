@@ -16,7 +16,7 @@ package X2CityComponent_BatterySupervision {
     }
 
     part def BatterySupervision { // LE-BATTERY-SUPERVISION
-        doc /* Project software responsibility on the vehicle host. It logically owns the existing BmsLink read/qualification and BatteryProtection operating-policy responsibilities; their existing software components realize this part, while supplied BMS internals remain outside it. */
+        doc /* Vehicle-host logical responsibility for reading and qualifying BMS information, capability and operating policy. Software realization is pending; supplied BMS internals remain outside it. */
         attribute voltageDeratingCalibration:BatteryVoltageDeratingCalibration {
             doc /* Immutable compiled calibration set; these current values await product validation. */
             :>> dischargeFullCurrentVoltageVolts = 3.40;
@@ -35,8 +35,8 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BMSIF-001'> bmsInformationQualification : AbstractSoftwareRequirement {
         doc /*
             Abstract Software Requirement; Draft successor to canonical REQ-001-R1.6 (Approved).
-            Allocation: LE-BATTERY-SUPERVISION; realized by existing BmsLink/BatteryProtection
-            contributions. Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources:
+            Allocation: LE-BATTERY-SUPERVISION; software realization pending.
+            Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources:
             [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md); [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract). Verify:
             T-SW/T-SYS against selected-unit evidence and independent valid/invalid observations;
             see [REQ-001 verification rules](../../../../../Requirements/REQ-001_Requirements.md). Open: installed schema, source-age
@@ -58,7 +58,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-002'> bmsReadCommandRestriction : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md) selected identity. Verify: T-SW/T-SYS confirms requests are limited to supported
             read-only 0x03/0x04/0x05. Open: confirm installed-unit support under OI-041/061 and WS-OI-018/019.
@@ -76,7 +76,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-003'> bmsResponseValidation : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Source: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract). Verify:
             T-SW framing vectors and T-SYS selected-unit captures; payload and transaction semantics
             are verified under 005-008/014. Open: installed framing evidence, OI-041/061; WS-OI-018/019.
@@ -96,7 +96,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-014'> bmsTransactionAcceptance : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Source: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract). Verify:
             T-SW/T-SYS matching and wrong requests, success/error status, outstanding-request
             boundaries. Open: qualify installed response correlation/status under OI-041/061; WS-OI-018/019.
@@ -117,7 +117,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-005'> bmsBasicInformationDecoding : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parents: [REQ-SYS-BMS-002](../BatteryControl.sysml) (configuration decoding),
             [REQ-SYS-BMS-003](../BatteryControl.sysml) (source fields), and
             [REQ-SYS-BMS-006](../BatteryControl.sysml) (startup version field). Sources: selected-unit UART facts in
@@ -150,7 +150,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-006'> bmsGroupVoltageQualification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS complete, missing,
             reordered, implausible and contradictory group sets. Open:
@@ -174,7 +174,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-007'> bmsIdentityInformationDecoding : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution. Native
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending. Native
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml) (identity information/source). Sources:
             [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md). Verify: T-SW/T-SYS
@@ -194,7 +194,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-008'> bmsTemperatureQualification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS conversion, probe
             identity/count, optional and unavailable readings. Open: installed probe layout and
@@ -219,7 +219,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-009'> bmsFieldQualification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS field loss, invalidity,
             staleness, and independence; confirm display fallback cannot qualify control data. Open:
@@ -239,7 +239,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-010'> bmsObservationAgeQualification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: selected-unit UART facts in
             [selected-unit UART acceptance contract](BMS_Information.md#selected-unit-uart-read-acceptance-contract); [Battery Integration per-consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance) and response
             budget. Verify: T-SW/T-SYS same-value accepted updates, rejected/unrelated/cached data,
@@ -265,7 +265,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-011'> bmsObservationRetention : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance) and response budget. Verify: T-SW/T-SYS
             interruption, sleep/wake, missed replies, field-specific expiry and dependent-use
@@ -291,7 +291,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-012'> bmsSourceRequalification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [operating-limit qualification](BatterySupervision.sysml#req-sys-batsup-002). Verify: T-SW/T-SYS controller startup and source loss/recovery, preserving unrelated validity and
             RidingControl fault authority. BatteryMeasurements retains its host-provided producer
@@ -315,7 +315,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BMSIF-013'> bmsReadServiceTiming : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink contribution.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration qualification and response budget](../Battery_Integration.md#qualification-evidence-and-response-budget); [operating-limit qualification](BatterySupervision.sysml#req-sys-batsup-002).
             Verify: T-SYS startup, source-update, response, timeout, publication, delivery/use,
@@ -338,7 +338,7 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BMSPOL-001'> batteryCapabilityPolicy : AbstractSoftwareRequirement {
         doc /*
             Abstract Software Requirement; Draft successor to canonical REQ-001-R1.6 (Approved).
-            Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection contributions.
+            Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001). Sources: [Battery Integration qualification and response budget](../Battery_Integration.md#qualification-evidence-and-response-budget) and
             event/recovery matrix; [REQ-001 verification rules](../../../../../Requirements/REQ-001_Requirements.md). Verify: analysis,
             T-SW/T-SYS/T-FI against independent quality, path, policy and overlapping-restriction
@@ -366,7 +366,7 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BATSUP-001'> bmsStartupChecks : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-006](../BatteryControl.sysml); input source:
             [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract).
             Verify: T-SW/T-SYS missing, invalid, mismatched and accepted startup evidence on every
@@ -393,8 +393,8 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BATSUP-002'> operatingLimitQualification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection
-            contributions. Parent: [REQ-SYS-BMS-006](../BatteryControl.sysml). Inputs:
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
+            Parent: [REQ-SYS-BMS-006](../BatteryControl.sysml). Inputs:
             [REQ-SYS-BMS-002](../BatteryControl.sysml) and [REQ-SYS-BMS-003](../BatteryControl.sysml).
             Sources: [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md); Battery_Integration
             configuration and per-consumer acceptance. Verify:
@@ -427,8 +427,8 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BATSUP-003'> actualSocQualification : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection
-            contributions; HMI fallback and RidingControl SOC policy remain consumer concerns.
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending;
+            HMI fallback and RidingControl SOC policy remain consumer concerns.
             Parent: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001) / [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md); [Battery Integration SOC acceptance](../Battery_Integration.md#soc-source-acceptance);
             selected-unit UART facts; DEC-SOC-001/002, DEC-HMI-002/005. Verify: analysis, T-SW/T-SYS
             against independent SOC references, startup/restart and loss. Open: calibration,
@@ -451,8 +451,8 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BATSUP-004'> chargePathCapability : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection
-            contributions. Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml). Sources: owner-authorized
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml). Sources: owner-authorized
             battery current-path capability refinement; [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md);
             [selected-unit UART facts](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             source qualification and age rules in [BMSIF-009–011](BatterySupervision.sysml#req-sys-bmsif-009) and
@@ -480,8 +480,8 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BATSUP-005'> dischargePathCapability : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection
-            contributions. Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml). Sources: owner-authorized
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml). Sources: owner-authorized
             battery current-path capability refinement; [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md);
             [selected-unit UART facts](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             source qualification and age rules in [BMSIF-009–011](BatterySupervision.sysml#req-sys-bmsif-009) and
@@ -509,8 +509,8 @@ package X2CityComponent_BatterySupervision {
 
     requirement <'REQ-SYS-BATSUP-006'> bmsMosDisabledStatus : AbstractSoftwareRequirement {
         doc /*
-            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; existing BmsLink/BatteryProtection
-            contributions. Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml). Source: qualified charge- and
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml). Source: qualified charge- and
             discharge-path status in the accepted BMS protection/path observation; source update and expiry
             budgets reuse [BMSIF-009–011](BatterySupervision.sysml#req-sys-bmsif-009) qualification rules. Verify: T-SW/T-SYS for each combination
             of qualified enabled/disabled charge and discharge paths, plus unknown, invalid, stale and source-loss

@@ -63,7 +63,7 @@ package X2CityContract_BatteryControl {
             BMS thermal faults), recognized startup mismatch and recognized required battery-information failure.
             Recognition order is comparable with other RidingControl fault evidence for its first-recognized rule.
             Diagnostic evidence remains available independently of operating-limit qualification. This item carries
-            reporting information only; detailed representation is derived in SoftwareArchitecture. */
+            reporting information only; detailed representation is deferred to software realization. */
     }
     item def BatteryOperatingLimits {
         doc /*
@@ -111,8 +111,8 @@ package X2CityContract_BatteryControl {
     port def BmsReadRequestInputPort { doc /* Receives a read-only UART information request at the supplied BMS. */ in item request:BmsReadRequest; }
     port def BmsTelemetryOutputPort { doc /* Sends selected BMS source fields from the supplied BMS to BatterySupervision over the read-only UART route. */ out item telemetry:BmsTelemetry; }
     port def BmsTelemetryInputPort { doc /* Receives selected BMS source fields at BatterySupervision for qualification. */ in item telemetry:BmsTelemetry; }
-    port def BatteryMeasurementsOutputPort { doc /* Sends BmsLink's qualified BMS measurements to BatteryProtection's operating-policy realization inside BatterySupervision. */ out item measurements:BatteryMeasurements; }
-    port def BatteryMeasurementsInputPort { doc /* Receives BmsLink's qualified BMS measurements at BatteryProtection's operating-policy realization inside BatterySupervision. */ in item measurements:BatteryMeasurements; }
+    port def BatteryMeasurementsOutputPort { doc /* Sends qualified BMS measurements to the operating policy inside BatterySupervision. */ out item measurements:BatteryMeasurements; }
+    port def BatteryMeasurementsInputPort { doc /* Receives qualified BMS measurements for the operating policy inside BatterySupervision. */ in item measurements:BatteryMeasurements; }
     port def BatteryStatusOutputPort {
         doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */
         out item status:BatteryStatus;

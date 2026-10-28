@@ -24,7 +24,7 @@ package X2CityContract_MotorPositionProcessing {
         item Qualification:MotorPositionQualification;
     }
     item def PhaseCurrentMeasurements:>QualifiedInformationRecord {
-        doc /* Semantic same-epoch phase-current feedback. This preserves the existing MotorPhaseInterface contribution rather than creating another conversion. */
+        doc /* Semantic same-epoch phase-current feedback. The logical processing responsibility provides this feedback directly to MotorControl. */
         attribute phaseACurrentAmperes:Real;
         attribute phaseBCurrentAmperes:Real;
         attribute phaseCCurrentAmperes:Real;
