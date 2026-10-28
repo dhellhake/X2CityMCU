@@ -84,10 +84,10 @@ package X2CityComponent_RidingControl {
         port qualifiedTemperatureIn:QualifiedTemperatureInputPort { doc /* Qualified motor and traction-board temperature observations. */ }
         port tractionConditionEvidenceIn:TractionConditionEvidenceInputPort { doc /* Local traction condition evidence for RidingControl fault selection and lifetime. */ }
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort { doc /* Qualified requested settings; requested and pending state remains internal. */ }
-        port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort { doc /* Battery startup assessment and recognized battery fault categories. */ }
-        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Qualified actual SOC for riding and fault policy. */ }
+        port batteryFaultStatusIn:BatteryFaultStatusInputPort { doc /* Recognized battery fault categories only; startup qualification is consumed from operating limits. */ }
+        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Qualified actual SOC for RidingControl low-SOC propulsion cutoff/recovery, and fault policy. */ }
         port actualTractionOutputIn:ActualTractionInputPort { doc /* Qualified actual applied wheel-torque/output observations from Traction for demand and powered-forward regenerative rearm policy; not stage-state or PWM evidence. */ }
-        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Independently qualified discharge, regenerative-charge and positive-propulsion limits. */ }
+        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Existing stream feeds battery Ready guards and Demand's independent effective discharge/charge current limits, and carries the independently qualified MOS-disabled state directly to Session report selection. MOS qualification is not inferred from common/branch qualification or zero current. A qualified zero is known no capability; an unqualified branch carries conservative zero without qualification. Zero charge acceptance suppresses requested regenerative braking without implying zero wheel torque. */ }
         port ridingAuthorityOut:RidingAuthorityOutputPort { doc /* Current authorization and its expiry; independent of the signed torque command. */ }
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort { doc /* Signed wheel-torque demand and current bounds; authorization remains a separate output. */ }
         port selectedFaultIndicationOut:SelectedFaultIndicationOutputPort { doc /* Selected reportable fault code and qualification for HMI encoding. */ }

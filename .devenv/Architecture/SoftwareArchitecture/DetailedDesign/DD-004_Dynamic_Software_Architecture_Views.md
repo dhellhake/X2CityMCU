@@ -34,21 +34,31 @@ sequenceDiagram
     P->>BR: startup/reset context
     P->>B: startup/reset context
     P->>T: startup/reset context
-    P->>BP: lowSocRetentionCandidateIn with validity/context
+    B->>B: invalidate private startup qualification and dependent BMS field qualification
+    B->>B: validate firmware 3.2 and reported series-group count 14 together in this startup's accepted 0x03 reply
+    alt both startup checks valid and matching
+        B->>B: establish private startup qualification; allow dependent outputs to qualify from current field evidence
+    else either startup check absent, invalid or mismatched
+        B->>B: keep dependent observations unqualified
+        BP->>BP: publish unqualified dependent limits with effective current zero
+    end
+    Note over B: Runtime 0x05 identity is informational only; no startup prerequisite or ordering dependency
     P-->>RC: runtimeInitializationIn, platformContextIn and platformHealthIn
     CE->>CE: sample a fresh currentTimeMicroseconds immediately before RidingControl invocation
     CE->>RC: executionTimeIn: fixed ExecutionTime for this invocation
     A-->>RC: acceleratorPositionIn once: current-startup AcceleratorPosition
     BR-->>RC: brakeLeverStateIn once: qualified current-startup brake fact
     H-->>RC: hmiRiderSettingsRequestIn once: qualified level/speed receipt
-    B-->>BP: batteryMeasurementsIn: field-qualified BatteryMeasurements with host last-accepted update references
-    BP-->>RC: batteryReadinessAndFaultIn, stateOfChargeIn and batteryOperatingLimitsIn
+    B-->>BP: batteryMeasurementsIn: field-qualified BatteryMeasurements (values + qualification)
+    BP-->>RC: batteryFaultStatusIn and qualified actual stateOfChargeIn
+    BP-->>RC: existing batteryOperatingLimitsIn stream carries current-only limits plus independently qualified mosDisabledState
     T-->>RC: motion, motor-position, temperature, traction-condition and actual-output inputs
     Note over RC,D: one component; U-SESSION-ELIGIBILITY evaluates the complete Ready guard, U-DEMAND-ARBITER consumes the same invocation inputs
+    Note over BP,RC: Ready checks the qualified discharge branch, not positive capability; charge-branch qualification and HMI-only current are independent
     alt all current guard facts hold
         RC->>D: internal authority state
         RC-->>T: ridingAuthorityOut
-        D->>D: form signed command from qualified inputs and BatteryOperatingLimitsAssessment
+        D->>D: form signed command from qualified actual SOC, current-only limits and compiled policy
         D-->>RC: internal signed command result
         RC-->>T: wheelTorqueCommandOut with signed request, both A bounds and independent command expiry
         T->>T: accept current authority/command, require valid Hall/current/Vdc/configuration
@@ -59,10 +69,13 @@ sequenceDiagram
         RC-->>T: ridingAuthorityOut unavailable/withdrawn
         T->>T: request zero of both signs, physical outcome remains separately observed
     end
-    RC-->>H: selectedFaultIndicationOut
+    RC-->>H: selectedFaultIndicationOut (retained group fault > composed 0x01 SOC-or-MOS warning)
     BP-->>H: stateOfChargeOut and batteryCurrentOut, each with its own qualification
     T-->>H: qualified physical motion for speed/period encoding
+    Note over D,RC: U-SESSION-REPORT checks its direct MOS-state and actual-SOC inputs with separate private delivery watchdogs; stale/unqualified MOS delivery withdraws warning evidence without implying enabled or retaining stale 0x01. MOS state is never inferred from zero current limit
 ```
+
+After every normal or unexpected vehicle-controller startup, BmsLink requires two private startup checks from the same current accepted `0x03` reply: firmware version 3.2 and reported series-group count 14. If either check is absent, invalid, or mismatched, dependent BmsLink observations stay unqualified; BatteryProtection publishes unqualified dependent limits with effective current zero. Startup qualification creates no public flag or port. Runtime `0x05` identity is not a startup prerequisite or ordering dependency. Every accepted response, including the startup `0x03`, receives its fixed command-schema checks. Regular scale, NTC/probe validity, and complete group-data checks remain observation qualifications, not extra dedicated startup checks.
 
 `SC-TRACTION-CTRL.V` requesting zero does not prove zero physical torque or protection.
 
@@ -138,7 +151,7 @@ not a fault, when the Hall-only position remains accepted.
 
 The selected scheduler can run cyclic slow work; it does not make a software component a task or supply an intercom endpoint. `U-ANALOG-ACQ-REGULAR` owns DMA completed-record stability, while `U-HALL-CAPTURE` owns Hall capture storage and `U-HALL-POSITION` publishes qualified Hall observation. `U-MOTOR-POSITION-ESTIMATOR` owns the final electrical position. Named accelerator, brake, temperature, supply and motor-phase units consume regular scans under their own qualification contracts. A later static intercom transport may carry a project-declared route only after its route-specific context, age, capacity and loss policy are defined.
 
-Receiver validity and qualification remain separate from local age supervision. Reading cached data, a health-only update, an invalid sample, or republishing unchanged evidence does not refresh a local measurement timeout; a genuinely new qualified sample does. `BatteryMeasurements` preserves host last-accepted update references per BMS field, never a claimed BMS measurement time; BatteryProtection creates its operating-limits assessment reference and Demand evaluates its age using caller-supplied execution time. Retained settings and light requests follow their component contracts and may remain current through HMI loss. If a future intercom uses the existing FIFO, one pop returns the oldest item, overflow overwrites the oldest and reports a lost count; receipt time is not acquisition time, and capacity alone supplies no time bound. Consumers retain measurement timestamps and apply private input timeouts/transport scheduling bounds.
+Receiver validity and qualification remain separate from local age supervision. Reading cached data, a health-only update, an invalid sample, or republishing unchanged evidence does not refresh an input's source-newness timer; a genuinely new accepted source update does. BmsLink keeps source timers private and publishes only battery values with field qualification. BatteryProtection and downstream consumers maintain independent private publication-delivery watchdogs; a newly published unchanged snapshot may refresh delivery liveness but cannot requalify a BMS source. A BMS transaction reply timeout does not expire otherwise unexpired source evidence. Retained settings and light requests follow their component contracts and may remain current through HMI loss. If a future intercom uses the existing FIFO, one pop returns the oldest item, overflow overwrites the oldest and reports a lost count; receipt time is not acquisition time, and capacity alone supplies no time bound. Battery deployment therefore requires bounded service/draining, current-snapshot/resynchronization behavior, and a proven delay margin; queue capacity alone is insufficient. Numeric source-age, update-latency, producer/consumer watchdog, transport and end-to-end limits remain explicit engineering gates. Other input contracts retain their own measurement timestamps and private timeout/scheduling bounds.
 
 ```mermaid
 sequenceDiagram
@@ -207,7 +220,7 @@ This does not require an edge at rest, treat an absent edge as a default fault, 
 
 ## Demand decision, withdrawal and post-stop regeneration rearm
 
-`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal; unavailable `BatteryOperatingLimitsAssessment` withdraws dependent rider permission and sends zero current for its affected electrical branch. It does not reuse a prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-RIDING-CONTROL` build parameters, so this interaction claims no numerical response time.
+`U-DEMAND-ARBITER` samples its typed inputs as one declared coherent decision snapshot. It evaluates `authorityExpiryTimeMicroseconds` independently from `commandExpiryTimeMicroseconds` in the shared host monotonic domain; a new `decisionSequence` never refreshes authority. A missing, aged beyond its local bound, invalid, foreign-generation/configuration or noncoherent **common** contributor causes both-sign withdrawal. Its battery operating-limits and actual-SOC deliveries have separate private watchdogs, each based only on its own accepted publication; neither recomputes BmsLink source age or renews the other stream. Missing, unqualified, stalled or queued-old actual SOC cannot establish positive-propulsion eligibility. Eligibility checks current discharge-branch qualification for Ready; charge-branch qualification and positive current capability are not Ready prerequisites. An unqualified electrical branch has effective current zero, and a qualified zero is a valid known limit. Demand permits positive propulsion only above 10% qualified actual SOC and suppresses requested regenerative braking when regenerative-charge capability is unqualified or its effective current limit is zero, following the existing no-charge policy. It does not infer that zero current proves zero physical braking or reuse an unqualified/prior value. The profile/ramp/taper and age/coherency bounds are immutable `SC-RIDING-CONTROL` build parameters, so this interaction claims no numerical response time.
 
 ```mermaid
 sequenceDiagram
@@ -228,7 +241,7 @@ sequenceDiagram
     D-->>T: requestedWheelTorqueNewtonMetres, both independent A bounds, authorityGeneration, commandExpiryTimeMicroseconds
 ```
 
-For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm and regeneration-recovery hold constrain rider-requested regeneration; lever and SOC positive-propulsion caps constrain positive rider torque; active-profile/ramp/taper results are then clamped within the remaining limits. A restriction recovery or limit increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies independent battery current limits and an assessment reference; `SC-RIDING-CONTROL` owns qualification of each reduction episode and forwards both current bounds. `SC-TRACTION-CTRL` selects the applicable bound from actual electrical transfer, never wheel-torque sign. RidingControl session fault restart remains `U-SESSION-ELIGIBILITY` state; neither that nor restriction recovery re-arms post-stop regeneration.
+For simultaneous events, demand applies this order within the coherent decision snapshot: invalidity/reset/platform-health loss, expired/mismatched authority and other both-sign inhibitions withdraw first; hard/active speed limits and other both-sign constraints apply next; post-stop rearm, zero/unqualified regenerative-charge capability and regeneration-recovery hold constrain rider-requested regeneration; the qualified actual-SOC 10% eligibility gate and lever actuation constrain positive rider torque; active-profile/recovery-ramp/taper results are clamped within the remaining limits. A restriction recovery or limit increase cannot win over a concurrent withdrawal or tighter limit. `SC-BAT-POLICY` supplies independently qualified effective battery current limits without an assessment timestamp; `SC-RIDING-CONTROL` owns qualification of each reduction episode and forwards both current bounds. Demand maintains independent delivery watchdogs for current-only operating limits and actual SOC. Both are separate from BmsLink source qualification. `SC-TRACTION-CTRL` selects the applicable bound from actual electrical transfer, never wheel-torque sign. A zero current limit constrains electrical transfer and does not itself prove zero physical braking. RidingControl session fault restart remains `U-SESSION-ELIGIBILITY` state; neither that nor restriction recovery re-arms post-stop regeneration.
 
 ## Settings application, HMI loss and lighting feedback
 
@@ -261,7 +274,7 @@ sequenceDiagram
     SET-->>D: internal ActiveRidingSettings
     RC->>D: shared accelerator, brake, motion, battery and actual-output snapshots
     D-->>RC: internal signed demand result
-    RC-->>T: wheelTorqueCommandOut with signed demand and both battery current bounds when permitted
+    RC-->>T: wheelTorqueCommandOut with signed demand and both battery current bounds under current authority
     T-->>L: active electrical-braking observation or unqualified state
     B-->>L: qualified lever state or unqualified state
     H-->>L: qualified normal-light request
@@ -280,34 +293,27 @@ A retained active-setting publication after link loss is current state, not a ne
 
 The rear logical mode can be Full for an actuated lever, active electrical braking, or either unqualified fact; it is otherwise Dim for normal request On and Off for Off.  This is logical intent, not lamp output or visible-light evidence.
 
-## Battery capability, reset and retained operating restriction
+## Battery capability and positive-propulsion eligibility
 
-This state view is intentionally limited to `SC-BAT-POLICY.V` ownership of the retained `reached10%` propulsion restriction.  It is not a BMS state model and does not retain battery-fault history.  `SC-BMS-LINK` requalifies observations after host startup, recognized BMS reset, or required-source qualification loss; a BMS wake/short interruption alone does not by itself clear a justified unexpired record.
+`SC-BAT-POLICY.V` owns battery-side electrical current restrictions, recognized battery faults and qualified SOC publication. `SC-RIDING-CONTROL.V / U-DEMAND-ARBITER` owns the vehicle positive-propulsion eligibility boundary: positive propulsion is zero at or below 10% qualified actual SOC and eligible only above 10%. This is not a BMS state model and never becomes battery-fault history. `SC-BMS-LINK` requalifies observations after vehicle-controller startup or required-source qualification loss; a BMS wake/short interruption alone does not by itself clear a justified unexpired RidingControl state.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> AwaitingQualifiedInputs: new vehicle/BMS context
-    AwaitingQualifiedInputs --> EvaluateLimits: qualified BatteryMeasurements and compiled pack configuration
-    EvaluateLimits --> NormalOperation: no approved cutoff entry
-    EvaluateLimits --> Reached10Restriction: qualified entry to approved 10% cutoff
-    NormalOperation --> AwaitingQualifiedInputs: required input unavailable, stale, invalid or foreign context
-    NormalOperation --> Reached10Restriction: qualified cutoff entry
-    Reached10Restriction --> Reached10Restriction: actual SOC not qualified above 20%
-    Reached10Restriction --> NormalOperation: qualified actual SOC exceeds 20%
-    Reached10Restriction --> RestoreCandidate: vehicle reset or relevant battery handling
-    RestoreCandidate --> Reached10Restriction: retained candidate qualified
-    RestoreCandidate --> AwaitingQualifiedInputs: candidate unqualified or absent
-    note right of Reached10Restriction
-      Restricts positive propulsion only.
-      It does not remove auxiliary discharge,
-      become a fault history, or clear session inhibition.
-    end note
+    [*] --> AwaitingQualifiedSOC: startup or reset
+    AwaitingQualifiedSOC --> PositiveIneligible: qualified actual SOC at or below 10%
+    AwaitingQualifiedSOC --> PositiveEligible: qualified actual SOC above 10%
+    PositiveIneligible --> PositiveEligible: current qualified actual SOC above 10%
+    PositiveEligible --> PositiveIneligible: current qualified actual SOC at or below 10%
+    PositiveEligible --> AwaitingQualifiedSOC: SOC unavailable or context reset
+    PositiveIneligible --> AwaitingQualifiedSOC: SOC unavailable or context reset
 ```
 
-`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` only; rejected frames do not refresh their field update references. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge current limits distinct, publishes zero permitted current for an unavailable or forbidden branch, and reports normal restrictions separately from recognized battery faults. Newly available limits cannot authorize torque or clear `SC-RIDING-CONTROL.V` inhibition.
+At or below 10% qualified SOC, positive propulsion is zero; above 10% it is eligible under existing authority, qualification, brake-release and level-ramp guards. Entry does not wait for standstill or a settings guard. SOC eligibility does not command automatic braking; otherwise-permitted regeneration and auxiliary discharge remain independent.
+
+`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` updates and expiry-driven qualification transitions; rejected frames reset no private per-field timer. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge effective current limits distinct. Each current branch has independent qualification; an unqualified branch has effective current zero, and qualified zero is a valid capability. Battery-normal restrictions remain separate from recognized battery faults. Returning limits alone cannot clear a RidingControl fault latch, grant Ready, bypass regeneration recovery guards or re-arm post-stop regeneration.
 
 ## Traceability and limits
 
-The vehicle views elaborate `SW-I-001` through `SW-I-006` and `SW-I-009`. They retain the ownership and constraints of [ARCH-003](../ARCH-003_Software_Architecture.md), its [retention rules](../ARCH-003_Software_Architecture.md#retained-restriction-and-reset-state) and [typed interactions](../ARCH-003_Software_Architecture.md#typed-software-interactions); [Vehicle startup, Ready and command acceptance](#vehicle-startup-ready-and-command-acceptance) is the canonical dynamic startup view.
+The vehicle views elaborate `SW-I-001` through `SW-I-006` and `SW-I-009`. They retain the ownership and constraints of [ARCH-003](../ARCH-003_Software_Architecture.md), [typed interactions](../ARCH-003_Software_Architecture.md#typed-software-interactions); [Vehicle startup, Ready and command acceptance](#vehicle-startup-ready-and-command-acceptance) is the canonical dynamic startup view.
 
 The source remains underdefined on event-detection mechanism, timing and concurrent-sampling realization, physical activity/path evidence, self-test scope, retained-state integrity, and diagnostic coverage. The coherent-snapshot precedence is defined; these views do not resolve the remaining qualification gates.

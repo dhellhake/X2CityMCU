@@ -21,9 +21,10 @@
   The [release record](Safety/HARA-001_Hazard_Analysis.md#release-record) retains the analysis assumptions
   and open safety-concept/validation gates; no formal ASIL claim is made.
 - [Requirements workstream](Requirements/README.md) indexes the historical releases, current PD/item drafts,
-  released REQ-001-R1.6 clusters, completion gates and [logical architecture](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md).
+  the 305-record Draft REQ-001 successor (five inactive records retained), completion gates and [logical architecture](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md).
 - [Selected battery and BMS](Battery/BAT-001_Selected_Pack_and_BMS.md) records the built
-  14S5P Samsung 35E pack, JBD SP14S004P14S50A UART and derived integration limits.
+  14S5P Samsung 35E pack, installed JBD SP14S004 hardware V1.0 / firmware 3.2,
+  UART and derived integration limits.
 - [WeAct STM32H723VGT6 board documentation](STM32H723VGT6/README.md) contains the
   WeAct board profile, physical connector reference, OpenOCD
   configuration and debugger SVD.

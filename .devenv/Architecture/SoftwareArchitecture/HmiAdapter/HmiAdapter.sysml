@@ -48,7 +48,9 @@ package X2CitySoftwareComponent_HmiAdapter {
     part def HmiAdapter {
         /* SC-HMI.V realizes LE-HMI information processing. It decodes qualified VD18MT frames,
            publishes settings/light requests, and encodes the selected Session fault, battery and
-           motion records. Software owns framing/protocol/timestamps; the electrical leaf owns
+           motion records. Its private BatteryProtection-publication watchdog withdraws stale
+           battery presentation inputs; battery source age remains in producer qualification and
+           is not reconstructed from receipt time. Software owns framing/protocol/timestamps; the electrical leaf owns
            the fixed five-pin electrical roles and conditioned on/wake path, while a concrete
            driver/peripheral binding remains a realization decision. */
         port executionTimeIn:ExecutionTimeInputPort;

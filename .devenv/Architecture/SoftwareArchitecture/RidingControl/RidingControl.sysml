@@ -84,7 +84,8 @@ package X2CitySoftwareContract_RidingControl {
     }
     attribute def DemandTimingBoundsCalibration {
         attribute acceleratorMaximumAgeMicroseconds:Integer; attribute brakeMaximumAgeMicroseconds:Integer;
-        attribute activeSettingsMaximumAgeMicroseconds:Integer; attribute batteryOperatingLimitsMaximumAgeMicroseconds:Integer;
+        attribute activeSettingsMaximumAgeMicroseconds:Integer; attribute batteryOperatingLimitsPublicationTimeoutMicroseconds:Integer;
+        attribute stateOfChargePublicationTimeoutMicroseconds:Integer;
         attribute motionMaximumAgeMicroseconds:Integer; attribute actualOutputMaximumAgeMicroseconds:Integer;
         attribute authorityMaximumAgeMicroseconds:Integer; attribute inputCoherenceWindowMicroseconds:Integer;
         attribute decisionPeriodMicroseconds:Integer; attribute commandValidityMicroseconds:Integer;
@@ -117,7 +118,7 @@ package X2CitySoftwareContract_RidingControl {
         in item brakeLeverState:SoftwareBrakeLeverState :>> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort::brakeLeverState;
     }
     port def RidingBatteryOperatingLimitsInputPort :> X2CityContract_BatteryControl::BatteryOperatingLimitsInputPort {
-        doc /* Receives battery policy's independent discharge/charge limits and SOC caps with its assessment reference; wheel-torque sign does not select electrical current direction. */
+        doc /* Receives battery policy's independently qualified MOS-disabled state plus discharge/charge current limits and reasons on the existing stream. U-SESSION-REPORT checks its own delivery-current watchdog for MOS state; MOS-state qualification is independent of discharge- and charge-branch qualification. Wheel-torque sign does not select electrical current direction and zero current limit does not imply MOS state. */
         in item operatingLimits:BatteryOperatingLimitsAssessment :>> X2CityContract_BatteryControl::BatteryOperatingLimitsInputPort::operatingLimits;
     }
     port def ActualTractionOutputInputPort :> X2CityContract_MotorControl::ActualTractionInputPort { doc /* Supplies qualified actual applied-output evidence independently of the requested torque command for regeneration rearm. */ in item payload:X2CitySharedSoftwareTypes::ActualTractionOutput :>> X2CityContract_MotorControl::ActualTractionInputPort::payload; }
@@ -142,7 +143,7 @@ package X2CitySoftwareComponent_RidingControl {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityComponent_RidingControl::*;
     part def RidingControl :> X2CityComponent_RidingControl::RidingControl { // SC-RIDING-CONTROL, realizing LE-RIDING
-        doc /* One runtime component owns setting receipt/pending/activation, Ready and current-session fault/restart state, report selection, authority, demand arbitration, battery restriction episodes and post-stop regeneration rearm. A qualified explicit physical Off closes the session immediately regardless of motion; unknown or unavailable is not Off, and a later On starts fresh qualification. It publishes a current sleep grant only while Off and qualified traction sleep permission remain true. Internal units retain separate state and behavior. Qualification, physical torque output/protection, sensor acquisition, battery capability and HMI interpretation remain with their existing owners. */
+        doc /* One runtime component owns setting receipt/pending/activation, Ready and current-session fault/restart state, report selection, authority, actual-SOC 10% positive-propulsion eligibility boundary, demand-side battery-current restriction episodes and post-stop regeneration rearm. A qualified explicit physical Off closes the session immediately regardless of motion; unknown or unavailable is not Off, and a later On starts fresh qualification. It publishes a current sleep grant only while Off and qualified traction sleep permission remain true. Internal units retain separate state and behavior. Qualification, physical torque output/protection, sensor acquisition, battery capability and HMI interpretation remain with their existing owners. */
         port executionTimeIn:X2CitySharedSoftwareTypes::ExecutionTimeInputPort { doc /* Receives the enclosing caller's single host-boot monotonic reference for this invocation; internal units share this fixed snapshot. */ }
         port vehicleOperationRequestIn:RidingVehicleOperationRequestInputPort :>> X2CityComponent_RidingControl::RidingControl::vehicleOperationRequestIn;
         port runtimeInitializationIn:RidingRuntimeInitializationInputPort :>> X2CityComponent_RidingControl::RidingControl::runtimeInitializationIn;
@@ -153,7 +154,7 @@ package X2CitySoftwareComponent_RidingControl {
         port qualifiedTemperatureIn:RidingQualifiedTemperatureInputPort :>> X2CityComponent_RidingControl::RidingControl::qualifiedTemperatureIn;
         port tractionConditionEvidenceIn:RidingTractionConditionEvidenceInputPort :>> X2CityComponent_RidingControl::RidingControl::tractionConditionEvidenceIn;
         port hmiRiderSettingsRequestIn:HmiRiderSettingsRequestInputPort :>> X2CityComponent_RidingControl::RidingControl::hmiRiderSettingsRequestIn;
-        port batteryReadinessAndFaultIn:X2CityContract_BatteryControl::BatteryReadinessAndFaultInputPort :>> X2CityComponent_RidingControl::RidingControl::batteryReadinessAndFaultIn;
+        port batteryFaultStatusIn:X2CityContract_BatteryControl::BatteryFaultStatusInputPort :>> X2CityComponent_RidingControl::RidingControl::batteryFaultStatusIn;
         port stateOfChargeIn:X2CityContract_BatteryControl::BatteryStateOfChargeInputPort :>> X2CityComponent_RidingControl::RidingControl::stateOfChargeIn;
         port actualTractionOutputIn:ActualTractionOutputInputPort :>> X2CityComponent_RidingControl::RidingControl::actualTractionOutputIn;
         port batteryOperatingLimitsIn:RidingBatteryOperatingLimitsInputPort :>> X2CityComponent_RidingControl::RidingControl::batteryOperatingLimitsIn;

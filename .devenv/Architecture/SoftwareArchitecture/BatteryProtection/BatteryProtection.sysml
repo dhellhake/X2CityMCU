@@ -1,15 +1,12 @@
 package X2CitySoftwareContract_BatteryProtection {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityContract_BatteryControl::*;
-    item def BatteryOperatingLimitsAssessment :> BatteryOperatingLimits {
-        // Host-local decision time for Demand's independent freshness check. It is neither an
-        // opaque BMS measurement time nor a general clock-service message.
-        attribute operatingLimitsAssessmentTimeMicroseconds:Integer;
-    }
+    item def BatteryOperatingLimitsAssessment :> BatteryOperatingLimits;
     port def BatteryOperatingLimitsAssessmentOutputPort :> BatteryOperatingLimitsOutputPort {
-        doc /* Publishes the assessed operating limits with their host-local assessment reference.
-           For either unqualified, forbidden, or unavailable electrical branch, its published
-           effective current limit is zero; a Real limit never authorizes an unknown branch. */
+        doc /* Publishes independently qualified effective operating capabilities with their
+           field qualification, including the independently qualified composite MOS-disabled
+           status. An unqualified or unavailable electrical branch has effective current limit
+           zero; a qualified zero is a valid known capability. */
         out item operatingLimits:BatteryOperatingLimitsAssessment :>> BatteryOperatingLimitsOutputPort::operatingLimits;
     }
 }
@@ -17,15 +14,25 @@ package X2CitySoftwareContract_BatteryProtection {
 package X2CitySoftwareComponent_BatteryProtection {
     private import X2CitySoftwareContract_BatteryProtection::*;
     private import X2CitySoftwareContract_Platform::*;
+    private import X2CityComponent_BatterySupervision::*;
     part def BatteryProtection {
-        /* Vehicle-resident battery supervision. It assesses qualified pack measurements against
-           fixed compiled pack configuration and qualified BMS source-configuration evidence,
-           derives battery-side current limits and SOC
-           restrictions, and never implements supplied-BMS firmware or protective switching. */
+        /* Vehicle-resident battery supervision assesses qualified observations/source evidence
+           against compiled pack constraints. It consumes published field qualifications and
+           does not inspect raw BMS fields. U-BAT-POLICY-EVALUATE owns one private per-cycle
+           startup nominal-capacity reference shared by regenerative-charge and discharge
+           base currents. It captures the same
+           qualified finite positive capacity at normal or unexpected controller startup and
+           retains it through the complete controller cycle; later field or context changes
+           do not reset or reacquire the reference. It derives
+           battery-side electrical current limits and SOC/temperature restrictions, with
+           branch qualification carried through
+           BatteryOperatingLimitsAssessment, including independently qualified composite MOS
+           disabled status. BatteryFaultStatus independently carries recognized
+           fault evidence and ordering even if limits are unqualified. It never implements supplied-
+           BMS firmware or protective switching. */
         port executionTimeIn:ExecutionTimeInputPort;
         port batteryMeasurementsIn:BatteryMeasurementsInputPort;
-        port lowSocRetentionCandidateIn:~RetentionCandidateOutputPort;
-        port batteryReadinessAndFaultOut:BatteryReadinessAndFaultOutputPort;
+        port batteryFaultStatusOut:BatteryFaultStatusOutputPort;
         port batteryOperatingLimitsOut:BatteryOperatingLimitsAssessmentOutputPort;
         port stateOfChargeOut:BatteryStateOfChargeOutputPort;
         port batteryCurrentOut:BatteryCurrentOutputPort;
@@ -33,5 +40,6 @@ package X2CitySoftwareComponent_BatteryProtection {
         port platformHealthIn:~PlatformHealthOutputPort;
         attribute compiledBatteryConfigurationId:String;
         attribute compiledBatteryConfigurationValid:Boolean;
+        attribute compiledVoltageDeratingCalibration:X2CityComponent_BatterySupervision::BatteryVoltageDeratingCalibration;
     }
 }

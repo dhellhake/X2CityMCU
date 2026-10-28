@@ -9,6 +9,7 @@ package X2CityDetailedUnit_SessionEligibility {
     private import X2CitySoftwareContract_Platform::*;
     private import X2CityContract_Compute::*;
     private import X2CityContract_BatteryControl::*;
+    private import X2CitySoftwareContract_BatteryProtection::BatteryOperatingLimitsAssessment;
     private import X2CitySoftwareContract_BrakeInterface::SoftwareBrakeLeverState;
     // Owner: SC-RIDING-CONTROL; DD-001; UR-SESSION-001; SW-I-004.
     item def SessionEligibilityRecord :> X2CitySoftwareContract_RidingControl::RidingAuthority;
@@ -30,11 +31,12 @@ package X2CityDetailedUnit_SessionEligibility {
         in item payload:QualifiedMotion;
     }
     port def RidingSleepRequestOutputPort :> X2CityContract_Compute::ComputeSleepRequestOutputPort { doc /* Publishes the current qualified Off/sleep eligibility grant or revocation with its qualification; Platform checks it at actual sleep entry. */ }
-    port def BatteryReadinessAndFaultInputPort { doc /* Receives the typed startup assessment and separate recognized battery/thermal fault evidence for Ready and existing earliest-fault selection. */ in item payload:BatteryReadinessAndFault; }
+    port def BatteryFaultStatusInputPort { doc /* Receives all recognized battery/thermal fault evidence and ordering for the existing Ready guard and earliest-fault selection, independent of operating-limits qualification. Startup, configuration, pack-group and applicable protection/path checks are represented by qualification of the assessed operating limits. */ in item payload:BatteryFaultStatus; }
+    port def EligibilityBatteryOperatingLimitsInputPort { doc /* Receives BatteryProtection's current assessed operating limits for the existing Ready guard; the same record is also broadcast to Demand. SessionEligibility owns a last-delivery timer and its own maximum-silence bound, evaluated with caller-supplied ExecutionTime independently of Demand and BmsLink. */ in item payload:BatteryOperatingLimitsAssessment; }
     port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for Session's existing low-charge selection; it is not the supplied BMS SOC candidate. */ in item payload:BatteryStateOfCharge; }
     port def BrakeLeverStateInputPort :> X2CitySoftwareContract_RidingControl::BrakeLeverStateInputPort { doc /* Receives the exact `BrakeLeverState` composite once, including its software Qualification refinement for source/reason/event-time/context checks. */ in item brakeLeverState:SoftwareBrakeLeverState :>> X2CitySoftwareContract_RidingControl::BrakeLeverStateInputPort::brakeLeverState; }
     part def SessionEligibilityEvaluator {
-        /* Evaluates current Ready prerequisites and riding-session inhibition to publish authority only when all required facts are current and qualified. Direct sensor-health conditions retain producer source/reason for the existing first-recognized-fault policy, while the independent PlatformHealthRecord retains platform fault/readiness input; this unit owns neither physical proof nor sensor aggregation. */
+        /* Evaluates current Ready prerequisites and riding-session inhibition. It checks required discharge-branch qualification for startup, configuration, all 14 groups and applicable protection/path checks. Ready does not require positive current capability, regenerative-charge qualification, or HMI-only battery-current data; a qualified zero discharge limit remains valid capability data. Direct sensor-health conditions retain producer source/reason for the existing first-recognized-fault policy, while the independent PlatformHealthRecord retains platform fault/readiness input; this unit owns neither physical proof nor sensor aggregation. */
         port executionTimeIn:ExecutionTimeInputPort;
         port vehicleOperationRequestIn:RidingVehicleOperationRequestInputPort;
         port runtimeInitializationIn:RidingRuntimeInitializationInputPort;
@@ -49,7 +51,8 @@ package X2CityDetailedUnit_SessionEligibility {
         port motorPositionIn:MotorPositionInputPort;
         // A typed current physical-motion result gates Ready; absence is not standstill.
         port motionIn:QualifiedMotionInputPort;
-        port batteryReadinessAndFaultIn:BatteryReadinessAndFaultInputPort;
+        port batteryFaultStatusIn:BatteryFaultStatusInputPort;
+        port batteryOperatingLimitsIn:EligibilityBatteryOperatingLimitsInputPort;
         port stateOfChargeIn:BatteryStateOfChargeInputPort;
         port authorityOut:SessionEligibilityOutputPort;
         port eligibilityObservationOut:SessionEligibilityObservationOutputPort;

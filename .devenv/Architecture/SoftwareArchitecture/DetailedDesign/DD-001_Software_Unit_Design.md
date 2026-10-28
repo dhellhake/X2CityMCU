@@ -31,7 +31,7 @@ The DRV8300DRGE-EVM and WeAct STM32H723VGT6 are selected vehicle traction-board 
 | `U-TRACTION-MOTION` | [SC-TRACTION-CTRL](../TractionControl/DetailedDesign/TractionControl_Detailed_Design.md) | qualified vehicle speed/direction/standstill for Demand, Settings and Session, SW-I-005 | REQ-SYS-TRQMOTION-001 / UR-TRACTION-MOTION-001 |
 | `U-TRACTION-CONTROL` | [SC-TRACTION-CTRL](../TractionControl/DetailedDesign/TractionControl_Detailed_Design.md) | Hall-sensored FOC current regulation, `PWMAndADCSamplingPlan` production and output/energy observation, internal traction realization | UR-TRACTION-CONTROL-001 |
 | `U-TRACTION-OUTPUT` | [SC-TRACTION-CTRL](../TractionControl/DetailedDesign/TractionControl_Detailed_Design.md) | literal CCR1..4/ADC-context stage-commit, deadline-bound PWM latch and inhibit observation | UR-TRACTION-OUTPUT-001 |
-| `U-PLATFORM-CONTEXT`, `U-PLATFORM-BINDING`, `U-PLATFORM-RETENTION`, `U-PLATFORM-HEALTH` | [SC-PLATFORM](../Platform/DetailedDesign/Platform_Detailed_Design.md) | context, project startup/vector/DMA binding, retention result and health events, SW-I-009 | REQ-SYS-PLT-001; Draft REQ-SYS-PLT-002 / UR-PLATFORM-BINDING-001 |
+| `U-PLATFORM-CONTEXT`, `U-PLATFORM-BINDING`, `U-PLATFORM-HEALTH` | [SC-PLATFORM](../Platform/DetailedDesign/Platform_Detailed_Design.md) | context, project startup/vector/DMA binding, context and health events, SW-I-009 | REQ-SYS-PLT-001; Draft REQ-SYS-PLT-002 / UR-PLATFORM-BINDING-001 |
 | DD-002 units | [BMS-LINK](../BmsLink/DetailedDesign/BmsLink_Detailed_Design.md), [BAT-POLICY](../BatteryProtection/DetailedDesign/BatteryProtection_Detailed_Design.md) | vehicle energy and regenerative acceptance | DD-002 owner |
 
 ## Input, traction and platform derivation gates

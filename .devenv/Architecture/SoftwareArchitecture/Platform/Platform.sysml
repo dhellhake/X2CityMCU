@@ -9,11 +9,6 @@ package X2CitySoftwareContract_Platform {
     }
     port def RuntimeInitializationOutputPort :> X2CityContract_Compute::ComputeRuntimeInitializationOutputPort;
     port def SleepRequestInputPort :> X2CityContract_Compute::ComputeSleepRequestInputPort;
-    item def RetentionCandidate:>ContextualSoftwareInformation;
-    port def RetentionCandidateOutputPort {
-        doc /* Publishes retained-state information to policy components. BatteryProtection uses the retained candidate with its validity context for reached-10% recovery handling. */
-        out item payload:RetentionCandidate;
-    }
     item def PlatformHealth:>ContextualSoftwareInformation {
         attribute fastSafetyState:String; // enum: inactive, armed, inhibited, latched.
     }
@@ -48,7 +43,7 @@ package X2CitySoftwareComponent_Platform {
     private import X2CitySoftwareContract_MotorPositionEstimator::MotorPositionInputPort;
     private import X2CitySoftwareContract_Platform::*;
     part def Platform {
-        /* Establishes local execution/reset context, retained-state access, and platform-health
+        /* Establishes local execution/reset context and platform-health
            information for its host instance. U-PLATFORM-BINDING owns static peripheral/IRQ/rank/
            trigger configuration. Each SoftwareComponent owns immutable compiled calibration
            parameters and validates them during build/startup; Platform has no calibration
@@ -59,7 +54,6 @@ package X2CitySoftwareComponent_Platform {
         port platformContextOut:PlatformContextOutputPort;
         port runtimeInitializationOut:RuntimeInitializationOutputPort;
         port sleepRequestIn:SleepRequestInputPort;
-        port retentionCandidateOut:RetentionCandidateOutputPort;
         port platformHealthOut:PlatformHealthOutputPort;
         port sensorHealthIn:SensorHealthInputPort;
         port acceleratorQualificationIn:AcceleratorQualificationInputPort;

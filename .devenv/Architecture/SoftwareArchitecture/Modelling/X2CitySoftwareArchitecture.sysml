@@ -1,5 +1,6 @@
 package X2CitySoftwareArchitecture {
     public import X2CitySharedSoftwareTypes::*;
+    private import X2CitySystemArchitecture::*;
     public import X2CityContract_BatteryControl::*;
     public import X2CitySoftwareComponent_RidingControl::*;
     public import X2CitySoftwareContract_RidingControl::*;
@@ -8,6 +9,7 @@ package X2CitySoftwareArchitecture {
     public import X2CitySoftwareComponent_BmsLink::*;
     public import X2CitySoftwareContract_BmsLink::*;
     public import X2CitySoftwareComponent_BatteryProtection::*;
+    public import X2CityComponent_BatterySupervision::*;
     public import X2CitySoftwareContract_BatteryProtection::*;
     public import X2CitySoftwareComponent_LightPolicy::*;
     public import X2CitySoftwareContract_LightPolicy::*;
@@ -60,6 +62,8 @@ package X2CitySoftwareArchitecture {
     part hmiVehicle:HmiAdapter;
     part bmsLinkVehicle:BmsLink;
     part batteryProtectionVehicle:BatteryProtection;
+    // The software owner compiles the single native product calibration without re-export assumptions.
+    bind batteryProtectionVehicle.compiledVoltageDeratingCalibration = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision.voltageDeratingCalibration;
     part lightPolicyVehicle:LightPolicy;
     part analogAcquisitionVehicle:AnalogAcquisition;
     part acceleratorInterfaceVehicle:AcceleratorInterface;
@@ -113,7 +117,7 @@ package X2CitySoftwareArchitecture {
     flow motorPositionToControl from motorPositionEstimatorVehicle.motorPositionOut.payload to ridingControlVehicle.motorPositionIn.payload;
     flow temperatureToControl from tractionControlVehicle.qualifiedTemperatureOut.payload to ridingControlVehicle.qualifiedTemperatureIn.payload;
     flow tractionConditionToControl from tractionControlVehicle.tractionObservationOut.payload to ridingControlVehicle.tractionConditionEvidenceIn.payload;
-    flow batteryReadinessToControl from batteryProtectionVehicle.batteryReadinessAndFaultOut.readinessAndFault to ridingControlVehicle.batteryReadinessAndFaultIn.readinessAndFault;
+    flow batteryFaultStatusToControl from batteryProtectionVehicle.batteryFaultStatusOut.faultStatus to ridingControlVehicle.batteryFaultStatusIn.faultStatus;
     flow batterySocToControl from batteryProtectionVehicle.stateOfChargeOut.stateOfCharge to ridingControlVehicle.stateOfChargeIn.stateOfCharge;
     flow batteryLimitsToControl from batteryProtectionVehicle.batteryOperatingLimitsOut.operatingLimits to ridingControlVehicle.batteryOperatingLimitsIn.operatingLimits;
     flow actualTractionToControl from tractionControlVehicle.appliedTractionStateOut.payload to ridingControlVehicle.actualTractionOutputIn.payload;
@@ -126,7 +130,6 @@ package X2CitySoftwareArchitecture {
     // SW-I-003/004/005/006: vehicle policy, dedicated demand inputs, signed command and observations.
     interface rV16BatteryMeasurements : IfA009BatteryMeasurements
         connect bmsLinkVehicle.batteryMeasurementsOut to batteryProtectionVehicle.batteryMeasurementsIn;
-    flow rV19LowSocRetention from platformVehicle.retentionCandidateOut.payload to batteryProtectionVehicle.lowSocRetentionCandidateIn.payload;
     // LightModeSelection receives the three concrete System-contract facts. BrakeInterface
     // owns mechanical-lever qualification; Traction owns actual electrical-braking state.
     flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to lightPolicyVehicle.brakeLeverStateIn.brakeLeverState;

@@ -38,11 +38,15 @@ package X2CityDetailedComponent_RidingControlDetailedDesign {
         flow vRidingTractionConditionToEligibility from tractionConditionEvidenceIn.payload to sessionEligibility.tractionConditionEvidenceIn.payload;
         flow vRidingOperationToEligibility from vehicleOperationRequestIn.request to sessionEligibility.vehicleOperationRequestIn.request;
         flow vRidingInitializationToEligibility from runtimeInitializationIn.initialization to sessionEligibility.runtimeInitializationIn.initialization;
-        flow vRidingBatteryReadinessToEligibility from batteryReadinessAndFaultIn.readinessAndFault to sessionEligibility.batteryReadinessAndFaultIn.payload;
+        flow vRidingBatteryFaultStatusToEligibility from batteryFaultStatusIn.faultStatus to sessionEligibility.batteryFaultStatusIn.payload;
+        flow vRidingBatteryLimitsToEligibility from batteryOperatingLimitsIn.operatingLimits to sessionEligibility.batteryOperatingLimitsIn.payload;
         flow vRidingSocToEligibility from stateOfChargeIn.stateOfCharge to sessionEligibility.stateOfChargeIn.payload;
+        flow vRidingSocToDemand from stateOfChargeIn.stateOfCharge to demandArbiter.stateOfChargeIn.payload;
         flow vRidingActiveSettingsToDemand from setState.activeSettingsOut.payload to demandArbiter.activeSettingsIn.payload;
         flow vRidingSettingsStateToEligibility from setState.stateOut.payload to sessionEligibility.settingsStateIn.payload;
         flow vRidingEligibilityToReport from sessionEligibility.eligibilityObservationOut.payload to sessionReport.eligibilityIn.payload;
+        flow vRidingBatteryLimitsToReport from batteryOperatingLimitsIn.operatingLimits to sessionReport.batteryOperatingLimitsIn.payload;
+        flow vRidingSocToReport from stateOfChargeIn.stateOfCharge to sessionReport.stateOfChargeIn.payload;
         flow vRidingAuthorityToDemand from sessionEligibility.authorityOut.payload to demandArbiter.authorityIn.payload;
         flow vRidingBatteryLimitsToDemand from batteryOperatingLimitsIn.operatingLimits to demandArbiter.batteryOperatingLimitsIn.payload;
         flow vRidingActualOutputToDemand from actualTractionOutputIn.payload to demandArbiter.actualOutputIn.payload;

@@ -23,9 +23,13 @@ Refit: connect the scooter power connector → place the battery in the base tra
 <a id="dec-bat-002"></a>
 ### DEC-BAT-002 — Built pack, selected BMS and riding temperature
 
-Owner, 2026-09-10: the already fabricated, working battery fits the bay and comprises **14S5P / 70 Samsung INR18650-35E cells** (exact model explicitly confirmed). Use the selected **JBD SP14S004P14S50A BMS through UART**. These are fixed inputs; no repeated cell/topology/BMS selection or initial-fit study is required. The owner subsequently confirms the BMS is connected but not fully configured, and expects its configuration to be derived by this engineering. Board/firmware identity, effective settings and physical integration acceptance remain to be recorded/qualified; reported operation does not establish mass, range, environmental or protection qualification.
+Owner, 2026-09-10: the already fabricated, working battery fits the bay and comprises **14S5P / 70 Samsung INR18650-35E cells** (exact model explicitly confirmed). Use the selected **JBD SP14S004P14S50A BMS through UART**; this designation records selection/provenance for the 14S50A variant. The owner subsequently confirms the installed BMS is JBD SP14S004 hardware V1.0 with firmware 3.2, connected but not fully configured, and expects its configuration to be derived by this engineering. Effective settings and physical integration acceptance remain to be qualified through commissioning/integration; firmware 3.2 is the installed version, not a protocol revision. Dedicated runtime startup checks are specified separately in BatterySupervision; they do not replace ordinary UART/schema qualification. Draft `REQ-SYS-BATSUP-007..011` and `012..015` use a shared BMS-reported nominal pack-capacity reference captured once at normal/unexpected controller startup and held for that entire controller cycle to assess regenerative and discharge capability. Later live capacity updates and ordinary source expiry/reinitialization do not change the cycle reference. The selected source is the V12 Basic (`0x03`) base nominal-capacity field; the separate optional full-charge-capacity extension is not selected. Installed-unit field encoding, scale and semantics remain qualification evidence. This nominal configuration/source reference is not proof of measured or aged pack capacity. [REQ-SYS-BATSUP-012..015](../Architecture/SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml#req-sys-batsup-012) define the accepted discharge-current ceiling and qualification rules. Independent SOC, protection and fault rules remain applicable. Reported operation does not establish mass, range, environmental or protection qualification.
 
-After review of the 35E cell limits, the owner changed the minimum **riding ambient from −15°C to −10°C**. Riding maximum remains +40°C; outdoor storage separately retains −15…+40°C. Cell discharge/charge limits and margins still govern actual operation; regeneration is charging. No heating/cooling design is selected.
+Owner, 2026-10-27: the existing voltage taper endpoints are parameterized through the canonical [BatterySupervision.voltageDeratingCalibration](../Architecture/SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml#req-sys-batsup-016), retaining their current assigned values. Product validation shall establish accepted values within the pack/cell envelope, with each pair independently qualified under REQ-SYS-BATSUP-016. These component-owned compiled parameters are immutable at runtime; changes require rebuild, deployment and restart.
+
+Owner, 2026-10-27: capability tapers use qualified BMS readings directly, without numerical uncertainty compensation. For voltage, use the maximum and minimum of all fourteen qualified group readings as the high and low inputs; for temperature, use the qualified reported cell-temperature reading directly. Product validation shall check measurement adequacy and cutoff behavior. Probe mapping, accuracy, coverage, response timing and protection qualification remain open.
+
+After review of the 35E cell limits, the owner changed the minimum **riding ambient from −15°C to −10°C**. Riding maximum remains +40°C; outdoor storage separately retains −15…+40°C. The owner confirms the battery shall be sufficiently warm for propulsion: per [REQ-SYS-BATSUP-012–015](../Architecture/SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml#req-sys-batsup-012), cells at or below −5°C have zero discharge ceiling. Cold-soaked controller/electronics startup remains in the ambient qualification; propulsion is permitted only when qualified cell temperature and the other discharge conditions yield nonzero capability. No heating/cooling design is selected. Regeneration remains subject to the separate charging envelope.
 
 [BAT-001](../Battery/BAT-001_Selected_Pack_and_BMS.md) records manufacturer evidence and derived voltage, capacity, current, mass, storage and electrical-interface consequences. Its JBD documents are family/protocol references, not verified actual-unit settings. Preserve the applicable SOC, range, speed, regenerative charge-acceptance and fault policies. Electrical integration and acceptance remain open; supplied battery fit and handling procedures are platform context. This 2026-10-06 Draft narrows project scope; prior requirement approvals do not approve the changed scope.
 
@@ -99,14 +103,14 @@ Either lever inhibits positive accelerator propulsion. Levers operate the suppli
 <a id="dec-brk-002"></a>
 ### DEC-BRK-002 — Positive-torque resumption profile
 
-When both valid levers are released, act on current valid positive accelerator demand without a pedal reset, subject to other permissives. Levels 1–4 use their active resumption ramp, Level 0 uses Level 1's ramp while retaining its own static mapping/no regeneration, and Level 5 has no deliberately added ramp. The same response governs positive return below a VD speed cutoff, above 20% SOC and below a low-SOC speed cap (DEC-SPD-001 / DEC-SOC-001).
+When both valid levers are released, act on current valid positive accelerator demand without a pedal reset, subject to other permissives. Levels 1–4 use their active resumption ramp, Level 0 uses Level 1’s ramp while retaining its own static mapping/no regeneration, and Level 5 has no deliberately added ramp. The same response governs positive return below a VD speed cutoff and above 10% SOC (DEC-SPD-001 / DEC-SOC-001).
 
 <a id="dec-reg-001"></a>
 ### DEC-REG-001 — Regeneration permissives and SOC ceiling
 
 Regeneration is supplemental accelerator-requested braking, permitted only when all operating/safety conditions allow it, up to **90% actual SOC** with conservative margins still to be derived. SOC below the ceiling alone does not guarantee charge acceptance or braking.
 
-Recovered energy above 80% up to 90% is available for normal propulsion, not reserved. PD RQ-001 still requires at least 70 km for a new battery on level ground at +20 °C and 130 kg within **20–80% actual SOC**; energy outside this window is excluded and preliminary sizing takes no regeneration credit. The 90% headroom does not enlarge qualification.
+Recovered energy above 80% up to 90% is available for normal propulsion, not reserved. PD RQ-001 still requires at least 70 km for a new battery on level ground at +20 °C and 130 kg within **10–80% actual SOC**; energy outside this window is excluded and preliminary sizing takes no regeneration credit. The 90% headroom does not enlarge qualification. The owner updated the lower qualification boundary to 10% on 2026-10-27.
 
 DEC-SOC-001 replaces the former protected 20% floor; DEC-SPD-001 imposes both-sign speed cutoffs. Sources: owner inclusion/90% decision and 2026-09-06 recovered-energy confirmation; PD OBJ-014 / CON-048 / RQ-001 / OI-048 / OI-061; release status WS-OI-004.
 
@@ -146,22 +150,18 @@ Regeneration can act again only after **actual forward motion with positive moto
 <a id="dec-soc-001"></a>
 ### DEC-SOC-001 — Low-charge propulsion and recovery
 
-Source: owner thresholds/recovery clarifications, 2026-09-08–09; PD OBJ-014 / CON-048–050 / OI-061 / OI-063.
+Source: owner thresholds/recovery clarifications, 2026-09-08–09; updated 2026-10-27 for the 10% cutoff and recovery policy. PD OBJ-014 / CON-048–050 / OI-061 / OI-063.
 
 | Actual SOC / event | Behavior |
 |---|---|
-| Falling to 20% | Drastically reduce maximum positive torque and propulsion speed; values determined during system validation. No pre-20% taper is specified. |
-| Above 10% through 20%, before a reached cutoff | Restricted propulsion may continue. |
-| At/below 10% | Stop positive propulsion. Retain this stop through recovery up to and including 20%. |
-| Strictly above 20% | Automatically restore normal propulsion capability using DEC-BRK-002 ramps and current valid demand, subject to all other permissives. |
-| At/above the low-SOC speed cap | Zero positive torque; otherwise permitted requested regeneration remains available. |
-| Speed falls below that cap before a reached 10% cutoff | Automatically resume current valid positive demand with DEC-BRK-002 ramps within the reduced envelope. No pedal reset; e.g. 15% SOC before cutoff. |
+| At/below 10% | Stop positive propulsion. |
+| Strictly above 10% | Automatically restore normal propulsion capability using DEC-BRK-002 ramps and current valid demand, subject to all other permissives. |
 
-**Derived setting interaction:** these automatic operating limits are not rider setting changes; entry does not wait for standstill/rest. Abrupt positive reduction at 20% and withdrawal at 10% are permitted in every level. Low charge never itself disables otherwise permitted regeneration; VD speed cutoffs and all regenerative conditions still apply. All levels retain equal maximum permitted positive endpoints under the same reduced envelope.
+**Derived setting interaction:** Withdrawal at 10% may be abrupt in every level. Above 10% there is no SOC-based torque or speed derate. Low charge does not itself disable otherwise permitted regeneration; speed cutoffs and regenerative conditions still apply.
 
-At/below 20%, low-charge error-field **0x01** is active; it clears automatically only above 20%. Display/report priority follows DEC-FLT-003. Warning clearance is not delayed by a propulsion-return ramp, and charge recovery clears neither a fault inhibition nor its report. The normal battery indicator remains empty below 20%.
+At/below 10%, low-charge error-field **0x01** is active; it clears automatically only above 10%. Display/report priority follows DEC-FLT-003. Warning clearance is not delayed by a propulsion-return ramp, and charge recovery clears neither a fault inhibition nor its report. The normal battery indicator remains empty below 10%.
 
-The 10% cutoff is positive-propulsion protection, not vehicle shutdown or an all-load battery floor. HMI/lighting continue while battery protection permits (DEC-FLT-009). **Derived continuity:** restart alone is not actual-SOC recovery and cannot bypass the reached cutoff; restart/battery-handling realization remains open. The no-persistent-failure-history rule concerns faults, not this low-SOC condition. RQ-001 and regenerative windows remain DEC-REG-001; auxiliary energy, storage margins and all-load protection remain downstream.
+The 10% cutoff is positive-propulsion protection, not vehicle shutdown or an all-load battery floor. HMI/lighting continue while battery protection permits (DEC-FLT-009). Current qualified SOC is required after restart; no reached-cutoff history is needed. RQ-001 and regenerative windows remain DEC-REG-001; auxiliary energy, storage margins and all-load protection remain downstream.
 
 <a id="dec-hmi-001"></a>
 ### DEC-HMI-001 — No dedicated regeneration-availability indication
@@ -186,9 +186,9 @@ Every recognized fault is reportable when communication and applicable selection
 <a id="dec-hmi-002"></a>
 ### DEC-HMI-002 — Normal usable-charge indication
 
-Display the normal **20–80% actual-SOC window** as empty/0% to full/100%, hiding actual-SOC limits. For actual SOC s in percentage points, displayed usable percentage is **u = min(100, max(0, 100 × (s − 20) / 60))**, to the selected display's supported resolution.
+Display the normal **10–80% actual-SOC window** as empty/0% to full/100%, hiding actual-SOC limits. For actual SOC s in percentage points, displayed usable percentage is **u = min(100, max(0, 100 × (s − 10) / 70))**, to the selected display's supported resolution. The owner updated the lower display boundary to 10% on 2026-10-27.
 
-Examples: actual 15% → 0%, 35% → 25%, 50% → 50%, 65% → 75%, 90% → 100%. Empty marks entry into restricted propulsion, not exhaustion of all permitted energy; energy outside the display window follows DEC-SOC-001 / DEC-REG-001. Clamping is presentation, not SOC estimation or a control/protection input. Discrete sixth-state thresholds, rounding, visible percentage, accuracy and update timing require selected-unit evidence (WS-OI-009). Source: owner, 2026-09-07–08.
+Examples: actual 10% → 0%, 27.5% → 25%, 45% → 50%, 62.5% → 75%, 90% → 100%. Empty marks the positive-propulsion cutoff. Clamping is presentation, not SOC estimation or a control/protection input. Discrete thresholds, rounding, accuracy and timing require selected-unit evidence (WS-OI-009).
 
 <a id="dec-hmi-005"></a>
 ### DEC-HMI-005 — Unknown-SOC display fallback
@@ -268,11 +268,14 @@ Project assignments to VD18MT controller-to-display **byte 5**:
 | Invalid accelerator | 0x0A | First-detected group |
 | Invalid shared brake-actuation information | 0x0D | First-detected group; no handle identity claimed |
 | Unreliable vehicle-speed information | 0x03 | First-detected group |
-| Actual battery fault, including SOC-information loss/failed initialization, except temperature-limit faults | 0x07 | First-detected group |
-| Upper/lower temperature-limit fault, including battery temperature | 0x06 | First-detected group |
+| Actual battery fault, including SOC-information loss/failed initialization and BMS-reported errors (including BMS-reported thermal errors) | 0x07 | First-detected group |
+| Independently recognized applicable upper/lower temperature-limit fault, including battery temperature | 0x06 | First-detected group |
 | Blocked-motor fault | 0x04 | First-detected group |
 | Fault without a specific project assignment | 0x05 | First-detected group |
-| Actual SOC at/below 20% | 0x01 | Low-charge warning; clears only above 20% |
+| Current qualified indication that charge or discharge MOS is disabled | 0x01 | Nonlatched warning; clears when both MOS states are qualified ON; invalid/stale MOS evidence does not hold the warning |
+| Actual SOC at/below 10% | 0x01 | Low-charge warning; clears only above 10% |
+
+The MOS-disabled and low-SOC causes combine independently; if both apply, 0x01 remains until both causes clear. Unknown or stale MOS state is not disabled-state evidence and follows existing required-information fault policy. The VD18MT under/overvoltage wording does not prove physical cell overvoltage or undervoltage.
 
 Within the defined seven-category group, the first detected fault retains the single report until **any normal/unexpected restart**, even after condition recovery; later group faults do not replace/alternate it. The selected group report outranks 0x01 regardless of detection order. Indistinguishable order follows DEC-FLT-008.
 
@@ -290,12 +293,12 @@ Recognized inability to determine vehicle speed reliably invokes common both-sig
 <a id="dec-flt-005"></a>
 ### DEC-FLT-005 — SOC qualification and information loss
 
-Trustworthy actual SOC is required before Ready; an assumed or displayed percentage cannot substitute. Recognized loss invokes DEC-FLT-007 both-sign inhibition/clean-restart recovery and 0x07 reporting. Valid information returning or actual SOC recovery above 20% cannot clear that session's fault inhibition. Initial qualification/failure follows DEC-FLT-007; unknown display follows DEC-HMI-005; auxiliary continuity follows DEC-FLT-009. This information fault is distinct from DEC-SOC-001's positive-only operating restrictions. Source: owner, 2026-09-08.
+Trustworthy actual SOC is required before Ready; an assumed or displayed percentage cannot substitute. Recognized loss invokes DEC-FLT-007 both-sign inhibition/clean-restart recovery and 0x07 reporting. Valid information returning or actual SOC recovery above 10% cannot clear that session's fault inhibition. Initial qualification/failure follows DEC-FLT-007; unknown display follows DEC-HMI-005; auxiliary continuity follows DEC-FLT-009. This information fault is distinct from DEC-SOC-001's positive-only operating restrictions. Source: owner, 2026-09-08.
 
 <a id="dec-flt-006"></a>
 ### DEC-FLT-006 — Battery category and retained fault indication
 
-Actual battery faults use 0x07, except the specific 0x06 assignment for temperature-limit faults, including battery temperature. Ordinary low charge/operating restriction is not automatically a battery fault. The owner generalized retention until normal/unexpected restart to indications for all problems requiring explicit fixing; current selection and specific/generic rules are DEC-FLT-003/008. Classification of overlapping physical faults and additional protection, isolation and regenerative-energy actions remain WS-OI-018. Source: owner, 2026-09-09.
+Actual battery faults use 0x07, including SOC-information loss/failed initialization and all BMS-reported errors, including BMS-reported thermal errors. Independently recognized applicable temperature-limit faults use 0x06. Ordinary low charge/operating restriction is not automatically a battery fault. The owner generalized retention until normal/unexpected restart to indications for all problems requiring explicit fixing; current selection and specific/generic rules are DEC-FLT-003/008. Classification of overlapping physical faults and additional protection, isolation and regenerative-energy actions remain WS-OI-018. Source: owner, 2026-09-09; current mapping clarification 2026-10-26.
 
 <a id="dec-flt-007"></a>
 ### DEC-FLT-007 — Common fault reaction and clean restart
@@ -306,7 +309,7 @@ Recovery requires a **normal or unexpected restart**, successful fresh startup s
 
 **SOC initialization:** failure to qualify trustworthy SOC within the allowed startup period is an actual battery fault with the same inhibition and 0x07 reporting. Late qualification cannot recover that session. Ordinary qualification within the period blocks Ready without automatically being a fault; a separately recognizable fault need not wait for expiry. Period, self-test scope, diagnostic coverage and finite response remain open.
 
-DEC-TMP-001–002 explicitly use this response for temperature-limit/information faults. Normal charge/recovery restrictions and communication continuity retain their own rules. A reached 10% SOC cutoff is not past-failure history. No complete detection guarantee is claimed. Source: owner and clean-restart confirmation, 2026-09-09.
+DEC-TMP-001–002 explicitly use this response for temperature-limit/information faults. Normal charge/recovery restrictions and communication continuity retain their own rules. The current SOC condition is not past-failure history. No complete detection guarantee is claimed. Source: owner and clean-restart confirmation, 2026-09-09.
 
 <a id="dec-tmp-001"></a>
 ### DEC-TMP-001 — Temperature-limit faults
@@ -383,7 +386,7 @@ Existing torque-profile, maximum-positive-torque, brake-priority, speed-limit an
 
 RQ-001's 70 km range qualification shall use the highest assist level, **active Level 5 throughout the qualifying run**. The owner selected this level separately from DEC-PERF-001's full-accelerator propulsion tests. Accelerator and mechanical-brake use follow the fixed RQ-001 riding sequence, with the nominal stop/cruise sequence subsequently fixed by DEC-RNG-002; the underlying PD traffic estimates remain provisional. Full accelerator throughout is not a range-test condition.
 
-Otherwise eligible regeneration within actual 20–80% SOC may contribute, while preliminary capacity sizing retains zero regeneration credit. The remaining riding sequence, tolerances and acceptance evidence stay under OI-053 / OI-059 / WS-OI-013. Source: owner answer, 2026-09-09, to the fixed RQ-001 level question: “It should use the highest level as well.”
+Otherwise eligible regeneration within actual 10–80% SOC may contribute, while preliminary capacity sizing retains zero regeneration credit. The remaining riding sequence, tolerances and acceptance evidence stay under OI-053 / OI-059 / WS-OI-013. Source: owner answer, 2026-09-09, to the fixed RQ-001 level question: “It should use the highest level as well.”
 
 
 <a id="dec-env-001"></a>
@@ -447,13 +450,13 @@ These 20 workstream records (19 open, WS-OI-004 closed) supplement, without renu
 | `WS-OI-004` | **CLOSED — PD Rev1.1 review/release** | Owner confirmed review and instructed release on 2026-09-09. [release authority and history](README.md#release-and-history) establishes the new upstream baseline. The later item/requirements approval is recorded in the index; quantitative, hazard and qualification evidence remains outstanding and technical issues stay open. |
 | `WS-OI-005` | Actual SOC, charge acceptance and regeneration permissives; OI-041 / OI-048 / OI-061 | Use BAT-001 selected-cell/BMS limits; define SOC reference/uncertainty, conservative margins, actual cutoff and finite withdrawal bounds, charge acceptance and other limiting-condition evidence. Assess overlapping restrictions and remaining entry transitions; no hysteresis or protection mechanism selected. |
 | `WS-OI-006` | Low-speed taper, rollback and hand parking; OI-048 / OI-054 | Determine common taper-onset speed during system validation; define taper shape, direction/applied-torque criteria, response and repeated-stop transitions, including deliberate launch and powered return after hand pushing. |
-| `WS-OI-007` | Startup/shutdown, Ready and energy state; VS-003 / VS-009 | BMS-006 now defines battery qualification content and ARCH-001 separates BMS and riding-control reset domains. Complete remaining self-test scope, numeric completion/duration, reset observability and residual/generated-energy/handling criteria. Verify simultaneous guards, moving restart and initial speed clamping; correlate reset/brownout coverage with WS-OI-010. |
+| `WS-OI-007` | Startup/shutdown, Ready and energy state; VS-003 / VS-009 | BMS-006 now defines battery qualification content. Complete remaining self-test scope, numeric completion/duration, controller-reset observability and residual/generated-energy/handling criteria. Verify simultaneous guards, moving restart and initial speed clamping; correlate reset/brownout coverage with WS-OI-010. |
 | `WS-OI-008` | Selected VD18MT and electrical evidence; OI-026–031 | Record hardware/firmware/manual identity and actual wire/display correspondence. Characterize continuous supply/brownout, active/off current, pin-5 power-lock voltage/drop/current/leakage/timing/abnormal states, UART thresholds/loading/unpowered behavior, connector pinout/contact/sealing integrity. Supplied connector mating/retention is interface context. Historical HIL or device-family ratings do not close selected-unit qualification. |
 | `WS-OI-009` | HMI/settings integration; OI-032 | Qualify charge display/current encoding, setting interpretation, visible faults and DEC-FLT-010 ordering. Verify valid/special requests, current fallback/recovery and accuracy/update bounds. DEC-LVL-003/DEC-HMI-007 fix no cross-boot, Ready or pending indication. |
 | `WS-OI-010` | Fault/communication/reset behavior; OI-049 | Complete detectable-fault coverage, self-tests, reset/brownout behavior, finite response/reporting bounds and protective realization. Verify startup/late qualification, persistent/new faults after restart, communication/pending settings and physical outcome; parser timing is not a vehicle deadline. |
 | `WS-OI-011` | Battery electrical handling; OI-062 | REQ-SYS-BAT-003 makes accessible-contact protection explicit throughout the supplied removal/refitting procedure and exposed-bay states. Derive electrical touch/exposure and stored/generated-energy limits, abnormal electrical-handling cases, and inspection/recovery criteria before interface acceptance. The supplied tray and lock are context; no connection/lock sensor or interlock is assumed. |
 | `WS-OI-012` | Fixed brake interface and downstream sensing; CON-010 / OI-037 | Characterize BOM/contact/harness/environmental tolerances, permitted loading, final identification and verification of left/front and right/rear association. Derive sensing, valid-state/unknown information, necessary diagnostics/protection/fault envelope and response; address bypass-open/resistive aliases/shared dependencies. Preserve Deferred BRK-009–011 and separate initial qualification from recognized failure. Verify current torque/report/light behavior with WS-OI-010/016. |
-| `WS-OI-013` | Performance/range qualification; PERF-001–005 / RQ-001 / OI-053–059 / OI-063 | DEC-PERF-001, DEC-RNG-001 and DEC-RNG-002 fix level and nominal trace. Qualify supplied duty inputs, trace tolerance, EPCS launch/rollback, adverse electrical operating conditions, storage margins, just-below-40 acceptance, 20–80% endpoint and electrical descent/regeneration response; calculations are not test evidence. Mechanical brake performance remains external. |
+| `WS-OI-013` | Performance/range qualification; PERF-001–005 / RQ-001 / OI-053–059 / OI-063 | DEC-PERF-001, DEC-RNG-001 and DEC-RNG-002 fix level and nominal trace. Qualify supplied duty inputs, trace tolerance, EPCS launch/rollback, adverse electrical operating conditions, storage margins, just-below-40 acceptance, 10–80% endpoint and electrical descent/regeneration response; calculations are not test evidence. Mechanical brake performance remains external. |
 | `WS-OI-014` | Release evidence and process alignment | Frozen Rev1.0 was restored with the release-record hash. Rev0.7 archive, promotion patch and checksum manifest remain absent; earlier promotion/review content cannot be independently reconstructed from them. Align future HSI revision with PD's tailored process; its ASIL/FTTI assumptions are not adopted here. Details below. |
 | `WS-OI-015` | Speed-setting/cutoff evidence; PERF-001 / OI-032 / OI-049 | SPD-002/004/005/008 are allocated unchanged to LE-RIDING. Define remaining encodings/special meanings and fixed-wheel error/age bounds; the [cutoff budget](System_Requirements/Interface_Qualification.md#speed-cutoff-uncertainty-and-response-budget) requires numeric motion/response evidence, including compatibility with sustained-speed acceptance. Verify clamped startup/pending requests, standstill/rest guards, communication transitions, control/display separation and repeated cutoff crossings with separate regenerative recovery. |
 | `WS-OI-016` | Lighting suitability and response; CON-009 / OI-038–039 | DEC-LGT-002 settles full-bright output for unqualified lever/braking states, and LGTPOL-001 allocates mode policy. Characterize rear VCC/GND dimming compatibility, powered-start/reset output and lamp visibility/environmental suitability; define trigger/release and response tolerances. Verify lever/invalid-input/actual-braking overlaps, normal dim/off return despite retained faults, no-command/startup/communication cases and fault auxiliary protection boundaries. |

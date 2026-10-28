@@ -26,8 +26,12 @@ package X2CityDetailedUnit_DemandArbiter {
         in item payload:X2CitySoftwareContract_RidingControl::RidingAuthority;
     }
     port def DemandBatteryOperatingLimitsInputPort {
-        doc /* Receives independent discharge and regenerative-charge current limits and qualification, plus SOC positive torque/speed caps. Both amperage limits propagate alongside the wheel request; Traction selects by actual electrical transfer, never wheel-torque sign. */
+        doc /* Receives independently qualified discharge and regenerative-charge current limits and reasons. An unqualified or zero regenerative-charge current limit suppresses the requested regenerative-braking torque under the existing no-charge policy, regardless of instantaneous net pack current. Both amperage limits propagate alongside the wheel request; Traction selects by actual electrical transfer, never wheel-torque sign. */
         in item payload:BatteryOperatingLimitsAssessment;
+    }
+    port def DemandStateOfChargeInputPort {
+        doc /* Receives qualified actual SOC for RidingControl's positive-propulsion 10% cutoff. Positive demand is permitted only above 10%; unqualified SOC cannot establish eligibility. */
+        in item payload:BatteryStateOfCharge;
     }
     port def DemandMotionInputPort {
         doc /* Receives qualified vehicle speed, direction and standstill from U-TRACTION-MOTION for cutoffs, recovery and rearm guards. */
@@ -60,6 +64,7 @@ package X2CityDetailedUnit_DemandArbiter {
         port activeSettingsIn:DemandActiveSettingsInputPort;
         port authorityIn:DemandAuthorityInputPort;
         port batteryOperatingLimitsIn:DemandBatteryOperatingLimitsInputPort;
+        port stateOfChargeIn:DemandStateOfChargeInputPort;
         port motionIn:DemandMotionInputPort;
         port actualOutputIn:DemandActualOutputInputPort;
         port platformContextIn:DemandPlatformContextInputPort;
@@ -67,6 +72,7 @@ package X2CityDetailedUnit_DemandArbiter {
         attribute compiledCalibrationId:String;
         attribute compiledDemandPolicyCalibration:DemandPolicyCalibration;
         attribute compiledCalibrationValid:Boolean;
+        attribute lastStateOfChargeReceiptTimeMicroseconds:Integer;
         port commandOut:DemandCommandOutputPort;
     }
 }

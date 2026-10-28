@@ -72,7 +72,7 @@ Fixed starting components, custom-development commitments and project/vehicle bo
 
 ### OBJ-001 — Functional commuter vehicle
 
-Meet RJ-001 and the separate new-battery RQ-001 qualification (§6): 2 × 20 km/day, five days/week; ≥70 km level range within actual SOC 20–80%. Use the defined 130 kg total-mass load case for EPCS performance and range qualification. Energy and motor feasibility remain unproven.
+Meet RJ-001 and the separate new-battery RQ-001 qualification (§6): 2 × 20 km/day, five days/week; ≥70 km level range within actual SOC 10–80%. Use the defined 130 kg total-mass load case for EPCS performance and range qualification. Energy and motor feasibility remain unproven.
 
 ### OBJ-002 — Electrical-engineering focus
 
@@ -124,16 +124,15 @@ All thresholds below are **actual battery SOC**:
 
 | Condition | Project policy |
 |---|---|
-| At/below 20%, before the 10% cutoff has been reached | Drastically reduce maximum positive torque and propulsion speed; numerical caps determined during system validation |
-| At/below 10% | Stop positive propulsion; retain this inhibition until SOC exceeds 20% |
-| Above 20% | Automatically restore normal propulsion capability, subject to other permissives |
+| At/below 10% | Stop positive propulsion; automatically restore eligibility strictly above 10% under remaining permissives and ramps |
+| Above 10% | Automatically restore normal propulsion capability, subject to other permissives |
 | Regeneration | Maximum 90%, only when all operating/safety/charge-acceptance limits permit |
 | Energy above 80% recovered by regeneration | Available for ordinary propulsion; excluded from RQ-001 |
-| RQ-001 qualification and initial capacity sizing | Use only the 20–80% interval; no preliminary regenerative-energy credit or guaranteed extra distance |
+| RQ-001 qualification and initial capacity sizing | Use only the 10–80% interval; no preliminary regenerative-energy credit or guaranteed extra distance |
 
 Low charge alone preserves otherwise permitted regeneration. Powered HMI/lighting continue wherever electrical protection permits. The 10% propulsion cutoff is not an all-load protection floor; derive auxiliary/storage allowances and conservative SOC margins without reducing the 70 km qualification.
 
-[DEC-SOC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-soc-001) and REQ-001 govern transitions, ramps and low-charge indication. [DEC-FLT-005–009](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-flt-005), DEC-TMP-001–002 and DEC-HMI-002/005 govern SOC qualification, common faults and displayed charge. Estimation, protection, balancing, charge acceptance, exact margins and retained-cutoff continuity remain downstream (§15).
+[DEC-SOC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-soc-001) and REQ-001 govern transitions, ramps and low-charge indication. [DEC-FLT-005–009](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-flt-005), DEC-TMP-001–002 and DEC-HMI-002/005 govern SOC qualification, common faults and displayed charge. Estimation, protection, balancing, charge acceptance, exact margins and current-SOC qualification remain downstream (§15).
 
 ## 3. Engineering-process position
 
@@ -351,7 +350,7 @@ At 30 km/h, assumed acceleration/deceleration distances are 69.4/34.7 m, fitting
 
 Accelerator-requested regeneration is supplemental in Levels 1–5; Level 0 coasts at rest. The supplied mechanical brakes are assumed available and adequate; electrical lever-state input and propulsion priority remain project behavior. [DEC-001](.devenv/Requirements/DEC-001_Decisions_and_Open_Issues.md) and [REQ-001](.devenv/Requirements/REQ-001_Requirements.md) own detailed torque, profile, startup, speed, fault and lighting behavior. Interpretable VD18MT limits above 40 km/h clamp to 40; decoded zero means no limit requested and also sets 40, including startup; changes require simultaneous standstill/physical accelerator rest (DEC-SPD-001). PERF-001 accepts sustained travel just below 40 km/h; system validation shall determine the tolerance (OI-054 / WS-OI-013), preserving mandatory zero commanded torque at/above 40 km/h.
 
-Grade is rise/horizontal distance, not degrees. The owner-defined 14%/100 m reference is not a surveyed Olympiaberg path; initial modelling treats 100 m as slope length (13.9 m elevation). Average acceleration is Δv/Δt, with no constant-waveform or above-20 km/h minimum implied. Hill launch and sustained climb are separate tests. Hill qualification within 20–80% remains required; derive SOC points/tolerances against restricted entry at 20%. Descent assessment covers recovered charge up to 90% and reduced/unavailable regeneration. Flat-performance start remains ≤80%.
+Grade is rise/horizontal distance, not degrees. The owner-defined 14%/100 m reference is not a surveyed Olympiaberg path; initial modelling treats 100 m as slope length (13.9 m elevation). Average acceleration is Δv/Δt, with no constant-waveform or above-20 km/h minimum implied. Hill launch and sustained climb are separate tests. Hill qualification within 10–80% remains required; derive SOC points, tolerances and margins against the 10% cutoff; no full hill-performance guarantee applies at exactly 10%. Descent assessment covers recovered charge up to 90% and reduced/unavailable regeneration. Flat-performance start remains ≤80%.
 
 Cold/wet/snow reductions preserve controllability, independent braking, warnings and component protection. No full hill/speed/range guarantee applies in those conditions. Recognized component-temperature limit violations instead invoke common **both-sign torque inhibition**, block Ready and require a qualifying restart even after normalization (DEC-TMP-001); qualified required temperature information also gates Ready (DEC-TMP-002). Ambient range does not establish component limits. Remaining coverage, timing, margins and report arbitration are in the workstream issues.
 
@@ -366,24 +365,24 @@ The **range-qualification profile RQ-001** is separate from the hilly reference 
 | Ambient temperature | **+20 °C** | DESIGN DECISION |
 | Total vehicle and carried mass | **130 kg** | DESIGN DECISION |
 | Battery age | **New / beginning of life** | DESIGN DECISION |
-| Qualification charge window | **Actual SOC shall remain at least 20% and shall not exceed 80%; energy recovered above 80% is excluded from the 70 km qualification** | DESIGN DECISION |
+| Qualification charge window | **Actual SOC shall remain at least 10% and shall not exceed 80%; energy recovered above 80% is excluded from the 70 km qualification** | DESIGN DECISION |
 | Starting charge | Normal full charge, **no more than 80% actual SOC** | DESIGN DECISION |
-| Finishing charge | **At least 20% actual SOC remains at the RQ-001 endpoint**; no additional guaranteed distance. Any subsequent restricted propulsion below 20% is outside the qualification | DESIGN DECISION |
+| Finishing charge | **At least 10% actual SOC remains at the RQ-001 endpoint**; no additional guaranteed distance. | DESIGN DECISION |
 | Additional user-available reserve | **None required beyond 70 km** | DESIGN DECISION |
 | Intermediate energy replenishment | None | DESIGN DECISION |
 | Stop and speed model | Active Level 5; 140 uniformly spaced intermediate full stops, 30 s dwell, 30 km/h cruise, target 0.5/1.0 m/s² acceleration/deceleration; departure/arrival separate | DESIGN DECISION, DEC-RNG-001/002; [exact trace and remaining acceptance](.devenv/Requirements/System_Requirements/Vehicle_Qualification.md#nominal-reproducible-rq-001-trace); sensitivity cases remain models |
 | Surface condition and wind | Dry pavement and negligible wind | ASSUMPTION for qualification |
 | Initial battery temperature | Thermally stabilized near +20 °C | ASSUMPTION; exact tolerance downstream |
 | Auxiliary loads | Normal riding functions operating, including HMI, controls and lights; exact loads and display settings recorded in the test | ASSUMPTION for qualification |
-| Regeneration | May contribute within actual 20–80% SOC using DEC-RNG-001/002; no credit in preliminary sizing and no outside-window energy counts | DESIGN DECISION; complete physical trace-following acceptance under OI-053 / OI-059 |
+| Regeneration | May contribute within actual 10–80% SOC using DEC-RNG-001/002; no credit in preliminary sizing and no outside-window energy counts | DESIGN DECISION; complete physical trace-following acceptance under OI-053 / OI-059 |
 
 #### Meaning of full, empty and low charge
 
-Actual SOC 20–80% maps linearly to displayed 0–100%, clamped outside. Displayed empty means the normal range window is depleted: restricted propulsion begins at actual 20%, positive propulsion stops at 10%. Normal full charge is ≤80%; otherwise permitted regenerative energy above it is available for ordinary propulsion, excluded from RQ-001. Untrustworthy SOC displays empty solely as a display fallback, never as an actual SOC control value (DEC-HMI-002/005).
+Actual SOC 10–80% maps linearly to displayed 0–100%, clamped outside. Displayed empty marks the 10% positive-propulsion cutoff. Normal full charge is ≤80%; otherwise permitted regenerative energy above it is available for ordinary propulsion, excluded from RQ-001. Untrustworthy SOC displays empty solely as a display fallback, never as an actual SOC control value (DEC-HMI-002/005).
 
-The maximum RQ-001 charge-capacity window is **60 percentage points**, not necessarily 60% of nameplate Wh because voltage varies with SOC. Size using actual interval energy and conservative uncertainty/loss/load margins (DV-011), with no preliminary regeneration credit. Engineering allowances shall not reduce the demonstrated 70 km. BMS voltage protection does not by itself enforce SOC; RQ-001 preparation shall not raise actual SOC above 80%.
+The maximum RQ-001 charge-capacity window is **70 percentage points**, not necessarily 70% of nameplate Wh because voltage varies with SOC. Size using actual interval energy and conservative uncertainty/loss/load margins (DV-011), with no preliminary regeneration credit. Engineering allowances shall not reduce the demonstrated 70 km. BMS voltage protection does not by itself enforce SOC; RQ-001 preparation shall not raise actual SOC above 80%.
 
-Derive separate post-cutoff auxiliary, shutdown and storage consumption/protection allowances. Neither 20% range completion nor 10% propulsion cutoff grants indefinite storage or defines an all-load floor. Storage starts at normal full charge under §8.2; entry tolerance, self-discharge and required margins remain open; cell bank/BMS selection is fixed by §10.8; actual-SOC qualification and remaining protection architecture are open.
+Derive separate post-cutoff auxiliary, shutdown and storage consumption/protection allowances. Neither 10% range completion nor 10% propulsion cutoff grants indefinite storage or defines an all-load floor. Storage starts at normal full charge under §8.2; entry tolerance, self-discharge and required margins remain open; cell bank/BMS selection is fixed by §10.8; actual-SOC qualification and remaining protection architecture are open.
 
 #### Scope of the range guarantee
 
@@ -444,7 +443,7 @@ Normal duty, faults, and misuse shall be distinguished. A scenario's inclusion d
 | FM-021 | Riding on public roads or public paths | Outside the private-property-only scope |
 | FM-023 | Using 40 km/h where snow, grip, visibility, or proximity to others does not permit controlled riding | The maximum speed is not an all-condition operating recommendation |
 | FM-024 | Refitting a wet, damaged, incorrectly latched or incorrectly connected battery; leaving accessible contacts contaminated while the pack is removed | Removal/refitting introduces mechanical and electrical interface hazards |
-| FM-025 | Bypassing OBJ-014 SOC limits or crediting energy outside 20–80% to RQ-001 | Permitted below-20% restricted propulsion and recovered above-80% energy remain outside range qualification |
+| FM-025 | Bypassing OBJ-014 SOC limits or crediting energy outside 10–80% to RQ-001 | Energy below 10% and recovered above 80% remain outside range qualification |
 | FM-026 | Leaving a nearly depleted usable-range battery unattended beyond its defined storage conditions | Protected SOC and storage-consumption risk |
 
 ## 8. Operating environment
@@ -465,14 +464,14 @@ Normal duty, faults, and misuse shall be distinguished. A scenario's inclusion d
 | Other people/vehicles | Possible interactions on the private site | ASSUMPTION |
 | Off-road/deep snow/ice | Not intended; unexpected ice remains a foreseeable hazard | DESIGN DECISION |
 
-Full reference hills need not be combined with wet/snow or −10 °C startup. Derive EPCS torque/cold/thermal limits for the supplied use conditions; steering and mechanical braking are external platform functions. No minimum winter journey distance is specified. Recognized temperature-limit faults follow DEC-TMP-001 rather than continued reduced operation.
+Full reference hills need not be combined with wet/snow or −10 °C cold-soaked startup. The E/E controller and electronics shall start within the supplied ambient domain; propulsion after cold soak requires a sufficiently warm battery and nonzero qualified discharge capability under [BATSUP-012–015](.devenv/Architecture/SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml#req-sys-batsup-012). Cells at or below −5 °C have zero discharge ceiling. Steering and mechanical braking are external platform functions. No minimum winter journey distance is specified. Recognized temperature-limit faults follow DEC-TMP-001 rather than continued reduced operation.
 
 ### 8.2 Ambient, parking and weather exposure
 
 | Attribute | Project definition | Status |
 |---|---|---|
 | Riding ambient | **−10 °C to +40 °C**; owner revised minimum for selected 35E cells; actual cell limits/margins still apply | DESIGN DECISION, 2026-09-10 |
-| Cold-start performance | Reduced acceleration, power and speed allowed according to validated system limits | DESIGN DECISION |
+| Cold-start performance | Controller/electronics startup is required within the ambient domain; propulsion requires sufficiently warm cells and nonzero qualified discharge capability (Draft BATSUP-012–015; zero at cell temperature ≤−5 °C) | DESIGN DECISION |
 | Parking/storage ambient | **−15 °C to +40 °C**, under the specified vehicle conditions | DESIGN DECISION |
 | Unattended outdoor duration | **At least one week (168 h)** | DESIGN DECISION / DERIVED VALUE |
 | Weather exposure | Sun, rain and snow, including workday, overnight and week-long exposure | DESIGN DECISION |
@@ -702,7 +701,7 @@ Wheel and motor speed are directly related; wheel rotation can generate voltage.
 
 ### DV-008 — Mission distance and reserve margins
 
-$2\times20\times5=200$ km/week. Seventy kilometres equals 3.5 legs or 1.75 daily distances arithmetically; under identical level/+20 °C consumption, 50/30 km remain after 20/40 km. These are not SOC percentages, extra guaranteed reserve, lifetime or proof of hilly RJ-001 endurance. Below-20% energy remains outside RQ-001.
+$2\times20\times5=200$ km/week. Seventy kilometres equals 3.5 legs or 1.75 daily distances arithmetically; under identical level/+20 °C consumption, 50/30 km remain after 20/40 km. These are not SOC percentages, extra guaranteed reserve, lifetime or proof of hilly RJ-001 endurance. Below-10% energy remains outside RQ-001.
 
 ### DV-009 — Reference grade load
 
@@ -728,16 +727,16 @@ At 40 km/h, translational energy is 8.02 kJ = 2.23 Wh, four times the energy at 
 For qualified battery-side RQ-001 consumption $e_\text{RQ}$ (Wh/km), including normal auxiliaries:
 
 $$
-E_\text{journey}\ge70e_\text{RQ},\qquad E_\text{available within 20–80\%}\ge E_\text{journey}+E_\text{necessary allowances}.
+E_\text{journey}\ge70e_\text{RQ},\qquad E_\text{available within 10–80\%}\ge E_\text{journey}+E_\text{necessary allowances}.
 $$
 
-The nominal charge-capacity window is 0.60 before margins. For capacity $Q_\text{full}$ (Ah), fractional actual SOC $z$, and relevant discharge voltage $V(z)$:
+The nominal charge-capacity window is 0.70 before margins. For capacity $Q_\text{full}$ (Ah), fractional actual SOC $z$, and relevant discharge voltage $V(z)$:
 
 $$
-E_{20\rightarrow80}=Q_\text{full}\int_{0.20}^{0.80}V(z)\,\mathrm{d}z\quad[\mathrm{Wh}].
+E_{10\rightarrow80}=Q_\text{full}\int_{0.10}^{0.80}V(z)\,\mathrm{d}z\quad[\mathrm{Wh}].
 $$
 
-Use that integral, measured pack data or a suitable cell model. Only with approximately constant voltage and no further allowances does $E_\text{full}\gtrsim70e_\text{RQ}/0.60\approx1.667E_\text{journey}$. This is not a selected size or exact chemistry-independent Wh multiplier. No energy below 20% or recovered above 80% counts toward RQ-001; initial sizing credits no regeneration.
+Use that integral, measured pack data or a suitable cell model. Only with approximately constant voltage and no further allowances does $E_\text{full}\gtrsim70e_\text{RQ}/0.70\approx1.429E_\text{journey}$. This is not a selected size or exact chemistry-independent Wh multiplier. No energy below 10% or recovered above 80% counts toward RQ-001; initial sizing credits no regeneration.
 
 Selected pack references are 50.4 V, 16.75 Ah and 844.2 Wh on the standard-cell-test basis (§10.8); usable interval energy and system qualification remain open.
 
@@ -815,7 +814,7 @@ All constraints below are **DESIGN DECISIONS** except where an assumption or dow
 | ID | Constraint |
 |---|---|
 | CON-034 | Use 130 kg total carried mass as the EPCS performance/range load case; no vehicle mass ceiling or payload certification is a project requirement. |
-| CON-035 | Meet RJ-001 and ≥70 km RQ-001 under §6.6; exclude energy outside 20–80% actual SOC. |
+| CON-035 | Meet RJ-001 and ≥70 km RQ-001 under §6.6; exclude energy outside 10–80% actual SOC. |
 | CON-036 | Use the provisional §6.4–6.4.1 trace and sensitivities for initial sizing; retain assumption status. |
 | CON-037 | Meet dry/+20 °C/130 kg reference ±14%/≥100 m duties: ≥10 km/h ascent, standstill uphill launch, 20 km/h descent. |
 | CON-038 | Meet dry/level/+20 °C/130 kg flat performance: 40 km/h and ≥0.5 m/s² average 0–20 km/h, starting at normal charge ≤80% actual SOC. |
@@ -826,8 +825,8 @@ All constraints below are **DESIGN DECISIONS** except where an assumption or dow
 | CON-045 | Use the supplied battery removal/refitting procedure and initial bay fit as interface context; mechanical access, lock function and retention are external platform facts. |
 | CON-046 | Quality, safety and functionality motivate process discipline; process education is secondary. |
 | CON-047 | Core function, suitability and verification remain required despite excluding public-road approval. |
-| CON-048 | Implement OBJ-014 / DEC-SOC-001: 20% severe positive-torque/speed reduction, retained 10% positive cutoff until >20%, normal-full/RQ-001 entry ≤80%, ≤90% regeneration; ordinary use of recovered energy and detailed transitions remain as defined there. |
-| CON-049 | Display usable charge linearly over actual 20–80%, clamped outside; displayed zero marks restriction, not zero actual SOC/immediate stop. RQ-001 uses only that window. |
+| CON-048 | Implement OBJ-014 / DEC-SOC-001: positive propulsion cutoff at/below 10%, automatic recovery strictly above 10% under existing guards and ramps, normal-full/RQ-001 entry ≤80%, ≤90% regeneration. |
+| CON-049 | Display usable charge linearly over actual 10–80%, clamped outside; displayed zero marks the positive propulsion cutoff. RQ-001 uses that window. |
 | CON-050 | Conservatively address SOC uncertainty, post-ride/storage/auxiliary loads without reducing 70 km or violating OBJ-014; derive all-load protection independently of the 10% propulsion cutoff. |
 | CON-053 | Full hill duty is dry/+20 °C only; adverse-weather reductions retain controllability and verified limits. Temperature-limit faults follow DEC-TMP-001. |
 | CON-054 | No fixed deadline; extra tools/components may be purchased. Verify task-specific equipment adequacy (§5.6). |
@@ -958,16 +957,16 @@ The VD18MT protocol message set and relevant behaviour are **not** open issues.
 
 | ID | Issue | Required resolution | Latest closure gate |
 |---|---|---|---|
-| OI-051 | HMI cold mismatch | CLOSED historically in Rev0.6 at −15°C; current riding minimum is −10°C per DEC-BAT-002. Component-domain conflict resolved; complete vehicle thermal capability remains unverified | Verify adopted cold envelope before cold-use release |
-| OI-053 | 70 km range qualification | Age/SOC/distance basis DEFINED by §6.6; below-20% energy excluded. Baseline precise level trace, tolerances, auxiliary data, SOC/energy allowances and thermal preparation; coordinate 20% endpoint with restricted entry (OI-061). | Before capacity freeze |
-| OI-054 | Performance-condition matrix | Core PERF-001–008 choices DEFINED. Derive launch acceptance, test SOC/tolerances and permitted reduced envelope; validate the accepted sustained-speed tolerance just below 40 km/h while retaining zero torque at/above 40, and coordinate the RQ-001 20% endpoint with restricted entry. Cover descent through 90% actual SOC with regeneration reduced/unavailable. | Before performance requirements baseline |
+| OI-051 | Cold-use compatibility after cold soak | FUNCTIONAL DISPOSITION: retain −10°C riding ambient and cold-soaked E/E startup; owner requires sufficiently warm battery for propulsion. Draft [BATSUP-012–015](.devenv/Architecture/SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml#req-sys-batsup-012) sets zero discharge ceiling at cell temperature ≤−5°C. | Verify cold-soaked E/E operation and conditioned-battery propulsion envelope before cold-use release; thermal integration and margins remain open |
+| OI-053 | 70 km range qualification | Derive the level trace, tolerances, auxiliary data, SOC/energy allowances and thermal preparation; coordinate the 10% endpoint with the cutoff. | Before capacity freeze |
+| OI-054 | Performance-condition matrix | Derive launch acceptance, test SOC/tolerances and permitted operating envelope; validate sustained-speed tolerance below 40 km/h and coordinate the RQ-001 endpoint with the 10% cutoff. Cover descent through 90% SOC with regeneration reduced/unavailable. | Before performance requirements baseline |
 | OI-055 | Light-snow/winter envelope | Qualify provisional 20 mm loose snow/no ice, permitted reduced capability and salt severity | Environmental requirements/validation |
 | OI-056 | Outdoor storage qualification | ≥168 h unattended, −15 °C to +40 °C sun/rain/snow fixed. DEC-ENV-001 fixes fitted/removed configurations. DEC-STO-002 fixes normal-full 80% entry; derive exposure/local solar temperatures, entry tolerance and consumption allowances. Entry above 80% is outside duration qualification. | Before enclosure/environmental qualification freeze |
 | OI-059 | Reference cycle completion | RQ-001 nominal trace is fixed by DEC-RNG-002; complete its physical conformance acceptance. Define the separate RJ-001 hill/event trace from §6.3/6.4.1 assumptions and apply the qualified positive-traction energy model | Before energy/performance simulation baseline |
 | OI-060 | Custom-development resources | Record budget/expenditures and needed probes/fixtures/fabrication/test capabilities within §5.6 | Bounded assumption at first review; task readiness before use |
-| OI-061 | SOC operating-policy evidence | Verify OBJ-014 / DEC-SOC-001 / DEC-FLT-005–007 / DEC-HMI-002/005: actual-SOC reference/uncertainty/margins; validation-set severe torque/speed caps; transition/ramp/report bounds; 10% cutoff retention until >20%; restart/refit continuity; truthful usable/fallback display; SOC qualification/loss and common fault response. Derive protection/auxiliary and battery-fault limits (WS-OI-017/018). Coordinate RQ-001 endpoints and performance with restricted entry; no energy outside 20–80% counts. | Before BMS/regenerative-control requirements freeze |
+| OI-061 | SOC operating-policy evidence | Verify actual-SOC reference/uncertainty/margins, 10% cutoff and recovery, transition/ramp/report bounds, current qualification after restart, truthful display and fault response. Derive protection/auxiliary and battery-fault limits; no energy outside 10–80% counts toward RQ-001. | Before BMS/regenerative-control requirements freeze |
 | OI-062 | Battery electrical interface | Initial bay fit is owner-confirmed context. Qualify electrical contacts, insulation, exposed-interface protection, energy/thermal behavior and electrical cycling; no OEM electronic compatibility required. Mechanical retention and handling fitness are external. | Before electrical interface acceptance or changes to electrical layout/enclosure |
-| OI-063 | Range/propulsion endpoints, auxiliaries and storage | Qualify DEC-STO-002 normal-full 80% entry/tolerance for the 168 h fitted and 672 h detached duties; derive residual-load/self-discharge/uncertainty allowances and all-load protection. Assess post-cutoff HMI/lighting; 10% is not an all-load floor and neither endpoint grants indefinite storage. Preserve ≥70 km within 20–80%. | Before energy-capacity/storage qualification freeze |
+| OI-063 | Range/propulsion endpoints, auxiliaries and storage | Qualify DEC-STO-002 normal-full 80% entry/tolerance for the 168 h fitted and 672 h detached duties; derive residual-load/self-discharge/uncertainty allowances and all-load protection. Assess post-cutoff HMI/lighting; 10% is not an all-load floor and neither endpoint grants indefinite storage. Preserve ≥70 km within 10–80%. | Before energy-capacity/storage qualification freeze |
 
 Remaining characterization and architecture issues need not all be closed to start hazard analysis. Each shall have an owner, required closure evidence, affected design decision, and latest closure milestone in the project register. The project owner is the default responsible person until otherwise assigned.
 
@@ -1011,7 +1010,7 @@ Qualify electrical pack connections, insulation, protection and thermal behavior
 | EXC-012 | Maintenance-free lifetime operation |
 | EXC-026 | Public-road or public-path operation |
 | EXC-027 | Unpaved off-road riding, deep snow, or deliberate ice riding |
-| EXC-032 | Regenerative charging above 90%, or using energy above 80% or energy below 20% to meet the 70 km qualification |
+| EXC-032 | Regenerative charging above 90%, or using energy above 80% or energy below 10% to meet the 70 km qualification |
 | EXC-033 | A 70 km guarantee with an aged battery or outside RQ-001 reference conditions |
 | EXC-034 | Full reference acceleration/speed/hill performance under cold, wet or snowy conditions |
 

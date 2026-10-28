@@ -138,7 +138,6 @@ flowchart TB
         TRDD -->|contains| UTO[U-TRACTION-OUTPUT]
         PLATFORM[SC-PLATFORM] -->|contains| UPC[U-PLATFORM-CONTEXT]
         PLATFORM -->|contains| UPB[U-PLATFORM-BINDING]
-        PLATFORM -->|contains| UPR[U-PLATFORM-RETENTION]
         PLATFORM -->|contains| UPH[U-PLATFORM-HEALTH]
     end
 ```
@@ -237,6 +236,8 @@ flowchart TB
     end
 ```
 
+`U-BAT-POLICY-EVALUATE` owns one private startup nominal-capacity reference, shared by regenerative-charge and discharge calculations: the captured ampere-hour value and its qualification. It captures the same qualified finite positive `BatteryMeasurements.socSourceEvidence.reportedNominalCapacityAmpereHours` once at normal or unexpected controller startup, then retains C through the complete cycle. Live readings and source qualification, availability, expiry, or context changes do not reset, re-recognize, or reacquire it. A new controller startup begins a new cycle. `regenerativeBaseCurrentAmperes` and `dischargeBaseCurrentAmperes` derive from that same C. Canonical calculations are specified by REQ-SYS-BATSUP-007–015. This private evaluator cache adds no public record, port, component, or second component-level copy.
+
 
 ## Deployment and instance boundaries
 
@@ -270,7 +271,7 @@ flowchart LR
     ACC[SC-ACCELERATOR-IF.V] -->|acceleratorPositionIn once| RC[SC-RIDING-CONTROL.V]
     BRK[SC-BRAKE-IF.V] -->|brakeLeverStateIn once| RC
     HMI[SC-HMI.V] -->|hmiRiderSettingsRequestIn once| RC
-    BAT[SC-BAT-POLICY.V] -->|battery readiness, SOC and operating limits once each| RC
+    BAT[SC-BAT-POLICY.V] -->|fault status, qualified actual SOC and existing limits stream with independently qualified mosDisabledState| RC
     TR[SC-TRACTION-CTRL.V] -->|motion, motor position, temperature, condition and actual output once each| RC
     PLT[SC-PLATFORM.V] -->|runtime readiness, context and health| RC
     CALL[CallingExecutionContextBoundary] -->|fresh executionTimeIn immediately before invocation| RC
@@ -282,6 +283,8 @@ flowchart LR
         SET -->|internal ActiveRidingSettings| D
         SES -->|internal RidingAuthority state| D
         SES --> REP
+        RC -->|typed existing batteryOperatingLimitsIn record, direct to report| REP
+        RC -->|qualified actual stateOfChargeIn| REP
     end
     RC -->|shared typed invocation snapshot| SET
     RC -->|shared typed invocation snapshot| SES
@@ -301,8 +304,9 @@ flowchart LR
 | Active settings | Only the internal active level/speed setting is used. Pending values never reach the demand unit. U-SET-STATE owns receipt and activation. |
 | Authority and command | `authorityExpiryTimeMicroseconds` and `commandExpiryTimeMicroseconds` carry independent decision sequences in the shared host monotonic domain. The command also carries independent discharge and regenerative-charge amperage bounds; acceptance emits `effectiveAcceptedExpiryTimeMicroseconds` and Traction applies the bound matching actual electrical transfer. Demand cannot refresh authority by issuing a command. |
 | Motion and actual output | Demand requires current qualified motion for speed/standstill decisions and current qualified actual positive applied torque plus forward travel to re-arm regeneration after stop. Hand-push travel cannot satisfy the latter proof. |
-| Battery operating limits | `BatteryOperatingLimitsAssessment` supplies independently qualified discharge and regenerative-charge current limits, SOC positive torque/speed caps, reasons and a host-local assessment reference. Demand checks freshness from caller time and may tighten or hold a regenerative-charge allowance for its owned recovery episode; it never enlarges either battery current bound. Traction acceptance preserves those effective limits and applies them by actual electrical transfer. |
-| Calibration | `SC-RIDING-CONTROL` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. Its startup checks govern profile availability; any change needs rebuild, deployment and restart. |
+| Battery operating limits | `BatteryOperatingLimitsAssessment` carries independent qualification for `mosDisabledState` and each current branch, finite non-negative effective discharge and regenerative-charge current limits, and reasons. MOS state qualification is independent of current-branch qualification; zero current is not MOS-state evidence. A qualified zero is valid capability data; required missing input leaves the affected branch unqualified with effective current zero. Eligibility and Demand check field qualification and their own private publication watchdogs using caller time; U-SESSION-REPORT receives a typed view of the same existing stream and independently checks MOS-state delivery current under its private watchdog. It also checks its direct actual-SOC input with a separate private watchdog. Ready requires qualified discharge-branch data and other Ready checks, not positive limits. Demand may tighten or hold a regenerative-charge current allowance for its owned recovery episode; it never enlarges either battery current bound. A zero or unqualified regenerative-charge current allowance also suppresses requested regenerative braking. Traction acceptance preserves the electrical current limits and applies them by actual energy-transfer direction. |
+| Actual SOC propulsion policy | RidingControl receives qualified actual SOC separately from current-only battery limits. Eligibility and Demand have independent SOC-publication watchdogs. Positive propulsion is zero at or below 10% qualified actual SOC and eligible only above 10%, subject to existing authority, qualification and recovery guards. This cutoff constrains positive propulsion only; otherwise-permitted regeneration and auxiliary discharge remain independent. |
+| Calibration | `SC-RIDING-CONTROL` owns immutable compiled `DemandPolicyCalibration` maps, ramps, taper, reference limits and timing-bound data. `SC-BAT-POLICY` owns compiled voltage-derating pairs structurally bound to the canonical System battery supervision calibration. Startup self-test validates pair finiteness/order and compiled configuration identity; values are product-validation inputs, and changes require rebuild, deployment and restart. |
 
 ## Static local-interface view
 
@@ -324,7 +328,7 @@ U-SET-STATE · U-SESSION-ELIGIBILITY · U-SESSION-REPORT · U-DEMAND-ARBITER]
     BRK -->|BrakeLeverState once| RC
     HMI -->|RiderSettingsRequest once| RC
     TR -->|qualified motion, motor position, condition and actual output once each| RC
-    BAT -->|readiness/fault, SOC and limits once each| RC
+    BAT -->|fault status, SOC and limits once each| RC
     PLV -->|runtime readiness, context, health and execution time| RC
     RC -->|ridingAuthorityOut| TR
     RC -->|wheelTorqueCommandOut| TR

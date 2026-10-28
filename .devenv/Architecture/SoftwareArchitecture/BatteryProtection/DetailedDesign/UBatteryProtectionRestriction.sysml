@@ -2,23 +2,18 @@ package X2CityDetailedUnit_BatteryProtectionRestriction {
     private import X2CitySharedSoftwareTypes::*;
     private import X2CityDetailedSharedContracts::*;
     private import X2CityDetailedUnit_BatteryProtectionEvaluate::*;
-    private import X2CityDetailedUnit_PlatformRetention::*;
     private import X2CityContract_BatteryControl::*;
     private import X2CitySoftwareContract_BatteryProtection::*;
-    // Owner: SC-BAT-POLICY.V; DD-002. It owns reached10% restriction and retains no battery-fault history.
+    // Owner: SC-BAT-POLICY.V; DD-002. It owns battery electrical restrictions and retains no battery-fault history.
     port def BatteryAssessmentCandidateInputPort {
-        doc /* Receives evaluated charge/discharge candidates before applying the vehicle reached-10%-SOC restriction and operation context. */
+        doc /* Receives evaluated charge/discharge candidates before applying battery electrical restrictions and operation context. */
         in item payload:BatteryAssessmentCandidate;
     }
-    port def RetentionCandidateInputPort {
-        doc /* Receives the platform retention candidate used only after requalification; it cannot recreate a battery fault history. */
-        in item payload:RetentionCandidateRecord;
-    }
-    port def BatteryReadinessAndFaultOutputPort { doc /* Publishes the evaluated startup assessment and distinct recognized battery/thermal fault evidence to Session. */ out item payload:BatteryReadinessAndFault; }
-    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified battery-side discharge and regenerative-charge limits, plus SOC positive-propulsion caps and host-local assessment reference, to Demand. An unavailable or forbidden branch publishes zero permitted current. */ out item payload:BatteryOperatingLimitsAssessment; }
+    port def BatteryFaultStatusOutputPort { doc /* Publishes and retains all recognized battery/thermal fault evidence and ordering to Session, independent of operating-limits qualification; startup and applicable branch configuration, group, protection and path qualification are represented by BatteryOperatingLimitsAssessment. */ out item payload:BatteryFaultStatus; }
+    port def BatteryOperatingLimitsOutputPort { doc /* Publishes the battery electrical operating-limit record to RidingControl Eligibility and Demand, including independently qualified composite MOS-disabled status. Shared required checks are assessed internally and included in each dependent branch qualification; no common qualification flag is published. MOS status qualification depends on current qualified source path states independently of charge and discharge branch qualification. Each branch includes its applicable startup, configuration, 14-group and protection/path checks. Each qualified effective current limit equals the exact minimum of its computed pack ceiling and every other applicable qualified battery-side current ceiling or restriction; a qualified disabled/prohibited path contributes zero. Missing or unqualified required applicable constraints leave the dependent branch unqualified with effective zero, not omitted. With no other lower limit, publish the computed pack ceiling. No arbitrary additional derating is permitted. A qualified zero is valid known capability. A qualified disabled charge/discharge path sets only its corresponding current limit to zero and retains that branch qualification when remaining applicable checks pass. OFF status alone does not establish a fault or physical isolation; recognized faults remain reported under existing rules. Unknown shared protection/path state leaves dependent branches unqualified and MOS status unqualified. An enabled path removes only its path restriction and does not establish positive capability. BatteryProtection retains voltage, temperature and SOC-at-90%-charge-acceptance restrictions on the affected electrical current branches; a no-charge state carries zero regenerative-charge current. It publishes no wheel-torque or speed ceiling. */ out item payload:BatteryOperatingLimitsAssessment; }
     port def BatteryStateOfChargeOutputPort { doc /* Publishes BatteryProtection's qualified actual SOC for HMI presentation and Session low-charge selection. */ out item payload:BatteryStateOfCharge; }
     port def BatteryCurrentOutputPort { doc /* Publishes BatteryProtection's qualified signed pack current for HMI presentation. */ out item payload:BatteryCurrent; }
     part def BatteryCapabilityRestrictor {
-        /* Applies operation context to battery envelope candidates and publishes propulsion and regeneration consequences. Vehicle scope owns the reached10% restriction until qualified actual SOC exceeds 20%; retention is accepted only after requalification, and this unit does not provide physical protection. */
-        port executionTimeIn:ExecutionTimeInputPort; port candidateIn:BatteryAssessmentCandidateInputPort; port retentionCandidateIn:RetentionCandidateInputPort; port readinessAndFaultOut:BatteryReadinessAndFaultOutputPort; port operatingLimitsOut:BatteryOperatingLimitsOutputPort; port stateOfChargeOut:BatteryStateOfChargeOutputPort; port batteryCurrentOut:BatteryCurrentOutputPort; }
+        /* Applies operation context to battery envelope candidates and publishes electrical discharge/charge restrictions. It does not own vehicle positive-propulsion policy or provide physical protection. */
+        port executionTimeIn:ExecutionTimeInputPort; port candidateIn:BatteryAssessmentCandidateInputPort; port faultStatusOut:BatteryFaultStatusOutputPort; port operatingLimitsOut:BatteryOperatingLimitsOutputPort; port stateOfChargeOut:BatteryStateOfChargeOutputPort; port batteryCurrentOut:BatteryCurrentOutputPort; }
 }

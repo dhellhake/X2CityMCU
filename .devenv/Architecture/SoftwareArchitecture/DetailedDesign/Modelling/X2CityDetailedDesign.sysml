@@ -25,7 +25,6 @@ package X2CityDetailedDesign {
     public import X2CityDetailedComponent_TractionControlImplementation::*;
     public import X2CityDetailedUnit_PlatformContext::*;
     public import X2CityDetailedUnit_PlatformBinding::*;
-    public import X2CityDetailedUnit_PlatformRetention::*;
     public import X2CityDetailedUnit_PlatformHealth::*;
     public import X2CityDetailedUnit_BmsLinkTransaction::*;
     public import X2CityDetailedUnit_BmsLinkDecode::*;
@@ -57,7 +56,6 @@ package X2CityDetailedDesign {
     part def PlatformUnits {
         part context:PlatformContextManager;
         part binding:PlatformBinding;
-        part retention:RetentionCandidateManager;
         part health:PlatformHealthManager;
     }
     part def EnergyUnits {
@@ -153,7 +151,6 @@ package X2CityDetailedDesign {
     flow vExecutionTimeToSupplyRegular from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.sensors.supplyRegular.executionTimeIn.payload;
     flow vExecutionTimeToPlatformContext from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.context.executionTimeIn.payload;
     flow vExecutionTimeToPlatformBinding from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.binding.executionTimeIn.payload;
-    flow vExecutionTimeToPlatformRetention from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.retention.executionTimeIn.payload;
     flow vExecutionTimeToPlatformHealth from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.platform.health.executionTimeIn.payload;
     flow vExecutionTimeToBmsTransaction from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.bmsTransaction.executionTimeIn.payload;
     flow vExecutionTimeToBmsDecode from vehicle.callingExecutionContext.executionTimeOut.payload to vehicle.energy.bmsDecode.executionTimeIn.payload;
@@ -281,7 +278,10 @@ package X2CityDetailedDesign {
     flow vBmsTransactionToDecode from vehicle.energy.bmsTransaction.acceptedPayloadOut.payload to vehicle.energy.bmsDecode.acceptedPayloadIn.payload;
     flow vBmsDecodeToPublish from vehicle.energy.bmsDecode.decodedOut.payload to vehicle.energy.bmsPublish.decodedIn.payload;
     flow vBmsPublishToBatteryEvaluate from vehicle.energy.bmsPublish.batteryMeasurementsOut.payload to vehicle.energy.batteryEvaluate.batteryMeasurementsIn.payload;
+    // The evaluator and owning BatteryProtection use the same immutable native compiled set.
+    bind X2CitySoftwareArchitecture::batteryProtectionVehicle.compiledVoltageDeratingCalibration = vehicle.energy.batteryEvaluate.compiledVoltageDeratingCalibration;
+    bind X2CitySoftwareArchitecture::batteryProtectionVehicle.compiledBatteryConfigurationId = vehicle.energy.batteryEvaluate.compiledBatteryConfigurationId;
+    bind X2CitySoftwareArchitecture::batteryProtectionVehicle.compiledBatteryConfigurationValid = vehicle.energy.batteryEvaluate.compiledBatteryConfigurationValid;
     flow vBatteryEvaluateToRestriction from vehicle.energy.batteryEvaluate.candidateOut.payload to vehicle.energy.batteryRestriction.candidateIn.payload;
-    flow vRetentionToBatteryRestriction from vehicle.platform.retention.candidateOut.payload to vehicle.energy.batteryRestriction.retentionCandidateIn.payload;
 
 }
