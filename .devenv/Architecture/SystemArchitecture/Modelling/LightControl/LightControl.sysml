@@ -6,6 +6,14 @@ package X2CityContract_LightControl {
         attribute normalLightRequestedOn:Boolean;
     }
 
+    item def LightingAvailability {
+        doc /* Qualified budget-derived operational lighting availability constraint from CurrentConsumptionCoordination; it is not measured supply or lamp output.
+         * Available false inhibits all illumination, including rear Full and startup fallback. True permits current selected modes subject to EnergyPath physical supply and protection; it neither proves supply or lamp output nor commands On.
+         * Unqualified information is not known false. In the live powered actuation context, loss, invalidity, or expiry cannot release a known qualified false restriction; only a new qualified true can release it. Qualification includes transport expiry or timeout evaluated using trusted time, without additional public freshness fields. */
+        attribute Available:Boolean;
+        item Qualification:QualifiedInformationRecord;
+    }
+
     enum def FrontLightMode { enum Off; enum On; }
     enum def RearLightMode { enum Off; enum Dim; enum Full; }
 
@@ -13,7 +21,7 @@ package X2CityContract_LightControl {
         doc /* Composite provided from selection to actuation: Front is an Off/On enum, Rear is an Off/Dim/Full enum, and modesAvailable states whether a usable software mode selection exists. */
         attribute Front:FrontLightMode;
         attribute Rear:RearLightMode;
-        attribute modesAvailable:Boolean { doc /* false requires the powered initial, start, or reset fallback: Front Off and Rear Full. */ }
+        attribute modesAvailable:Boolean { doc /* false selects the powered initial, start, or reset fallback: Front Off and Rear Full, subject to any current or retained qualified unavailable restriction and to supply and protection. */ }
     }
 
     item def FrontIllumination {
@@ -34,6 +42,14 @@ package X2CityContract_LightControl {
         doc /* Receives HMI's accepted normal-light On/Off request with qualification. */
         in item normalLightRequest:NormalLightRequest;
     }
+    port def LightingAvailabilityOutputPort {
+        doc /* Publishes the qualified budget-derived operational lighting availability constraint. */
+        out item lightingAvailability:LightingAvailability;
+    }
+    port def LightingAvailabilityInputPort {
+        doc /* Receives the qualified budget-derived operational lighting availability constraint. */
+        in item lightingAvailability:LightingAvailability;
+    }
     port def LightModesOutputPort {
         doc /* Publishes selected Front/Rear logical modes and their availability for physical actuation. */
         out item lightModes:LightModes;
@@ -52,6 +68,7 @@ package X2CityContract_LightControl {
     }
 
     interface def IfA006NormalLightRequest { end producer:NormalLightRequestOutputPort; end consumer:NormalLightRequestInputPort; flow producer.normalLightRequest to consumer.normalLightRequest; }
+    interface def IfA006LightingAvailability { end producer:LightingAvailabilityOutputPort; end consumer:LightingAvailabilityInputPort; flow producer.lightingAvailability to consumer.lightingAvailability; }
     interface def IfA006LightModes { end producer:LightModesOutputPort; end consumer:LightModesInputPort; flow producer.lightModes to consumer.lightModes; }
 }
 
@@ -70,6 +87,7 @@ package X2CityComponent_LightControl {
         port runningLightStateIn:NormalLightRequestInputPort;
         port brakeLeverStateIn:BrakeLeverStateInputPort { doc /* Receives the qualified mechanical brake State/Qualification composite; it is not brake-force evidence. */ }
         port electricalBrakingStateIn:ElectricalBrakingStateInputPort { doc /* Receives Traction's qualified actual electrical-braking present/absent projection. */ }
+        port lightingAvailabilityIn:LightingAvailabilityInputPort { doc /* Budget-derived operational constraint, delegated to actuation independently of mode selection. */ }
         port vehicleElectricalPowerIn:VehicleElectricalPowerInputPort { doc /* Receives distributed vehicle electrical energy from Energy for the contained actuation path. */ }
         port frontIlluminationOut:FrontIlluminationOutputPort;
         port rearIlluminationOut:RearIlluminationOutputPort;
@@ -78,6 +96,7 @@ package X2CityComponent_LightControl {
         flow electricalBrakingToSelection from electricalBrakingStateIn.payload to lightModeSelection.electricalBrakingStateIn.payload;
         interface selectedModesToActuation : IfA006LightModes
             connect lightModeSelection.lightModesOut to lightActuation.lightModesIn;
+        flow lightingAvailabilityToActuation from lightingAvailabilityIn.lightingAvailability to lightActuation.lightingAvailabilityIn.lightingAvailability;
         flow vehicleElectricalPowerToActuation from vehicleElectricalPowerIn.vehicleElectricalPower to lightActuation.vehicleElectricalPowerIn.vehicleElectricalPower;
         flow frontIlluminationFromActuation from lightActuation.frontIlluminationOut.frontIllumination to frontIlluminationOut.frontIllumination;
         flow rearIlluminationFromActuation from lightActuation.rearIlluminationOut.rearIllumination to rearIlluminationOut.rearIllumination;

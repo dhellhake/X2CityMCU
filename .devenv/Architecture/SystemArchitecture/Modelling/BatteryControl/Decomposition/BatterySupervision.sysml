@@ -26,9 +26,10 @@ package X2CityComponent_BatterySupervision {
         }
         port bmsTelemetryIn:BmsTelemetryInputPort { doc /* Read-only UART response input from the supplied BMS. */ }
         port bmsReadRequestOut:BmsReadRequestOutputPort { doc /* Read-only UART request output to the supplied BMS. */ }
-        port batteryStatusOut:BatteryStatusOutputPort { doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */ }
-        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* Publishes qualified operating assessment and independent charge/discharge branches to RidingControl. */ }
-        port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC for HMI display and RidingControl's low-SOC propulsion policy. */ }
+        port batteryStatusOut:BatteryStatusOutputPort { doc /* Publishes independent battery reporting conditions including lowDischargeVoltageWarning;
+            operating qualification and effective limits travel on BatteryOperatingLimits. */ }
+        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* Publishes independent charge/discharge assessments for RidingControl budgeting and EnergyPath enforcement of total battery bounds. */ }
+        port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMI for display and range information. */ }
         port batteryCurrentOut:BatteryCurrentOutputPort { doc /* Publishes independently qualified signed pack current in amperes to RidingControl.CurrentConsumptionCoordination and HMIControl. */ }
     }
 
@@ -253,6 +254,8 @@ package X2CityComponent_BatterySupervision {
                 shall withdraw only that value's qualification. That field-only unavailability shall not
                 invalidate other accepted measurements, actual SOC, battery status, or either operating-limit
                 branch, and shall not alone recognize a battery-information fault or alter effective limits.
+                If only the SOC field is absent, invalid or stale, withdraw only StateOfCharge qualification;
+                do not alter current limits, BatteryStatus, startup eligibility or recognize a new fault.
                 If a Basic response or transport is lost, other fields shall instead follow their own source-age,
                 qualification and fault-recognition rules; independently recognized faults and common retained
                 fault effects remain applicable. Fabricated values and HMI display fallbacks shall not qualify
@@ -270,7 +273,7 @@ package X2CityComponent_BatterySupervision {
             budget. Verify: T-SW/T-SYS same-value accepted updates, rejected/unrelated/cached data,
             no-frame timeout, sample latency, and missed transaction deadlines. Open:
             evidence-derived per-field age/latency and reaction limits under OI-041/061;
-            WS-OI-018/019; FLT-010 startup SOC classification.
+            WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
@@ -342,7 +345,7 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration qualification and response budget](../Battery_Integration.md#qualification-evidence-and-response-budget); [operating-limit qualification](BatterySupervision.sysml#req-sys-batsup-002).
             Verify: T-SYS startup, source-update, response, timeout, publication, delivery/use,
-            sleep and energy budgets. Open: numerical acceptance criteria under OI-041/061 and WS-OI-018/019; FLT-010 startup classification remains external.
+            sleep and energy budgets. Open: numerical acceptance criteria under OI-041/061 and WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
@@ -351,8 +354,7 @@ package X2CityComponent_BatterySupervision {
                 updates, transaction responses, field timeout detection, startup qualification,
                 qualification publication, delivery, dependent use, and applicable power, sleep and
                 storage-energy consumption. Timeout-driven qualification withdrawal shall meet its
-                accepted delivery/use budget without requiring a new frame. Existing startup SOC
-                fault classification remains governed by FLT-010.
+                accepted delivery/use budget without requiring a new frame.
             */
         }
     }
@@ -361,27 +363,38 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BMSPOL-001'> batteryCapabilityPolicy : AbstractSoftwareRequirement {
         doc /*
             Abstract Software Requirement; Draft successor to canonical REQ-001-R1.6 (Approved).
-            Allocation: LE-BATTERY-SUPERVISION; software realization pending.
-            Parent: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001). Sources: [Battery Integration qualification and response budget](../Battery_Integration.md#qualification-evidence-and-response-budget) and
-            event/recovery matrix; [REQ-001 verification rules](../../../../../Requirements/REQ-001_Requirements.md). Verify: analysis,
-            T-SW/T-SYS/T-FI against independent quality, path, policy and overlapping-restriction
-            cases, including exact minimum selection, qualified zero, unqualified required constraints
-            and branch independence. Open: IF-A-003/009 and OI-041/045/048/049/061. Software outputs do not establish
-            physical protection with the host unavailable.
+            Allocation: LE-BATTERY-SUPERVISION; software realization pending. External parent:
+            [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001). Native System parents
+            are recorded in the derivation graph in ../BatteryControl.sysml. Sources: [Battery Integration qualification
+            and response budget](../Battery_Integration.md#qualification-evidence-and-response-budget),
+            event/recovery matrix and [REQ-001 verification rules](../../../../../Requirements/REQ-001_Requirements.md).
+            Verify: analysis, T-SW/T-SYS/T-FI for independent quality, path and overlapping limits;
+            exact minima, qualified zero and unqualified constraints; discharge voltage at, below and above
+            cutoffs, startup and recovery. Hold qualified temperature, voltages, paths and startup
+            capacity fixed while varying SOC through 0, 10, 90 and 100 percent and SOC-only
+            unavailability; both current ceilings and branch qualifications remain unchanged, while
+            only the SOC display/report field changes. Open: IF-A-003/009 and
+            OI-041/045/048/049/061. Software outputs do not
+            establish physical protection with the host unavailable.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
                 For each qualified branch, BatterySupervision shall set its finite, nonnegative effective
                 current limit to exactly the minimum of the computed branch-specific pack ceiling and
-                every applicable qualified battery-side current ceiling or restriction, including physical
-                capability, battery policy, protection, configuration and path restrictions. A qualified
-                prohibition or disabled path contributes zero; a nonapplicable constraint does not limit
-                operation. If no additional applicable qualified constraint is tighter, the effective limit
-                equals the computed pack ceiling. An unqualified required constraint leaves the affected
-                branch unqualified with effective current limit zero. BatterySupervision shall internally
-                assess applicable shared evidence as part of each dependent branch qualification, and publish
-                independent branch qualification, effective current limits and restriction reasons. A qualified zero means known zero capability. Reporting conditions remain separate from operating capability.
+                every applicable qualified battery-side ceiling or restriction, including physical capability,
+                battery policy, protection, configuration and path restrictions. A qualified prohibition or
+                disabled path contributes zero; a nonapplicable constraint does not limit operation.
+
+                If no additional applicable qualified constraint is tighter, the effective limit equals the
+                computed pack ceiling. An unqualified required constraint leaves the affected branch
+                unqualified with effective current limit zero. Branch qualification follows REQ-SYS-BATSUP-002.
+                Source age and retention follow
+                REQ-SYS-BMSIF-010/011; recognized fault retention follows REQ-SYS-BATSUP-019.
+                BatterySupervision shall assess applicable shared evidence within each dependent branch
+                qualification and publish independent branch qualification, effective current limits and
+                restriction reasons. A qualified zero means known zero capability; zero while unqualified
+                denotes unavailable information. Reporting conditions remain separate from operating capability.
             */
         }
     }
@@ -434,7 +447,8 @@ package X2CityComponent_BatterySupervision {
             doc /*
                 After controller startup/restart, both existing branch qualifications shall remain false until their
                 applicable current assessments pass.
-                Both checks in REQ-SYS-BATSUP-001 shall pass before dependent limits qualify. Each
+                Both checks in REQ-SYS-BATSUP-001 shall pass before dependent limits qualify. Actual SOC
+                qualification is not required for either branch or startup eligibility. Each
                 branch qualification shall include its applicable shared and operation-specific
                 evidence; shared qualification shall remain internal and shall not be published as a
                 separate flag. Charge-only evidence shall not gate discharge qualification. The qualified
@@ -454,7 +468,7 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BATSUP-003'> actualSocQualification : AbstractSoftwareRequirement {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending;
-            HMI fallback and RidingControl SOC policy remain consumer concerns.
+            HMI fallback remains a display concern; SOC qualification supports display and range reporting.
             Parent: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001) / [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md); [Battery Integration SOC acceptance](../Battery_Integration.md#soc-source-acceptance);
             selected-unit UART facts; DEC-SOC-001/002, DEC-HMI-002/005. Verify: analysis, T-SW/T-SYS
             against independent SOC references, startup/restart and loss. Open: calibration,
@@ -467,9 +481,8 @@ package X2CityComponent_BatterySupervision {
                 supplied candidate meets the controlled SOC source acceptance criteria against
                 actual charge and capacity references for the selected pack. Qualification shall
                 account for source and calibration evidence, capacity references, error and
-                uncertainty, usable range, and data age suitable for the 10%, 80% and 90%
-                vehicle SOC policies. Reported RSOC alone and any HMI display fallback are not
-                qualified actual SOC.
+                uncertainty, usable range, and data age suitable for SOC mapping and range information.
+                Reported RSOC alone and any HMI display fallback are not qualified actual SOC.
             */
         }
     }
@@ -684,7 +697,7 @@ package X2CityComponent_BatterySupervision {
                 contribute a qualified known zero. The effective
                 regenerative current limit shall equal exactly the minimum of Ipack and every applicable
                 qualified battery-side current ceiling or restriction, including physical, component, charge-path,
-                SOC policy, protection and configuration limits. A qualified prohibition or disabled charge path
+                protection and configuration limits. A qualified prohibition or disabled charge path
                 contributes zero; a nonapplicable constraint does not limit operation. If no additional applicable
                 qualified constraint is tighter, the limit equals Ipack. Missing, invalid or unqualified required
                 capacity, cell temperature or any of the fourteen voltages shall leave the dependent regenerative
@@ -827,7 +840,7 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
-            Sources: FLT-008/010; BATSUP-001 startup mismatch.
+            Sources: FLT-005/006, BMS-007 and BATSUP-001 startup mismatch.
             Verify: T-SW/T-SYS BMS thermal and other faults, mismatch, required-information loss,
             initial waiting, rejected frames and optional or pack-current-only loss.
         */
@@ -838,7 +851,8 @@ package X2CityComponent_BatterySupervision {
                 faults, including BMS thermal faults, recognized startup mismatch, and recognized failure of
                 required battery information under the applicable existing recognition policies. Initial
                 waiting, a single rejected frame, and loss solely of optional or pack-current information shall
-                not alone establish this fault.
+                not alone establish this fault. SOC-only loss or initial SOC qualification expiry shall
+                not establish a battery fault or inhibit startup.
             */
         }
     }
@@ -867,7 +881,7 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
-            Sources: FLT-008/010 and TMP-001/002.
+            Sources: FLT-005/006, BMS-007 and TMP-001/002.
             Verify: T-SW/T-SYS both fault categories, source and path recovery, valid unrelated
             measurements, and normal and unexpected restart.
         */
@@ -888,7 +902,7 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
-            Sources: FLT-008/010, TMP-001/002 and BATSUP-001.
+            Sources: FLT-005/006, BMS-007, TMP-001/002 and BATSUP-001.
             Verify: T-SW/T-SYS simultaneous, brief and cleared faults, unknown source states and
             unqualified operating assessments; confirm common first-recognized report ordering.
             Open: recognition thresholds, source mapping and publication/delivery budgets.
@@ -897,9 +911,14 @@ package X2CityComponent_BatterySupervision {
         require constraint {
             doc /*
                 BatterySupervision shall publish independent battery and local thermal fault conditions and
-                the live MOS warning concurrently in BatteryStatus, without battery-local priority or HMI-code
-                selection. A live condition clears only on qualified evidence of its absence; unknown is
-                neither confirmed presence nor confirmed absence. It shall capture and make every recognized
+                the live MOS warning and lowDischargeVoltageWarning concurrently in BatteryStatus, without
+                battery-local priority or HMI-code selection. Independently of SOC and complete current
+                assessment, when all fourteen group voltage readings and discharge cutoff calibration
+                are qualified, lowDischargeVoltageWarning is known true if Vl <= Dcut and known false
+                otherwise. If any required evidence is unqualified, it is unknown and reporting evidence
+                is withdrawn, not assumed clear. Temperature-curve zero or a disabled path alone shall
+                not establish this low-voltage condition. A live condition clears only on qualified
+                evidence of its absence; unknown is neither confirmed presence nor confirmed absence. It shall capture and make every recognized
                 fault and its common recognition order available to RidingControl for reporting, including
                 brief, cleared and simultaneous events, even while operating assessments are unqualified.
                 Publication and delivery shall meet the accepted derived budgets.
@@ -972,7 +991,7 @@ package X2CityComponent_BatterySupervision {
 
     doc /* Output responsibility and system integration retained from the capability-policy record:
         - Physical battery capability: Keep charge and discharge capabilities distinct, including qualified effective current limits and charge-path acceptance. Limits account for the most restrictive applicable cell/group, temperature, configured protection and connected-component envelope. An unknown required limit shall leave affected current at zero and dependent operation unavailable.
-        - Operation-specific battery restrictions: Distinguish regenerative charge acceptance from discharge capability, including auxiliary discharge. Low-SOC propulsion cutoff does not alter the BatterySupervision discharge-current assessment. A temperature where discharge current remains available but effective charge current is zero is an ordinary regeneration restriction under DEC-TMP-003. RidingControl applies the 10% positive-propulsion cutoff and recovery from qualified actual SOC.
+        - Operation-specific battery restrictions: Distinguish regenerative charge acceptance from discharge capability, including auxiliary discharge. BatterySupervision includes lowest-group discharge and highest-group regenerative voltage cutoffs in its respective effective current limits. A temperature where discharge current remains available but effective charge current is zero is an ordinary regeneration restriction under DEC-TMP-003.
         - Riding integration: BatterySupervision publishes qualified battery assessment and fault evidence. A newly available battery envelope alone does not determine RidingControl authority or its session state.
         - Physical protection: LE-EPCS and the supplied BMS/other derived protection contributors retain the system obligation for energized paths, residual/generated energy, faults, and host/UART loss. Vendor protection release is an observation, not automatic restoration of effective limits or a system session.
         Only the information-policy contribution is allocated here. Calibration, source accuracy, diagnostics, actual protection, and parent system acceptance remain open; no software unit, inverter algorithm, or circuit is selected. */

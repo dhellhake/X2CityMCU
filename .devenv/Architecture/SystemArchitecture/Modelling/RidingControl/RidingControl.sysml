@@ -26,7 +26,7 @@ package X2CityContract_RidingControl {
         attribute selectedWireCode:Integer;
     }
     item def SignedWheelTorqueRequest:>QualifiedInformationRecord {
-        doc /* Requested wheel torque in newton-metres; positive is forward propulsion and the sign is wheel-torque direction. Electrical transfer direction is independent. Coordinator-issued traction discharge and regenerative-charge budgets apply independently; branch qualification is explicit; a zero bound means that branch is forbidden or unqualified. */
+        doc /* Requested wheel torque in newton-metres; positive denotes forward wheel torque. Positive torque does not determine electrical transfer direction, including during rollback. Electrical transfer direction is independent. Coordinator-issued traction discharge and regenerative-charge budgets apply independently; branch qualification is explicit; a zero bound means that branch is forbidden or unqualified. */
         attribute requestedWheelTorqueNewtonMetres:Real;
         attribute expiry:Expiry;
         attribute dischargeBudgetQualified:Boolean;
@@ -84,6 +84,7 @@ package X2CityComponent_RidingControl {
     private import X2CityContract_MotorControl::*;
     private import X2CityContract_MotorPositionProcessing::*;
     private import X2CityContract_BatteryControl::*;
+    private import X2CityContract_LightControl::*;
     private import X2CityContract_Compute::*;
     private import X2CityContract_HmiControl::*;
     private import X2CityComponent_RidingPolicy::*;
@@ -104,10 +105,12 @@ package X2CityComponent_RidingControl {
         port tractionConditionEvidenceIn:TractionConditionEvidenceInputPort { doc /* Local traction condition evidence for RidingControl fault selection and lifetime. */ }
         port hmiRiderSettingsRequestIn:RiderSettingsRequestInputPort { doc /* Qualified requested settings; requested and pending state remains internal. */ }
         port batteryStatusIn:BatteryStatusInputPort { doc /* Reporting conditions only; first-recognized diagnostic selection uses common ordering. Ready, torque and restoration use operational values and qualification, not BatteryStatus. */ }
-        port stateOfChargeIn:BatteryStateOfChargeInputPort { doc /* Qualified actual SOC for RidingControl low-SOC propulsion cutoff/recovery, and fault policy. */ }
         port actualTractionOutputIn:ActualTractionInputPort { doc /* Qualified actual applied wheel-torque/output observations from Traction for demand and powered-forward regenerative rearm policy; not stage-state or PWM evidence. */ }
-        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Existing stream feeds battery Ready guards and the coordinator allocation. Eligibility depends on operational qualification and values, independently of BatteryStatus. A qualified zero is known no capability; an unqualified branch carries conservative zero without qualification. Zero charge acceptance suppresses requested regenerative braking without implying zero wheel torque. */ }
+        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Existing stream feeds battery Ready guards and the coordinator allocation. Required discharge assessment must be qualified for Ready; qualified zero is distinct from unqualified. Eligibility depends on operational qualification and values, independently of BatteryStatus. A qualified zero is known no capability; an unqualified branch carries conservative zero without qualification. Zero charge acceptance suppresses requested regenerative braking without implying zero wheel torque. */ }
         port batteryCurrentIn:BatteryCurrentInputPort { doc /* Qualified measured pack current for the sole coordinator shared-budget supervision. */ }
+        port lightingAvailabilityOut:LightingAvailabilityOutputPort {
+            doc /* Qualified full-bright lighting allocation from the current coordinator. */
+        }
         port ridingAuthorityOut:RidingAuthorityOutputPort { doc /* Current authorization and its expiry; independent of the signed torque command. */ }
         port wheelTorqueCommandOut:WheelTorqueCommandOutputPort { doc /* Signed wheel-torque demand and current bounds; authorization remains a separate output. */ }
         port selectedFaultIndicationOut:SelectedFaultIndicationOutputPort { doc /* Selected reportable fault code and qualification for HMI encoding. */ }
@@ -122,7 +125,6 @@ package X2CityComponent_RidingControl {
         flow tractionConditionEvidenceInToPolicy from tractionConditionEvidenceIn.payload to ridingPolicy.tractionConditionEvidenceIn.payload;
         flow hmiRiderSettingsRequestInToPolicy from hmiRiderSettingsRequestIn.payload to ridingPolicy.hmiRiderSettingsRequestIn.payload;
         flow batteryStatusInToPolicy from batteryStatusIn.status to ridingPolicy.batteryStatusIn.status;
-        flow stateOfChargeInToPolicy from stateOfChargeIn.stateOfCharge to ridingPolicy.stateOfChargeIn.stateOfCharge;
         flow actualTractionOutputInToPolicy from actualTractionOutputIn.payload to ridingPolicy.actualTractionOutputIn.payload;
         flow batteryOperatingLimitsInToPolicy from batteryOperatingLimitsIn.operatingLimits to ridingPolicy.batteryOperatingLimitsIn.operatingLimits;
         flow ridingAuthorityOutFromPolicy from ridingPolicy.ridingAuthorityOut.payload to ridingAuthorityOut.payload;
@@ -130,6 +132,7 @@ package X2CityComponent_RidingControl {
         flow selectedFaultIndicationOutFromPolicy from ridingPolicy.selectedFaultIndicationOut.selectedFaultIndication to selectedFaultIndicationOut.selectedFaultIndication;
         flow sleepRequestOutFromPolicy from ridingPolicy.sleepRequestOut.request to sleepRequestOut.request;
         flow operatingLimitsToCoordinator from batteryOperatingLimitsIn.operatingLimits to currentConsumptionCoordination.batteryOperatingLimitsIn.operatingLimits;
+        flow lightingAvailabilityOutFromCoordinator from currentConsumptionCoordination.lightingAvailabilityOut.lightingAvailability to lightingAvailabilityOut.lightingAvailability;
         flow packCurrentToCoordinator from batteryCurrentIn.batteryCurrent to currentConsumptionCoordination.batteryCurrentIn.batteryCurrent;
     }
 }

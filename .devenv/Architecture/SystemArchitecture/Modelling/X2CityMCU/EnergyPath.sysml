@@ -37,7 +37,8 @@ package X2CityComponent_EnergyPath {
     private import X2CityContract_BatteryControl::*;
 
     part def EnergyPath { // LE-ENERGY-PATH
-        /* Provides general vehicle electrical-power distribution from BatteryControl to vehicle loads and the physical traction connection. It carries energy but does not define policy, protection, switching, or a supply realization. */
+        /* Provides general vehicle electrical-power distribution from BatteryControl to vehicle loads and the physical traction connection. It actuates the qualified discharge bound across supplied loads; it does not decide SOC policy or select sensing, protection, switching, or supply realization. */
+        port batteryOperatingLimitsIn:BatteryOperatingLimitsInputPort { doc /* Receives qualified battery operating limits for all-load discharge-bound actuation; unknown is distinct from qualified zero. */ }
         port batteryPower:BatteryPowerPort { doc /* Receives and returns physical pack energy for discharge and regeneration. */ }
         port vehicleElectricalPowerOut:VehicleElectricalPowerOutputPort { doc /* Supplies general distributed vehicle electrical power to a vehicle-load boundary. */ }
         port tractionElectricalPower:TractionElectricalPowerPort { doc /* Physical bidirectional traction-energy branch. */ }

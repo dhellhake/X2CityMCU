@@ -28,6 +28,8 @@ package X2CityComponent_X2CityMCU {
         part energyPath:EnergyPath { doc /* General vehicle electrical-power distribution sibling of BatteryControl. */ }
         part lightControl:LightControl;
         part compute:Compute;
+        interface batteryLimitsToEnergyPath : IfA003BatteryOperatingLimits
+            connect batteryControl.batteryOperatingLimitsOut to energyPath.batteryOperatingLimitsIn;
         interface batteryPowerToEnergyPath : IfA010BatteryPower
             connect batteryControl.batteryPower to energyPath.batteryPower;
         interface vehicleElectricalPowerToLightControl : IfA010VehicleElectricalPower
@@ -70,6 +72,8 @@ package X2CityComponent_X2CityMCU {
             connect ridingControl.wheelTorqueCommandOut to traction.wheelTorqueCommandIn;
         interface normalLightToLightControl : IfA006NormalLightRequest
             connect driverInteraction.runningLightStateOut to lightControl.runningLightStateIn;
+        interface lightingAvailabilityToLightControl : IfA006LightingAvailability
+            connect ridingControl.lightingAvailabilityOut to lightControl.lightingAvailabilityIn;
         interface stateOfChargeToDriverInteraction : IfA003BatteryStateOfCharge
             connect batteryControl.stateOfChargeOut to driverInteraction.stateOfChargeIn;
         interface batteryCurrentToDriverInteraction : IfA003BatteryCurrent
@@ -93,6 +97,5 @@ package X2CityComponent_X2CityMCU {
         interface batteryLimitsToRidingControl : IfA003BatteryOperatingLimits
             connect batteryControl.batteryOperatingLimitsOut to ridingControl.batteryOperatingLimitsIn;
         interface stateOfChargeToRidingControl : IfA003BatteryStateOfCharge
-            connect batteryControl.stateOfChargeOut to ridingControl.stateOfChargeIn;
     }
 }

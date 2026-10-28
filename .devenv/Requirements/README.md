@@ -8,12 +8,12 @@
 |---|---|
 | [PD-001](../../README.md) | Current Draft project definition; PD-001-R1.1 remains the released baseline |
 | [ID-001](ID-001_Item_Definition.md) | Current item context; ID-001-R1.0 remains the released baseline |
-| [REQ-001](REQ-001_Requirements.md) | Current 316-record catalogue (five inactive records retained), requirement model and canonical clusters |
+| [REQ-001](REQ-001_Requirements.md) | Current 320-record catalogue (five inactive records retained), requirement model and canonical clusters |
 | [HARA-001 / SG-001](../Safety/HARA-001_Hazard_Analysis.md) | Prior release contains 11 goals; current Draft successor retains 8 goals and 28 events after scope change; physical electrical safety evidence remains open |
 | [DEC-001](DEC-001_Decisions_and_Open_Issues.md) | Current owner decisions and open issue register; `WS-OI-020(B)` remains open |
 | [ARCH-001](../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md) | Prior release ARCH-001-R1.0 remains historical; current Draft successor removes mechanical-only elements and reallocates surviving E/E responsibilities |
 | [ARCH-002](../Architecture/ARCH-002_Hardware_Architecture.md) | Prior release remains historical; current Draft successor aligns hardware scope to the E/E retrofit; software realization is pending |
-| [FC-001 / FC-002](../Architecture/FC-001_Functional_Concept.md) | Prior releases remain historical; current Draft trace aligns to surviving requirements and the active 8-goal safety set; 9 FSC requirements remain Draft |
+| [FC-001 / FC-002](../Architecture/FC-001_Functional_Concept.md) | Prior releases remain historical; current Draft trace aligns to surviving requirements and the active 8-goal safety set; 9 FSC requirements remain Draft. Voltage/temperature capability and EnergyPath actuation allocations are Draft and await physical verification |
 | [Selected battery/BMS reference](../Battery/BAT-001_Selected_Pack_and_BMS.md) | Frozen source snapshot: Draft0.1; selected components, manufacturer evidence and qualified derivations; no integration acceptance claimed |
 | [Brake interface evidence](evidence/Brake_Input_Reference.md) | Revision 1.0: fixed shared coded interface, provenance, values and diagnostic limitations |
 | [VD18MT implementation evidence](evidence/VD18MT_Implementation_Reference.md) | Revision 1.0: historical tested source and evidence qualifications |

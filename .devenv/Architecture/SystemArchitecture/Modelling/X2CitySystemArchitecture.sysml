@@ -318,7 +318,6 @@ package X2CitySystemArchitecture {
         interface batteryLimitsToRidingControl : X2CityContract_BatteryControl::IfA003BatteryOperatingLimits
             connect batteryControl.batteryOperatingLimitsOut to ridingControl.batteryOperatingLimitsIn;
         interface stateOfChargeToRidingControl : X2CityContract_BatteryControl::IfA003BatteryStateOfCharge
-            connect batteryControl.stateOfChargeOut to ridingControl.stateOfChargeIn;
         interface actualTractionOutputToRidingControl : X2CityContract_MotorControl::IfA005ActualTractionOutput
             connect traction.actualTractionOutputOut to ridingControl.actualTractionOutputIn;
     }
@@ -346,8 +345,6 @@ package X2CitySystemArchitecture {
         connect x2CityVehicle.epcs.batteryControl.batteryStatusOut to x2CityVehicle.epcs.ridingControl.batteryStatusIn;
     interface ifA003LimitsToRidingControl : IfA003BatteryOperatingLimits
         connect x2CityVehicle.epcs.batteryControl.batteryOperatingLimitsOut to x2CityVehicle.epcs.ridingControl.batteryOperatingLimitsIn;
-    interface ifA003SocToRidingControl : IfA003BatteryStateOfCharge
-        connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.ridingControl.stateOfChargeIn;
     interface ifA003SocToHmi : IfA003BatteryStateOfCharge
         connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.driverInteraction.stateOfChargeIn;
     interface ifA003CurrentToHmi : IfA003BatteryCurrent

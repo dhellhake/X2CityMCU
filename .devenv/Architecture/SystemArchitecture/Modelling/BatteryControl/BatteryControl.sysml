@@ -41,7 +41,8 @@ package X2CityContract_BatteryControl {
     }
     item def BatteryStatus {
         doc /* Logical reporting contract: battery fault, independently recognized local actual thermal fault,
-            and ordinary at-least-one-MOS-disabled warning are independent, simultaneous conditions. Each has
+            ordinary at-least-one-MOS-disabled warning, and lowDischargeVoltageWarning are independent,
+            simultaneous conditions. Each has
             meaningful known/unknown state; unknown is not absence. Battery fault includes BMS faults (including
             BMS thermal faults), recognized startup mismatch and recognized required battery-information failure.
             Recognition order is comparable with other RidingControl fault evidence for its first-recognized rule.
@@ -58,8 +59,7 @@ package X2CityContract_BatteryControl {
             zero capability; it is not missing information or a fault. Qualification remains authoritative: when
             required current-envelope information is unqualified, the affected effective current limit is zero and
             dependent operation is unavailable. A numeric zero alone never qualifies the limit. Battery current sign
-            is not a wheel-torque sign; actual-SOC propulsion policy is owned by RidingControl and is independent of
-            these electrical current branches.
+            is not a wheel-torque sign; BatterySupervision assesses each electrical current branch independently.
         */
         attribute sourceContext:SourceContext;
         attribute dischargeBranchQualified:Boolean {
@@ -81,7 +81,7 @@ package X2CityContract_BatteryControl {
         attribute regenerativeChargeRestrictionReason:Integer;
     }
     item def BatteryStateOfCharge:>QualifiedInformationRecord {
-        doc /* BatterySupervision's qualified actual SOC for HMI display and RidingControl's low-charge selection. It is distinct from the supplied BMS candidate SOC. */
+        doc /* BatterySupervision's qualified actual SOC for display and range reporting. It is distinct from the supplied BMS candidate SOC. */
         attribute actualStateOfChargePercent:Real;
     }
     item def BatteryCurrent:>QualifiedInformationRecord {
@@ -95,17 +95,18 @@ package X2CityContract_BatteryControl {
     port def BmsTelemetryOutputPort { doc /* Sends selected BMS source fields from the supplied BMS to BatterySupervision over the read-only UART route. */ out item telemetry:BmsTelemetry; }
     port def BmsTelemetryInputPort { doc /* Receives selected BMS source fields at BatterySupervision for qualification. */ in item telemetry:BmsTelemetry; }
     port def BatteryStatusOutputPort {
-        doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */
+        doc /* Publishes independent battery reporting conditions including lowDischargeVoltageWarning;
+            operating qualification and effective limits travel on BatteryOperatingLimits. */
         out item status:BatteryStatus;
     }
     port def BatteryStatusInputPort {
-        doc /* Receives battery reporting conditions at RidingControl. */
+        doc /* Receives independent battery reporting conditions including lowDischargeVoltageWarning at RidingControl. */
         in item status:BatteryStatus;
     }
-    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified discharge and regenerative-charge current assessments to RidingControl. */ out item operatingLimits:BatteryOperatingLimits; }
-    port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge and regenerative-charge current assessments at RidingControl. */ in item operatingLimits:BatteryOperatingLimits; }
-    port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl or RidingControl. */ out item stateOfCharge:BatteryStateOfCharge; }
-    port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl or RidingControl. */ in item stateOfCharge:BatteryStateOfCharge; }
+    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified total discharge and regenerative-charge current bounds to RidingControl and EnergyPath. */ out item operatingLimits:BatteryOperatingLimits; }
+    port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified total discharge and regenerative-charge current bounds at RidingControl or EnergyPath. */ in item operatingLimits:BatteryOperatingLimits; }
+    port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl. */ out item stateOfCharge:BatteryStateOfCharge; }
+    port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl. */ in item stateOfCharge:BatteryStateOfCharge; }
     port def BatteryCurrentOutputPort { doc /* Publishes independently qualified signed pack current to RidingControl.CurrentConsumptionCoordination and HMIControl. */ out item batteryCurrent:BatteryCurrent; }
     port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at RidingControl.CurrentConsumptionCoordination or HMIControl. */ in item batteryCurrent:BatteryCurrent; }
 
@@ -131,10 +132,10 @@ package X2CityComponent_BatteryControl {
         part batterySupervision:BatterySupervision { doc /* Project vehicle-host supervision for BMS reading, qualification, and battery operating policy. */ }
         port batteryPower:BatteryPowerPort { doc /* External physical bidirectional pack-to-EnergyPath boundary for discharge and regeneration. */ }
         port batteryStatusOut:BatteryStatusOutputPort {
-            doc /* External RidingControl reporting conditions. */
+            doc /* External RidingControl reporting conditions, including independent lowDischargeVoltageWarning. */
         }
-        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External RidingControl operating limits for both current-sign branches. */ }
-        port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* External qualified actual-SOC publication for HMI and RidingControl. */ }
+        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External total battery operating limits for RidingControl budgeting and EnergyPath enforcement across both current-sign branches. */ }
+        port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* External qualified actual-SOC publication for HMI. */ }
         port batteryCurrentOut:BatteryCurrentOutputPort { doc /* External qualified signed-current publication for RidingControl.CurrentConsumptionCoordination and HMI. */ }
         flow assemblyPowerToBoundary from batteryAssembly.batteryPower.batteryPower to batteryPower.batteryPower;
         flow boundaryPowerToAssembly from batteryPower.batteryPower to batteryAssembly.batteryPower.batteryPower;
@@ -329,8 +330,7 @@ package X2CityComponent_BatteryControl {
                 discharge or regenerative-charge branch qualification; no separate common qualification shall be
                 published. Each branch qualification shall represent its applicable shared and branch-required
                 assessment.
-                A known ordinary restriction, including the existing 90% actual-SOC regenerative-charge limit or a
-                temperature that forbids charging,
+                A known ordinary restriction, including a temperature that forbids charging,
                 may leave an applicable branch qualified with a reduced or zero effective limit. Every effective limit
                 shall be finite and nonnegative, and shall include applicable physical capability and battery
                 policy/protection/configuration/path restrictions. A qualified zero limit denotes known zero
@@ -358,8 +358,8 @@ package X2CityComponent_BatteryControl {
             [REQ-SYS-BMS-005](Battery_Integration.md#req-sys-bms-005).
 
             Planned verification: I, A, T-SYS, T-FI. Apply the
-            [battery event matrix](Battery_Integration.md#battery-event-and-recovery-matrix); contrast normal SOC cutoff
-            with weakest-group undervoltage protection, charge-disabled by a known ordinary restriction with unexpected
+            [battery event matrix](Battery_Integration.md#battery-event-and-recovery-matrix); contrast voltage-curve cutoff
+            with independent physical undervoltage protection, charge-disabled by a known ordinary restriction with unexpected
             trip, and valid status bits with physical path failure. Verify report masking does not change protection.
 
             Open dependencies / qualifications: DEC-FLT-005–009, DEC-TMP-001–003; OI-041/049/061. Qualify actual BMS
@@ -394,8 +394,8 @@ package X2CityComponent_BatteryControl {
                 system integration. A recognized restart-required battery-side fault retains both branches
                 unqualified with effective limits zero until the next normal or unexpected controller
                 restart. BatteryStatus publishes independent battery-fault, local actual thermal-fault and
-                MOS-warning reporting conditions, including unknown state and common fault recognition
-                order, without selecting an HMI code. BatteryControl shall express battery-side effects on
+                MOS-warning and lowDischargeVoltageWarning reporting conditions, including unknown state and
+                common fault recognition order, without selecting an HMI code. BatteryControl shall express battery-side effects on
                 operation and recovery through operating values and their qualification; BatteryStatus shall
                 provide reporting information only. A qualified disabled path contributes known zero
                 effective current for its own
@@ -455,6 +455,88 @@ package X2CityComponent_BatteryControl {
     }
     satisfy dischargePermissiveChargeRestriction by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
 
+    requirement <'REQ-SYS-SOC-003'> dischargeVoltageCutoff : SystemRequirement {
+        doc /*
+            Draft successor allocation: LE-BATTERY-CONTROL. Sources: DEC-SOC-001, CON-048, OI-061.
+            Verify: I, T-SYS with held demand, startup and auxiliary loads at and below the validated
+            discharge voltage endpoint. The endpoint is expected around 10% SOC, subject to product
+            validation; it is not an exact SOC threshold. Loss of auxiliary power, including brake lights,
+            is allowed; physical isolation and storage protection remain separate.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        require X2CityComponent_BatterySupervision::dischargeVoltageCeiling;
+        require X2CityComponent_BatterySupervision::dischargePackCeiling;
+        require constraint {
+            doc /*
+                At or below the validated discharge cutoff voltage for the lowest qualified series group,
+                BatteryControl shall set total battery discharge current capability to zero, including
+                auxiliary loads. The current provisional setting is owned by the discharge voltage
+                calibration. Abrupt withdrawal is permitted in every riding level without a comfort fade.
+            */
+        }
+    }
+    satisfy dischargeVoltageCutoff by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+
+    requirement <'REQ-SYS-SOC-004'> currentBranchIndependence : SystemRequirement {
+        doc /*
+            Draft successor allocation: LE-BATTERY-CONTROL. Sources: DEC-SOC-001, DEC-REG-001/006,
+            DEC-SPD-001. Verify: I, T-SYS with independent charge and discharge limits and faults.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        require constraint {
+            doc /*
+                BatteryControl shall assess each current branch against its own applicable operating
+                envelopes and limits, independently of the other branch, subject to shared constraints
+                and recognized common faults.
+            */
+        }
+    }
+    satisfy currentBranchIndependence by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+
+    requirement <'REQ-SYS-SOC-005'> dischargeVoltageRecovery : SystemRequirement {
+        doc /*
+            Draft successor allocation: LE-BATTERY-CONTROL. Source: DEC-SOC-001. Verify: I, T-SYS
+            at the discharge voltage endpoint and just above, including startup and overlapping
+            restrictions; positive response follows REQ-SYS-SOC-008.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        require X2CityComponent_BatterySupervision::dischargeVoltageCeiling;
+        require X2CityComponent_BatterySupervision::dischargePackCeiling;
+        require constraint {
+            doc /*
+                Strictly above the validated discharge cutoff voltage for the lowest qualified series group,
+                BatteryControl shall automatically allow the discharge voltage curve to recover without
+                restart or extra enable action, subject to temperature and all other applicable limits.
+            */
+        }
+    }
+    satisfy dischargeVoltageRecovery by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+
+    requirement <'REQ-SYS-REG-002'> regenerativeVoltageCutoff : SystemRequirement {
+        doc /*
+            Draft successor allocation: LE-BATTERY-CONTROL. Sources: DEC-REG-001/004, CON-048,
+            OI-061. Verify: A, T-SYS at and around the calibrated highest-group charge voltage
+            endpoint in every regenerative level, with independent limits and recovery.
+        */
+        subject batteryControl:BatteryControl = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+        require X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        require X2CityComponent_BatterySupervision::regenerativeVoltageCeiling;
+        require X2CityComponent_BatterySupervision::regenerativePackCeiling;
+        require constraint {
+            doc /*
+                At or above the calibrated charge cutoff voltage for the highest qualified series group,
+                BatteryControl shall set regenerative charge current capability to zero. The current
+                provisional endpoint is 4.10 V. Below it the voltage curve shall automatically recover,
+                subject to temperature and other applicable limits. Abrupt withdrawal is permitted in
+                riding Levels 1–5 without an anticipatory comfort fade.
+            */
+        }
+    }
+    satisfy regenerativeVoltageCutoff by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
+
     requirement batteryControlRequirements : SystemRequirement {
         doc /*
             Draft organizational conjunction of canonical obligations for the BatteryControl architectural occurrence.
@@ -466,12 +548,64 @@ package X2CityComponent_BatteryControl {
         require X2CityComponent_BatteryControl::batteryStartupQualification;
         require X2CityComponent_BatteryControl::batteryOperatingClassification;
         require X2CityComponent_BatteryControl::dischargePermissiveChargeRestriction;
+        require X2CityComponent_BatteryControl::dischargeVoltageCutoff;
+        require X2CityComponent_BatteryControl::currentBranchIndependence;
+        require X2CityComponent_BatteryControl::dischargeVoltageRecovery;
+        require X2CityComponent_BatteryControl::regenerativeVoltageCutoff;
         require X2CityComponent_BatteryAssembly::batteryAssemblyRequirements;
         require X2CityComponent_BatterySupervision::batterySupervisionRequirements;
     }
     satisfy batteryControlRequirements by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl;
 
     doc /* Native requirement derivations connect only requirement usages modeled in SysML. Parent records maintained in Markdown remain source links in the owning requirement documentation; this model does not create proxy requirements for those records. */
+
+    #derivation connection def DischargeVoltageCutoffDerivation {
+        end #original original : Requirements::RequirementCheck;
+        end #derive batteryCapabilityPolicy : Requirements::RequirementCheck;
+        end #derive dischargeVoltageCeiling : Requirements::RequirementCheck;
+        end #derive dischargePackCeiling : Requirements::RequirementCheck;
+    }
+    #derivation connection dischargeVoltageCutoffDerivation : DischargeVoltageCutoffDerivation {
+        end original ::> X2CityComponent_BatteryControl::dischargeVoltageCutoff;
+        end batteryCapabilityPolicy ::> X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        end dischargeVoltageCeiling ::> X2CityComponent_BatterySupervision::dischargeVoltageCeiling;
+        end dischargePackCeiling ::> X2CityComponent_BatterySupervision::dischargePackCeiling;
+    }
+
+    #derivation connection def CurrentBranchIndependenceDerivation {
+        end #original original : Requirements::RequirementCheck;
+        end #derive batteryCapabilityPolicy : Requirements::RequirementCheck;
+    }
+    #derivation connection currentBranchIndependenceDerivation : CurrentBranchIndependenceDerivation {
+        end original ::> X2CityComponent_BatteryControl::currentBranchIndependence;
+        end batteryCapabilityPolicy ::> X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+    }
+
+    #derivation connection def DischargeVoltageRecoveryDerivation {
+        end #original original : Requirements::RequirementCheck;
+        end #derive batteryCapabilityPolicy : Requirements::RequirementCheck;
+        end #derive dischargeVoltageCeiling : Requirements::RequirementCheck;
+        end #derive dischargePackCeiling : Requirements::RequirementCheck;
+    }
+    #derivation connection dischargeVoltageRecoveryDerivation : DischargeVoltageRecoveryDerivation {
+        end original ::> X2CityComponent_BatteryControl::dischargeVoltageRecovery;
+        end batteryCapabilityPolicy ::> X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        end dischargeVoltageCeiling ::> X2CityComponent_BatterySupervision::dischargeVoltageCeiling;
+        end dischargePackCeiling ::> X2CityComponent_BatterySupervision::dischargePackCeiling;
+    }
+
+    #derivation connection def RegenerativeVoltageCutoffDerivation {
+        end #original original : Requirements::RequirementCheck;
+        end #derive batteryCapabilityPolicy : Requirements::RequirementCheck;
+        end #derive regenerativeVoltageCeiling : Requirements::RequirementCheck;
+        end #derive regenerativePackCeiling : Requirements::RequirementCheck;
+    }
+    #derivation connection regenerativeVoltageCutoffDerivation : RegenerativeVoltageCutoffDerivation {
+        end original ::> X2CityComponent_BatteryControl::regenerativeVoltageCutoff;
+        end batteryCapabilityPolicy ::> X2CityComponent_BatterySupervision::batteryCapabilityPolicy;
+        end regenerativeVoltageCeiling ::> X2CityComponent_BatterySupervision::regenerativeVoltageCeiling;
+        end regenerativePackCeiling ::> X2CityComponent_BatterySupervision::regenerativePackCeiling;
+    }
 
     #derivation connection def BatteryAssemblySelectionDerivation {
         end #original original : Requirements::RequirementCheck;

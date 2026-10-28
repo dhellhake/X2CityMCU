@@ -23,9 +23,11 @@ package X2CityContract_LightPower {
 package X2CityComponent_LightPower {
     private import X2CityContract_EnergyPath::*;
     private import X2CityContract_LightPower::*;
+    private import X2CityContract_LightControl::*;
 
     part def LightPower { // LE-LIGHT-POWER
-        /* Receives distributed vehicle electrical energy and provides the physical lighting-power supply consumed by its owning LightActuation. It specifies no separate converter or circuit implementation. */
+        /* Receives distributed vehicle electrical energy and provides the physical lighting-power supply consumed by its owning LightActuation. Qualified unavailable withdraws lighting supply or actuation, including before usable software modes; in the live powered actuation context an unqualified update cannot release a known restriction. Qualified available permits supply subject to EnergyPath and protection limits. It specifies no separate converter or circuit implementation. */
+        port lightingAvailabilityIn:LightingAvailabilityInputPort { doc /* Receives the qualified budget-derived operational constraint delegated by LightActuation. */ }
         port vehicleElectricalPowerIn:VehicleElectricalPowerInputPort { doc /* Receives the owning LightActuation's delegated distributed vehicle electrical energy. */ }
         port lightingPowerOut:LightingPowerOutputPort { doc /* Provides the physical lighting-power contract consumed by the owning LightActuation. */ }
     }
