@@ -106,10 +106,10 @@ package X2CityComponent_BatterySupervision {
             doc /*
                 BatterySupervision shall use a response for measurement updates only when it meets
                 the envelope conditions of REQ-SYS-BMSIF-003, matches the outstanding read request,
-                and reports success. A wrong-request or non-success response shall update no
-                measurement. A response with a valid envelope and non-success status is a
-                transaction failure and shall follow existing failure, timeout and retention
-                behavior.
+                and reports success within the transaction deadline in REQ-SYS-BMSIF-013.
+                A wrong-request, late or non-success response shall update no measurement. A response
+                with a valid envelope and non-success status is a transaction failure and shall
+                follow existing failure, timeout and retention behavior.
             */
         }
     }
@@ -202,22 +202,33 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
-            [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS conversion, probe
-            identity/count, optional and unavailable readings. Open: installed probe layout and
-            required-probe criteria under OI-041/061; retention is REQ-SYS-BMSIF-011.
+            [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS block decoding, source ordinals,
+            independent channel qualification, and rejected-frame retention of timely T2 versus immediate
+            withdrawal on accepted invalid T2. The owner-defined selected-unit
+            mapping is ordinal 1=MOS, 2=T1, 3=T2 (physical probe at cell-pack centre); T1 is a source
+            label and its PCB-sensor interpretation is unconfirmed. This is ordinary field and consumer
+            assessment, not a startup check. Open: physical accuracy, coverage, latency, applicable
+            field domains and consumer-required channel criteria under OI-041/061; retention is
+            REQ-SYS-BMSIF-011.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
-                BatterySupervision shall express supported temperature observations in Celsius and
-                preserve probe identity and count only when payload layout and encoding conform to
-                the selected-unit interface schema, the decoded number of readings matches the
-                response's declared NTC count, and identifiers are unique and match supported
-                channel assignments. An absent permitted optional reading shall
-                affect only that reading. A bad conversion, unsupported or conflicting probe layout,
-                or unavailable required reading shall leave affected temperature information
-                unqualified. It shall not substitute ambient, zero/default or display values, or
-                present an expired reading as current temperature.
+                In a selected-unit Basic (0x03) response accepted under REQ-SYS-BMSIF-003/014,
+                BatterySupervision shall decode the temperature block at its defined position in the
+                payload, after its declared NTC count
+                and before the checksum/trailer. The count shall be 3, followed by exactly three
+                ordered big-endian 16-bit values in 0.1 K units. Convert each raw value r to Celsius
+                as (r - 2731) / 10. Preserve 1-based source ordinals as probe identifiers: 1=MOS,
+                2=T1, and 3=T2, the physical probe at the centre of the cell pack. A missing,
+                truncated or structurally unsupported block, or a declared count other than 3, shall
+                leave all temperatures from that block unqualified. Qualify decoded channels
+                independently: MOS/T1 field-only invalidity or unavailability shall not invalidate an
+                otherwise qualified T2 or either dependent current limit. Invalid or unavailable required T2 shall
+                immediately leave T2 unqualified and both dependent regenerative and discharge limits
+                unqualified and zero under REQ-SYS-BATSUP-009/013; this qualification withdrawal
+                shall not wait for battery-fault timeout recognition. Do not substitute ambient,
+                default or display values, or present an expired reading as current.
             */
         }
     }
@@ -270,21 +281,22 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: selected-unit UART facts in
             [selected-unit UART acceptance contract](BMS_Information.md#selected-unit-uart-read-acceptance-contract); [Battery Integration per-consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance) and response
             budget. Verify: T-SW/T-SYS same-value accepted updates, rejected/unrelated/cached data,
-            no-frame timeout, sample latency, and missed transaction deadlines. Open:
-            evidence-derived per-field age/latency and reaction limits under OI-041/061;
-            WS-OI-018/019.
+            no-frame timeout, rejected and late replies, identical values, and missed transaction deadlines.
+            The host timeout is a selected target; device refresh, measurement latency and physical
+            end-to-end limits remain validation evidence under OI-041/061; WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
-                For each applicable field, timeliness shall remain qualified only while its
-                evidence-based source-age criteria hold, including measurement-to-response latency
-                and uncertainty; host receipt shall not be treated as sample time. A newly accepted
-                relevant source update shall renew that field's timeliness even when its value is
-                unchanged. Rejected, malformed, wrong-request, unrelated-field or cached data, and
-                republication alone, shall renew none. Timeliness shall expire when its age
-                criterion is exceeded, including when no new frame arrives. Missing a transaction
-                response deadline alone shall not expire otherwise timely information.
+                Each cyclic field's host timeliness shall expire 600 ms after its last accepted,
+                qualified relevant update, independently of incoming frames. An identical qualified
+                value renews that field's timer. Rejected, malformed, non-success, wrong-request,
+                expired-transaction, unrelated-field or cached data, and republication alone, shall
+                not renew it. A missed transaction deadline alone shall not expire otherwise timely
+                information. Host accepted-update absence is distinct from internal BMS measurement
+                age; receipt shall not be treated as sample time. Device refresh and latency and
+                physical end-to-end limits remain subject to validation. The captured startup capacity
+                reference is retained under REQ-SYS-BATSUP-007 and is not a cyclic field.
             */
         }
     }
@@ -296,7 +308,8 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance) and response budget. Verify: T-SW/T-SYS
             interruption, sleep/wake, missed replies, field-specific expiry and dependent-use
-            withdrawal. Open: evidence-derived timeout and delivery/use budgets under OI-041/061;
+            withdrawal. The host timeout and component publication targets are specified in
+            BMSIF-010/013; physical delivery and use remain subject to validation under OI-041/061;
             WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
@@ -307,10 +320,9 @@ package X2CityComponent_BatterySupervision {
                 interruption, missed transaction deadline or sleep/wake alone shall not invalidate
                 still-qualified data. On expiry or loss of another qualification criterion, it shall
                 withdraw only affected shared or branch qualification and set the dependent
-                effective discharge or regenerative-charge current limit to zero. Expired
-                information shall not support dependent use, including after delayed publication or
-                delivery. Expiry and its qualification withdrawal shall occur within the accepted
-                delivery/use budget, including when no new frame arrives.
+                effective discharge or regenerative-charge current limit to zero where dependent.
+                Expired information shall not support dependent use. Timeout and component publication
+                follow REQ-SYS-BMSIF-010/013; downstream delivery remains subject to validation.
             */
         }
     }
@@ -343,17 +355,23 @@ package X2CityComponent_BatterySupervision {
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
             [Battery Integration qualification and response budget](../Battery_Integration.md#qualification-evidence-and-response-budget); [operating-limit qualification](BatterySupervision.sysml#req-sys-batsup-002).
-            Verify: T-SYS startup, source-update, response, timeout, publication, delivery/use,
-            sleep and energy budgets. Open: numerical acceptance criteria under OI-041/061 and WS-OI-018/019.
+            Verify: T-SW/T-SYS alternating polling, one outstanding request, 100 ms transaction and
+            10 ms publication boundaries, failure and normal reattempt; validate device refresh,
+            physical delivery/use, sleep and energy under OI-041/061 and WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
-                BatterySupervision's read-only service shall meet the accepted budgets for source
-                updates, transaction responses, field timeout detection, startup qualification,
-                qualification publication, delivery, dependent use, and applicable power, sleep and
-                storage-energy consumption. Timeout-driven qualification withdrawal shall meet its
-                accepted delivery/use budget without requiring a new frame.
+                BatterySupervision shall request Basic (0x03) and complete 14-group voltage (0x04)
+                information each every 200 ms, alternating nominally 100 ms apart, with at most one
+                outstanding request. A transaction completes only on a matching, valid, successful
+                reply within 100 ms from the start of request transmission, including serialization.
+                After failure, the normal cyclic schedule shall reattempt without burst or queued
+                retries. The optional 0x05 identity read shall have no periodic request and shall not
+                be a startup prerequisite. BatterySupervision shall recompute and publish affected
+                component outputs within 10 ms of relevant accepted information or timer expiry,
+                including fault recognition and status publication. Downstream physical delay, device
+                refresh, power, sleep and storage-energy performance remain subject to validation.
             */
         }
     }
@@ -419,8 +437,12 @@ package X2CityComponent_BatterySupervision {
                 startup checks from the same current accepted Basic (0x03) response: decoded software
                 version 3.2 and 14 reported series groups. Version interpretation shall follow the
                 selected-unit protocol reference. A missing or invalid value means that check has not
-                passed; missing initial information alone does not establish a battery fault. A
-                recognized mismatch shall follow existing battery/configuration fault handling. Until
+                passed. Required startup checks and data, including the capacity reference before
+                capture, shall be acquired within 1 s after polling begins at each controller startup.
+                Initial waiting before that deadline does not establish a battery fault; failure at
+                the deadline shall recognize a battery-information fault under REQ-SYS-BATSUP-017.
+                An accepted version or group-count mismatch shall be recognized immediately and
+                follow existing battery/configuration fault handling. Until
                 both checks pass, dependent operating limits remain unqualified with effective limits
                 zero.
             */
@@ -436,9 +458,10 @@ package X2CityComponent_BatterySupervision {
             Sources: [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md); Battery_Integration
             configuration and per-consumer acceptance. Verify:
             inspection, analysis, T-SW/T-SYS/T-FI across controller startup, independent
-            shared/branch loss, restrictions and recovery. Open: two startup checks, source ages,
-            per-consumer input subsets and required temperature channels, applicable individual physical-domain limits,
-            timeout criteria, dependencies and update budget under OI-041/049/061; WS-OI-007/018/019.
+            shared/branch loss, restrictions and recovery. Startup and timing targets are specified
+            in BATSUP-001 and BMSIF-010/013. Open: per-consumer input subsets and required temperature
+            channels, applicable individual physical-domain limits and physical validation under
+            OI-041/049/061; WS-OI-007/018/019.
             The qualified BMS pack-current observation is not required by either current-limit branch.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
@@ -458,7 +481,7 @@ package X2CityComponent_BatterySupervision {
                 restart-required battery-side fault is recognized. A zero current limit while
                 required startup assessment is unqualified denotes unavailable information, not
                 known zero capability under REQ-SYS-BMSPOL-001. Affected qualification changes shall
-                be published within the accepted update budget.
+                be published within the component output budget in REQ-SYS-BMSIF-013.
             */
         }
     }
@@ -628,18 +651,20 @@ package X2CityComponent_BatterySupervision {
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized regenerative pack capability decision.
             Verify: T-SW/T-SYS at each breakpoint, between points and with missing temperature.
-            Evidence / open: Measurement adequacy and cell-probe role are to be verified at product validation.
-            MOS/T1 is not proven to represent cell temperature; the external central T2 assignment is provisional.
+            Temperature source mapping and qualification follow BMSIF-008. Open: T2 accuracy, pack
+            coverage, measurement latency, applicable thermal fault thresholds and consumer
+            qualification criteria require product validation under OI-041/061.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
                 BatterySupervision shall determine the temperature ceiling IT = Ib × fT(Tcell), where
-                Tcell is the qualified reported cell-temperature reading in degrees Celsius from a correctly
-                identified cell probe in the selected BMS data. fT is piecewise
+                Tcell is the qualified third reading (source ordinal 3, T2) in the selected unit's
+                Basic (0x03) temperature block, in degrees Celsius. fT is piecewise
                 linear through (5, 0), (10, 0.25), (15, 0.50), (20, 1), (30, 1), (35, 0.75),
                 and (40, 0), and is zero at Tcell ≤ 5 and Tcell ≥ 40. Missing, invalid or unqualified
-                required cell temperature shall leave the dependent regenerative limit unqualified and zero.
+                required T2 shall immediately leave the dependent regenerative limit unqualified and zero;
+                battery-fault timeout recognition shall not delay this qualification withdrawal.
             */
         }
     }
@@ -733,19 +758,21 @@ package X2CityComponent_BatterySupervision {
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized discharge pack capability decision.
             Verify: T-SW/T-SYS at each breakpoint, between points and with missing temperature.
-            Evidence / open: Measurement adequacy and cell-probe role are to be verified at product validation.
-            MOS/T1 is not proven to represent cell temperature; the external central T2 assignment is provisional.
+            Temperature source mapping and qualification follow BMSIF-008. Open: T2 accuracy, pack
+            coverage, measurement latency, applicable thermal fault thresholds and consumer
+            qualification criteria require product validation under OI-041/061.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
                 BatterySupervision shall determine the discharge temperature ceiling ITD = IbD × FD(Tcell),
-                where Tcell is the qualified reported cell-temperature reading in degrees Celsius from a correctly
-                identified cell probe in the selected BMS data. FD is
+                where Tcell is the qualified third reading (source ordinal 3, T2) in the selected
+                unit's Basic (0x03) temperature block, in degrees Celsius. FD is
                 piecewise linear through (-5, 0), (0, 0.25), (10, 0.60), (20, 1), (35, 1),
                 (40, 0.75), (45, 0.40), and (50, 0), and is zero at Tcell ≤ -5 and Tcell ≥ 50.
-                Missing, invalid or unqualified required cell temperature shall leave the dependent discharge
-                limit unqualified and zero.
+                Missing, invalid or unqualified required T2 shall immediately leave the dependent discharge
+                limit unqualified and zero; battery-fault timeout recognition shall not delay this
+                qualification withdrawal.
             */
         }
     }
@@ -841,17 +868,23 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
             Sources: FLT-005/006, BMS-007 and BATSUP-001 startup mismatch.
             Verify: T-SW/T-SYS BMS thermal and other faults, mismatch, required-information loss,
-            initial waiting, rejected frames and optional or pack-current-only loss.
+            initial waiting, the 1 s startup and 600 ms field boundaries, rejected and late frames,
+            same-value renewal, SOC-only and current-only loss, and retained effect after recovery.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
                 BatterySupervision shall recognize the battery-fault category from qualified BMS-reported
-                faults, including BMS thermal faults, recognized startup mismatch, and recognized failure of
-                required battery information under the applicable existing recognition policies. Initial
-                waiting, a single rejected frame, and loss solely of optional or pack-current information shall
-                not alone establish this fault. SOC-only loss or initial SOC qualification expiry shall
-                not establish a battery fault or inhibit startup.
+                faults, including BMS thermal faults, accepted startup mismatch, and failure of required
+                battery information. An accepted actual BMS fault or startup mismatch shall be recognized
+                immediately without added debounce. All initially missing required fields use the startup
+                deadline in REQ-SYS-BATSUP-001; after a required cyclic field has qualified, its expiry
+                under REQ-SYS-BMSIF-010 shall recognize a battery-information fault. Invalid required
+                fields lose affected qualification under existing rules; the timeout runs from the last
+                qualified update. Initial waiting before the deadline, a single rejected frame, and loss
+                solely of optional, SOC or pack-current information shall not alone establish this fault.
+                SOC-only or pack-current-only loss shall not inhibit startup. Recognized faults have the
+                retained common effect in REQ-SYS-BATSUP-019.
             */
         }
     }
@@ -904,7 +937,8 @@ package X2CityComponent_BatterySupervision {
             Sources: FLT-005/006, BMS-007, TMP-001/002 and BATSUP-001.
             Verify: T-SW/T-SYS simultaneous, brief and cleared faults, unknown source states and
             unqualified operating assessments; confirm common first-recognized report ordering.
-            Open: recognition thresholds, source mapping and publication/delivery budgets.
+            Component publication follows BMSIF-013; physical delivery and other recognition
+            thresholds and source mapping remain subject to validation.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
@@ -920,7 +954,8 @@ package X2CityComponent_BatterySupervision {
                 evidence of its absence; unknown is neither confirmed presence nor confirmed absence. It shall capture and make every recognized
                 fault and its common recognition order available to RidingControl for reporting, including
                 brief, cleared and simultaneous events, even while operating assessments are unqualified.
-                Publication and delivery shall meet the accepted derived budgets.
+                BatteryStatus shall report the recognized battery fault. Component publication shall
+                meet REQ-SYS-BMSIF-013. Physical downstream delivery remains subject to validation.
             */
         }
     }

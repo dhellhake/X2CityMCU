@@ -10,7 +10,7 @@ package X2CityContract_BatteryControl {
         attribute recordKind:BmsReadRecordKind;
     }
     item def TemperatureObservation {
-        doc /* One available BMS temperature reading with probe identity. Availability does not imply a fixed probe count, placement, or seventy cell sensors. */
+        doc /* One available BMS temperature reading. probeIdentifier is its 1-based Basic (0x03) source ordinal: 1=MOS, 2=T1, 3=T2 (physical probe at the centre of the cell pack). Availability does not imply seventy cell sensors. */
         attribute probeIdentifier:Integer;
         attribute temperatureCelsius:Real;
     }
@@ -242,8 +242,10 @@ package X2CityComponent_BatteryControl {
             qualification/fault behavior.
 
             Open dependencies / qualifications: WS-OI-005/018/019, OI-041/049: verify firmware support and its fixed
-            mapping to accepted protocol captures, exact implemented response schemas, accuracy, polling/response,
-            field-age-validity and initialization limits. Firmware version 3.2 is known but does not establish the
+            mapping to accepted protocol captures, exact implemented response schemas and accuracy. Polling,
+            host timeout, startup and component publication targets are specified by BMSIF-010/013 and
+            BATSUP-001; device refresh, measurement latency and physical end-to-end limits require validation.
+            Firmware version 3.2 is known but does not establish the
             protocol revision or wire encoding. A BMS estimate becomes actual-SOC information only after qualification.
             Fourteen groups and available probes are not complete individual-cell/temperature fault coverage.
         */
@@ -287,12 +289,16 @@ package X2CityComponent_BatteryControl {
             [REQ-SYS-STA-006](../../../../Requirements/System_Requirements/Power_Startup_and_Faults.md#req-sys-sta-006).
 
             Planned verification: I, A, T-SYS, T-FI. Cover each qualification item independently missing, inconsistent,
-            stale and valid; wrong series count/configuration, missing required probe, active protection, expected path
-            disable and actual failed path. At each applicable restart, verify shared checks are reflected in each
-            dependent branch qualification and operation-specific qualification from BatteryOperatingLimits.
+            stale and valid; wrong series count/configuration, missing required T2 channel, active protection,
+            expected path disable and actual failed path. Confirm temperature qualification is ordinary field and
+            consumer assessment, not a third startup check. At each applicable restart, verify shared checks are
+            reflected in each dependent branch and operation-specific qualification from BatteryOperatingLimits.
 
             Open dependencies / qualifications: OI-041/049/061; WS-OI-007/018/019. Define per-consumer
-            input subsets, required temperature channels, applicable per-field domain criteria and timeout criteria;
+            input subsets and applicable per-field domain criteria; required temperature channels are
+            consumer-specific under BMSIF-008. Temperature mapping/qualification is ordinary field
+            and consumer assessment, not a third startup check; physical accuracy, coverage, latency
+            and required-channel criteria remain open;
             the qualified BMS pack-current observation is not required by either current-limit branch. Use the
             [BMS configuration derivation](../../../../Battery/BAT-001_Selected_Pack_and_BMS.md#bms-configuration-derivation);
             retain commissioning evidence and admission/change control for protection settings that are not observable
@@ -300,8 +306,8 @@ package X2CityComponent_BatteryControl {
             two checks in BATSUP-001 from the same current accepted Basic (0x03) response: decoded software version
             3.2 and 14 series groups. A 0x05 identity read remains informational. The selected-unit version field
             interpretation remains subject to protocol evidence; no wire encoding is presumed. Current/capacity
-            scale, supported temperature encoding, probe identity/layout, and group-voltage encoding remain ordinary
-            field or capability qualification. Hardware/model/configuration acceptance remains commissioning\
+            scale and group-voltage encoding remain ordinary field or capability qualification.
+            Hardware/model/configuration acceptance remains commissioning\
             evidence. Existing
             response validation and timeout/field qualification remain required. Applicable shared checks are internal
             to each dependent branch qualification.
