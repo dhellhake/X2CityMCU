@@ -681,7 +681,8 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BATSUP-010'> regenerativeVoltageCeiling : AbstractSoftwareRequirement {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
-            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Parents: [REQ-SYS-BMS-007](../BatteryControl.sysml#req-sys-bms-007) and
+            [REQ-SYS-REG-002](../BatteryControl.sysml#req-sys-reg-002).
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized regenerative pack capability decision.
             Verify: T-SW/T-SYS at and around each configured endpoint, with each group missing,
@@ -707,7 +708,8 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BATSUP-011'> regenerativePackCeiling : AbstractSoftwareRequirement {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
-            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Parents: [REQ-SYS-BMS-007](../BatteryControl.sysml#req-sys-bms-007) and
+            [REQ-SYS-REG-002](../BatteryControl.sysml#req-sys-reg-002).
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized regenerative pack capability decision.
             Verify: T-SW/T-SYS with simultaneous derating and independent discharge evidence. At C=17 Ah,
@@ -784,7 +786,9 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BATSUP-014'> dischargeVoltageCeiling : AbstractSoftwareRequirement {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
-            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Parents: [REQ-SYS-BMS-007](../BatteryControl.sysml#req-sys-bms-007),
+            [REQ-SYS-SOC-003](../BatteryControl.sysml#req-sys-soc-003), and
+            [REQ-SYS-SOC-005](../BatteryControl.sysml#req-sys-soc-005).
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized discharge pack capability decision.
             Verify: T-SW/T-SYS at and around each configured endpoint, with each group missing,
@@ -810,7 +814,9 @@ package X2CityComponent_BatterySupervision {
     requirement <'REQ-SYS-BATSUP-015'> dischargePackCeiling : AbstractSoftwareRequirement {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
-            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Parents: [REQ-SYS-BMS-007](../BatteryControl.sysml#req-sys-bms-007),
+            [REQ-SYS-SOC-003](../BatteryControl.sysml#req-sys-soc-003), and
+            [REQ-SYS-SOC-005](../BatteryControl.sysml#req-sys-soc-005).
             Sources: [REQ-SYS-BMS-001](../Battery_Integration.md#req-sys-bms-001);
             owner-authorized discharge pack capability decision.
             Verify: T-SW/T-SYS with simultaneous derating and independent regenerative evidence. At C=17 Ah,
