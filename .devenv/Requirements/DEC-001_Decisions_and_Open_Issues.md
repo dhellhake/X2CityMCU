@@ -15,6 +15,11 @@ Unless stated otherwise, torque means commanded motor-produced rear-wheel torque
 
 Owner, 2026-10-28: adopt [AG-001](../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#ag-001-operational-and-reporting-interfaces) as the governing interface guideline for future architecture and requirements work.
 
+<a id="dec-arch-003"></a>
+### DEC-ARCH-003 — BatteryStatus and retained battery fault effect
+
+Owner, 2026-10-28: apply the five BatterySupervision refinements in [REQ-SYS-BATSUP-017–021](../Architecture/SystemArchitecture/Modelling/BatteryControl/Decomposition/BatterySupervision.sysml#req-sys-batsup-017) under AG-001. Qualified battery limits/operating qualification govern battery functional behavior; reporting-only `BatteryStatus` exposes concurrent recognized battery-fault, local actual-thermal-fault and live MOS-disabled warning conditions, with unknown states distinguishable. Recognized restart-required battery faults retain both battery operating branches unqualified with zero effective limits until a normal or unexpected controller restart, even if source/path information recovers. Ordinary restrictions, qualified zero limits and initial missing qualification are not by themselves faults; other valid measurements retain independent validity. RidingControl owns report codes, first-recognition order, tie resolution and session lifetime; BatterySupervision performs no HMI code mapping or local priority. HMI report encoding/selection semantics remain unchanged. Recognition/publication/delivery timing, probe mapping, coverage and physical response remain controlled engineering derivation.
+
 <a id="dec-scope-001"></a>
 ### DEC-SCOPE-001 — Electrical/electronic retrofit on supplied BMW platform
 

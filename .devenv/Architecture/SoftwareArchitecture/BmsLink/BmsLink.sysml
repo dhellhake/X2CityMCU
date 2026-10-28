@@ -11,6 +11,7 @@ package X2CitySoftwareContract_BmsLink {
 package X2CitySoftwareComponent_BmsLink {
     private import X2CitySoftwareContract_BmsLink::*;
     private import X2CitySoftwareContract_Platform::*;
+    private import X2CityContract_BatteryControl::*;
     part def BmsLink {
         /* Implements the fixed SP14S004 V1.0 read protocol. On every normal or unexpected host
            startup, dependent output qualification requires exactly
@@ -27,6 +28,7 @@ package X2CitySoftwareComponent_BmsLink {
         port executionTimeIn:ExecutionTimeInputPort;
         port bmsTransportExchange:BmsTransportExchangePort;
         port batteryMeasurementsOut:BatteryMeasurementsOutputPort;
+        port bmsStatusOut:BatteryStatusOutputPort;
         port platformContextIn:~PlatformContextOutputPort;
         port platformHealthIn:~PlatformHealthOutputPort;
     }

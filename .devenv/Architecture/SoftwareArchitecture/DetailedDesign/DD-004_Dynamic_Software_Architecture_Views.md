@@ -50,8 +50,9 @@ sequenceDiagram
     BR-->>RC: brakeLeverStateIn once: qualified current-startup brake fact
     H-->>RC: hmiRiderSettingsRequestIn once: qualified level/speed receipt
     B-->>BP: batteryMeasurementsIn: field-qualified BatteryMeasurements (values + qualification)
-    BP-->>RC: batteryFaultStatusIn and qualified actual stateOfChargeIn
-    BP-->>RC: existing batteryOperatingLimitsIn stream carries current-only limits plus independently qualified mosDisabledState
+    B-->>BP: bmsStatusIn: reporting-only diagnostic contribution, independent of numeric qualification
+    BP-->>RC: batteryStatusIn and qualified actual stateOfChargeIn
+    BP-->>RC: batteryOperatingLimitsIn carries current-only limits; batteryStatusIn carries independently qualified MOS warning
     T-->>RC: motion, motor-position, temperature, traction-condition and actual-output inputs
     Note over RC,D: one component; U-SESSION-ELIGIBILITY evaluates the complete Ready guard, U-DEMAND-ARBITER consumes the same invocation inputs
     Note over BP,RC: Ready checks the qualified discharge branch, not positive capability; charge-branch qualification and HMI-only current are independent
@@ -310,7 +311,7 @@ stateDiagram-v2
 
 At or below 10% qualified SOC, positive propulsion is zero; above 10% it is eligible under existing authority, qualification, brake-release and level-ramp guards. Entry does not wait for standstill or a settings guard. SOC eligibility does not command automatic braking; otherwise-permitted regeneration and auxiliary discharge remain independent.
 
-`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` updates and expiry-driven qualification transitions; rejected frames reset no private per-field timer. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge effective current limits distinct. Each current branch has independent qualification; an unqualified branch has effective current zero, and qualified zero is a valid capability. Battery-normal restrictions remain separate from recognized battery faults. Returning limits alone cannot clear a RidingControl fault latch, grant Ready, bypass regeneration recovery guards or re-arm post-stop regeneration.
+`SC-BMS-LINK.V` publishes accepted `BatteryMeasurements` updates and expiry-driven qualification transitions; rejected frames reset no private per-field timer. `SC-BAT-POLICY.V` keeps discharge and regenerative-charge effective current limits distinct. Each current branch has independent qualification; an unqualified branch has effective current zero, and qualified zero is a valid capability. Battery-normal restrictions remain separate from recognized battery faults. Returning limits alone cannot clear a retained restart-required battery fault effect, grant Ready, bypass regeneration recovery guards or re-arm post-stop regeneration.
 
 ## Traceability and limits
 

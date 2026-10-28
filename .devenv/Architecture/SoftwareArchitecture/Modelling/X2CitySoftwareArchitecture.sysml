@@ -117,7 +117,7 @@ package X2CitySoftwareArchitecture {
     flow motorPositionToControl from motorPositionEstimatorVehicle.motorPositionOut.payload to ridingControlVehicle.motorPositionIn.payload;
     flow temperatureToControl from tractionControlVehicle.qualifiedTemperatureOut.payload to ridingControlVehicle.qualifiedTemperatureIn.payload;
     flow tractionConditionToControl from tractionControlVehicle.tractionObservationOut.payload to ridingControlVehicle.tractionConditionEvidenceIn.payload;
-    flow batteryFaultStatusToControl from batteryProtectionVehicle.batteryFaultStatusOut.faultStatus to ridingControlVehicle.batteryFaultStatusIn.faultStatus;
+    flow batteryStatusToControl from batteryProtectionVehicle.batteryStatusOut.status to ridingControlVehicle.batteryStatusIn.status;
     flow batterySocToControl from batteryProtectionVehicle.stateOfChargeOut.stateOfCharge to ridingControlVehicle.stateOfChargeIn.stateOfCharge;
     flow batteryLimitsToControl from batteryProtectionVehicle.batteryOperatingLimitsOut.operatingLimits to ridingControlVehicle.batteryOperatingLimitsIn.operatingLimits;
     flow actualTractionToControl from tractionControlVehicle.appliedTractionStateOut.payload to ridingControlVehicle.actualTractionOutputIn.payload;
@@ -130,6 +130,7 @@ package X2CitySoftwareArchitecture {
     // SW-I-003/004/005/006: vehicle policy, dedicated demand inputs, signed command and observations.
     interface rV16BatteryMeasurements : IfA009BatteryMeasurements
         connect bmsLinkVehicle.batteryMeasurementsOut to batteryProtectionVehicle.batteryMeasurementsIn;
+    flow bmsStatusToBatteryProtection from bmsLinkVehicle.bmsStatusOut.status to batteryProtectionVehicle.bmsStatusIn.status;
     // LightModeSelection receives the three concrete System-contract facts. BrakeInterface
     // owns mechanical-lever qualification; Traction owns actual electrical-braking state.
     flow rV20BrakeLeverState from brakeInterfaceVehicle.brakeLeverStateOut.brakeLeverState to lightPolicyVehicle.brakeLeverStateIn.brakeLeverState;

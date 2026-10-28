@@ -26,8 +26,8 @@ package X2CityComponent_BatterySupervision {
         }
         port bmsTelemetryIn:BmsTelemetryInputPort { doc /* Read-only UART response input from the supplied BMS. */ }
         port bmsReadRequestOut:BmsReadRequestOutputPort { doc /* Read-only UART request output to the supplied BMS. */ }
-        port batteryFaultStatusOut:BatteryFaultStatusOutputPort { doc /* Publishes recognized thermal/battery fault evidence only; operating qualification and effective limits travel on BatteryOperatingLimits. */ }
-        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* Publishes qualified operating assessment and independent charge/discharge branches, including independently qualified MOS-disabled status, to RidingControl. */ }
+        port batteryStatusOut:BatteryStatusOutputPort { doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */ }
+        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* Publishes qualified operating assessment and independent charge/discharge branches to RidingControl. */ }
         port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC for HMI display and RidingControl's low-SOC propulsion policy. */ }
         port batteryCurrentOut:BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current in amperes for HMI. */ }
     }
@@ -305,8 +305,9 @@ package X2CityComponent_BatterySupervision {
                 unqualified until newly accepted relevant source evidence satisfies its qualification
                 criteria. Cached data and republication alone shall not requalify it; unaffected independent
                 observations may remain qualified. Optional or HMI-only information loss shall not create a
-                blanket battery assessment fault. Existing fault and restart classification remains
-                authoritative.
+                blanket battery assessment fault. Source recovery shall not clear a retained
+                restart-required battery-side fault effect; existing fault and restart classification
+                remains authoritative.
             */
         }
     }
@@ -357,10 +358,7 @@ package X2CityComponent_BatterySupervision {
                 equals the computed pack ceiling. An unqualified required constraint leaves the affected
                 branch unqualified with effective current limit zero. BatterySupervision shall internally
                 assess applicable shared evidence as part of each dependent branch qualification, and publish
-                independent branch qualification, effective current limits, restriction reasons and recognized
-                battery-fault evidence. A qualified zero means known zero capability. Restriction reasons
-                shall remain distinct from fault evidence. BatterySupervision shall publish
-                recognized battery-fault evidence independently of operating-limit qualification.
+                independent branch qualification, effective current limits and restriction reasons. A qualified zero means known zero capability. Reporting conditions remain separate from operating capability.
             */
         }
     }
@@ -417,7 +415,8 @@ package X2CityComponent_BatterySupervision {
                 separate flag. Charge-only evidence shall not gate discharge qualification; HMI-only
                 current display evidence shall gate neither branch, while operation-required current
                 remains required. Loss of a required shared input shall withdraw every dependent
-                branch qualification; branch-only loss shall withdraw only that branch. A zero current limit while
+                branch qualification; branch-only loss shall withdraw only that branch unless a
+                restart-required battery-side fault is recognized. A zero current limit while
                 required startup assessment is unqualified denotes unavailable information, not
                 known zero capability under REQ-SYS-BMSPOL-001. Affected qualification changes shall
                 be published within the accepted update budget.
@@ -467,7 +466,8 @@ package X2CityComponent_BatterySupervision {
         require constraint {
             doc /*
                 If charge-path status is qualified disabled and all other applicable shared and charge-branch
-                criteria pass, BatterySupervision shall publish the charge branch qualified with a zero
+                criteria pass and no retained restart-required fault applies, BatterySupervision shall
+                publish the charge branch qualified with a zero
                 effective regenerative-charge current limit. Unknown, invalid or stale required charge-path
                 status shall leave that branch unqualified with a zero limit. Qualified enabled status removes
                 only the charge-path restriction; remaining required evidence and envelope constraints still
@@ -495,7 +495,8 @@ package X2CityComponent_BatterySupervision {
         require constraint {
             doc /*
                 If discharge-path status is qualified disabled and all other applicable shared and discharge-branch
-                criteria pass, BatterySupervision shall publish the discharge branch qualified with a
+                criteria pass and no retained restart-required fault applies, BatterySupervision shall
+                publish the discharge branch qualified with a
                 zero effective discharge-current limit. Unknown, invalid or stale required discharge-path
                 status shall leave that branch unqualified with a zero limit. Qualified enabled status removes
                 only the discharge-path restriction; remaining required evidence and envelope constraints still
@@ -519,16 +520,16 @@ package X2CityComponent_BatterySupervision {
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
-                BatterySupervision shall publish BatteryOperatingLimits.mosDisabledState as a qualified composite
+                BatterySupervision shall publish the BatteryStatus MOS-disabled warning as an independent condition
                 derived from the current qualified BMS charge- and discharge-MOS path states. When both states are
-                qualified, anyMosDisabled shall be true if either state is disabled and false only if both states
+                qualified, the warning shall be present if either state is disabled and absent only if both states
                 are enabled. The qualification of this status shall depend on current qualification of the path-state
                 source and shall be independent of charge/discharge branch current-assessment
                 completeness. Unknown, invalid, stale or otherwise unqualified source state shall make this status
                 unqualified; it shall not be interpreted as either disabled or enabled. Loss of source qualification
                 shall invalidate the status under existing BMS source-loss and expiry rules. The status alone shall
                 neither create or latch a fault nor assert physical isolation; recognized fault evidence continues
-                through the existing fault channel.
+                through BatteryStatus. The live warning clears on qualified evidence that both paths are enabled.
             */
         }
     }
@@ -651,7 +652,8 @@ package X2CityComponent_BatterySupervision {
             doc /*
                 BatterySupervision shall determine the regenerative pack ceiling Ipack = min(IT, IV), without
                 multiplying the temperature and voltage factors. When all required regenerative evidence is
-                qualified, a zero from either curve shall contribute a qualified known zero. The effective
+                qualified and no retained restart-required fault applies, a zero from either curve shall
+                contribute a qualified known zero. The effective
                 regenerative current limit shall equal exactly the minimum of Ipack and every applicable
                 qualified battery-side current ceiling or restriction, including physical, component, charge-path,
                 SOC policy, protection and configuration limits. A qualified prohibition or disabled charge path
@@ -752,7 +754,8 @@ package X2CityComponent_BatterySupervision {
             doc /*
                 BatterySupervision shall determine the discharge pack ceiling IpackD = min(ITD, IVD), without
                 multiplying the temperature and voltage factors. When all required discharge evidence is
-                qualified, a zero from either curve shall contribute a qualified known zero as an ordinary
+                qualified and no retained restart-required fault applies, a zero from either curve shall
+                contribute a qualified known zero as an ordinary
                 restriction and shall not by itself create or latch a fault. The effective discharge current
                 limit shall equal exactly the minimum of IpackD and every applicable qualified battery-side
                 current ceiling or restriction, including cell, pack, component, protection and discharge-path
@@ -790,6 +793,109 @@ package X2CityComponent_BatterySupervision {
     }
     satisfy voltageDeratingCalibrationQualification by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
 
+    requirement <'REQ-SYS-BATSUP-017'> batteryFaultRecognition : AbstractSoftwareRequirement {
+        doc /*
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Sources: FLT-008/010; BATSUP-001 startup mismatch.
+            Verify: T-SW/T-SYS BMS thermal and other faults, mismatch, required-information loss,
+            initial waiting, rejected frames and optional or HMI-only loss.
+        */
+        subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+        require constraint {
+            doc /*
+                BatterySupervision shall recognize the battery-fault category from qualified BMS-reported
+                faults, including BMS thermal faults, recognized startup mismatch, and recognized failure of
+                required battery information under the applicable existing recognition policies. Initial
+                waiting, a single rejected frame, and loss solely of optional or HMI-only information shall
+                not alone establish this fault.
+            */
+        }
+    }
+    satisfy batteryFaultRecognition by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+
+    requirement <'REQ-SYS-BATSUP-018'> localThermalFaultRecognition : AbstractSoftwareRequirement {
+        doc /*
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Sources: TMP-001/002 and existing temperature fault policy.
+            Verify: T-SW/T-SYS actual violation, missing information and ordinary charge ineligibility.
+        */
+        subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+        require constraint {
+            doc /*
+                BatterySupervision shall separately recognize an actual local thermal limit violation under
+                the applicable temperature fault policy; missing temperature information alone shall not
+                establish an actual thermal violation. Ordinary temperature-based charge ineligibility
+                shall not alone establish a fault.
+            */
+        }
+    }
+    satisfy localThermalFaultRecognition by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+
+    requirement <'REQ-SYS-BATSUP-019'> batteryFaultRetainedEffect : AbstractSoftwareRequirement {
+        doc /*
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Sources: FLT-008/010 and TMP-001/002.
+            Verify: T-SW/T-SYS both fault categories, source and path recovery, valid unrelated
+            measurements, and normal and unexpected restart.
+        */
+        subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+        require constraint {
+            doc /*
+                Upon recognition of a restart-required battery-side fault, including either the battery-fault
+                or local actual thermal-fault category, BatterySupervision shall retain both operating
+                branches unqualified with effective current limits zero until the next normal or unexpected
+                controller restart. Source or path recovery, live condition clearing or requalification shall
+                not clear this effect. Other actually valid measurements shall retain independent validity.
+            */
+        }
+    }
+    satisfy batteryFaultRetainedEffect by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+
+    requirement <'REQ-SYS-BATSUP-020'> batteryStatusPublication : AbstractSoftwareRequirement {
+        doc /*
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Sources: FLT-008/010, TMP-001/002 and BATSUP-001.
+            Verify: T-SW/T-SYS simultaneous, brief and cleared faults, unknown source states and
+            unqualified operating assessments; confirm common first-recognized report ordering.
+            Open: recognition thresholds, source mapping and publication/delivery budgets.
+        */
+        subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+        require constraint {
+            doc /*
+                BatterySupervision shall publish independent battery and local thermal fault conditions and
+                the live MOS warning concurrently in BatteryStatus, without battery-local priority or HMI-code
+                selection. A live condition clears only on qualified evidence of its absence; unknown is
+                neither confirmed presence nor confirmed absence. It shall capture and make every recognized
+                fault and its common recognition order available to RidingControl for reporting, including
+                brief, cleared and simultaneous events, even while operating assessments are unqualified.
+                Publication and delivery shall meet the accepted derived budgets.
+            */
+        }
+    }
+    satisfy batteryStatusPublication by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+
+    requirement <'REQ-SYS-BATSUP-021'> batteryStatusRestart : AbstractSoftwareRequirement {
+        doc /*
+            Status: Draft. Allocation: LE-BATTERY-SUPERVISION.
+            Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
+            Verify: T-SW/T-SYS normal and unexpected restart with cleared and still-present faults.
+        */
+        subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+        require constraint {
+            doc /*
+                At each normal or unexpected controller restart BatterySupervision shall discard prior-cycle
+                retained fault effects and diagnostic evidence and reacquire current evidence under startup
+                qualification and recognition rules; a still-present fault may be recognized anew. No
+                prior-cycle fault memory shall be carried across restart.
+            */
+        }
+    }
+    satisfy batteryStatusRestart by X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
+
     requirement batterySupervisionRequirements : AbstractSoftwareRequirement {
         doc /*
             Draft organizational conjunction of canonical obligations for the BatterySupervision architectural
@@ -804,6 +910,11 @@ package X2CityComponent_BatterySupervision {
         require X2CityComponent_BatterySupervision::chargePathCapability;
         require X2CityComponent_BatterySupervision::dischargePathCapability;
         require X2CityComponent_BatterySupervision::bmsMosDisabledStatus;
+        require X2CityComponent_BatterySupervision::batteryFaultRecognition;
+        require X2CityComponent_BatterySupervision::localThermalFaultRecognition;
+        require X2CityComponent_BatterySupervision::batteryFaultRetainedEffect;
+        require X2CityComponent_BatterySupervision::batteryStatusPublication;
+        require X2CityComponent_BatterySupervision::batteryStatusRestart;
         require X2CityComponent_BatterySupervision::startupCapacityReference;
         require X2CityComponent_BatterySupervision::regenerativeBaseCurrent;
         require X2CityComponent_BatterySupervision::regenerativeTemperatureCeiling;

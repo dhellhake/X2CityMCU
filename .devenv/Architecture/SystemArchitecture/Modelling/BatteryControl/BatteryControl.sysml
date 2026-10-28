@@ -1,10 +1,6 @@
 package X2CityContract_BatteryControl {
     private import X2CitySharedContracts::*;
 
-    attribute def FaultRecognitionOrder {
-        doc /* Comparable recognition ordering shared with RidingControl fault evidence. Zero means not recognized; equal non-zero values mean indistinguishable recognition order and require RidingControl's established tie rule. The ordering is not a BMS measurement timestamp or a battery-local sequence. */
-    }
-
     item def BatteryPower {
         doc /* Physical bidirectional pack-energy-path power boundary. It conveys discharge and regenerative charging energy without selecting voltage, conductors, switching, protection topology, or a software protection credit. */
     }
@@ -60,22 +56,14 @@ package X2CityContract_BatteryControl {
         item socSourceEvidence:BmsSocSourceEvidence;
         attribute socSourceEvidenceValid:Boolean;
     }
-    item def BatteryFaultStatus:>QualifiedInformationRecord {
-        doc /*
-            Fault-only channel for recognized battery fault evidence to RidingControl under BMS-005/006/007. Thermal
-            and other battery fault categories stay distinct; recognition order supports RidingControl's existing
-            first-recognized reporting rule without preselecting a display fault. Fault recognition and order remain
-            independent while BatteryOperatingLimits are unqualified; operating qualification and effective limits are published
-            separately in BatteryOperatingLimits.
-        */
-        attribute thermalFaultRecognized:Boolean;
-        attribute thermalFaultRecognitionOrder:FaultRecognitionOrder;
-        attribute batteryFaultRecognized:Boolean;
-        attribute batteryFaultRecognitionOrder:FaultRecognitionOrder;
-    }
-    item def BatteryMosDisabledState:>QualifiedInformationRecord {
-        doc /* Independently qualified composite of the supplied charge- and discharge-MOS enabled states. When this status is qualified, anyMosDisabled is true exactly when either currently qualified path state is disabled; it is false only when both are currently qualified enabled. Unknown, invalid or stale source path state leaves this record unqualified. Its qualification is independent of BatteryOperatingLimits branch qualification, and the value reports status only: it does not prove physical isolation or establish a battery fault. */
-        attribute anyMosDisabled:Boolean;
+    item def BatteryStatus {
+        doc /* Logical reporting contract: battery fault, independently recognized local actual thermal fault,
+            and ordinary at-least-one-MOS-disabled warning are independent, simultaneous conditions. Each has
+            meaningful known/unknown state; unknown is not absence. Battery fault includes BMS faults (including
+            BMS thermal faults), recognized startup mismatch and recognized required battery-information failure.
+            Recognition order is comparable with other RidingControl fault evidence for its first-recognized rule.
+            Diagnostic evidence remains available independently of operating-limit qualification. This item carries
+            reporting information only; detailed representation is derived in SoftwareArchitecture. */
     }
     item def BatteryOperatingLimits {
         doc /*
@@ -91,7 +79,6 @@ package X2CityContract_BatteryControl {
             these electrical current branches.
         */
         attribute sourceContext:SourceContext;
-        item mosDisabledState:BatteryMosDisabledState { doc /* Qualified charge/discharge MOS status, independently qualified from both current branches. */ }
         attribute dischargeBranchQualified:Boolean {
             doc /* True only while applicable shared and discharge-required current evidence/configuration/protection/path
                 assessment supports this branch. It describes assessment completeness, not available magnitude; a
@@ -126,23 +113,22 @@ package X2CityContract_BatteryControl {
     port def BmsTelemetryInputPort { doc /* Receives selected BMS source fields at BatterySupervision for qualification. */ in item telemetry:BmsTelemetry; }
     port def BatteryMeasurementsOutputPort { doc /* Sends BmsLink's qualified BMS measurements to BatteryProtection's operating-policy realization inside BatterySupervision. */ out item measurements:BatteryMeasurements; }
     port def BatteryMeasurementsInputPort { doc /* Receives BmsLink's qualified BMS measurements at BatteryProtection's operating-policy realization inside BatterySupervision. */ in item measurements:BatteryMeasurements; }
-    port def BatteryFaultStatusOutputPort {
-        doc /* Publishes recognized thermal/battery fault evidence only; current operating qualification and
-            effective limits travel on BatteryOperatingLimits. */
-        out item faultStatus:BatteryFaultStatus;
+    port def BatteryStatusOutputPort {
+        doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */
+        out item status:BatteryStatus;
     }
-    port def BatteryFaultStatusInputPort {
-        doc /* Receives recognized thermal/battery fault evidence only at RidingControl. */
-        in item faultStatus:BatteryFaultStatus;
+    port def BatteryStatusInputPort {
+        doc /* Receives battery reporting conditions at RidingControl. */
+        in item status:BatteryStatus;
     }
-    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified discharge and regenerative-charge current assessments plus independently qualified composite MOS-disabled status to RidingControl. */ out item operatingLimits:BatteryOperatingLimits; }
-    port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge and regenerative-charge current assessments plus independently qualified composite MOS-disabled status at RidingControl. */ in item operatingLimits:BatteryOperatingLimits; }
+    port def BatteryOperatingLimitsOutputPort { doc /* Publishes independently qualified discharge and regenerative-charge current assessments to RidingControl. */ out item operatingLimits:BatteryOperatingLimits; }
+    port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge and regenerative-charge current assessments at RidingControl. */ in item operatingLimits:BatteryOperatingLimits; }
     port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl or RidingControl. */ out item stateOfCharge:BatteryStateOfCharge; }
     port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl or RidingControl. */ in item stateOfCharge:BatteryStateOfCharge; }
     port def BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current to HMIControl. */ out item batteryCurrent:BatteryCurrent; }
     port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at HMIControl. */ in item batteryCurrent:BatteryCurrent; }
 
-    interface def IfA003BatteryFaultStatus { end producer:BatteryFaultStatusOutputPort; end consumer:BatteryFaultStatusInputPort; flow producer.faultStatus to consumer.faultStatus; }
+    interface def IfA003BatteryStatus { end producer:BatteryStatusOutputPort; end consumer:BatteryStatusInputPort; flow producer.status to consumer.status; }
     interface def IfA003BatteryOperatingLimits { end producer:BatteryOperatingLimitsOutputPort; end consumer:BatteryOperatingLimitsInputPort; flow producer.operatingLimits to consumer.operatingLimits; }
     interface def IfA003BatteryStateOfCharge { end producer:BatteryStateOfChargeOutputPort; end consumer:BatteryStateOfChargeInputPort; flow producer.stateOfCharge to consumer.stateOfCharge; }
     interface def IfA003BatteryCurrent { end producer:BatteryCurrentOutputPort; end consumer:BatteryCurrentInputPort; flow producer.batteryCurrent to consumer.batteryCurrent; }
@@ -164,10 +150,10 @@ package X2CityComponent_BatteryControl {
         part batteryAssembly:BatteryAssembly { doc /* The sole removable physical 14S5P pack assembly. */ }
         part batterySupervision:BatterySupervision { doc /* Project vehicle-host supervision for BMS reading, qualification, and battery operating policy. */ }
         port batteryPower:BatteryPowerPort { doc /* External physical bidirectional pack-to-EnergyPath boundary for discharge and regeneration. */ }
-        port batteryFaultStatusOut:BatteryFaultStatusOutputPort {
-            doc /* External RidingControl evidence for recognized battery faults only. */
+        port batteryStatusOut:BatteryStatusOutputPort {
+            doc /* External RidingControl reporting conditions. */
         }
-        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External RidingControl operating limits for both current-sign branches and independently qualified composite MOS-disabled status. */ }
+        port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External RidingControl operating limits for both current-sign branches. */ }
         port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* External qualified actual-SOC publication for HMI and RidingControl. */ }
         port batteryCurrentOut:BatteryCurrentOutputPort { doc /* External qualified signed-current publication for HMI. */ }
         flow assemblyPowerToBoundary from batteryAssembly.batteryPower.batteryPower to batteryPower.batteryPower;
@@ -176,7 +162,7 @@ package X2CityComponent_BatteryControl {
             connect batterySupervision.bmsReadRequestOut to batteryAssembly.bms.bmsReadRequestIn;
         interface bmsTelemetryFromAssembly : IfA009BmsTelemetry
             connect batteryAssembly.bms.bmsTelemetryOut to batterySupervision.bmsTelemetryIn;
-        flow faultStatusFromSupervision from batterySupervision.batteryFaultStatusOut.faultStatus to batteryFaultStatusOut.faultStatus;
+        flow statusFromSupervision from batterySupervision.batteryStatusOut.status to batteryStatusOut.status;
         flow limitsFromSupervision from batterySupervision.batteryOperatingLimitsOut.operatingLimits to batteryOperatingLimitsOut.operatingLimits;
         flow socFromSupervision from batterySupervision.stateOfChargeOut.stateOfCharge to stateOfChargeOut.stateOfCharge;
         flow currentFromSupervision from batterySupervision.batteryCurrentOut.batteryCurrent to batteryCurrentOut.batteryCurrent;
@@ -349,7 +335,8 @@ package X2CityComponent_BatteryControl {
         require X2CityComponent_BatterySupervision::bmsBasicInformationDecoding;
         require constraint {
             doc /*
-                At each normal or unexpected controller startup/restart, BatteryControl shall publish BatteryOperatingLimits
+                At each normal or unexpected controller startup/restart, BatteryControl shall publish
+                BatteryOperatingLimits
                 with both branch qualification fields false. Before dependent
                 limits qualify, both checks in REQ-SYS-BATSUP-001 shall pass from the same current accepted Basic
                 (0x03) response. A missing, invalid, or mismatched value means the checks have not passed.
@@ -370,7 +357,10 @@ package X2CityComponent_BatteryControl {
 
                 Missing charge-only evidence shall not withdraw an otherwise qualified discharge branch; HMI
                 current-only information shall not qualify or invalidate either branch. Loss of a required shared
-                input shall withdraw each dependent branch; branch-only loss shall withdraw only that branch.
+                input shall withdraw each dependent branch; branch-only loss shall withdraw only that branch
+                unless a restart-required battery-side fault is recognized. A recognized restart-required
+                battery-side fault shall retain both branches unqualified with effective limits zero until
+                the next normal or unexpected controller restart.
             */
         }
     }
@@ -397,6 +387,11 @@ package X2CityComponent_BatteryControl {
         require X2CityComponent_BatterySupervision::chargePathCapability;
         require X2CityComponent_BatterySupervision::dischargePathCapability;
         require X2CityComponent_BatterySupervision::bmsMosDisabledStatus;
+        require X2CityComponent_BatterySupervision::batteryFaultRecognition;
+        require X2CityComponent_BatterySupervision::localThermalFaultRecognition;
+        require X2CityComponent_BatterySupervision::batteryFaultRetainedEffect;
+        require X2CityComponent_BatterySupervision::batteryStatusPublication;
+        require X2CityComponent_BatterySupervision::batteryStatusRestart;
         require X2CityComponent_BatterySupervision::startupCapacityReference;
         require X2CityComponent_BatterySupervision::regenerativeBaseCurrent;
         require X2CityComponent_BatterySupervision::regenerativeTemperatureCeiling;
@@ -412,9 +407,18 @@ package X2CityComponent_BatteryControl {
                 BatteryControl shall classify battery-side qualification state, operating restrictions, expected
                 charge/discharge-path states and recognized battery or protection-information fault evidence, and use
                 that classification to produce the applicable effective operating limits and evidence published for
-                system integration. A qualified disabled path contributes known zero effective current for its own
-                branch while leaving that branch qualified when its other required assessments pass. Required unknown,
-                invalid or stale path status leaves the dependent branch or branches unqualified with zero current. Current
+                system integration. A recognized restart-required battery-side fault retains both branches
+                unqualified with effective limits zero until the next normal or unexpected controller
+                restart. BatteryStatus publishes independent battery-fault, local actual thermal-fault and
+                MOS-warning reporting conditions, including unknown state and common fault recognition
+                order, without selecting an HMI code. BatteryControl shall express battery-side effects on
+                operation and recovery through operating values and their qualification; BatteryStatus shall
+                provide reporting information only. A qualified disabled path contributes known zero
+                effective current for its own
+                branch while leaving that branch qualified when its other required assessments pass and no
+                retained restart-required fault applies. Required unknown,
+                invalid or stale path status leaves the dependent branch or branches unqualified with zero
+                current. Current
                 charge-path-enabled and discharge-path-enabled fields remain supplied BMS source observations, not
                 project permission indications; an enabled path removes only its path restriction.
 
@@ -422,7 +426,7 @@ package X2CityComponent_BatteryControl {
                 required path/protection status shall leave the affected operation-required information unqualified,
                 publish zero for the affected effective current limit, and shall not grant dependent operation.
 
-                BatteryControl shall also publish the independently qualified composite MOS-disabled status required
+                BatteryControl shall also publish the independent MOS-disabled warning in BatteryStatus required
                 by REQ-SYS-BATSUP-006. It is qualified from current charge- and discharge-path source state even when
                 either current branch assessment is incomplete; unknown, invalid or stale MOS source state leaves
                 this status unqualified.
@@ -573,6 +577,11 @@ package X2CityComponent_BatteryControl {
         end #derive chargePathCapability : Requirements::RequirementCheck;
         end #derive dischargePathCapability : Requirements::RequirementCheck;
         end #derive bmsMosDisabledStatus : Requirements::RequirementCheck;
+        end #derive batteryFaultRecognition : Requirements::RequirementCheck;
+        end #derive localThermalFaultRecognition : Requirements::RequirementCheck;
+        end #derive batteryFaultRetainedEffect : Requirements::RequirementCheck;
+        end #derive batteryStatusPublication : Requirements::RequirementCheck;
+        end #derive batteryStatusRestart : Requirements::RequirementCheck;
         end #derive startupCapacityReference : Requirements::RequirementCheck;
         end #derive regenerativeBaseCurrent : Requirements::RequirementCheck;
         end #derive regenerativeTemperatureCeiling : Requirements::RequirementCheck;
@@ -590,6 +599,11 @@ package X2CityComponent_BatteryControl {
         end chargePathCapability ::> X2CityComponent_BatterySupervision::chargePathCapability;
         end dischargePathCapability ::> X2CityComponent_BatterySupervision::dischargePathCapability;
         end bmsMosDisabledStatus ::> X2CityComponent_BatterySupervision::bmsMosDisabledStatus;
+        end batteryFaultRecognition ::> X2CityComponent_BatterySupervision::batteryFaultRecognition;
+        end localThermalFaultRecognition ::> X2CityComponent_BatterySupervision::localThermalFaultRecognition;
+        end batteryFaultRetainedEffect ::> X2CityComponent_BatterySupervision::batteryFaultRetainedEffect;
+        end batteryStatusPublication ::> X2CityComponent_BatterySupervision::batteryStatusPublication;
+        end batteryStatusRestart ::> X2CityComponent_BatterySupervision::batteryStatusRestart;
         end startupCapacityReference ::> X2CityComponent_BatterySupervision::startupCapacityReference;
         end regenerativeBaseCurrent ::> X2CityComponent_BatterySupervision::regenerativeBaseCurrent;
         end regenerativeTemperatureCeiling ::> X2CityComponent_BatterySupervision::regenerativeTemperatureCeiling;

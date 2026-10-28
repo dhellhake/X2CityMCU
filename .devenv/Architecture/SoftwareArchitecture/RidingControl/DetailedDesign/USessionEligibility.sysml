@@ -31,7 +31,6 @@ package X2CityDetailedUnit_SessionEligibility {
         in item payload:QualifiedMotion;
     }
     port def RidingSleepRequestOutputPort :> X2CityContract_Compute::ComputeSleepRequestOutputPort { doc /* Publishes the current qualified Off/sleep eligibility grant or revocation with its qualification; Platform checks it at actual sleep entry. */ }
-    port def BatteryFaultStatusInputPort { doc /* Receives all recognized battery/thermal fault evidence and ordering for the existing Ready guard and earliest-fault selection, independent of operating-limits qualification. Startup, configuration, pack-group and applicable protection/path checks are represented by qualification of the assessed operating limits. */ in item payload:BatteryFaultStatus; }
     port def EligibilityBatteryOperatingLimitsInputPort { doc /* Receives BatteryProtection's current assessed operating limits for the existing Ready guard; the same record is also broadcast to Demand. SessionEligibility owns a last-delivery timer and its own maximum-silence bound, evaluated with caller-supplied ExecutionTime independently of Demand and BmsLink. */ in item payload:BatteryOperatingLimitsAssessment; }
     port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC for Session's existing low-charge selection; it is not the supplied BMS SOC candidate. */ in item payload:BatteryStateOfCharge; }
     port def BrakeLeverStateInputPort :> X2CitySoftwareContract_RidingControl::BrakeLeverStateInputPort { doc /* Receives the exact `BrakeLeverState` composite once, including its software Qualification refinement for source/reason/event-time/context checks. */ in item brakeLeverState:SoftwareBrakeLeverState :>> X2CitySoftwareContract_RidingControl::BrakeLeverStateInputPort::brakeLeverState; }
@@ -51,7 +50,6 @@ package X2CityDetailedUnit_SessionEligibility {
         port motorPositionIn:MotorPositionInputPort;
         // A typed current physical-motion result gates Ready; absence is not standstill.
         port motionIn:QualifiedMotionInputPort;
-        port batteryFaultStatusIn:BatteryFaultStatusInputPort;
         port batteryOperatingLimitsIn:EligibilityBatteryOperatingLimitsInputPort;
         port stateOfChargeIn:BatteryStateOfChargeInputPort;
         port authorityOut:SessionEligibilityOutputPort;

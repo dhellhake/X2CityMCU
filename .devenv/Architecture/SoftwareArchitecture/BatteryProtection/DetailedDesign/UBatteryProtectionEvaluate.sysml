@@ -5,7 +5,7 @@ package X2CityDetailedUnit_BatteryProtectionEvaluate {
     private import X2CityComponent_BatterySupervision::*;
     // Owner: SC-BAT-POLICY.V; DD-002; SW-I-003/009.
     item def BatteryAssessmentCandidate :> UnitInformationEnvelope {
-        item faultStatus:BatteryFaultStatus;
+        item status:BatteryStatus;
         item operatingLimits:BatteryOperatingLimits;
         item stateOfCharge:BatteryStateOfCharge;
         item batteryCurrent:BatteryCurrent;
@@ -40,7 +40,7 @@ package X2CityDetailedUnit_BatteryProtectionEvaluate {
            its corresponding current branch and retains qualification if other checks pass;
            unknown shared path state leaves dependent branches unqualified. OFF alone is
            neither a fault nor proof of physical isolation; ON removes only the path
-           restriction. Keep existing restriction and fault rules.
+           restriction. Recognize restart-required battery faults from qualified operational observations and source/watchdog evidence; privately retain their effect until normal or unexpected controller startup. Publish both branch candidates unqualified with effective zero for that interval while preserving valid measured fields, and separately emit diagnostic status. Ordinary missing initial data and ordinary qualified-zero restrictions do not latch. Never use diagnostic status as a control input. Keep existing restriction and fault rules.
 
            Own one private per-controller-cycle startup nominal-capacity reference shared by
            charge and discharge assessment. Capture the same qualified finite positive

@@ -3,7 +3,7 @@ package X2CityDetailedUnit_BmsLinkDecode {
     private import X2CityDetailedSharedContracts::*;
     private import X2CityDetailedUnit_BmsLinkTransaction::*;
     // Owner: SC-BMS-LINK.V; DD-002. Decodes the fixed SP14S004 V1.0 / firmware 3.2 profile.
-    item def BmsDecodedRecord :> UnitInformationEnvelope;
+    item def BmsDecodedRecord :> UnitInformationEnvelope { doc /* Carries qualified recognition and ordering of accepted Basic startup mismatch independently of numerical measurement qualification, for reporting only. It does not expose a startup-pass flag or qualify incompatible observations. */ }
     port def BmsAcceptedPayloadInputPort {
         doc /* Receives only a frame-valid response that also matched the current request and reported success. Per-command fixed schema validation remains mandatory here. */
         in item payload:BmsAcceptedPayload;

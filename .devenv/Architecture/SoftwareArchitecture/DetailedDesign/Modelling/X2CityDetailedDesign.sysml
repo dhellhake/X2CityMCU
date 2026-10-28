@@ -278,6 +278,7 @@ package X2CityDetailedDesign {
     flow vBmsTransactionToDecode from vehicle.energy.bmsTransaction.acceptedPayloadOut.payload to vehicle.energy.bmsDecode.acceptedPayloadIn.payload;
     flow vBmsDecodeToPublish from vehicle.energy.bmsDecode.decodedOut.payload to vehicle.energy.bmsPublish.decodedIn.payload;
     flow vBmsPublishToBatteryEvaluate from vehicle.energy.bmsPublish.batteryMeasurementsOut.payload to vehicle.energy.batteryEvaluate.batteryMeasurementsIn.payload;
+    flow vBmsStatusToBatteryRestriction from vehicle.energy.bmsPublish.bmsStatusOut.status to vehicle.energy.batteryRestriction.bmsStatusIn.status;
     // The evaluator and owning BatteryProtection use the same immutable native compiled set.
     bind X2CitySoftwareArchitecture::batteryProtectionVehicle.compiledVoltageDeratingCalibration = vehicle.energy.batteryEvaluate.compiledVoltageDeratingCalibration;
     bind X2CitySoftwareArchitecture::batteryProtectionVehicle.compiledBatteryConfigurationId = vehicle.energy.batteryEvaluate.compiledBatteryConfigurationId;

@@ -118,7 +118,7 @@ package X2CitySoftwareContract_RidingControl {
         in item brakeLeverState:SoftwareBrakeLeverState :>> X2CityContract_BrakeStateIdentification::BrakeLeverStateInputPort::brakeLeverState;
     }
     port def RidingBatteryOperatingLimitsInputPort :> X2CityContract_BatteryControl::BatteryOperatingLimitsInputPort {
-        doc /* Receives battery policy's independently qualified MOS-disabled state plus discharge/charge current limits and reasons on the existing stream. U-SESSION-REPORT checks its own delivery-current watchdog for MOS state; MOS-state qualification is independent of discharge- and charge-branch qualification. Wheel-torque sign does not select electrical current direction and zero current limit does not imply MOS state. */
+        doc /* Receives battery policy's discharge/charge current limits and reasons; reporting receives MOS-disabled state on the separate battery status stream. Wheel-torque sign does not select electrical current direction and zero current limit does not imply MOS state. */
         in item operatingLimits:BatteryOperatingLimitsAssessment :>> X2CityContract_BatteryControl::BatteryOperatingLimitsInputPort::operatingLimits;
     }
     port def ActualTractionOutputInputPort :> X2CityContract_MotorControl::ActualTractionInputPort { doc /* Supplies qualified actual applied-output evidence independently of the requested torque command for regeneration rearm. */ in item payload:X2CitySharedSoftwareTypes::ActualTractionOutput :>> X2CityContract_MotorControl::ActualTractionInputPort::payload; }
@@ -154,7 +154,7 @@ package X2CitySoftwareComponent_RidingControl {
         port qualifiedTemperatureIn:RidingQualifiedTemperatureInputPort :>> X2CityComponent_RidingControl::RidingControl::qualifiedTemperatureIn;
         port tractionConditionEvidenceIn:RidingTractionConditionEvidenceInputPort :>> X2CityComponent_RidingControl::RidingControl::tractionConditionEvidenceIn;
         port hmiRiderSettingsRequestIn:HmiRiderSettingsRequestInputPort :>> X2CityComponent_RidingControl::RidingControl::hmiRiderSettingsRequestIn;
-        port batteryFaultStatusIn:X2CityContract_BatteryControl::BatteryFaultStatusInputPort :>> X2CityComponent_RidingControl::RidingControl::batteryFaultStatusIn;
+        port batteryStatusIn:X2CityContract_BatteryControl::BatteryStatusInputPort :>> X2CityComponent_RidingControl::RidingControl::batteryStatusIn;
         port stateOfChargeIn:X2CityContract_BatteryControl::BatteryStateOfChargeInputPort :>> X2CityComponent_RidingControl::RidingControl::stateOfChargeIn;
         port actualTractionOutputIn:ActualTractionOutputInputPort :>> X2CityComponent_RidingControl::RidingControl::actualTractionOutputIn;
         port batteryOperatingLimitsIn:RidingBatteryOperatingLimitsInputPort :>> X2CityComponent_RidingControl::RidingControl::batteryOperatingLimitsIn;

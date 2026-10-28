@@ -117,9 +117,9 @@ package X2CitySystemArchitecture {
     alias BatteryMeasurementsOutputPort for X2CityContract_BatteryControl::BatteryMeasurementsOutputPort;
     alias BatteryMeasurementsInputPort for X2CityContract_BatteryControl::BatteryMeasurementsInputPort;
     alias IfA009BatteryMeasurements for X2CityContract_BatteryControl::IfA009BatteryMeasurements;
-    alias BatteryFaultStatus for X2CityContract_BatteryControl::BatteryFaultStatus;
-    alias BatteryFaultStatusOutputPort for X2CityContract_BatteryControl::BatteryFaultStatusOutputPort;
-    alias BatteryFaultStatusInputPort for X2CityContract_BatteryControl::BatteryFaultStatusInputPort;
+    alias BatteryStatus for X2CityContract_BatteryControl::BatteryStatus;
+    alias BatteryStatusOutputPort for X2CityContract_BatteryControl::BatteryStatusOutputPort;
+    alias BatteryStatusInputPort for X2CityContract_BatteryControl::BatteryStatusInputPort;
     alias BatteryOperatingLimits for X2CityContract_BatteryControl::BatteryOperatingLimits;
     alias BatteryOperatingLimitsOutputPort for X2CityContract_BatteryControl::BatteryOperatingLimitsOutputPort;
     alias BatteryOperatingLimitsInputPort for X2CityContract_BatteryControl::BatteryOperatingLimitsInputPort;
@@ -129,7 +129,7 @@ package X2CitySystemArchitecture {
     alias BatteryCurrent for X2CityContract_BatteryControl::BatteryCurrent;
     alias BatteryCurrentOutputPort for X2CityContract_BatteryControl::BatteryCurrentOutputPort;
     alias BatteryCurrentInputPort for X2CityContract_BatteryControl::BatteryCurrentInputPort;
-    alias IfA003BatteryFaultStatus for X2CityContract_BatteryControl::IfA003BatteryFaultStatus;
+    alias IfA003BatteryStatus for X2CityContract_BatteryControl::IfA003BatteryStatus;
     alias IfA003BatteryOperatingLimits for X2CityContract_BatteryControl::IfA003BatteryOperatingLimits;
     alias IfA003BatteryStateOfCharge for X2CityContract_BatteryControl::IfA003BatteryStateOfCharge;
     alias IfA003BatteryCurrent for X2CityContract_BatteryControl::IfA003BatteryCurrent;
@@ -317,8 +317,8 @@ package X2CitySystemArchitecture {
             connect traction.qualifiedVehicleMotionOut to ridingControl.qualifiedVehicleMotionIn;
         interface settingsToRidingControl : X2CityContract_RidingControl::IfA002RiderSettingsRequest
             connect driverInteraction.ridingSettingsOut to ridingControl.hmiRiderSettingsRequestIn;
-        interface batteryFaultStatusToRidingControl : X2CityContract_BatteryControl::IfA003BatteryFaultStatus
-            connect batteryControl.batteryFaultStatusOut to ridingControl.batteryFaultStatusIn;
+        interface batteryStatusToRidingControl : X2CityContract_BatteryControl::IfA003BatteryStatus
+            connect batteryControl.batteryStatusOut to ridingControl.batteryStatusIn;
         interface batteryLimitsToRidingControl : X2CityContract_BatteryControl::IfA003BatteryOperatingLimits
             connect batteryControl.batteryOperatingLimitsOut to ridingControl.batteryOperatingLimitsIn;
         interface stateOfChargeToRidingControl : X2CityContract_BatteryControl::IfA003BatteryStateOfCharge
@@ -346,8 +346,8 @@ package X2CitySystemArchitecture {
         connect x2CityVehicle.epcs.driverInteraction.ridingSettingsOut to x2CityVehicle.epcs.ridingControl.hmiRiderSettingsRequestIn;
 
     // IF-A-003: RidingControl receives battery evidence directly; HMI retains its separate SOC/current observations.
-    interface ifA003BatteryFaultStatusToRidingControl : IfA003BatteryFaultStatus
-        connect x2CityVehicle.epcs.batteryControl.batteryFaultStatusOut to x2CityVehicle.epcs.ridingControl.batteryFaultStatusIn;
+    interface ifA003BatteryStatusToRidingControl : IfA003BatteryStatus
+        connect x2CityVehicle.epcs.batteryControl.batteryStatusOut to x2CityVehicle.epcs.ridingControl.batteryStatusIn;
     interface ifA003LimitsToRidingControl : IfA003BatteryOperatingLimits
         connect x2CityVehicle.epcs.batteryControl.batteryOperatingLimitsOut to x2CityVehicle.epcs.ridingControl.batteryOperatingLimitsIn;
     interface ifA003SocToRidingControl : IfA003BatteryStateOfCharge

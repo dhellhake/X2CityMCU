@@ -88,8 +88,8 @@ package X2CityComponent_X2CityMCU {
             connect traction.tractionConditionEvidenceOut to ridingControl.tractionConditionEvidenceIn;
         interface actualTractionOutputToRidingControl : IfA005ActualTractionOutput
             connect traction.actualTractionOutputOut to ridingControl.actualTractionOutputIn;
-        interface batteryFaultStatusToRidingControl : IfA003BatteryFaultStatus
-            connect batteryControl.batteryFaultStatusOut to ridingControl.batteryFaultStatusIn;
+        interface batteryStatusToRidingControl : IfA003BatteryStatus
+            connect batteryControl.batteryStatusOut to ridingControl.batteryStatusIn;
         interface batteryLimitsToRidingControl : IfA003BatteryOperatingLimits
             connect batteryControl.batteryOperatingLimitsOut to ridingControl.batteryOperatingLimitsIn;
         interface stateOfChargeToRidingControl : IfA003BatteryStateOfCharge
