@@ -10,6 +10,7 @@ package X2CityComponent_TractionHardware {
         port supplyVoltageMeasurementOut:SupplyVoltageMeasurementOutputPort { doc /* Physical PVDD/GVDD measurement evidence. */ }
         port phaseExcitationCommandIn:PhaseExcitationCommandInputPort { doc /* Requested phase-voltage vector and software inhibition; protections remain independent. */ }
         port tractionStageEvidenceOut:TractionStageEvidenceOutputPort { doc /* Physical output-stage evidence; it does not echo a request as proof. */ }
+        port appliedTractionModulationEvidenceOut:AppliedTractionModulationEvidenceOutputPort { doc /* Qualified applied modulation and permit effects for local DC-current estimation. */ }
         port tractionHardwareProtectionEvidenceOut:TractionHardwareProtectionEvidenceOutputPort { doc /* Independent hardware protection evidence. */ }
         port physicalMotorActuation:PhysicalMotorActuationPort { doc /* Explicit physical motor-actuation boundary. */ }
     }

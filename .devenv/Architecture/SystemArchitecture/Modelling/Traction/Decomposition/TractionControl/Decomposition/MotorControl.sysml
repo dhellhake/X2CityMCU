@@ -34,6 +34,15 @@ package X2CityContract_MotorControl {
         item observedOutputStageState:ObservedOutputStageState;
         attribute inhibitRetainedWithoutMcuExecution:Boolean;
     }
+    item def AppliedTractionModulationEvidence:>QualifiedInformationRecord {
+        doc /* Evidence of effective applied bridge modulation over a referenced interval, including permit/protection effects, aligned to current acquisition. Duty is the effective high-side fraction in the declared phase-current polarity convention; qualification requires evidence of application and timing, not a requested vector; latched peripheral outputs and qualified actuation observation may support it without claiming transistor switching is sensed. Deadtime, diode paths and unavailable switching windows require a validated reconstruction model. */
+        attribute phaseAHighSideDuty:Real;
+        attribute phaseBHighSideDuty:Real;
+        attribute phaseCHighSideDuty:Real;
+        attribute intervalStartMicroseconds:Integer;
+        attribute intervalEndMicroseconds:Integer;
+        attribute bridgePermitted:Boolean;
+    }
     item def TractionHardwareProtectionEvidence:>QualifiedInformationRecord {
         doc /* Independent hardware protection evidence. Hardware protection can constrain its stage regardless of a software command. */
         attribute hardwareProtectionActive:Boolean;
@@ -61,6 +70,8 @@ package X2CityContract_MotorControl {
     port def PhaseExcitationCommandInputPort { doc /* Receives requested phase excitation and overriding inhibition; it does not prove physical output. */ in item payload:PhaseExcitationCommand; }
     port def TractionStageEvidenceOutputPort { doc /* Publishes qualified physical output-stage evidence independently of command. */ out item payload:TractionStageEvidence; }
     port def TractionStageEvidenceInputPort { doc /* Receives qualified physical output-stage evidence independently of command. */ in item payload:TractionStageEvidence; }
+    port def AppliedTractionModulationEvidenceOutputPort { doc /* Publishes qualified applied modulation and permit evidence for current estimation. */ out item payload:AppliedTractionModulationEvidence; }
+    port def AppliedTractionModulationEvidenceInputPort { doc /* Receives applied modulation evidence aligned with current acquisition. */ in item payload:AppliedTractionModulationEvidence; }
     port def TractionHardwareProtectionEvidenceOutputPort { doc /* Publishes independent hardware protection evidence. */ out item payload:TractionHardwareProtectionEvidence; }
     port def TractionHardwareProtectionEvidenceInputPort { doc /* Receives independent hardware protection evidence. */ in item payload:TractionHardwareProtectionEvidence; }
     port def TractionConditionEvidenceOutputPort { doc /* Publishes local traction condition/fault evidence to Session; it does not latch it. */ out item payload:TractionConditionEvidence; }
@@ -72,6 +83,7 @@ package X2CityContract_MotorControl {
     interface def IfA005QualifiedVehicleMotion { end producer:QualifiedVehicleMotionOutputPort; end consumer:QualifiedVehicleMotionInputPort; flow producer.payload to consumer.payload; }
     interface def IfA005PhaseExcitationCommand { end controller:PhaseExcitationCommandOutputPort; end hardware:PhaseExcitationCommandInputPort; flow controller.payload to hardware.payload; }
     interface def IfA005TractionStageEvidence { end hardware:TractionStageEvidenceOutputPort; end controller:TractionStageEvidenceInputPort; flow hardware.payload to controller.payload; }
+    interface def IfA005AppliedTractionModulationEvidence { end hardware:AppliedTractionModulationEvidenceOutputPort; end controller:AppliedTractionModulationEvidenceInputPort; flow hardware.payload to controller.payload; }
     interface def IfA005TractionHardwareProtectionEvidence { end hardware:TractionHardwareProtectionEvidenceOutputPort; end controller:TractionHardwareProtectionEvidenceInputPort; flow hardware.payload to controller.payload; }
     interface def IfA005TractionConditionEvidence { end producer:TractionConditionEvidenceOutputPort; end consumer:TractionConditionEvidenceInputPort; flow producer.payload to consumer.payload; }
     interface def IfA005PhysicalMotorActuation { end tractionHardware:PhysicalMotorActuationPort; end motor:PhysicalMotorActuationPort; flow tractionHardware.actuation to motor.actuation; flow motor.actuation to tractionHardware.actuation; }
@@ -85,7 +97,7 @@ package X2CityComponent_MotorControl {
     private import X2CityContract_TractionControl::*;
 
     part def MotorControl { // LE-MOTOR-CTRL
-        /* Software logical responsibility for controlled traction output. It derives requested phase excitation from authority, demand and qualified feedback. It must inhibit both propulsion and regenerative signs until required startup traction conditions, including GVDD, are qualified and accepted; any recognized fault remains inhibited until a clean restart. Measurement remains active while actuation is disarmed, so startup evidence does not depend on activation. Session owns the common fault latch. */
+        /* Software logical responsibility for controlled traction output. It derives requested phase excitation from authority, demand and qualified feedback. It must inhibit both propulsion and regenerative signs until required startup traction conditions, including GVDD, are qualified and accepted; any recognized fault remains inhibited until a clean restart. Measurement remains active while actuation is disarmed, so startup evidence does not depend on activation. Session owns the common fault latch. It qualifies a local average inverter DC-branch current estimate and uses it to enforce independently qualified traction allocations while retaining the FOC phase-current loops. */
         port ridingAuthorityIn:RidingAuthorityInputPort { doc /* RidingControl authorization boundary for excitation. */ }
         port wheelTorqueCommandIn:WheelTorqueCommandInputPort { doc /* Signed demand input; a zero request remains distinct from inhibition. */ }
         port motorPositionIn:MotorPositionInputPort { doc /* Qualified electrical position/qualification composite from the estimator. */ }
@@ -93,6 +105,7 @@ package X2CityComponent_MotorControl {
         port temperatureMeasurementIn:TemperatureMeasurementInputPort { doc /* Raw motor/board temperature measurement for local conversion and qualification. */ }
         port supplyVoltageMeasurementIn:SupplyVoltageMeasurementInputPort { doc /* Raw PVDD/GVDD measurement for local conversion and qualification. */ }
         port tractionStageEvidenceIn:TractionStageEvidenceInputPort { doc /* Actual physical-stage evidence, separate from requested excitation. */ }
+        port appliedTractionModulationEvidenceIn:AppliedTractionModulationEvidenceInputPort { doc /* Applied bridge modulation evidence matched to current samples, not a command echo. */ }
         port tractionHardwareProtectionEvidenceIn:TractionHardwareProtectionEvidenceInputPort { doc /* Independent hardware-protection evidence. */ }
         port phaseExcitationCommandOut:PhaseExcitationCommandOutputPort { doc /* Requested phase-voltage vector with software inhibition override. */ }
         port tractionConditionEvidenceOut:TractionConditionEvidenceOutputPort { doc /* Local categorized condition/fault evidence for Session; no latch is created here. */ }

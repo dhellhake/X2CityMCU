@@ -70,6 +70,8 @@ package X2CityComponent_TractionControl {
             connect motorControl.phaseExcitationCommandOut to tractionHardware.phaseExcitationCommandIn;
         interface stageEvidenceToMotorControl : IfA005TractionStageEvidence
             connect tractionHardware.tractionStageEvidenceOut to motorControl.tractionStageEvidenceIn;
+        interface appliedModulationToMotorControl : IfA005AppliedTractionModulationEvidence
+            connect tractionHardware.appliedTractionModulationEvidenceOut to motorControl.appliedTractionModulationEvidenceIn;
         interface protectionEvidenceToMotorControl : IfA005TractionHardwareProtectionEvidence
             connect tractionHardware.tractionHardwareProtectionEvidenceOut to motorControl.tractionHardwareProtectionEvidenceIn;
         interface energyToHardware : IfA010TractionElectricalPower

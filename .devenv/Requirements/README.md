@@ -8,7 +8,7 @@
 |---|---|
 | [PD-001](../../README.md) | Current Draft project definition; PD-001-R1.1 remains the released baseline |
 | [ID-001](ID-001_Item_Definition.md) | Current item context; ID-001-R1.0 remains the released baseline |
-| [REQ-001](REQ-001_Requirements.md) | Current 310-record catalogue (five inactive records retained), requirement model and canonical clusters |
+| [REQ-001](REQ-001_Requirements.md) | Current 316-record catalogue (five inactive records retained), requirement model and canonical clusters |
 | [HARA-001 / SG-001](../Safety/HARA-001_Hazard_Analysis.md) | Prior release contains 11 goals; current Draft successor retains 8 goals and 28 events after scope change; physical electrical safety evidence remains open |
 | [DEC-001](DEC-001_Decisions_and_Open_Issues.md) | Current owner decisions and open issue register; `WS-OI-020(B)` remains open |
 | [ARCH-001](../Architecture/SystemArchitecture/ARCH-001_System_Architecture.md) | Prior release ARCH-001-R1.0 remains historical; current Draft successor removes mechanical-only elements and reallocates surviving E/E responsibilities |

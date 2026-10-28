@@ -264,7 +264,7 @@ package X2CitySystemArchitecture {
     alias Platform for X2CityComponent_Platform::Platform;
 
     part def X2CityMCU { // LE-EPCS
-        part ridingControl:RidingControl { doc /* Consolidated LE-RIDING software allocation; owns internal settings, session and demand policy state. */ }
+        part ridingControl:RidingControl { doc /* LE-RIDING System composite containing the riding-policy and shared-current-coordination software leaves; routes their interfaces. */ }
         part driverInteraction:DriverInteraction;
         part traction:Traction;
         part batteryControl:BatteryControl { doc /* Removable BatteryAssembly and vehicle-host BatterySupervision composite. */ }
@@ -356,6 +356,8 @@ package X2CitySystemArchitecture {
         connect x2CityVehicle.epcs.batteryControl.stateOfChargeOut to x2CityVehicle.epcs.driverInteraction.stateOfChargeIn;
     interface ifA003CurrentToHmi : IfA003BatteryCurrent
         connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.driverInteraction.batteryCurrentIn;
+    interface ifA003CurrentToRidingControl : IfA003BatteryCurrent
+        connect x2CityVehicle.epcs.batteryControl.batteryCurrentOut to x2CityVehicle.epcs.ridingControl.batteryCurrentIn;
 
     // IF-A-004: independent RidingControl authority and signed demand reach Traction as separate outputs.
     flow ifA004Authority from x2CityVehicle.epcs.ridingControl.ridingAuthorityOut.payload to x2CityVehicle.epcs.traction.ridingAuthorityIn.payload;

@@ -23,7 +23,12 @@ Owner, 2026-10-28: apply the five BatterySupervision refinements in [REQ-SYS-BAT
 <a id="dec-arch-004"></a>
 ### DEC-ARCH-004 — Software realization and unit requirements pending
 
-Owner, 2026-10-28: withdraw the project software-realization architecture, detailed-design documents and Unit Requirements from the active workspace to focus current work on the System Architecture and retained System-level Abstract Software Requirements. The prior design remains available in Git history at `d31fb8e`; this note does not reproduce or archive that design. Future software realization, detailed design and Unit Requirements remain pending. The 310-record System/Abstract Software/Abstract Hardware catalogue and its logical responsibility targets remain active; no System-level Abstract Software obligation is withdrawn.
+Owner, 2026-10-28: withdraw the project software-realization architecture, detailed-design documents and Unit Requirements from the active workspace to focus current work on the System Architecture and retained System-level Abstract Software Requirements. The prior design remains available in Git history at `d31fb8e`; this note does not reproduce or archive that design. Future software realization, detailed design and Unit Requirements remain pending. The current System/Abstract Software/Abstract Hardware catalogue and its logical responsibility targets remain active; no System-level Abstract Software obligation is withdrawn.
+
+<a id="dec-arch-005"></a>
+### DEC-ARCH-005 — Riding current-budget ownership
+
+Owner, 2026-10-28: represent RidingControl as a System composite of `LE-RIDING-POLICY` and `LE-CURRENT-CONSUMPTION-COORDINATION`. The coordinator is the sole shared traction-current budget authority and uses a validated fixed worst-case auxiliary reserve. It consumes qualified signed pack current only for central sustained-excess supervision; loss of that observation alone changes its qualifier and does not invalidate other BatterySupervision outputs or otherwise qualified reserve-based budgets. MotorControl enforces allocated discharge and regenerative-charge budgets with its own qualified average inverter DC-current estimate, not BMS pack current. If auxiliary demand alone exceeds discharge capability, zero traction cannot resolve the excess; existing all-load protection and auxiliary-continuity obligations remain applicable. Reserve evidence, accuracy, timing and physical protection acceptance remain open; this decision adds no numeric limit or new fault code.
 
 <a id="dec-scope-001"></a>
 ### DEC-SCOPE-001 — Electrical/electronic retrofit on supplied BMW platform

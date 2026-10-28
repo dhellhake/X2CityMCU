@@ -29,7 +29,7 @@ package X2CityComponent_BatterySupervision {
         port batteryStatusOut:BatteryStatusOutputPort { doc /* Publishes independent battery reporting conditions; operating qualification and effective limits travel on BatteryOperatingLimits. */ }
         port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* Publishes qualified operating assessment and independent charge/discharge branches to RidingControl. */ }
         port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC for HMI display and RidingControl's low-SOC propulsion policy. */ }
-        port batteryCurrentOut:BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current in amperes for HMI. */ }
+        port batteryCurrentOut:BatteryCurrentOutputPort { doc /* Publishes independently qualified signed pack current in amperes to RidingControl.CurrentConsumptionCoordination and HMIControl. */ }
     }
 
     requirement <'REQ-SYS-BMSIF-001'> bmsInformationQualification : AbstractSoftwareRequirement {
@@ -221,17 +221,29 @@ package X2CityComponent_BatterySupervision {
         doc /*
             Status: Draft. Allocation: LE-BATTERY-SUPERVISION; software realization pending.
             Parent: [REQ-SYS-BMS-003](../BatteryControl.sysml). Sources: [selected-unit UART acceptance](BMS_Information.md#selected-unit-uart-read-acceptance-contract);
-            [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance). Verify: T-SW/T-SYS field loss, invalidity,
-            staleness, and independence; confirm display fallback cannot qualify control data. Open:
-            consumer-visible qualification representation under OI-041/061; WS-OI-018/019.
+            [Battery Integration consumer acceptance](../Battery_Integration.md#per-consumer-information-acceptance);
+            owner decision 2026-10-28: qualified pack current is consumed by RidingControl.CurrentConsumptionCoordination
+            as well as HMIControl, and its field-only unavailability affects only its own qualification. Verify:
+            T-SW/T-SYS field loss, invalidity, staleness and independence; distinguish current-field-only absence
+            from Basic-response/transport loss; confirm independently recognized fault and required-field policies
+            remain effective and display fallback cannot qualify control data. Open: evidence-based source-age and
+            consumer use limits under OI-041/061; WS-OI-018/019.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
                 BatterySupervision shall qualify each applicable field independently. Unknown,
-                invalid or stale information shall remain unqualified. An absent optional field
-                shall not invalidate unrelated accepted fields. Fabricated values and HMI display
-                fallbacks shall not qualify information for control use.
+                invalid or stale information shall remain unqualified. The qualified signed pack-current
+                value is consumed by RidingControl.CurrentConsumptionCoordination for shared-budget
+                supervision and by HMIControl for display; positive means charging and negative means
+                discharging. If only the pack-current field is absent, invalid or stale, BatterySupervision
+                shall withdraw only that value's qualification. That field-only unavailability shall not
+                invalidate other accepted measurements, actual SOC, battery status, or either operating-limit
+                branch, and shall not alone recognize a battery-information fault or alter effective limits.
+                If a Basic response or transport is lost, other fields shall instead follow their own source-age,
+                qualification and fault-recognition rules; independently recognized faults and common retained
+                fault effects remain applicable. Fabricated values and HMI display fallbacks shall not qualify
+                information for control use.
             */
         }
     }
@@ -304,7 +316,7 @@ package X2CityComponent_BatterySupervision {
                 At controller startup or after loss of required source qualification, affected information shall remain
                 unqualified until newly accepted relevant source evidence satisfies its qualification
                 criteria. Cached data and republication alone shall not requalify it; unaffected independent
-                observations may remain qualified. Optional or HMI-only information loss shall not create a
+                observations may remain qualified. Optional or pack-current-only information loss shall not create a
                 blanket battery assessment fault. Source recovery shall not clear a retained
                 restart-required battery-side fault effect; existing fault and restart classification
                 remains authoritative.
@@ -402,7 +414,7 @@ package X2CityComponent_BatterySupervision {
             shared/branch loss, restrictions and recovery. Open: two startup checks, source ages,
             per-consumer input subsets and required temperature channels, numeric plausibility limits,
             timeout criteria, dependencies and update budget under OI-041/049/061; WS-OI-007/018/019.
-            No universal pack-current requirement is selected for both branches.
+            The qualified BMS pack-current observation is not required by either current-limit branch.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
@@ -412,9 +424,10 @@ package X2CityComponent_BatterySupervision {
                 Both checks in REQ-SYS-BATSUP-001 shall pass before dependent limits qualify. Each
                 branch qualification shall include its applicable shared and operation-specific
                 evidence; shared qualification shall remain internal and shall not be published as a
-                separate flag. Charge-only evidence shall not gate discharge qualification; HMI-only
-                current display evidence shall gate neither branch, while operation-required current
-                remains required. Loss of a required shared input shall withdraw every dependent
+                separate flag. Charge-only evidence shall not gate discharge qualification. The qualified
+                BMS pack-current observation is consumed by CurrentConsumptionCoordination but is not a
+                required input to either BatterySupervision operating-limit branch; field-only current
+                unavailability shall affect only that observation's qualification. Loss of a required shared input shall withdraw every dependent
                 branch qualification; branch-only loss shall withdraw only that branch unless a
                 restart-required battery-side fault is recognized. A zero current limit while
                 required startup assessment is unqualified denotes unavailable information, not
@@ -799,7 +812,7 @@ package X2CityComponent_BatterySupervision {
             Parent: [REQ-SYS-BMS-007](../BatteryControl.sysml).
             Sources: FLT-008/010; BATSUP-001 startup mismatch.
             Verify: T-SW/T-SYS BMS thermal and other faults, mismatch, required-information loss,
-            initial waiting, rejected frames and optional or HMI-only loss.
+            initial waiting, rejected frames and optional or pack-current-only loss.
         */
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
@@ -807,7 +820,7 @@ package X2CityComponent_BatterySupervision {
                 BatterySupervision shall recognize the battery-fault category from qualified BMS-reported
                 faults, including BMS thermal faults, recognized startup mismatch, and recognized failure of
                 required battery information under the applicable existing recognition policies. Initial
-                waiting, a single rejected frame, and loss solely of optional or HMI-only information shall
+                waiting, a single rejected frame, and loss solely of optional or pack-current information shall
                 not alone establish this fault.
             */
         }

@@ -102,7 +102,7 @@ package X2CityContract_BatteryControl {
         attribute actualStateOfChargePercent:Real;
     }
     item def BatteryCurrent:>QualifiedInformationRecord {
-        doc /* BatterySupervision's qualified signed pack current in amperes for HMI-020. Positive/negative sign interpretation follows the project pack-current convention; it is not a torque value. */
+        doc /* BatterySupervision's independently qualified signed pack current in amperes, consumed by RidingControl.CurrentConsumptionCoordination for shared-budget supervision and by HMIControl for HMI-020. Positive means charging and negative means discharging; this is not a torque value. Unavailability is represented by this value's inherited qualification only. */
         attribute signedPackCurrentAmperes:Real;
     }
 
@@ -125,8 +125,8 @@ package X2CityContract_BatteryControl {
     port def BatteryOperatingLimitsInputPort { doc /* Receives independently qualified discharge and regenerative-charge current assessments at RidingControl. */ in item operatingLimits:BatteryOperatingLimits; }
     port def BatteryStateOfChargeOutputPort { doc /* Publishes qualified actual SOC to HMIControl or RidingControl. */ out item stateOfCharge:BatteryStateOfCharge; }
     port def BatteryStateOfChargeInputPort { doc /* Receives qualified actual SOC at HMIControl or RidingControl. */ in item stateOfCharge:BatteryStateOfCharge; }
-    port def BatteryCurrentOutputPort { doc /* Publishes qualified signed pack current to HMIControl. */ out item batteryCurrent:BatteryCurrent; }
-    port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at HMIControl. */ in item batteryCurrent:BatteryCurrent; }
+    port def BatteryCurrentOutputPort { doc /* Publishes independently qualified signed pack current to RidingControl.CurrentConsumptionCoordination and HMIControl. */ out item batteryCurrent:BatteryCurrent; }
+    port def BatteryCurrentInputPort { doc /* Receives qualified signed pack current at RidingControl.CurrentConsumptionCoordination or HMIControl. */ in item batteryCurrent:BatteryCurrent; }
 
     interface def IfA003BatteryStatus { end producer:BatteryStatusOutputPort; end consumer:BatteryStatusInputPort; flow producer.status to consumer.status; }
     interface def IfA003BatteryOperatingLimits { end producer:BatteryOperatingLimitsOutputPort; end consumer:BatteryOperatingLimitsInputPort; flow producer.operatingLimits to consumer.operatingLimits; }
@@ -155,7 +155,7 @@ package X2CityComponent_BatteryControl {
         }
         port batteryOperatingLimitsOut:BatteryOperatingLimitsOutputPort { doc /* External RidingControl operating limits for both current-sign branches. */ }
         port stateOfChargeOut:BatteryStateOfChargeOutputPort { doc /* External qualified actual-SOC publication for HMI and RidingControl. */ }
-        port batteryCurrentOut:BatteryCurrentOutputPort { doc /* External qualified signed-current publication for HMI. */ }
+        port batteryCurrentOut:BatteryCurrentOutputPort { doc /* External qualified signed-current publication for RidingControl.CurrentConsumptionCoordination and HMI. */ }
         flow assemblyPowerToBoundary from batteryAssembly.batteryPower.batteryPower to batteryPower.batteryPower;
         flow boundaryPowerToAssembly from batteryPower.batteryPower to batteryAssembly.batteryPower.batteryPower;
         interface bmsReadRequestToAssembly : IfA009BmsReadRequest
@@ -316,7 +316,7 @@ package X2CityComponent_BatteryControl {
 
             Open dependencies / qualifications: OI-041/049/061; WS-OI-007/018/019. Define per-consumer
             input subsets, required temperature channels, numeric plausibility limits and timeout criteria;
-            no universal pack-current requirement is selected for both branches. Use the
+            the qualified BMS pack-current observation is not required by either current-limit branch. Use the
             [BMS configuration derivation](../../../../Battery/BAT-001_Selected_Pack_and_BMS.md#bms-configuration-derivation);
             retain commissioning evidence and admission/change control for protection settings that are not observable
             through selected telemetry reads. At each normal or unexpected controller startup/restart, establish the
@@ -355,8 +355,10 @@ package X2CityComponent_BatteryControl {
                 capability, not missing information or a fault. If required information is unqualified, the affected
                 assessment shall remain unqualified and its effective current limit shall be zero.
 
-                Missing charge-only evidence shall not withdraw an otherwise qualified discharge branch; HMI
-                current-only information shall not qualify or invalidate either branch. Loss of a required shared
+                Missing charge-only evidence shall not withdraw an otherwise qualified discharge branch. The
+                qualified BMS pack-current observation shall not be required by either branch; its field-level
+                unavailability shall affect only that observation's qualification and shall not qualify or invalidate
+                either branch. Loss of a required shared
                 input shall withdraw each dependent branch; branch-only loss shall withdraw only that branch
                 unless a restart-required battery-side fault is recognized. A recognized restart-required
                 battery-side fault shall retain both branches unqualified with effective limits zero until
