@@ -46,10 +46,9 @@ package X2CityComponent_BatterySupervision {
         subject supervision:BatterySupervision = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batterySupervision;
         require constraint {
             doc /*
-                BatterySupervision shall provide each applicable BMS observation with its field
-                identity, applicable units and independent qualification, including source
-                timeliness. Unavailable or unqualified information shall not be presented as
-                current.
+                BatterySupervision shall decode and internally qualify each applicable BMS observation with its
+                field identity, applicable units and independent qualification, including source timeliness.
+                Unavailable or unqualified information shall not be presented as current.
             */
         }
     }

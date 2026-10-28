@@ -265,19 +265,14 @@ package X2CityComponent_BatteryControl {
         require X2CityComponent_BatterySupervision::bmsReadServiceTiming;
         require constraint {
             doc /*
-                BatteryControl shall supply qualified pack voltage, signed battery current, actual SOC, all 14
-                series-group voltages, available temperature information, and relevant protection and
-                charge/discharge-path state from information read through the selected BMS UART.
+                BatteryControl shall acquire and internally qualify the applicable pack voltage, candidate SOC,
+                group voltages, available temperatures, protection/path state and other source fields read through
+                the selected BMS UART, including their source timeliness. It shall publish signed pack current and
+                actual SOC as independently qualified values. Reported RSOC alone is not actual SOC.
 
-                UART fields shall meet the selected-unit read contract and
+                Source fields shall meet the selected-unit read contract and
                 [Per-consumer information acceptance criteria](Battery_Integration.md#per-consumer-information-acceptance).
-
-                BatteryControl shall publish an SOC value as actual SOC only after it meets the
-                [SOC source acceptance criteria](Battery_Integration.md#soc-source-acceptance); reported RSOC alone is
-                not actual SOC.
-
-                Values shall be accompanied by their qualification; BatteryControl shall assess source timeliness
-                internally.
+                Actual SOC shall meet the [SOC source acceptance criteria](Battery_Integration.md#soc-source-acceptance).
                 Unavailable or unqualified information shall not authorize dependent battery operation.
             */
         }
