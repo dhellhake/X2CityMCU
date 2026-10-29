@@ -17,22 +17,15 @@ package X2CityComponent_Cells {
 
     requirement <'REQ-SYS-CELL-001'> fixedCellBankComposition : AbstractHardwareRequirement {
         doc /*
-            Historical source: REQ-001-R1.6, Approved. Current body and successor allocation are Draft: LE-CELLS, the
-            Cells physical-battery-assembly branch, realized by HC-CELLS, the built cell bank. Historical
-            approval/provenance is retained; the current draft does not allocate supplied BMS firmware to hardware.
-
-            Parent: [REQ-SYS-BAT-002](../BatteryControl.sysml). Sources / qualifications:
-            [DEC-BAT-002](../../../../../Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-bat-002),
-            [BAT-001](../../../../../Battery/BAT-001_Selected_Pack_and_BMS.md). Owner-confirmed construction;
-            interconnection, insulation, thermal and integration acceptance remain system work.
-
-            Planned verification: I, A. Record as-built identity/connections and 70-cell inventory; relate accessible
-            voltage observations to the 14 parallel groups.
+            Status: Draft successor allocation; historical R1.6 approval is provenance only. Allocation: LE-CELLS.
+            Parent: REQ-SYS-BAT-002. Sources: DEC-BAT-002; BAT-001.
+            Planned verification: I, A. Record the as-built 70-cell inventory and verify the series/parallel group arrangement.
+            Open: interconnection, insulation, thermal and integration acceptance remain system work.
         */
         subject fixedCells:Cells = X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batteryAssembly.cells;
         require constraint {
             doc /*
-                The Cells component shall comprise 14 series-connected groups, each containing five parallel Samsung
+                Cells shall comprise fourteen series-connected groups, each containing five parallel Samsung
                 INR18650-35E cells.
             */
         }
