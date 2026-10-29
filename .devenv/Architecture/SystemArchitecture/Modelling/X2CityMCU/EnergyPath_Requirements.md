@@ -1,9 +1,0 @@
-# EnergyPath hardware allocation
-
-**Type:** Abstract Hardware Requirement. **Target:** `LE-ENERGY-PATH`. **Status:** Draft. **Derived from:** [REQ-SYS-ENE-001](../../../../Requirements/System_Requirements/Energy_and_Protection.md#req-sys-ene-001), [REQ-SYS-SOC-003](../BatteryControl/BatteryControl.sysml). This logical allocation selects no circuit or BMS command.
-
-| ID | Requirement | Planned verification / distinguishing cases | Open dependencies |
-| --- | --- | --- | --- |
-| <a id="req-ahw-enepath-001"></a>`REQ-AHW-ENEPATH-001` | EnergyPath shall enforce the qualified BatterySupervision discharge-current ceiling, including zero, on total net battery discharge supplying all operating loads, including traction, display, lighting and control. | `I`, `A`, `T-SYS`: verify finite positive and qualified zero bounds with simultaneous loads and transitions, using independently measured signed battery current. Distinguish unqualified branch from qualified zero; electrical current direction is distinct from wheel torque. | Derive and physically verify actuation, bootstrap and qualification sequencing, retention or hold-up, loss of host power, residual/parasitic and self-discharge behavior, tolerances and timing. Do not assume control power survives cutoff or promise charging when control is unpowered. The UART is read-only; no vendor BMS MOS override or current-sensing/switch topology is selected. |
-
-The requirement actuates an externally supplied bound; EnergyPath makes no SOC decision. Unqualified capability does not authorize a numerical limit, and startup/retention behavior remains a physical derivation and verification gate. Unknown capability is not a known voltage cutoff; derive fallback or retention consistent with the independent auxiliary fault-continuity obligations and any known qualified bound. This allocation is not evidence of implementation or validation.

@@ -4,14 +4,14 @@
   are released as **FC-001-R1.1 / FC-002-R1.1**, with 19 functions and the approved Hall/FOC contribution refinement.
   The [release record](Architecture/FC-001_Functional_Concept.md#release-record) preserves logical architecture
   Draft0.3 as a historical snapshot and REQ-001 Draft1.7, including 12 proposed safety-derived requirements, as supporting Drafts.
-- [Component architecture](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md) and [hardware architecture](Architecture/ARCH-002_Hardware_Architecture.md) retain released **ARCH-001-R1.0 / ARCH-002-R1.1** as historical baselines. Current E/E scope and software realization remain Draft/pending; future allocation and acceptance remain open.
+- [Component architecture](Architecture/SystemArchitecture/X2CityMCU.md) and [hardware architecture](Architecture/ARCH-002_Hardware_Architecture.md) retain released **ARCH-001-R1.0 / ARCH-002-R1.1** as historical baselines. Current E/E scope and software realization remain Draft/pending; future allocation and acceptance remain open.
 - [Hazard analysis](Safety/HARA-001_Hazard_Analysis.md) and [safety goals](Safety/SG-001_Safety_Goals.md)
   are released as **HARA-001-R1.0 / SG-001-R1.0**, with trace to REQ-001-R1.6.
   The [release record](Safety/HARA-001_Hazard_Analysis.md#release-record) retains the analysis assumptions
   and open safety-concept/validation gates; no formal ASIL claim is made.
 - [Requirements workstream](Requirements/README.md) indexes the historical releases, current PD/item drafts,
-  the 310-record Draft REQ-001 successor (five inactive records retained), completion gates and [logical architecture](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md). System and abstract software/hardware obligations remain active; Unit Requirements remain a future requirement type with no active unit catalogue.
-- Future architecture and requirements work follows the [AG-001 operational/reporting interface guideline](Architecture/SystemArchitecture/ARCH-001_System_Architecture.md#ag-001-operational-and-reporting-interfaces).
+  the 310-record Draft REQ-001 successor (five inactive records retained), completion gates and [logical architecture](Architecture/SystemArchitecture/X2CityMCU.md). System and abstract software/hardware obligations remain active; Unit Requirements remain a future requirement type with no active unit catalogue.
+- Future architecture and requirements work follows the [AG-001 operational/reporting interface guideline](Architecture/SystemArchitecture/X2CityMCU.md#ag-001-operational-and-reporting-interfaces).
 - [Selected battery and BMS](Battery/BAT-001_Selected_Pack_and_BMS.md) records the built
   14S5P Samsung 35E pack, installed JBD SP14S004 hardware V1.0 / firmware 3.2,
   UART and derived integration limits.

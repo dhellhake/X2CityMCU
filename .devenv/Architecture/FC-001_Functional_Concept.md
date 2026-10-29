@@ -6,7 +6,7 @@
 | Revision / status | Historical source release 1.1, 2026-09-14; current EPCS scope is Draft dated 2026-10-06 |
 | Inputs | REQ-001-R1.6 at `ac43704a3b814143734ee614a1d8c7a50d398c6d`; HARA-001-R1.0 / SG-001-R1.0 at `2d4a39e4c761c148eb777751dae5a78076a2cba8`; their source statuses, assumptions and open gates remain effective |
 | Scope | EPCS electrical retrofit and one supplied removable battery across operation, regeneration, electrical storage and service states |
-| Related work | [Exact requirement/function trace](FC-002_Function_Trace.md), [logical architecture](SystemArchitecture/ARCH-001_System_Architecture.md), [working requirement catalogue](../Requirements/REQ-001_Requirements.md), [released goals](../Safety/SG-001_Safety_Goals.md) |
+| Related work | [Exact requirement/function trace](FC-002_Function_Trace.md), [logical architecture](SystemArchitecture/X2CityMCU.md), [working requirement catalogue](../Requirements/REQ-001_Requirements.md), [released goals](../Safety/SG-001_Safety_Goals.md) |
 
 ## Purpose and interpretation
 
@@ -103,7 +103,7 @@ flowchart LR
 
 ### Interface responsibility
 
-[ARCH-001](SystemArchitecture/ARCH-001_System_Architecture.md#allocation-records-and-component-contracts) owns canonical IF-A contracts. The bindings below identify function endpoints and the physical interfaces added by this concept. Initial values, invalidity, operating context and finite response apply at both ends; no consumer silently substitutes a different mode or reset lifetime.
+[ARCH-001](SystemArchitecture/X2CityMCU.md#allocation-records-and-component-contracts) owns canonical IF-A contracts. The bindings below identify function endpoints and the physical interfaces added by this concept. Initial values, invalidity, operating context and finite response apply at both ends; no consumer silently substitutes a different mode or reset lifetime.
 
 | Interface | Functional producer → consumer / exchange |
 |---|---|

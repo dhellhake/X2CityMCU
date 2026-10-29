@@ -1,0 +1,55 @@
+# LightControl
+
+`LE-LIGHT-CONTROL` composes software [LightModeSelection](LightModeSelection/LightModeSelection.md) (`LE-LIGHT-POLICY`) and logical hardware [LightActuation](LightActuation/LightActuation.md) (`LE-LAMP-HW`). `LightPower` (`LE-LIGHT-POWER`) is contained within LightActuation and owns its lighting supply. [Canonical system requirements](LightControl.md) remain the end-to-end contract; vehicle electrical power is an external boundary supplied through LE-ENERGY-PATH.
+
+```mermaid
+flowchart TD
+    EPCS[LE-EPCS] -->|contains| LC[LightControl]
+    LC -->|software| S[LightModeSelection]
+    LC -->|hardware| A[LightActuation]
+    A -->|contains| P[LightPower]
+    CCC[CurrentConsumptionCoordination] -->|lighting availability| RC[RidingControl]
+    RC -->|lighting availability| LC
+    LC -->|lighting availability| A
+    A -->|lighting availability| P
+```
+
+EnergyPath → Energy → LightControl → LightActuation → LightPower; LightPower supplies LightActuation internally. CurrentConsumptionCoordination → RidingControl → LightControl → LightActuation → LightPower carries qualified lighting availability as a budget-derived operational constraint on physical supply, independently of LightModeSelection. Qualified available neither proves physical supply nor lamp output.
+
+| Port | Meaning | Owner |
+| --- | --- | --- |
+| `runningLightStateIn` | Qualified HMI normal-light request; its retained request is internal selection state | LightModeSelection |
+| `brakeLeverStateIn` | Qualified mechanical lever State/Qualification composite from MechanicalBrakeDetection | LightModeSelection |
+| `electricalBrakingStateIn` | Actual motor-braking state from Traction | LightModeSelection |
+| `lightModesOut` / `lightModesIn` | Front On/Off and rear Off/Dim/Full intent | LightModeSelection → LightActuation |
+| `lightingAvailabilityIn` | Qualified budget-derived operational constraint; delegated through LightControl and LightActuation to LightPower | CurrentConsumptionCoordination → RidingControl → LightControl → LightActuation → LightPower |
+| `vehicleElectricalPowerIn` | Distributed vehicle electrical energy at the LightControl boundary | LE-ENERGY-PATH → LightControl |
+| `vehicleElectricalPowerOut` | Electrical energy delegated by LE-ENERGY-PATH toward lighting supply | LE-ENERGY-PATH |
+| `lightingPowerOut` | Lighting power provided by LightPower to the owned actuation path | LightPower → LightActuation |
+| `frontIlluminationOut` / `rearIlluminationOut` | Physical illumination results | LightActuation |
+
+Qualified unavailable overrides all physical illumination, including rear Full and startup fallback. In the live powered actuation context a known restriction persists through loss of qualification until qualified available returns; then current selected modes apply subject to supply and protection. Without a known restriction, unqualified availability alone preserves existing fallback and fault continuity where power and protection permit.
+
+Actual electrical braking includes rollback retardation and constant-speed descent motor braking; it is not merely negative torque or battery charging. Physical continuity remains conditional on protection under [AUX-001](../../../Requirements/System_Requirements/Auxiliary_Continuity.md#req-veh-aux-001).
+
+## Light control requirements
+
+**Type:** System Requirement. **Target:** `LE-LIGHT-CONTROL`. **Status:** Draft. The end-to-end logical function comprises [LightModeSelection](LightModeSelection/LightModeSelection.md) (`LE-LIGHT-POLICY`) and [LightActuation](LightActuation/LightActuation.md) (`LE-LAMP-HW`). LightPower (`LE-LIGHT-POWER`) is owned within LightActuation; vehicle electrical energy remains an external distributed boundary through LE-ENERGY-PATH. Electrical protection remains governed by [AUX-001](../../../Requirements/System_Requirements/Auxiliary_Continuity.md#req-veh-aux-001).
+
+The illumination and brake-priority obligations below are subject to qualified lighting availability under LGT-010 and to available supply and protection; mode-selection intent and request retention remain independent of that physical constraint.
+
+| ID | Requirement | Derived from | Sources / governing contracts | Planned verification |
+| --- | --- | --- | --- | --- |
+| <a id="req-veh-lgt-001"></a>`REQ-VEH-LGT-001` **Draft successor** | From power-on, front and rear normal illumination shall follow the same current valid or retained normal-light request, subject to rear brake priority. | — | `DEC-HMI-003`, `OBJ-007`, `OI-032`, `OI-038`, `OI-039`; [AUX-001](../../../Requirements/System_Requirements/Auxiliary_Continuity.md#req-veh-aux-001). | `I`, `T-SYS`: normal On gives front On/rear Dim; normal Off gives both Off when rear has no brake priority. |
+| <a id="req-veh-lgt-002"></a>`REQ-VEH-LGT-002` **Draft successor** | Before the first valid normal-light request in a powered session, normal front/rear illumination shall remain Off, subject to rear brake priority. | — | `DEC-HMI-003`, `DEC-FLT-001`. | `I`, `T-SYS`: distinguish initial Off from later communication loss and retained request. |
+| <a id="req-veh-lgt-003"></a>`REQ-VEH-LGT-003` **Draft successor** | Rear normal On shall be Dim and rear brake indication Full. | — | `DEC-LGT-001`, `OI-039`; physical distinction: [FSC-012](#req-veh-fsc-012). | `I`, `T-SYS`: distinguish physical Dim and Full. |
+| <a id="req-veh-lgt-004"></a>`REQ-VEH-LGT-004` **Draft successor** | While powered, qualified active electrical braking shall require rear Full brake indication. | — | `DEC-LGT-001`; actual braking is supplied by Traction and includes rollback retardation and constant-speed descent motor braking. | `I`, `T-SYS`: cover those braking cases; suppressed demand, torque sign, and battery-current direction alone do not establish braking. |
+| <a id="req-veh-lgt-005"></a>`REQ-VEH-LGT-005` **Draft successor** | While powered, required rear brake indication shall override rear normal illumination, including normal Off and unavailable normal-light information; the front remains governed by its normal request. | — | `DEC-LGT-001`, `DEC-HMI-003`, `DEC-FLT-001`. | `I`, `T-SYS`: cover normal On/Off, no first command, and communication loss. |
+| <a id="req-veh-lgt-006"></a>`REQ-VEH-LGT-006` **Draft successor** | While powered, either qualified actuated mechanical brake lever shall require rear Full brake indication regardless of motion or actual deceleration. | — | `DEC-LGT-001`; qualified mechanical lever state is supplied by MechanicalBrakeDetection. | `I`, `T-SYS`: each/both levers at rest and in motion, including unavailable regeneration. |
+| <a id="req-veh-lgt-007"></a>`REQ-VEH-LGT-007` **Draft successor** | Passive slowing alone shall not require rear brake indication when both levers are qualified released and active electrical braking is qualified absent. | — | `DEC-LGT-001`. | `I`, `T-SYS`: coast, drag, and uphill travel, then add each qualifying trigger. |
+| <a id="req-veh-lgt-008"></a>`REQ-VEH-LGT-008` **Draft successor** | While powered, the rear shall return to the current normal Dim/Off state when both levers are qualified released and actual electrical braking is qualified absent, even if related torque-inhibition or fault-report state remains latched. | — | `DEC-LGT-001`, `DEC-FLT-002`, `DEC-FLT-003`. | `T-FI`, `T-SYS`: restore qualified released/absent states with retained fault and torque state; Full shall not remain latched. |
+| <a id="req-veh-lgt-009"></a>`REQ-VEH-LGT-009` **Draft successor** | While powered, unqualified brake-lever state or unqualified actual electrical-braking state shall require rear Full brake indication, including startup. | — | `DEC-LGT-002`, `DEC-FLT-011`, `REQ-SYS-INT-003`; [AUX-001](../../../Requirements/System_Requirements/Auxiliary_Continuity.md#req-veh-aux-001). | `T-FI`, `T-SYS`: withhold and stale each input independently and together, including startup. |
+| <a id="req-veh-lgt-010"></a>`REQ-VEH-LGT-010` **Draft** | LightControl shall inhibit all front and rear illumination when lighting availability is qualified unavailable, including brake indication and the startup fallback. In the live powered lighting actuation context, a known qualified unavailable restriction shall persist through unqualified, invalid, lost, or expired availability until a new qualified available indication arrives. On qualified availability returning, the current selected modes shall automatically apply subject to supply and protection, without a new rider request. Where no known restriction exists, unqualified availability alone shall retain the existing startup and fault behavior wherever power and protection permit. | — | Owner-approved lighting availability proposal, 2026-10-28; `IfA006LightingAvailability`; [AUX-001](../../../Requirements/System_Requirements/Auxiliary_Continuity.md#req-veh-aux-001). | `T-SYS`, `T-FI`: inhibit normal and rear Full including startup; lose qualification after false; restore true with retained request and current brake state; exercise initially unqualified and supply/protection limits. |
+| <a id="req-veh-fsc-012"></a>`REQ-VEH-FSC-012` **Draft** | Physical front illumination and rear Off/Dim/Full output shall meet the qualified visibility and rear normal/brake-mode distinction envelope for selected and available LightControl modes wherever power and protection permit, including startup, unqualified braking information, and protection-limited transitions. Rear Full for unknown braking state retains its precautionary meaning; no extra rider indication is required. | [SG-007](../../../Safety/SG-001_Safety_Goals.md#sg-007) | `OI-032`, `OI-038`, `OI-039`, `OI-041`, `OI-045`, `OI-056`, `WS-OI-007`, `WS-OI-010`, `WS-OI-012`; [WS-OI-016 acceptance gate](../../../Requirements/DEC-001_Decisions_and_Open_Issues.md#dec-lgt-002). | `I`, `A`, `T-SYS`, `T-FI`: exercise all physical modes, triggers, unknown states, communication loss, and protection-limited transitions. |
+
+No numeric brightness, visibility, response, or circuit value is selected here.
