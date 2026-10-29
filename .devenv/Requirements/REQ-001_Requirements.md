@@ -106,6 +106,23 @@ Use one canonical requirement record and one file per coherent cluster under its
 
 This is project tailoring; method references are [NASA logical decomposition](https://www.nasa.gov/reference/4-3-logical-decomposition/) and [OMG requirement/allocation relationships](https://www.omg.org/sysml/sysmlv1/).
 
+## Requirement quality guidelines
+
+Apply these review criteria to System, Abstract Hardware and Abstract Software Requirements, and to future Unit Requirements. NASA’s [guidance on writing good requirements](https://www.nasa.gov/reference/appendix-c-how-to-write-a-good-requirement/) informs these criteria; project traceability and record rules above remain in force.
+
+| Review criterion | Guidance |
+|---|---|
+| **Need and source** | State a necessary obligation grounded in an identified source, decision, fixed interface or justified analysis. Preserve applicable source conditions and status. |
+| **Atomic obligation** | State one independently verifiable obligation per canonical record. Equivalent conditions may share one required outcome; split independently verifiable reactions or recovery duties into separate records. There is no fixed word limit; multiple `shall` clauses prompt review for separable obligations. |
+| **Owner and scope** | Assign exactly one actual architectural responsible target, and make the title and scope match its responsibility. Put shared outcomes at the responsible parent and allocate distinct obligations to the appropriate logical leaves. |
+| **Right level** | State what the responsible target must do and the needed outcome, not an invented realization. A selected fixed interface, constraint or explicit hardware/software allocation is valid when supported by its source. |
+| **Clear conditions** | Define terms or link to their definitions; state applicable states, inputs, boundaries, units and qualifications. Distinguish an unqualified/invalid condition from zero where that difference matters. Use positive wording where practical; justified prohibitions are valid. |
+| **Verifiable result** | Specify an observable pass condition, including timing, tolerance or boundary where relevant. Keep unresolved values explicit and link them to their existing issue or parameter record; do not invent numbers. |
+| **Consistency and trace** | Check for conflict with parent, sibling and interface obligations. Keep one canonical owner; parents state parent outcomes and children refine them. Use stable source/derive/subject/satisfy/verification links; links support navigation but are not proof. |
+| **Readable record** | Separate normative text from rationale, metadata, planned tests and examples. Keep prose and wrapping clear and uniform. Use `shall` for an obligation; a concise pattern is `<responsible target> shall <observable outcome> when <condition>`. |
+
+For native SysML, keep the canonical natural-language obligation in the normative text of the canonical requirement; place rationale and metadata outside that normative statement. An unnumbered requirement collection may conjunctively reference canonical child usages and need not repeat their behavior.
+
 ## Reading and verification rules
 
 The 171 R1.6 active records remain the historical approved baseline. This 2026-10-06 Draft removes pure mechanical qualifications and narrows mixed requirements to project electrical/electronic obligations; no prior review or release approves this scope change. Nine retained FSC records remain **Draft**. The ten reclassified records retain their historical identities. Historical approval does not establish full architecture B or implementation acceptance. `SYS` and `VEH` remain stable record identifiers; each active row's target metadata identifies current responsibility. PD-001 supplies objectives and constraints; each active row records its obligation, planned verification, source and unresolved dependencies.
@@ -139,8 +156,6 @@ The following shared coverage applies where relevant; row cases add distinguishi
 
 <a id="accelerator-position-identification"></a>
 ## Requirement clusters
-
-Requirement quality convention: each row states one independently verifiable obligation, keeps rationale separate from the obligation, and makes numerical gaps explicit rather than implying values.
 
 The current working inventory includes Draft Compute and Platform lifecycle refinements, Session lifecycle `REQ-SYS-CTL-005`-007, System hardware/software interface and traction-interconnection obligations, grouped DriverInteraction composition, traction control, motor-current budget enforcement, centralized riding current coordination, mechanical-brake, accelerator and motor-position requirement clusters. Abstract Software records retain their logical targets and obligations; detailed realization, interface contracts and Unit Requirement derivation remain pending. These records refine parent contracts without changing approved bodies. The current Draft catalogue contains 319 records, including five inactive records and new Draft `REQ-SYS-DRI-001`, `REQ-SYS-CUR-001`–004, `REQ-VEH-LGT-010`, `REQ-SYS-LGTHW-005`, `REQ-AS-TRQDC-001`–002, `REQ-SYS-TRQDC-003`, `REQ-SYS-BATSUP-006` and `REQ-SYS-BATSUP-007..017, 019..021`; architecture-hosted records total 189. Historical R2.0 remains the unchanged 228-record snapshot (211 Approved, 12 Draft, 3 Deferred, 2 Withdrawn). Its approved `REQ-SYS-TRQHW-001` is unchanged in Git; the current `REQ-SYS-TRQHW-001` is an explicitly changed Draft successor allocation that moves current-channel responsibility to `REQ-SYS-MSM-001`. R1.9 remains 223 records (206 Approved, 12 Draft, 3 Deferred, 2 Withdrawn); historical R1.8 remains the unchanged 197-record release. The 11 approved safety goals remain canonical in SG-001-R1.0 and are counted separately. Software design and unit derivation are pending. Historical detailed-design approval remains in Git and does not close electrical, physical, timing, resource, retention, protection, diagnostic or verification gates.
 
