@@ -1,12 +1,12 @@
 # FC-001 — Functional concept
 
-**Draft EPCS baseline — 2026-10-06.** Active functions cover the electrical/electronic retrofit and its electrical safety boundary. BMW X2City mechanics and handling procedures are external platform context under [ID-001 §2.1](../Requirements/ID-001_Item_Definition.md#external-mechanical-platform-assumption).
+**Draft EPCS baseline — 2026-10-06.** Active functions cover the electrical/electronic retrofit and its electrical safety boundary. BMW X2City mechanics and handling procedures are external platform context under [ID-001 §2.1](ID-001_Item_Definition.md#external-mechanical-platform-assumption).
 | Attribute | Value |
 |---|---|
 | Revision / status | Historical source release 1.1, 2026-09-14; current EPCS scope is Draft dated 2026-10-06 |
 | Inputs | REQ-001-R1.6 at `ac43704a3b814143734ee614a1d8c7a50d398c6d`; HARA-001-R1.0 / SG-001-R1.0 at `2d4a39e4c761c148eb777751dae5a78076a2cba8`; their source statuses, assumptions and open gates remain effective |
 | Scope | EPCS electrical retrofit and one supplied removable battery across operation, regeneration, electrical storage and service states |
-| Related work | [Exact requirement/function trace](FC-002_Function_Trace.md), [logical architecture](SystemArchitecture/X2CityMCU.md), [working requirement catalogue](../Requirements/REQ-001_Requirements.md), [released goals](../Safety/SG-001_Safety_Goals.md) |
+| Related work | [Exact requirement/function trace](FC-002_Function_Trace.md), [logical architecture](SystemArchitecture/X2CityMCU.md), [working requirement catalogue](REQ-001_Requirements.md), [released goals](../Safety/SG-001_Safety_Goals.md) |
 
 ## Purpose and interpretation
 
@@ -184,7 +184,7 @@ In this concept, FSC-nnn is shorthand for the unique catalogue ID ending in FSC-
 
 **Response budgets:** derive event-specific bounds before accepting a dependent protection/control function. For an available hazard margin `M` and a conservatively bounded approach rate `r>0`, `t_response + t_uncertainty ≤ M/r` is a sufficient initial response-budget condition under the stated bounded-rate model; changing dynamics or multiple limits require the more restrictive justified reachability result. Allocate source age, detection/qualification, transfer, decision and physical response without double-counting overlap, including uncertainty and safe-condition duration. A UART wire time or software cycle is not a fault-tolerant interval. If no reliable observation/time margin exists, derive prevention or physical exposure limitation instead of assigning a fictitious deadline.
 
-Use the existing [speed-cutoff uncertainty budget](../Requirements/System_Requirements/Interface_Qualification.md#speed-cutoff-uncertainty-and-response-budget). Qualify the voltage- and temperature-based current capability and physical protection response against applicable cell and pack current, energy and thermal exposures, including observation age, transfer and physical response. Measurement uncertainty is qualification evidence for those bounds; it does not introduce an adjustment to the runtime temperature or voltage inputs or an additional SOC control threshold. Reset/retry energy requires a cumulative bound over the physically credible reset sequence, not only a per-pulse limit.
+Use the existing [speed-cutoff uncertainty budget](SystemArchitecture/X2CityMCU.md#context-interface-qualification-speed-cutoff-uncertainty-and-response-budget). Qualify the voltage- and temperature-based current capability and physical protection response against applicable cell and pack current, energy and thermal exposures, including observation age, transfer and physical response. Measurement uncertainty is qualification evidence for those bounds; it does not introduce an adjustment to the runtime temperature or voltage inputs or an additional SOC control threshold. Reset/retry energy requires a cumulative bound over the physically credible reset sequence, not only a per-pulse limit.
 
 Store each numeric reference, uncertainty, applicable state, safety outcome and allocation in its eventual canonical qualification/calibration record under the existing issue gates. The concept requires those bounds but supplies no unverified values. Response ordering must satisfy all simultaneous goals; assigning zero torque, opening a path or removing a supply alone cannot establish this.
 

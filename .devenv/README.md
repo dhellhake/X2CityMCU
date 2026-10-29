@@ -9,10 +9,10 @@
   are released as **HARA-001-R1.0 / SG-001-R1.0**, with trace to REQ-001-R1.6.
   The [release record](Safety/HARA-001_Hazard_Analysis.md#release-record) retains the analysis assumptions
   and open safety-concept/validation gates; no formal ASIL claim is made.
-- [Requirements workstream](Requirements/README.md) indexes the historical releases, current PD/item drafts,
+- [Requirements workstream](Architecture/README.md) indexes the historical releases, current PD/item drafts,
   the 310-record Draft REQ-001 successor (five inactive records retained), completion gates and [logical architecture](Architecture/SystemArchitecture/X2CityMCU.md). System and abstract software/hardware obligations remain active; Unit Requirements remain a future requirement type with no active unit catalogue.
 - Future architecture and requirements work follows the [AG-001 operational/reporting interface guideline](Architecture/SystemArchitecture/X2CityMCU.md#ag-001-operational-and-reporting-interfaces).
-- [Selected battery and BMS](Battery/BAT-001_Selected_Pack_and_BMS.md) records the built
+- [Selected battery and BMS](Architecture/SystemArchitecture/BatteryControl/BatteryAssembly/BatteryAssembly.md#fixed-inputs-and-provenance) records the built
   14S5P Samsung 35E pack, installed JBD SP14S004 hardware V1.0 / firmware 3.2,
   UART and derived integration limits.
 - [WeAct STM32H723VGT6 board documentation](STM32H723VGT6/README.md) contains the
@@ -24,11 +24,11 @@
   contains the firmware-visible MCU configuration for the owner-confirmed V1.2
   board with fitted 0.96 inch 80x160 ST7735 LCD, including 550 MHz startup,
   memory, scheduler, watchdog and peripheral requirements.
-- [DRV8300DRGE-EVM vendor reference](DRV8300DRGE-EVM/README.md) retains
+- [DRV8300DRGE-EVM vendor reference](Architecture/SystemArchitecture/Traction/TractionControl/TractionHardware/TractionHardware.md#drv8300drge-evm-vendor-reference) retains
   the reduced vendor documentation set. The owner-selected-board [integration and
-  requirements fit](Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_Integration_and_Requirements_Fit.md)
+  requirements fit](Architecture/SystemArchitecture/Traction/TractionControl/TractionHardware/TractionHardware.md#drv8300drge-evm-integration-and-requirements-fit)
   records the separate project allocation, host/adapter and acceptance boundaries.
-  The canonical [EVM–WeAct traction HSI](Architecture/DRV8300DRGE-EVM/DRV8300DRGE-EVM_WeAct_STM32H723VGT6_Traction_HSI.md)
+  The canonical [EVM–WeAct traction HSI](Architecture/SystemArchitecture/Traction/TractionControl/TractionHardware/TractionHardware.md#drv8300drge-evm--weact-stm32h723vgt6-traction-hsi)
   contains the one vehicle pin/peripheral/epoch/inhibit contract and its Draft qualification gates. Software realization and runtime integration remain pending.
 
 The owner-selected WeAct Studio STM32H723VGT6 is the vehicle controller board; its existing firmware evidence remains a controlled development configuration. Its physical

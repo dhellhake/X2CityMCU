@@ -1,8 +1,8 @@
 # Stable line endings for current workstream documentation.
 /.gitattributes text eol=lf
 /README.md text eol=lf
-/.devenv/Requirements/** text eol=lf
-/.devenv/VD18MT/*.md text eol=lf
-/.devenv/Architecture/*.md text eol=lf
-/.devenv/Battery/*.md text eol=lf
+/.devenv/Architecture/**/*.md text eol=lf
+/.devenv/Architecture/**/*.sysml text eol=lf
+/.devenv/Architecture/SystemArchitecture/Traction/TractionControl/TractionHardware/References/*.PDF -text
+/.devenv/Architecture/SystemArchitecture/Traction/TractionControl/TractionHardware/References/*.xls -text
 /.devenv/Safety/*.md text eol=lf

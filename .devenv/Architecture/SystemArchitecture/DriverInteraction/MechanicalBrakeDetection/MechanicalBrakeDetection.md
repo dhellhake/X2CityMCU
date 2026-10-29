@@ -27,12 +27,28 @@ Session, Demand, and Light consume the complete composite; Platform consumes onl
 
 `BrakeLeverState` is the sole public brake-information composite. It has exactly `State` and `Qualification`. `State` carries `leverCombination` (`Neither`, `Left`, `Right`, or `Both`) and `measurementTimeMicroseconds`. `Qualification` carries usability, `initialQualificationPending`, and `recognizedMeasurementFault`. A state is usable only when its Qualification permits use; unavailable information does not stand for any lever combination.
 
-| ID | Requirement | Derived from / governing contracts | Planned verification and remaining gate |
-|---|---|---|---|
-| <a id="req-sys-brk-006"></a>`REQ-SYS-BRK-006` **Approved body; Draft successor target** | Within the validated fault-free interface envelope, the EPCS shall distinguish neither, left, right and both levers pressed. | `DEC-REF-002`, `CON-010`; [Brake input reference](../../../../Requirements/evidence/Brake_Input_Reference.md). | `I`, `T-SYS`: exercise all four codes over defined tolerances/environment, reverse either branch polarity and verify handle identity; verify left/front and right/rear mechanical association. `WS-OI-012`, `WS-OI-013`: terminal measurements do not verify sensing. |
-| <a id="req-sys-brk-007"></a>`REQ-SYS-BRK-007` **Approved body; Draft successor target** | Invalid brake information shall represent actuation and handle identity as unknown, without substituting a valid pressed/released state. | `DEC-REF-002`, `DEC-FLT-002`, `DEC-FLT-003`, `DEC-LGT-001`; [INT-001](../../../../Requirements/System_Requirements/Interface_Qualification.md#req-sys-int-001). | `I`, `T-FI`: verify unknown state independently of torque inhibition, retained report and full rear brightness. `WS-OI-010`, `WS-OI-012`, `WS-OI-016`: full brightness does not establish a physical press or failed-handle identity. |
-| <a id="req-sys-brk-008"></a>`REQ-SYS-BRK-008` **Approved body; Draft successor target** | Unavailable, stale, implausible or ambiguous brake information shall not be accepted as a valid released/actuated state. | `DEC-REF-002`; [INT-001](../../../../Requirements/System_Requirements/Interface_Qualification.md#req-sys-int-001), [INT-002](../../../../Requirements/System_Requirements/Interface_Qualification.md#req-sys-int-002). | `I`, `T-SYS`, `T-FI`: challenge derived validity criteria; distinguish initial unqualified information from recognized failure. `WS-OI-007`, `WS-OI-010`, `WS-OI-012`: no sensing, sampling, filter, threshold or timing realization is adopted. |
-| <a id="req-sys-brkdet-001"></a>`REQ-SYS-BRKDET-001` **Draft** | `LE-MECHANICAL-BRAKE` shall publish each brake result as the one `BrakeLeverState` composite defined above, and shall make the full record available to RidingControl, Demand, and Light while providing its exact Qualification projection to Platform. | [REQ-SYS-BRK-006](#req-sys-brk-006)–[008](#req-sys-brk-008), [REQ-SYS-HSI-001](../../../../Requirements/System_Requirements/System_Hardware_Software_Interface.md#req-sys-hsi-001). | `I`, `T-SYS`: inspect the public schema and routes; verify State and Qualification are not separated, transformed, or duplicated for consumers. |
-| <a id="req-sys-brkdet-002"></a>`REQ-SYS-BRKDET-002` **Draft** | `LE-MECHANICAL-BRAKE` shall preserve the distinction between initial qualification pending and a recognized measurement fault in `BrakeLeverState.Qualification`; requalification of current information may restore consumer use but shall not clear a Session-retained fault. | [REQ-SYS-BRK-007](#req-sys-brk-007), [REQ-SYS-BRK-008](#req-sys-brk-008), [REQ-SYS-INT-002](../../../../Requirements/System_Requirements/Interface_Qualification.md#req-sys-int-002). | `T-SYS`, `T-FI`: compare initial startup waiting, recognized fault, source recovery, and the Session latch. Fault-recognition criteria remain derived work. |
 
-The [brake-signal measurement](BrakeSignalMeasurement/BrakeSignalMeasurement.md) leaf owns physical measurement evidence. The [brake-state identification](BrakeStateIdentification/BrakeStateIdentification.md) leaf owns band classification, qualification, age, startup and recovery. Existing braking priority remains at `REQ-SYS-BRK-001`–005; `REQ-SYS-BRK-012` remains the Session/Ready integration guard. `REQ-SYS-BRK-009`–011 remain deferred in [Brake interface and priority](../../../../Requirements/System_Requirements/Brake_Interface_and_Priority.md).
+The [brake-signal measurement](BrakeSignalMeasurement/BrakeSignalMeasurement.md) leaf owns physical measurement evidence. The [brake-state identification](BrakeStateIdentification/BrakeStateIdentification.md) leaf owns band classification, qualification, age, startup and recovery. Existing braking priority remains at `REQ-SYS-BRK-001`–005; `REQ-SYS-BRK-012` remains the Session/Ready integration guard. `REQ-SYS-BRK-009`–011 remain deferred in [Brake interface and priority](MechanicalBrakeDetection.md).
+
+<a id="context-brake-interface-and-priority-specification"></a>
+## Specification
+
+- [Requirements](Specification/Requirements.sysml)
+
+<a id="context-brake-interface-and-priority-brake-interface-and-priority"></a>
+## Brake interface and priority
+
+**Target:** [LE-EPCS](../../../REQ-001_Requirements.md#le-epcs).
+
+Part of **REQ-001-R1.6**. [Model, status and cluster index](../../../REQ-001_Requirements.md) · [Shared verification](../../../REQ-001_Requirements.md#reading-and-verification-rules) · [Common interpretation](../../../REQ-001_Requirements.md#common-interpretation-and-upstream-scope). These rules apply to every row; relocation preserves its approval/status and qualifications.
+
+<a id="context-brake-interface-and-priority-brake-priority-and-release"></a>
+### Brake priority and release
+
+The supplied mechanical brakes are assumed available and adequate under [ID-001 §2.1](../../../ID-001_Item_Definition.md#external-mechanical-platform-assumption). This cluster covers only the fixed electrical lever-state input, its EPCS priority behavior and any permitted electrical regeneration; it does not qualify mechanical brake performance.
+
+
+<a id="context-brake-interface-and-priority-deferred-resistance-coded-brake-diagnostics"></a>
+### Deferred resistance-coded brake diagnostics
+
+The fixed passive shared two-wire interface is defined by [Brake_Input_Reference](BrakeSignalMeasurement/BrakeSignalMeasurement.md), [DEC-REF-002](../../../DEC-001_Decisions_and_Open_Issues.md#dec-ref-002) and PD `CON-010`. The canonical approved bodies `REQ-SYS-BRK-006`–008 and their Draft successor allocation are in [MechanicalBrakeDetection requirements](MechanicalBrakeDetection.md). Only the handle/harness terminal interface is adopted; sensing and diagnostic realization remain downstream.

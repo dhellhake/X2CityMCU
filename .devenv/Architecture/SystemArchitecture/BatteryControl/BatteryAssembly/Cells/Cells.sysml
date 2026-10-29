@@ -1,7 +1,5 @@
 package X2CityComponent_Cells {
     private import X2CityContract_BatteryControl::*;
-    private import RequirementTypes::AbstractHardwareRequirement;
-
     item def CellBankPower {
         doc /*
             Physical electrical energy at the fixed 14S5P cell-bank terminals.
@@ -69,36 +67,4 @@ package X2CityComponent_Cells {
         }
     }
 
-    requirement <'REQ-SYS-CELL-001'> fixedCellBankComposition : AbstractHardwareRequirement {
-        doc /*
-            Status: Draft successor allocation; historical R1.6 approval is provenance only. Allocation:
-            LE-CELLS.
-            Parent: REQ-SYS-BAT-002. Sources: DEC-BAT-002; BAT-001.
-            Planned verification: I, A. Record the as-built 70-cell inventory and verify the series/parallel
-            group arrangement.
-            Open: interconnection, insulation, thermal and integration acceptance remain system work.
-        */
-        subject fixedCells:Cells =
-            X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batteryAssembly.cells;
-        require constraint {
-            doc /*
-                Cells shall comprise fourteen series-connected groups, each containing five parallel Samsung
-                INR18650-35E cells.
-            */
-        }
-    }
-    satisfy fixedCellBankComposition by
-        X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batteryAssembly.cells;
-
-    requirement cellsRequirements : AbstractHardwareRequirement {
-        doc /*
-            Draft organizational conjunction of canonical obligations for the Cells architectural
-            occurrence.
-        */
-        subject fixedCells:Cells =
-            X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batteryAssembly.cells;
-        require X2CityComponent_Cells::fixedCellBankComposition;
-    }
-    satisfy cellsRequirements by
-        X2CitySystemArchitecture::x2CityVehicle.epcs.batteryControl.batteryAssembly.cells;
 }
