@@ -1,4 +1,4 @@
-package X2CitySpecification_MotorControl_RequirementDerivations {
+package X2CitySpecification_MotorControl_RequirementSet {
     #derivation connection def REQSYSPWR003ToREQSYSTRQACT003Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

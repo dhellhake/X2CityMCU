@@ -1,4 +1,4 @@
-package X2CitySpecification_Traction_RequirementDerivations {
+package X2CitySpecification_Traction_RequirementSet {
     #derivation connection def REQSYSFLT009ToREQSYSINT004Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

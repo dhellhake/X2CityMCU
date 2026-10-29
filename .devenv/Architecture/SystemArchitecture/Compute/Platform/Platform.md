@@ -14,6 +14,7 @@ This file contains only the new lifecycle-adjacent Platform allocation. Unrelate
 - [Requirements](Specification/Requirements.sysml)
 - [SystemHardwareSoftwareInterface](Specification/SystemHardwareSoftwareInterface.sysml)
 - [SystemInterfaceAllocations](Specification/SystemInterfaceAllocations.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)
 
 <a id="context-system-interface-allocations-system-interface-allocations"></a>
 ## System interface allocations

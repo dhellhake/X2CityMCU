@@ -65,6 +65,8 @@ The same physical pack remains within EPCS responsibility across installed opera
 
 Requirement derivation is an acyclic graph, independent of architectural composition. Maintain navigable traceability in both directions by stable IDs: forward references link to canonical records; reverse references can be found by searching that ID across the documentation without maintaining duplicate backlink tables. Many children may contribute to a parent and a child may have multiple parents.
 
+In each architectural owner’s `Specification/RequirementSet.sysml`, keep its requirement collections, when defined, together with its SysML traceability and derivation relationships in the owner’s `X2CitySpecification_<Owner>_RequirementSet` package. Canonical requirement usages remain in their owning specification packages; a trace-only requirement set does not require a collection.
+
 | Relationship | Meaning / required record |
 |---|---|
 | **Source** | Each active requirement identifies its PD obligation, owner decision, fixed interface or justified analysis, retaining source conditions and status |

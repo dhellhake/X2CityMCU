@@ -1,4 +1,4 @@
-package X2CitySpecification_DriverInteraction_RequirementDerivations {
+package X2CitySpecification_DriverInteraction_RequirementSet {
     #derivation connection def REQSYSHSI001ToREQSYSDRI001Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

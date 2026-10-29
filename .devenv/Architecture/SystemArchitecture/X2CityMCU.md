@@ -321,6 +321,7 @@ Current Draft review adds the logical accelerator function and its two responsib
 - [ServiceAndDurability](Specification/ServiceAndDurability.sysml)
 - [SystemHardwareSoftwareInterface](Specification/SystemHardwareSoftwareInterface.sysml)
 - [VehicleQualification](Specification/VehicleQualification.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)
 
 <a id="context-auxiliary-continuity-auxiliary-continuity"></a>
 ## Auxiliary continuity

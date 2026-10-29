@@ -15,3 +15,4 @@ The grouped logical boundary retains the three separately typed child interfaces
 ## Specification
 
 - [Requirements](Specification/Requirements.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)

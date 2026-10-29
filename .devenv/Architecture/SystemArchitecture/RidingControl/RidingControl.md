@@ -26,6 +26,7 @@ The current requirement body is a Draft successor; historical approval remains p
 - [CurrentBudgeting](Specification/CurrentBudgeting.sysml)
 - [Requirements](Specification/Requirements.sysml)
 - [SessionReportPolicy](Specification/SessionReportPolicy.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)
 
 <a id="context-power-startup-and-faults-power-startup-and-fault-handling"></a>
 ## Power, startup and fault handling

@@ -9,6 +9,7 @@ The modeled outputs include riding authority, signed wheel-torque demand, select
 ## Specification
 
 - [SettingsAndControlPolicy](Specification/SettingsAndControlPolicy.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)
 
 <a id="context-rider-control-assist-levels-torque-regeneration-and-speed-limits"></a>
 ## Assist levels, torque, regeneration and speed limits

@@ -8,3 +8,4 @@ TractionControl receives riding authority and wheel-torque demand, and connects 
 
 - [InterfaceQualification](Specification/InterfaceQualification.sysml)
 - [RidingSafetyFunctions](Specification/RidingSafetyFunctions.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)

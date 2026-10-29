@@ -1,4 +1,4 @@
-package X2CitySpecification_RidingControl_CurrentBudgetTraceability {
+package X2CitySpecification_RidingControl_RequirementSet {
     #derivation connection def CurrentBudgetDerivation {
         end #original original : Requirements::RequirementCheck;
         end #derive allocation : Requirements::RequirementCheck;

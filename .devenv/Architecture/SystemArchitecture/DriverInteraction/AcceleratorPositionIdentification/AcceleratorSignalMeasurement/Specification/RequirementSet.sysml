@@ -1,4 +1,4 @@
-package X2CitySpecification_AcceleratorSignalMeasurement_RequirementDerivations {
+package X2CitySpecification_AcceleratorSignalMeasurement_RequirementSet {
     #derivation connection def REQSYSACC001ToREQSYSACC003Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

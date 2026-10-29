@@ -1,4 +1,4 @@
-package X2CitySpecification_RidingPolicy_RequirementDerivations {
+package X2CitySpecification_RidingPolicy_RequirementSet {
     #derivation connection def REQSYSBRK001ToREQSYSCTL002Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

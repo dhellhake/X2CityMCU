@@ -1,4 +1,4 @@
-package X2CitySpecification_MotorSignalMeasurement_RequirementDerivations {
+package X2CitySpecification_MotorSignalMeasurement_RequirementSet {
     #derivation connection def REQSYSHSI001ToREQSYSMSM001Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

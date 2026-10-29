@@ -1,4 +1,4 @@
-package X2CitySpecification_BrakeStateIdentification_RequirementDerivations {
+package X2CitySpecification_BrakeStateIdentification_RequirementSet {
     #derivation connection def REQSYSBRK006ToREQSYSBRKSW001Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

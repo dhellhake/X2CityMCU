@@ -1,4 +1,4 @@
-package X2CitySpecification_MotorPositionEstimation_RequirementDerivations {
+package X2CitySpecification_MotorPositionEstimation_RequirementSet {
     #derivation connection def REQSYSFLT003ToREQSYSMPE004Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

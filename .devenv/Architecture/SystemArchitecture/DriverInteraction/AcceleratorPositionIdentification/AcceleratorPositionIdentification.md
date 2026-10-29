@@ -32,3 +32,4 @@ Electrical mapping and rest characterization, sensor compatibility, error, fresh
 ## Specification
 
 - [Requirements](Specification/Requirements.sysml)
+- [RequirementSet](Specification/RequirementSet.sysml)

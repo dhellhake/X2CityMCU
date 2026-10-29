@@ -1,4 +1,4 @@
-package X2CitySpecification_Platform_RequirementDerivations {
+package X2CitySpecification_Platform_RequirementSet {
     #derivation connection def REQSYSTRQIO001ToREQSYSINP002Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

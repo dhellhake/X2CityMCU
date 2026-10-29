@@ -1,4 +1,4 @@
-package X2CitySpecification_MotorPositionProcessing_RequirementDerivations {
+package X2CitySpecification_MotorPositionProcessing_RequirementSet {
     #derivation connection def REQSYSTRQIO001ToREQSYSPHASEIF001Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;

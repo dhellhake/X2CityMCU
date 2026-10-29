@@ -1,4 +1,4 @@
-package X2CitySpecification_X2CityMCU_RequirementDerivations {
+package X2CitySpecification_X2CityMCU_RequirementSet {
     #derivation connection def REQSYSBRK008ToREQSYSINT001Derivation {
         end #original original : Requirements::RequirementCheck;
         end #derive derived : Requirements::RequirementCheck;
